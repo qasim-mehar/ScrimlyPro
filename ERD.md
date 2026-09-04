@@ -63,7 +63,7 @@ erDiagram
 
 ## 2. SQLite implementation mapping
 
-Implemented via Drizzle + better-sqlite3 at `./data/scrimly.db` (gitignored; folder auto-created). Type mapping: `uuid` → `TEXT`, `jsonb` → `TEXT` (JSON via typed `toJson`/`fromJson` helpers), `timestamptz` → `TEXT` ISO-8601 UTC, `boolean` → `INTEGER`. IDs are uuid v4 generated in app code.
+Implemented via Drizzle + better-sqlite3 at `./data/scrimly.db` (gitignored; folder auto-created). Type mapping: `uuid` → `TEXT`, `jsonb` → `TEXT` via Drizzle mode:"json" + $type<> (no separate helpers), `timestamptz` → `TEXT` ISO-8601 UTC, `boolean` → `INTEGER`. IDs are uuid v4 generated in app code.
 
 **Constraints** (enforced in app layer + checked in tests): `planned_matches` 1–6 · `team_count` 4–25 · `match_no` 1..planned · `placement` 1..team_count · squad 1–4 players · `UNIQUE(session_id, name)` on teams · `UNIQUE(session_id, match_no)` on matches.
 

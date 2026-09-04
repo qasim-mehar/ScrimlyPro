@@ -291,17 +291,16 @@ const SQUAD_TAGS = {
 };
 
 // must stay in sync with lib/matching/normalize (C2.2); duplication acceptable
-// in an offline script. NFKD → lowercase → strip tag prefix → remove
-// zero-width chars → non-alphanumerics → space → collapse → trim.
-const TAG_PREFIX = /^[\w×]{2,6}\s*[|·:.\-/]\s*/;
+// in an offline script. Per the C1.2-review decision: NFKD → strip combining
+// marks → remove zero-width chars → lowercase → every run of chars outside
+// [\p{L}\p{N}] becomes ONE space → trim. No tag-prefix stripping.
 function normalizeName(name) {
   return name
     .normalize("NFKD")
-    .toLowerCase()
-    .replace(TAG_PREFIX, "")
+    .replace(/\p{M}/gu, "")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 }
 

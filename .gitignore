@@ -46,3 +46,7 @@ next-env.d.ts
 
 # zcode session files
 .zcode/
+
+# local logs
+studio.log
+dev.log
