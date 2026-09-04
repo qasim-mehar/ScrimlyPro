@@ -99,7 +99,7 @@ Sanity bounds: kills 0–15/player (≥8 flagged "verify" in UI), squads 1–4 p
 
 | Case | Behavior |
 |---|---|
-| Same player, different OCR spelling across matches | within-team fuzzy merge for MVP; variants shown |
+| Same player, different OCR spelling across matches | mild drift (≤2 edits after normalization) auto-merges within-team; heavy drift stays split and the organizer merges it manually in the MVP editor |
 | Substitute / zero roster overlap | weak or no suggestion; manual dropdown; fast |
 | OCR missed squads (screenshot gap) | MISSING_SQUADS banner; manual row add; never dead-end |
 | OCR duplicated squad across overlapping screenshots | prompt dedupes; V2 rejects; auto-retry once |

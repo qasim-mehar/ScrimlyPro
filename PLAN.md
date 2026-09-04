@@ -15,7 +15,7 @@ LLM agents execute small, well-bounded tasks far more reliably than large ones. 
 - Mobile-first: interactive targets >=44px; ZERO horizontal overflow at 375px; every async action has loading + error UI.
 - ALL business logic (scoring, matching, MVP, validation, standings) lives in `/lib` as pure typed functions with vitest tests. UI components never contain business logic.
 - `GEMINI_API_KEY` exists only in `app/api/ocr/route.ts` (server).
-- Allowed deps: `drizzle-orm`, `better-sqlite3`, `drizzle-kit`, `vitest`, `html-to-image`, `@google/genai`, `clsx`, the two `@fontsource` packages. Anything else: justify in README Assumptions.
+- Allowed deps: `drizzle-orm`, `better-sqlite3`, `drizzle-kit`, `vitest`, `html-to-image`, `@google/genai`, `clsx`, the two `@fontsource` packages + `@types/better-sqlite3` (types-only). Anything else: justify in README Assumptions.
 - `next.config`: `serverExternalPackages: ["better-sqlite3"]`.
 - If better-sqlite3 fails to compile: switch to `drizzle-orm/libsql` with `file:./data/scrimly.db`, schema unchanged.
 - PRD.md / ERD.md / PLAN.md are truth. Deviation -> record in README Assumptions; schema changes are forbidden without updating ERD.md.
@@ -50,7 +50,7 @@ Hard sequence: C1 → C2 → C3 → C4 → C5 → C6 → C7. Inside C2 and C3 th
 **C2.2 Normalization + suggestion engine.** `normalize(name)`: NFKD → lowercase → strip clan-tag prefix (regex `^[\w×]{2,6}\s*[|·:.\-/]\s*`) → remove zero-width chars → non-alphanumerics → space → collapse → trim. `suggestMappings(squads, rosters)` → greedy one-to-one over score matrix (`overlap/squad_size` + 0.3 tag bonus), tiers strong ≥0.6 / weak 0.3–0.6 / none. Pure `learnRosterDelta` / `rebuildRosters` data functions. Tests: full overlap; 2-of-4 substitute; zero overlap; tag-only; two teams sharing one tag (must NOT cross-assign).
 **ACCEPT:** fixtures green; no DB access anywhere in `/lib/matching`.
 
-**C2.3 MVP aggregation.** `collectPlayers(confirmedResults)` → within-team merge (exact normalized OR Levenshtein ≤2 AND len ≥4), variants list, canonical = most frequent raw spelling, top-5 draft (kills DESC → name ASC). Own Levenshtein. Tests: exact merge; TF×MAₛOOR + TFxMA_SODOR merge; similar names on DIFFERENT teams must NOT merge.
+**C2.3 MVP aggregation.** `collectPlayers(confirmedResults)` → within-team merge (exact normalized OR Levenshtein ≤2 AND len ≥4), variants list, canonical = most frequent raw spelling, top-5 draft (kills DESC → name ASC). Own Levenshtein. Tests: exact merge; punctuation drift (Bawa·Qadra + Bawa Qadra); edit drift ≤2 (TRB HANAN + TRB HANN); heavy drift TF×MAₛOOR + TFxMA_SODOR must stay separate (editor resolves); similar names on DIFFERENT teams must NOT merge.
 **ACCEPT:** fixtures green.
 
 **C2.4 Gemini client + validation + fixtures.** `generateSquads(images, teamCount)`: model = env with 404-fallback chain, 60s timeout, ONE call with all images, `responseMimeType: application/json` + responseSchema below. Verbatim prompt (replace `{TEAM_COUNT}`):
