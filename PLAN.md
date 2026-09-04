@@ -120,7 +120,7 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 
 ### C6 — Finale
 
-**C6.1 MVP editor + lock.** `/sessions/[id]/mvp`: draft from C2.3; variants expander; rename/adjust kills/add via search/remove/reorder; Lock → `mvp_lists` write; graphic renders from locked entries only; Unlock re-opens editor.
+**C6.1 MVP editor + lock.** `/sessions/[id]/mvp`: draft from C2.3; variants expander; rename/adjust kills/add via search/remove/reorder; merge two players: kills sum, variants union, canonical = the name the organizer picks; merged entry flagged as manual-merge for the graphic's variants note; Lock → `mvp_lists` write; graphic renders from locked entries only; Unlock re-opens editor.
 **ACCEPT:** post-lock re-export identical.
 
 **C6.2 Finalize.** Mark complete → standings subtitle switches to "FINAL RESULTS"; MVP promoted in graphics tab; warning if incomplete; re-open allowed.
