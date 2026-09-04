@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif;
+  --color-gold: #f5c542;
+  --color-bg: #0b0d12;
+  --color-surface: #12151c;
+  --color-surface-2: #1a1e28;
+  --color-line: #272d3b;
+  --color-muted: #8b93a7;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: #e8eaf0;
+  font-family: var(--font-display);
+}
