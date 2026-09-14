@@ -92,6 +92,7 @@ Env: copy `.env.example` → `.env.local`. All optional in C1.1.
 - **C5.3 — total-payload + shouldResize tests live in matches-mapping.test.ts:** `tests/ocr-form.test.ts` is C5.2-owned and untouched; the §2.6 guard test (5×4.2MB → BAD_REQUEST) and the `shouldResize` battery sit with the other C5.3 tests.
 - **C5.3 — re-confirm test resets to draft first:** the confirmed-match guard ("Unlock the match first") is explicit per spec, so the idempotency test simulates a draft carrying stale rows → single replaced set, updated values.
 - **C5.3 — Accept-all fills every empty dropdown:** suggestion team when still free, else the first free team alphabetically (still changeable; Confirm stays gated on validateMapping).
+- **C5.3 — sanitizeSquads boundary (live-found 500):** real Gemini reads omit `squadTag`/`confidence` on some squads (RawSquad declares them, the wire doesn't guarantee them) — the first live render crashed in tag affinity on `normalize(undefined)`. `sanitizeSquads` (lib/matches, pure, tested) coerces + sorts at the page boundary before suggestions/form; lib/matching itself untouched (other lane's file).
 
 ## Post-C2 audit (2026-09-05)
 

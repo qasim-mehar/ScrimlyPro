@@ -4,6 +4,8 @@
  * confirmMatch re-runs it server-side before writing anything (PRD R1).
  */
 
+import type { RawSquad } from "@/lib/db/schema";
+
 export type SquadRowDraft = {
   placement: number;
   squadTag: string;
@@ -19,6 +21,36 @@ export type MappingIssueCode =
   | "BAD_SQUAD_SIZE";
 
 export type MappingIssue = { code: MappingIssueCode; message: string };
+
+/** Sanitized squad: the exact shape the review form + suggestMappings take. */
+export type CleanSquad = {
+  placement: number;
+  squadTag: string;
+  confidence: "high" | "low";
+  players: Array<{ name: string; kills: number; confidence?: "high" | "low" }>;
+};
+
+/**
+ * Boundary between untrusted OCR JSON and the form: sort placement ASC and
+ * coerce the fields Gemini may omit (live reads drop squadTag/confidence,
+ * which otherwise crash tag affinity with normalize(undefined)).
+ */
+export function sanitizeSquads(squads: RawSquad[]): CleanSquad[] {
+  return [...squads]
+    .sort((a, b) => a.placement - b.placement)
+    .map((squad) => ({
+      placement: squad.placement,
+      squadTag: typeof squad.squadTag === "string" ? squad.squadTag : "",
+      confidence: squad.confidence === "low" ? "low" : "high",
+      players: squad.players.map((player) => ({
+        name: player.name,
+        kills: player.kills,
+        ...(player.confidence === "low"
+          ? { confidence: "low" as const }
+          : {}),
+      })),
+    }));
+}
 
 /**
  * Issues: unmapped squads (with placements), duplicate teamIds (with the

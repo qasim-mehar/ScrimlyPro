@@ -4,6 +4,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import { matches, rosters, sessions, teams } from "@/lib/db/schema";
+import { sanitizeSquads } from "@/lib/matches/mapping";
 import { suggestMappings } from "@/lib/matching";
 import { ReviewForm, type ReviewSuggestion } from "@/components/matches/ReviewForm";
 import { UploadPanel } from "@/components/matches/UploadPanel";
@@ -115,13 +116,9 @@ async function MatchReview({
           .all()
       : [];
 
-  const ordered = [...squads].sort((a, b) => a.placement - b.placement);
+  const ordered = sanitizeSquads(squads);
   const suggestions: ReviewSuggestion[] = suggestMappings(
-    ordered.map((squad) => ({
-      placement: squad.placement,
-      squadTag: squad.squadTag,
-      players: squad.players,
-    })),
+    ordered,
     teamRows,
     rosterRows,
   ).map((suggestion) => ({ teamId: suggestion.teamId, tier: suggestion.tier }));
@@ -132,16 +129,7 @@ async function MatchReview({
       matchNo={matchNo}
       teamCount={teamCount}
       teams={teamRows}
-      initialSquads={ordered.map((squad) => ({
-        placement: squad.placement,
-        squadTag: squad.squadTag,
-        confidence: squad.confidence,
-        players: squad.players.map((player) => ({
-          name: player.name,
-          kills: player.kills,
-          confidence: player.confidence,
-        })),
-      }))}
+      initialSquads={ordered}
       suggestions={suggestions}
     />
   );

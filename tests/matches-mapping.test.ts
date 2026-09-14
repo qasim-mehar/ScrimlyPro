@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { shouldResize } from "@/components/matches/resize-images";
+import type { RawSquad } from "@/lib/db/schema";
+import { suggestMappings } from "@/lib/matching/suggest";
 import { parseOcrFormData } from "@/lib/ocr/form";
-import { validateMapping, type SquadRowDraft } from "@/lib/matches/mapping";
+import {
+  sanitizeSquads,
+  validateMapping,
+  type SquadRowDraft,
+} from "@/lib/matches/mapping";
 
 function row(
   placement: number,
@@ -110,6 +116,26 @@ describe("validateMapping", () => {
 
     expect(issues).toHaveLength(1);
     expect(issues[0]?.code).toBe("BAD_SQUAD_SIZE");
+  });
+});
+
+describe("sanitizeSquads (untrusted OCR boundary)", () => {
+  it("missing squadTag/confidence → coerced, sorted; suggestMappings no longer crashes", () => {
+    // Live Gemini reads omit squadTag/confidence (RawSquad declares them,
+    // the wire doesn't guarantee them) — normalize(undefined) 500'd the page.
+    const raw = JSON.parse(
+      '[{"placement":2,"players":[{"name":"A","kills":1}]},{"placement":1,"squadTag":"TF","confidence":"low","players":[{"name":"B","kills":2,"confidence":"low"}]}]',
+    ) as RawSquad[];
+
+    const clean = sanitizeSquads(raw);
+
+    expect(clean.map((s) => s.placement)).toEqual([1, 2]);
+    expect(clean[0]).toMatchObject({ squadTag: "TF", confidence: "low" });
+    expect(clean[1]).toMatchObject({ squadTag: "", confidence: "high" });
+    expect(clean[1]?.players).toEqual([{ name: "A", kills: 1 }]);
+    expect(() =>
+      suggestMappings(clean, [{ id: "t1", name: "TF Squad" }], []),
+    ).not.toThrow();
   });
 });
 
