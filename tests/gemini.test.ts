@@ -141,9 +141,17 @@ describe("validateSquads", () => {
     }
   });
 
-  it("V3: kills 16 → BAD_KILLS", () => {
+  it("V3: kills 16 → ok (Rondo-inflated 16–19 are legit, bound is 0–20)", () => {
     const squads = makeValidSquads();
     squads[0].players[0] = player("P1-0", 16);
+    const result = validateSquads(squads, 16);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.warnings).toEqual([]);
+  });
+
+  it("V3: kills 21 → BAD_KILLS", () => {
+    const squads = makeValidSquads();
+    squads[0].players[0] = player("P1-0", 21);
     const result = validateSquads(squads, 16);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.failure.code).toBe("BAD_KILLS");
@@ -157,20 +165,27 @@ describe("validateSquads", () => {
     if (!result.ok) expect(result.failure.code).toBe("BAD_KILLS");
   });
 
-  it("V4: lobby kills 100 → BAD_KILLS 'lobby kills 100 > 99'", () => {
+  it("V4: lobby kills 100 → ok with LOBBY_KILLS_HIGH warning (never a failure)", () => {
     const squads = makeValidSquads();
     // base total is 38; squads 1–2 originally contribute 11 + 8 = 19,
     // remaining 14 squads contribute 19 → set squads 1–2 to 60 + 21 = 100 − 19
     squads[0].players = [player("a", 15), player("b", 15), player("c", 15), player("d", 15)];
     squads[1].players = [player("e", 15), player("f", 6)];
     const result = validateSquads(squads, 16);
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.failure.code).toBe("BAD_KILLS");
-      if (result.failure.code === "BAD_KILLS") {
-        expect(result.failure.detail).toBe("lobby kills 100 > 99");
-      }
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.warnings).toEqual([{ code: "LOBBY_KILLS_HIGH", total: 100 }]);
     }
+  });
+
+  it("V4: lobby kills exactly 99 → ok with no warnings", () => {
+    const squads = makeValidSquads();
+    // base total is 38; squad 1 originally contributes 11 → set it to
+    // 72 (4 × 18) for a total of exactly 99
+    squads[0].players = [player("a", 18), player("b", 18), player("c", 18), player("d", 18)];
+    const result = validateSquads(squads, 16);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.warnings).toEqual([]);
   });
 });
 
@@ -309,6 +324,35 @@ describe("parseMatchSquads", () => {
       expected: 16,
     });
     expect(callModel).toHaveBeenCalledTimes(2);
+  });
+
+  it("warning (lobby kills > 99) → NO retry: retried false, called EXACTLY once, warnings present", async () => {
+    stubModelEnv();
+    // base total 38; squad 1 contributes 11 → 4 × 20 = 80 gives 107 total
+    const squads = makeValidSquads();
+    squads[0].players = [player("a", 20), player("b", 20), player("c", 20), player("d", 20)];
+    const callModel = vi.fn(async () => JSON.stringify(squads));
+
+    const result = await parseMatchSquads(IMAGES, 16, { callModel });
+
+    expect(result.retried).toBe(false);
+    expect(callModel).toHaveBeenCalledTimes(1);
+    expect(result.warnings).toEqual([{ code: "LOBBY_KILLS_HIGH", total: 107 }]);
+    expect(result.squads).toHaveLength(16);
+  });
+
+  it("warnings pass through to the caller", async () => {
+    stubModelEnv();
+    const squads = makeValidSquads();
+    squads[0].players = [player("a", 20), player("b", 20), player("c", 20), player("d", 20)];
+    const direct = validateSquads(squads, 16);
+    if (!direct.ok) throw new Error("fixture should validate with a warning");
+    const callModel = vi.fn(async () => JSON.stringify(squads));
+
+    const result = await parseMatchSquads(IMAGES, 16, { callModel });
+
+    expect(result.warnings).toEqual(direct.warnings);
+    expect(result.warnings).toEqual([{ code: "LOBBY_KILLS_HIGH", total: 107 }]);
   });
 });
 
