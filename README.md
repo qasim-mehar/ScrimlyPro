@@ -90,3 +90,10 @@ Env: copy `.env.example` → `.env.local`. All optional in C1.1.
 - **Truth sync already landed:** the C2.3 review's editor-action edit (PRD §F5 + PLAN C6.1 "merge two entries") is in commit `90a15d6`; verified present in both files.
 - **Audit gates (all green):** `npm install`, `npm run lint` (zero), `npm run build`, `npm test` (76/76), `npm run db:migrate`, `npm run db:seed` (11 PASS, rosters = 66).
 - **No worktrees to clean:** `git worktree list` shows only the main checkout; branch list is `main` only.
+
+## C6.1 notes (2026-09-14, lane/mvp)
+
+- **Unlock preserves entries:** `unlockMvp` flips `locked` to false (clearing `lockedAt`) and retains `entries`, so the editor re-opens pre-filled with the organizer's manual work. The page prefers the retained list over a fresh C2.3 draft and re-attaches aggregation variants by name match where possible.
+- **Cross-team merge follows the kept name:** merging two rows from different teams is not blocked; the merged row takes the `teamId` of the entry whose name the organizer keeps. The showcase path (same-team drift pair) is unaffected.
+- **Validation shared client/server:** `validateMvpEntries` is pure (no DB) and imported directly by the client editor for inline issues and the Lock gate; `lockMvpList` re-validates server-side against the session's teams loaded from the injected db handle, so client gating is never trusted.
+- **Gates:** `npm run lint` zero, `next build` green (incl. `/sessions/[id]/mvp`), `npm test` 13 files / 183 green, seed 11 PASS.
