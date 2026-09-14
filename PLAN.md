@@ -82,7 +82,7 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
   required: ["placement","players"] } };
 ```
 
-`validateSquads(squads, teamCount)` implements V1–V4 (PRD §F2) with typed errors `MISSING_SQUADS`/`BAD_PLACEMENTS`/`BAD_KILLS`/`PARSE_FAILED`; `withRetry` does the single corrective retry (appends `Previous extraction failed: {reason}. Fix this.`). `lib/fixtures/sampleMatches.ts`: matches 1–3 for 16 teams — clan tags, a tag-less team with a substitute across 2–3, the drifted TF×MAₛOOR/TFxMA_SODOR player; intended mapping documented in comments. Tests: each V-rule incl. duplicate placements and 100 lobby kills; retry called once.
+`validateSquads(squads, teamCount)` implements V1–V4 (PRD §F2) with typed errors `MISSING_SQUADS`/`BAD_PLACEMENTS`/`BAD_KILLS`/`PARSE_FAILED`; `withRetry` does the single corrective retry (appends `Previous extraction failed: {reason}. Fix this.`). AMENDED by C2.4b: V3 kills 0–20; V4 lobby kills > 99 → soft warning LOBBY_KILLS_HIGH{total}, never fails, never retries; parseMatchSquads returns warnings. `lib/fixtures/sampleMatches.ts`: matches 1–3 for 16 teams — clan tags, a tag-less team with a substitute across 2–3, the drifted TF×MAₛOOR/TFxMA_SODOR player; intended mapping documented in comments. Tests: each V-rule incl. duplicate placements and 100 lobby kills; retry called once.
 **ACCEPT:** all green WITHOUT any network (client mocked).
 
 ### C3 — Graphics engine
@@ -101,7 +101,7 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 **C4.1 Create wizard.** `/sessions/new`, 3 steps per PRD F1: basics → teams (bulk paste split newline/comma, count badge, per-team logo upload → 256px JPEG data URL, "load sample teams" dev helper) → confirm summary (read-only scoring table). Server action inserts session + teams; redirect to session page. All PRD validations.
 **ACCEPT:** 16 teams via bulk paste; wizard usable at 375px; logo stored.
 
-**C4.2 Session page.** `/sessions/[id]`: header (name, aesthetic, N/M confirmed, status), match list (draft/confirmed states, "Add Match N" gated to `planned_matches`, Unlock action per confirmed match), tabs: Standings (HTML table from C2.1, full tie-break), Graphics (announcement / latest overall / MVP previews + Download via C3), "Mark complete" (warns if confirmed < planned; re-openable). Server components + server actions; loading skeletons.
+**C4.2 Session page.** `/sessions/[id]`: header (name, aesthetic, N/M confirmed, status), match list (draft/confirmed states, "Add Match N" gated to `planned_matches`, Unlock action per confirmed match (REASSIGNED from C5.4 — session-page functionality, deps met; C5.4 = confirm pipeline only)), tabs: Standings (HTML table from C2.1, full tie-break), Graphics (announcement / latest overall / MVP previews + Download via C3), "Mark complete" (warns if confirmed < planned; re-openable). Server components + server actions; loading skeletons.
 **ACCEPT:** with seed data all tabs correct; unlock recomputes standings.
 
 ### C5 — Match loop (core of the core)
@@ -115,12 +115,12 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 **C5.3 Review & mapping form.** `/sessions/[id]/matches/[matchNo]` per PRD F3 in full: rows by placement; editable placement/kills; expandable players; team dropdown (chosen teams filtered out); suggestion tiers with colors; accept-all; low-confidence highlights; `MISSING_SQUADS` banner + manual add-row; confirm gating (distinct teams, all mapped); draft reopen loads `raw_squad_data` (NO new OCR). (If the agent stalls, split into C5.3a layout / C5.3b mapping logic.)
 **ACCEPT:** full confirm flow with fixtures; gating airtight; mobile keyboard-friendly.
 
-**C5.4 Confirm pipeline.** Server action, one transaction: replace `match_results` for the match; learn rosters (C2.2 delta); match → confirmed + `confirmed_at`; standings recompute via C2.1; redirect to session page with the new "AFTER MATCH N" graphic ready. Unlock action: transactional delete results + status→draft + rosters rebuild.
+**C5.4 Confirm pipeline.** Server action, one transaction: replace `match_results` for the match; learn rosters (C2.2 delta); match → confirmed + `confirmed_at`; standings recompute via C2.1; redirect to session page with the new "AFTER MATCH N" graphic ready.
 **ACCEPT:** idempotent re-confirm; unlock leaves consistent state; tests cover both paths.
 
 ### C6 — Finale
 
-**C6.1 MVP editor + lock.** `/sessions/[id]/mvp`: draft from C2.3; variants expander; rename/adjust kills/add via search/remove/reorder; merge two players: kills sum, variants union, canonical = the name the organizer picks; merged entry flagged as manual-merge for the graphic's variants note; Lock → `mvp_lists` write; graphic renders from locked entries only; Unlock re-opens editor.
+**C6.1 MVP editor + lock.** `/sessions/[id]/mvp`: draft from C2.3; editor actions: rename, adjust kills, add via search, remove, reorder, merge two entries (kills sum, variants union, canonical = organizer-picked name, flagged manual-merge), variants expander; Lock → `mvp_lists` write; graphic renders from locked entries only; Unlock re-opens editor.
 **ACCEPT:** post-lock re-export identical.
 
 **C6.2 Finalize.** Mark complete → standings subtitle switches to "FINAL RESULTS"; MVP promoted in graphics tab; warning if incomplete; re-open allowed.

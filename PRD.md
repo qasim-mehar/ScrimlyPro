@@ -34,7 +34,7 @@ Scope decision: per-match result graphics are NOT produced in v1 (organizers sha
 
 ### F1 — Session creation
 
-Wizard: (a) basics — name, planned matches 1–6, team count 4–25, aesthetic (3 choices); (b) teams — bulk textarea (split on newline/comma) + per-team optional logo (client-resized 256px JPEG → data URL); (c) confirm summary with scoring table shown read-only. Validations per ERD constraints. On submit: session + teams rows; redirect to session page; announcement graphic available immediately.
+Wizard: (a) basics — name, planned matches 1–6, team count 4–25, aesthetic (3 choices); (b) teams — bulk textarea (split on newline/comma) + per-team optional logo (client-resized 256px PNG data URL, alpha-preserving); (c) confirm summary with scoring table shown read-only. Validations per ERD constraints. On submit: session + teams rows; redirect to session page; announcement graphic available immediately.
 
 ### F2 — Screenshot ingest (OCR)
 
@@ -71,7 +71,7 @@ Wizard: (a) basics — name, planned matches 1–6, team count 4–25, aesthetic
 
 - Collect per-player kills from all confirmed matches (team-joined).
 - Merge name variants within a team only, never across teams: exact normalized match, OR Levenshtein ≤2 with normalized length ≥4.
-- Draft list → editor (rename, adjust kills, add via search, remove, reorder, merge two entries, variants expander) → Lock. MVP graphic renders ONLY from the locked list. Unlock allowed.
+- Draft list → editor (rename, adjust kills, add via search, remove, reorder, merge two entries (kills sum, variants union, canonical = organizer-picked name, flagged manual-merge), variants expander) → Lock. MVP graphic renders ONLY from the locked list. Unlock allowed.
 
 ### F6 — Graphics
 
