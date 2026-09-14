@@ -44,9 +44,9 @@ Wizard: (a) basics — name, planned matches 1–6, team count 4–25, aesthetic
 - Validation before the form ever renders:
   - V1 squad count == session team_count → else `MISSING_SQUADS` `{extracted,expected}`
   - V2 placements exactly 1..N, unique, no gaps → `BAD_PLACEMENTS`
-  - V3 squad size 1–4; name 1–30 chars; kills 0–15 → `BAD_KILLS`
-  - V4 lobby-wide total kills ≤ 99 → `BAD_KILLS`
-- On failure: ONE automatic retry appending a corrective note, then a typed error. Manual fallback always exists (add rows by hand).
+  - V3 squad size 1–4; name 1–30 chars; kills 0–20 → `BAD_KILLS` (failures = V1–V3 only; 16–19 are legit on Rondo — recalls inflate individual totals; 20 still catches digit misreads like 77/99)
+  - V4 lobby-wide total kills > 99 → soft warning `LOBBY_KILLS_HIGH{total}` — never a failure, never retried. Rondo recalls (eliminated players return and can die again) legitimately exceed 99 — e.g. a 19-squad Rondo match produced 109 lobby kills — so a human judges (Rondo recalls vs OCR double-count) in the review form.
+- On failure (V1–V3 only): ONE automatic retry appending a corrective note, then a typed error. Warnings never retry: retrying on lobby kills > 99 would pressure the model to fabricate lower numbers when the read is correct. Manual fallback always exists (add rows by hand).
 - Parsed JSON persisted on the match row (draft); reopening a draft loads it — no second Gemini call.
 - Dev fixture mode (env-gated, off by default) returns sample data for matches 1–3 so the flow is testable without a key.
 
@@ -57,6 +57,7 @@ Wizard: (a) basics — name, planned matches 1–6, team count 4–25, aesthetic
 - "Accept all suggestions" fills every empty dropdown with its best candidate (still changeable).
 - Yellow highlight on OCR-flagged low-confidence cells.
 - `MISSING_SQUADS` → banner + "add squad row" button.
+- `LOBBY_KILLS_HIGH{total}` → non-blocking warning banner showing the lobby kill total for human review (never blocks confirm, never retries).
 - Confirm disabled until every squad maps to a distinct team.
 - The engine only SUGGESTS; a human confirms every mapping, every match (tags and rosters are hints, not truth — substitutes and tag-less teams are normal).
 
@@ -93,7 +94,7 @@ Kills: 1 point each. Placement: 1st=10, 2nd=6, 3rd=5, 4th=4, 5th=3, 6th=2, 7th=1
 {"kill_points":1,"placement_points":{"1":10,"2":6,"3":5,"4":4,"5":3,"6":2,"7":1,"8":1},"default_placement_points":0}
 ```
 
-Sanity bounds: kills 0–15/player (≥8 flagged "verify" in UI), squads 1–4 players, lobby kills ≤ 99.
+Sanity bounds: kills 0–20/player (≥8 flagged "verify" in UI; 16–19 are legit on Rondo — recalls inflate individual totals; 20 still catches digit misreads like 77/99), squads 1–4 players, lobby kills > 99 → `LOBBY_KILLS_HIGH{total}` soft warning (Rondo recalls legitimately exceed 99; a human judges, the validator doesn't block).
 
 ## 7. Edge cases → required behavior
 
@@ -103,6 +104,7 @@ Sanity bounds: kills 0–15/player (≥8 flagged "verify" in UI), squads 1–4 p
 | Substitute / zero roster overlap | weak or no suggestion; manual dropdown; fast |
 | OCR missed squads (screenshot gap) | MISSING_SQUADS banner; manual row add; never dead-end |
 | OCR duplicated squad across overlapping screenshots | prompt dedupes; V2 rejects; auto-retry once |
+| Rondo lobby total > 99 (recalls — eliminated players return and die again) | `LOBBY_KILLS_HIGH{total}` warning banner; human confirms; never a failure, never retried |
 | Wrong kill parsed | editable in form before confirm |
 | Fix a confirmed match | Unlock → edit → re-confirm; everything recomputes |
 | Session ended under planned matches | final graphics allowed + warning banner |
