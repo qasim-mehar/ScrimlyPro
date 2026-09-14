@@ -111,3 +111,26 @@ Env: copy `.env.example` → `.env.local`. All optional in C1.1.
 - **Banner placement:** `NudgeBanner` renders at the top of the Matches tab (the default SSR-rendered tab). The Graphics tab MVP card swaps the "Lock Top 5" link for the embedded `MvpPreview` only when `mvp.locked && entries.length > 0`.
 - **Verification limitation:** no automation browser (Playwright/Puppeteer) is installed and no browser tool is available in this environment, so the client-only Graphics-tab embed and the PNG download could not be exercised end-to-end; they are covered instead by the pure `toMvpDisplay`/projection tests plus the human checklist. Server-rendered branches were verified against the live dev server on 3010: seed (active 2/6, unlocked) → no nudge; completed unlocked → "Session completed — Top 5 not locked yet"; completed locked → no banner (and the RSC prop payload carries `locked:true` + entry names); a synthetic 2/2 active session → "All 2 matches confirmed — finalize the scrim" + Mark Complete. Scratch DB mutations were reverted with `db:seed`.
 - **Gates:** `npm run lint` zero, `next build` green, `npm test` 16 files / 214 (212 + 2) green, zero `any` tokens over changed files, `actions.ts` untouched.
+
+## C7.1a notes (2026-09-14, lane/polish)
+
+**Glyph torture audit (AUDIT-ONLY — no fonts/deps/stacks touched).** Verified with headless Chrome over CDP on the dev server at :3030: `/dev/glyphs` renders all three public graphics from the torture fixtures; each exported via the real `exportPng` (html-to-image, exact 1080×1620) and inspected. Verdict: **no tofu in any exported PNG** — every class below rendered legibly from system-font fallback and survived foreignObject export.
+
+| Glyph class | Example(s) | On-screen | Exported PNG | Notes |
+|---|---|---|---|---|
+| Arabic | أحمد, حسیب, ن in TFXMAنSOOR | ✅ | ✅ | Connected forms correct; fallback metrics differ from Rajdhani (glyph sits at a slightly different baseline/size) but fully legible. RTL ordering within the string rendered as expected. |
+| Katakana | ハナン, ツ | ✅ | ✅ | Clean, full-size fallback glyphs. |
+| CJK | 卍, 乡 | ✅ | ✅ | Rendered; 卍 in 『卍lhp』, 乡 added for the brief's CJK class. |
+| Fullwidth | ＮＣＴ | ✅ | ✅ | Rendered as wide forms (intrinsic width), not tofu. |
+| Greek | Λ (KHΛN), Δ (SUPRΔ) | ✅ | ✅ | Clean. |
+| Diacritics | Šlayer, ínvaders, ínvSYÇØ, Fł〆Wahab | ✅ | ✅ | Composed Latin diacritics fine. |
+| Symbols | ★, 〆, ∠, →, 『』 | ✅ | ✅ | All render; 〆 is the stylized Noto Symbols/Segoe variant. |
+| Middot | Bawa · Qadra, NMS · TITANIUM | ✅ | ✅ | Fine. |
+
+**Watermark verdict (open since C3.1):** settled — `scrimlypro.com` renders **bottom-right** in all three exported PNGs, right edge at x=1040 (slot x=760 + w=280, right-aligned), sitting ~20–50px above the bottom edge (slot y=1570, 26px). Observed on 3/3 exports; no clipping. (In the 7-row MVP torture export the extra rows run into the watermark band — MVP is authored for 5 rows, so not an audit defect.)
+
+- **Findings → follow-up decision:** all classes pass with zero dependencies; the banked font risk closes unless the human's own eyes disagree. Evidence PNGs: `glyph-audit/exported-{standings,mvp,announcement}.png`, zooms, watermark crops, plus 404/error screenshots (temp dir, not committed).
+- **error.tsx prop is `retry`, not `reset`:** Next 16.3 makes `retry` the stable error-boundary prop (`reset` remains an alternative). `app/error.tsx` accepts both (`retry ?? reset`) so [Try again] works on either; `global-error.tsx` uses the brief's [Reload] → `window.location.reload()`.
+- **Fixtures are verbatim live-OCR strings** (`lib/fixtures/glyphNames.ts`); the lone CJK `乡` is included only because the audit brief names it as a class to report.
+- **Planned PLAN.md landing note (next docs commit; PLAN.md not owned here):** "C7.1a — CARVE-OUT from C7.1 (parallel-able): glyph torture audit (dev route + real-OCR dataset, exported-PNG legibility, watermark position evidence) + root error/not-found/global-error pages. C7.1 retains: full 375px audit, loading/empty-state sweep, README/userdocs, final acceptance gates. Do not execute C7.1 until C5.3 + C6.2 + C7.1a are all merged."
+- **Gates:** `npm run lint` zero, `next build` green (incl. `/dev/glyphs`, `/dev/boom`), `npm test` 17 files / 217 green; `package.json` diff empty; 404 shows themed "Page not found" + Home; `/dev/boom` shows themed error card with dev message + working [Try again].
