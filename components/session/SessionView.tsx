@@ -6,12 +6,15 @@ import { useState } from "react";
 import { reopenSessionAction } from "@/app/sessions/[id]/actions";
 import type { StandingRow, TeamRow } from "@/lib/scoring";
 import type {
+  SessionNudge,
+  SessionPageData,
   SessionPageMatch,
   SessionPageSession,
 } from "@/lib/sessions/queries";
 
+import { CompleteButton } from "./CompleteButton";
 import { GraphicsTab } from "./GraphicsTab";
-import { CompleteButton, MatchesTab } from "./MatchesTab";
+import { MatchesTab } from "./MatchesTab";
 import { StandingsTab } from "./StandingsTab";
 
 type SessionViewProps = {
@@ -22,6 +25,8 @@ type SessionViewProps = {
   standings: Array<StandingRow & { rank: number }>;
   subtitle: string;
   nextMatch: number | null;
+  mvp: SessionPageData["mvp"];
+  nudge: SessionNudge;
 };
 
 type TabId = "matches" | "standings" | "graphics";
@@ -78,6 +83,8 @@ export default function SessionView({
   standings,
   subtitle,
   nextMatch,
+  mvp,
+  nudge,
 }: SessionViewProps) {
   const [tab, setTab] = useState<TabId>("matches");
   const isCompleted = session.status === "completed";
@@ -132,7 +139,12 @@ export default function SessionView({
       </nav>
 
       {tab === "matches" ? (
-        <MatchesTab session={session} matches={matches} nextMatch={nextMatch} />
+        <MatchesTab
+          session={session}
+          matches={matches}
+          nextMatch={nextMatch}
+          nudge={nudge}
+        />
       ) : null}
       {tab === "standings" ? (
         <StandingsTab standings={standings} confirmedCount={confirmedCount} />
@@ -145,6 +157,7 @@ export default function SessionView({
           standings={standings}
           subtitle={subtitle}
           confirmedCount={confirmedCount}
+          mvp={mvp}
         />
       ) : null}
     </main>

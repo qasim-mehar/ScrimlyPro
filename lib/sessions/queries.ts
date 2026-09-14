@@ -4,8 +4,10 @@ import type { Db } from "@/lib/db/client";
 import {
   matchResults,
   matches,
+  mvpLists,
   sessions,
   teams,
+  type MvpEntry,
   type ScoringRules,
 } from "@/lib/db/schema";
 import type { ResultRow, TeamRow } from "@/lib/scoring";
@@ -34,6 +36,9 @@ export type SessionPageData = {
   matches: SessionPageMatch[];
   confirmedCount: number;
   results: ResultRow[];
+  // Locked Top-5 list (C6.1). entries is null when no mvp_lists row exists;
+  // locked implies 5 entries by C6.1 validation, but callers guard on length.
+  mvp: { locked: boolean; entries: MvpEntry[] | null };
 };
 
 /**
@@ -126,13 +131,47 @@ export function getSessionPageData(
       m.status === "confirmed" ? (winnerByMatchId.get(m.id) ?? null) : null,
   }));
 
+  const mvpRow = db
+    .select({ locked: mvpLists.locked, entries: mvpLists.entries })
+    .from(mvpLists)
+    .where(eq(mvpLists.sessionId, sessionId))
+    .get();
+
   return {
     session: sessionRow,
     teams: teamRows,
     matches: matchList,
     confirmedCount: confirmedIds.length,
     results: resultRows,
+    mvp: mvpRow
+      ? { locked: mvpRow.locked, entries: mvpRow.entries }
+      : { locked: false, entries: null },
   };
+}
+
+export type SessionNudge =
+  | { kind: "none" }
+  | { kind: "finalize" } // all planned confirmed, still active, MVP unlocked
+  | { kind: "mvp-pending" }; // completed, MVP not locked
+
+/**
+ * Small pure state machine (C6.2) for the session page banners — trivially
+ * testable truth table, no DB. "none" renders nothing.
+ */
+export function sessionNudge(
+  status: string,
+  confirmedCount: number,
+  plannedMatches: number,
+  mvpLocked: boolean,
+): SessionNudge {
+  if (status === "completed") {
+    return mvpLocked ? { kind: "none" } : { kind: "mvp-pending" };
+  }
+  if (mvpLocked) return { kind: "none" };
+  if (plannedMatches > 0 && confirmedCount >= plannedMatches) {
+    return { kind: "finalize" };
+  }
+  return { kind: "none" };
 }
 
 /**

@@ -15,9 +15,9 @@ import {
   reopenSession,
   unlockMatch,
 } from "@/lib/sessions/lifecycle";
-import { getSessionPageData, nextMatchNumber } from "@/lib/sessions/queries";
+import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/sessions/queries";
 
-const { matchResults, matches, rosters, sessions, teams } = schema;
+const { matchResults, matches, mvpLists, rosters, sessions, teams } = schema;
 
 const RULES = {
   kill_points: 1,
@@ -456,5 +456,57 @@ describe("session page", () => {
         )
         .all(),
     ).toHaveLength(1);
+  });
+
+  it("sessionNudge truth table (C6.2)", () => {
+    // all planned confirmed, still active, MVP unlocked → finalize
+    expect(sessionNudge("active", 6, 6, false)).toEqual({ kind: "finalize" });
+    // still short of plan → nothing
+    expect(sessionNudge("active", 5, 6, false)).toEqual({ kind: "none" });
+    // active complete but already locked → nothing
+    expect(sessionNudge("active", 6, 6, true)).toEqual({ kind: "none" });
+    expect(sessionNudge("active", 5, 6, true)).toEqual({ kind: "none" });
+    // completed without a lock → mvp-pending (regardless of confirmed count)
+    expect(sessionNudge("completed", 2, 6, false)).toEqual({
+      kind: "mvp-pending",
+    });
+    expect(sessionNudge("completed", 6, 6, false)).toEqual({
+      kind: "mvp-pending",
+    });
+    // completed AND locked → settled
+    expect(sessionNudge("completed", 6, 6, true)).toEqual({ kind: "none" });
+  });
+
+  it("getSessionPageData reads mvp_lists: null → unlocked row → locked round-trip", () => {
+    seedTwoConfirmed(db);
+    // No row yet.
+    expect(getSessionPageData(db, "s1")!.mvp).toEqual({
+      locked: false,
+      entries: null,
+    });
+
+    const entries = [
+      { rank: 1, name: "B1", teamId: "t2", kills: 8 },
+      { rank: 2, name: "A1", teamId: "t1", kills: 6 },
+      { rank: 3, name: "C1", teamId: "t3", kills: 3 },
+      { rank: 4, name: "A2", teamId: "t1", kills: 2 },
+      { rank: 5, name: "B2", teamId: "t2", kills: 2 },
+    ];
+    db.insert(mvpLists)
+      .values({ sessionId: "s1", entries, locked: false })
+      .run();
+    // Saved-but-unlocked: entries round-trip, locked false.
+    expect(getSessionPageData(db, "s1")!.mvp).toEqual({
+      locked: false,
+      entries,
+    });
+
+    db.update(mvpLists)
+      .set({ locked: true, lockedAt: "2025-01-02T00:00:00.000Z" })
+      .where(eq(mvpLists.sessionId, "s1"))
+      .run();
+    const page = getSessionPageData(db, "s1")!;
+    expect(page.mvp.locked).toBe(true);
+    expect(page.mvp.entries).toEqual(entries);
   });
 });

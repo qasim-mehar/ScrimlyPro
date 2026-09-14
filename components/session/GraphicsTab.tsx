@@ -3,9 +3,12 @@
 import Link from "next/link";
 
 import { AnnouncementPreview } from "@/components/graphics/AnnouncementPreview";
+import { MvpPreview } from "@/components/graphics/MvpPreview";
 import { StandingsPreview } from "@/components/graphics/StandingsPreview";
 import { PARTICIPATING_TEAMS } from "@/lib/graphics/announcement";
+import { MVP_SUBTITLE, toMvpDisplay } from "@/lib/graphics/mvp";
 import type { StandingRow, TeamRow } from "@/lib/scoring";
+import type { SessionPageData } from "@/lib/sessions/queries";
 
 type GraphicsTabProps = {
   sessionId: string;
@@ -14,6 +17,7 @@ type GraphicsTabProps = {
   standings: StandingRow[];
   subtitle: string;
   confirmedCount: number;
+  mvp: SessionPageData["mvp"];
 };
 
 export function GraphicsTab({
@@ -23,6 +27,7 @@ export function GraphicsTab({
   standings,
   subtitle,
   confirmedCount,
+  mvp,
 }: GraphicsTabProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -60,16 +65,27 @@ export function GraphicsTab({
         <h2 className="font-display text-xl font-semibold tracking-widest text-gold">
           MVP
         </h2>
-        <p className="text-sm text-muted">
-          Top-5 fraggers across all confirmed matches. Review and lock before
-          sharing.
-        </p>
-        <Link
-          href={`/sessions/${sessionId}/mvp`}
-          className="flex min-h-[44px] items-center justify-center rounded-lg border border-gold/60 px-4 text-sm font-semibold text-gold"
-        >
-          Open MVP
-        </Link>
+        {mvp.locked && mvp.entries && mvp.entries.length > 0 ? (
+          <MvpPreview
+            title={sessionName}
+            subtitle={MVP_SUBTITLE}
+            organizer={null}
+            entries={toMvpDisplay(mvp.entries, teams)}
+          />
+        ) : (
+          <>
+            <p className="text-sm text-muted">
+              Top-5 fraggers across all confirmed matches. Review and lock
+              before sharing.
+            </p>
+            <Link
+              href={`/sessions/${sessionId}/mvp`}
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-gold/60 px-4 text-sm font-semibold text-gold"
+            >
+              Lock Top 5
+            </Link>
+          </>
+        )}
       </section>
     </div>
   );

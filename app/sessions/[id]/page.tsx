@@ -4,7 +4,7 @@ import SessionView from "@/components/session/SessionView";
 import { getDb } from "@/lib/db/client";
 import { standingsSubtitle, withRanks } from "@/lib/graphics/standings";
 import { computeStandings } from "@/lib/scoring";
-import { getSessionPageData, nextMatchNumber } from "@/lib/sessions/queries";
+import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/sessions/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,12 @@ export default async function SessionPage({
     data.matches.length,
     data.session.plannedMatches,
   );
+  const nudge = sessionNudge(
+    data.session.status,
+    data.confirmedCount,
+    data.session.plannedMatches,
+    data.mvp.locked,
+  );
 
   return (
     <SessionView
@@ -38,6 +44,8 @@ export default async function SessionPage({
       standings={standings}
       subtitle={subtitle}
       nextMatch={next}
+      mvp={data.mvp}
+      nudge={nudge}
     />
   );
 }
