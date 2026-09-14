@@ -101,3 +101,26 @@ Env: copy `.env.example` → `.env.local`. All optional in C1.1.
 - **Cross-team merge follows the kept name:** merging two rows from different teams is not blocked; the merged row takes the `teamId` of the entry whose name the organizer keeps. The showcase path (same-team drift pair) is unaffected.
 - **Validation shared client/server:** `validateMvpEntries` is pure (no DB) and imported directly by the client editor for inline issues and the Lock gate; `lockMvpList` re-validates server-side against the session's teams loaded from the injected db handle, so client gating is never trusted.
 - **Gates:** `npm run lint` zero, `next build` green (incl. `/sessions/[id]/mvp`), `npm test` 13 files / 183 green, seed 11 PASS.
+
+## C7.1a notes (2026-09-14, lane/polish)
+
+**Glyph torture audit (AUDIT-ONLY — no fonts/deps/stacks touched).** Verified with headless Chrome over CDP on the dev server at :3030: `/dev/glyphs` renders all three public graphics from the torture fixtures; each exported via the real `exportPng` (html-to-image, exact 1080×1620) and inspected. Verdict: **no tofu in any exported PNG** — every class below rendered legibly from system-font fallback and survived foreignObject export.
+
+| Glyph class | Example(s) | On-screen | Exported PNG | Notes |
+|---|---|---|---|---|
+| Arabic | أحمد, حسیب, ن in TFXMAنSOOR | ✅ | ✅ | Connected forms correct; fallback metrics differ from Rajdhani (glyph sits at a slightly different baseline/size) but fully legible. RTL ordering within the string rendered as expected. |
+| Katakana | ハナン, ツ | ✅ | ✅ | Clean, full-size fallback glyphs. |
+| CJK | 卍, 乡 | ✅ | ✅ | Rendered; 卍 in 『卍lhp』, 乡 added for the brief's CJK class. |
+| Fullwidth | ＮＣＴ | ✅ | ✅ | Rendered as wide forms (intrinsic width), not tofu. |
+| Greek | Λ (KHΛN), Δ (SUPRΔ) | ✅ | ✅ | Clean. |
+| Diacritics | Šlayer, ínvaders, ínvSYÇØ, Fł〆Wahab | ✅ | ✅ | Composed Latin diacritics fine. |
+| Symbols | ★, 〆, ∠, →, 『』 | ✅ | ✅ | All render; 〆 is the stylized Noto Symbols/Segoe variant. |
+| Middot | Bawa · Qadra, NMS · TITANIUM | ✅ | ✅ | Fine. |
+
+**Watermark verdict (open since C3.1):** settled — `scrimlypro.com` renders **bottom-right** in all three exported PNGs, right edge at x=1040 (slot x=760 + w=280, right-aligned), sitting ~20–50px above the bottom edge (slot y=1570, 26px). Observed on 3/3 exports; no clipping. (In the 7-row MVP torture export the extra rows run into the watermark band — MVP is authored for 5 rows, so not an audit defect.)
+
+- **Findings → follow-up decision:** all classes pass with zero dependencies; the banked font risk closes unless the human's own eyes disagree. Evidence PNGs: `glyph-audit/exported-{standings,mvp,announcement}.png`, zooms, watermark crops, plus 404/error screenshots (temp dir, not committed).
+- **error.tsx prop is `retry`, not `reset`:** Next 16.3 makes `retry` the stable error-boundary prop (`reset` remains an alternative). `app/error.tsx` accepts both (`retry ?? reset`) so [Try again] works on either; `global-error.tsx` uses the brief's [Reload] → `window.location.reload()`.
+- **Fixtures are verbatim live-OCR strings** (`lib/fixtures/glyphNames.ts`); the lone CJK `乡` is included only because the audit brief names it as a class to report.
+- **Planned PLAN.md landing note (next docs commit; PLAN.md not owned here):** "C7.1a — CARVE-OUT from C7.1 (parallel-able): glyph torture audit (dev route + real-OCR dataset, exported-PNG legibility, watermark position evidence) + root error/not-found/global-error pages. C7.1 retains: full 375px audit, loading/empty-state sweep, README/userdocs, final acceptance gates. Do not execute C7.1 until C5.3 + C6.2 + C7.1a are all merged."
+- **Gates:** `npm run lint` zero, `next build` green (incl. `/dev/glyphs`, `/dev/boom`), `npm test` 17 files / 217 green; `package.json` diff empty; 404 shows themed "Page not found" + Home; `/dev/boom` shows themed error card with dev message + working [Try again].
