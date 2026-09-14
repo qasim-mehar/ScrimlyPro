@@ -7,6 +7,8 @@ import type { ImageInput } from "@/lib/gemini/client";
 export const MIN_IMAGES = 1;
 export const MAX_IMAGES = 14;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB per image
+/** Total across all images — the client mirrors this before uploading. */
+export const TOTAL_PAYLOAD_BYTES = 20 * 1024 * 1024; // 20MB total
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png"] as const;
 
 export type OcrFormError = { code: "BAD_REQUEST"; message: string };
@@ -63,6 +65,17 @@ export async function parseOcrFormData(form: FormData): Promise<ParseResult> {
   }
 
   const images: ImageInput[] = [];
+  let totalBytes = 0;
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (entry instanceof File) totalBytes += entry.size;
+  }
+  if (totalBytes > TOTAL_PAYLOAD_BYTES) {
+    return fail(
+      `Total upload ${(totalBytes / 1024 / 1024).toFixed(1)}MB exceeds 20MB — re-capture fewer/smaller screenshots.`,
+    );
+  }
+
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     const label = `image ${i + 1}`;
