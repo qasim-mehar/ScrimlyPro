@@ -17,7 +17,7 @@ User: solo scrim organizer; mobile-first; uploads happen immediately after each 
 ## 3. The Core Loop (heart of the product — CUMULATIVE model)
 
 1. Create session: name, planned matches (1–6), team count (4–25), team names (bulk paste), optional logos, aesthetic choice.
-2. Ingest match N: upload 1–10 result screenshots → ONE Gemini call → validated squads JSON (placement, players, per-player kills).
+2. Ingest match N: upload 1–14 result screenshots → ONE Gemini call → validated squads JSON (placement, players, per-player kills).
 3. Review form: rows = this match's squads sorted by placement (placement, kills, expandable players — all editable, low-confidence cells highlighted). Each row has a team-name dropdown, pre-filled by suggestions learned from earlier matches. Organizer confirms every mapping (distinct teams, no duplicates).
 4. Confirm → points stored → one graphic is produced: "OVERALL STANDINGS — AFTER MATCH N" (cumulative: adds this match's points to all previous). Downloadable 1080×1620 PNG.
 5. Repeat for the next match. Match 2+ dropdowns auto-suggested from match-1 rosters; human still confirms.
@@ -38,7 +38,7 @@ Wizard: (a) basics — name, planned matches 1–6, team count 4–25, aesthetic
 
 ### F2 — Screenshot ingest (OCR)
 
-- Upload 1–10 images; client-side downscale to ≤1600px longest edge, JPEG q0.85 (strips EXIF), each ≤4MB after downscale.
+- Upload 1–14 screenshots (≈10 for a 16-team lobby; more for larger); client-side downscale to ≤1600px longest edge, JPEG q0.85 (strips EXIF), each ≤4MB after downscale.
 - ONE Gemini request with ALL images (cost ≈ $0.004/match).
 - Model: env `GEMINI_MODEL` (default `gemini-3.1-flash-lite`) with 404-fallback chain. 60s timeout. Key only in `/api/ocr` route.
 - Validation before the form ever renders:

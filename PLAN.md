@@ -98,7 +98,7 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 
 ### C4 — Session flow UI
 
-**C4.1 Create wizard.** `/sessions/new`, 3 steps per PRD F1: basics → teams (bulk paste split newline/comma, count badge, per-team logo upload → 256px JPEG data URL, "load sample teams" dev helper) → confirm summary (read-only scoring table). Server action inserts session + teams; redirect to session page. All PRD validations.
+**C4.1 Create wizard.** `/sessions/new`, 3 steps per PRD F1: basics → teams (bulk paste split newline/comma, count badge, per-team logo upload → 256px PNG data URL (alpha-preserving), "load sample teams" dev helper) → confirm summary (read-only scoring table). Server action inserts session + teams; redirect to session page. All PRD validations.
 **ACCEPT:** 16 teams via bulk paste; wizard usable at 375px; logo stored.
 
 **C4.2 Session page.** `/sessions/[id]`: header (name, aesthetic, N/M confirmed, status), match list (draft/confirmed states, "Add Match N" gated to `planned_matches`, Unlock action per confirmed match (REASSIGNED from C5.4 — session-page functionality, deps met; C5.4 = confirm pipeline only)), tabs: Standings (HTML table from C2.1, full tie-break), Graphics (announcement / latest overall / MVP previews + Download via C3), "Mark complete" (warns if confirmed < planned; re-openable). Server components + server actions; loading skeletons.
@@ -106,7 +106,7 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 
 ### C5 — Match loop (core of the core)
 
-**C5.1 Upload UI.** Multi-select 1–10 images; client downscale (≤1600px, JPEG q0.85); thumbnail strip remove/reorder; POST FormData (images, sessionId, matchNo) to `/api/ocr`; loading + typed error banners with retry.
+**C5.1 Upload UI.** Multi-select 1–14 images; client downscale (≤1600px, JPEG q0.85); thumbnail strip remove/reorder; POST FormData (images, sessionId, matchNo) to `/api/ocr`; loading + typed error banners with retry.
 **ACCEPT:** 7×3MB photos → payload each ≤4MB; reorder persists.
 
 **C5.2 /api/ocr route.** Contract: validate input; if `SAMPLE_OCR=1` and no key → return fixture for matchNo 1–3 (else 400); else `generateSquads` → `validateSquads` → `withRetry` → upsert match row (status draft, raw_squad_data) → return squads or typed error. Raw images never persisted.
@@ -115,7 +115,7 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 **C5.3 Review & mapping form.** `/sessions/[id]/matches/[matchNo]` per PRD F3 in full: rows by placement; editable placement/kills; expandable players; team dropdown (chosen teams filtered out); suggestion tiers with colors; accept-all; low-confidence highlights; `MISSING_SQUADS` banner + manual add-row; confirm gating (distinct teams, all mapped); draft reopen loads `raw_squad_data` (NO new OCR). (If the agent stalls, split into C5.3a layout / C5.3b mapping logic.)
 **ACCEPT:** full confirm flow with fixtures; gating airtight; mobile keyboard-friendly.
 
-**C5.4 Confirm pipeline.** Server action, one transaction: replace `match_results` for the match; learn rosters (C2.2 delta); match → confirmed + `confirmed_at`; standings recompute via C2.1; redirect to session page with the new "AFTER MATCH N" graphic ready.
+**C5.4 Confirm pipeline.** C5.4 — FOLDED into C5.3. Scope (confirm pipeline) is now Phase B of C5.3. Rationale: a review form whose Confirm writes nothing is a stub; the loop must close in one chunk. The Unlock action was already reassigned to C4.2 in an earlier fold. Do not execute C5.4 standalone.
 **ACCEPT:** idempotent re-confirm; unlock leaves consistent state; tests cover both paths.
 
 ### C6 — Finale
