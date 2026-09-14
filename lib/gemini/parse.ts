@@ -8,6 +8,7 @@ import {
 import {
   validateSquads,
   type ValidationFailure,
+  type ValidationWarning,
 } from "@/lib/gemini/validate";
 
 function failureReason(failure: ValidationFailure): string {
@@ -25,18 +26,32 @@ function failureReason(failure: ValidationFailure): string {
  * generateSquads → validateSquads, with ONE corrective retry: the second call
  * appends "Previous extraction failed: {reason}. Fix this." to the prompt.
  * Still failing → GeminiError("VALIDATION_FAILED") carrying the failure.
+ *
+ * Retrying on lobby kills > 99 would pressure the model to fabricate lower
+ * numbers when the read is correct (Rondo recalls legitimately exceed 99) —
+ * warnings go to the human instead.
  */
 export async function parseMatchSquads(
   images: ImageInput[],
   teamCount: number,
   opts?: { callModel?: CallModel },
-): Promise<{ squads: RawSquad[]; model: string; retried: boolean }> {
+): Promise<{
+  squads: RawSquad[];
+  model: string;
+  retried: boolean;
+  warnings: ValidationWarning[];
+}> {
   const first = await generateSquads(images, teamCount, {
     callModel: opts?.callModel,
   });
   const firstResult = validateSquads(first.squads, teamCount);
   if (firstResult.ok) {
-    return { squads: firstResult.squads, model: first.model, retried: false };
+    return {
+      squads: firstResult.squads,
+      model: first.model,
+      retried: false,
+      warnings: firstResult.warnings,
+    };
   }
 
   const second = await generateSquads(images, teamCount, {
@@ -45,7 +60,12 @@ export async function parseMatchSquads(
   });
   const secondResult = validateSquads(second.squads, teamCount);
   if (secondResult.ok) {
-    return { squads: secondResult.squads, model: second.model, retried: true };
+    return {
+      squads: secondResult.squads,
+      model: second.model,
+      retried: true,
+      warnings: secondResult.warnings,
+    };
   }
 
   throw new GeminiError(

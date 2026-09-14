@@ -5,18 +5,27 @@ export type ValidationFailure =
   | { code: "BAD_PLACEMENTS"; detail: string }
   | { code: "BAD_KILLS"; detail: string };
 
+export type ValidationWarning = {
+  code: "LOBBY_KILLS_HIGH";
+  total: number;
+};
+
 export type ValidationResult =
-  | { ok: true; squads: RawSquad[] }
-  | { ok: false; failure: ValidationFailure };
+  | { ok: true; squads: RawSquad[]; warnings: ValidationWarning[] }
+  | { ok: false; failure: ValidationFailure }; // failures = V1–V3 only
 
 const MAX_PLAYERS = 4;
 const MAX_NAME_LENGTH = 30;
-const MAX_KILLS = 15;
-const MAX_LOBBY_KILLS = 99;
+// Rondo recalls inflate individual totals — legit 16–19s must pass;
+// 77/99 digit misreads are still caught above 20.
+export const MAX_PLAYER_KILLS = 20;
+// Soft V4: lobby kills > 99 means Rondo recalls OR OCR double-count;
+// a human judges, the validator doesn't.
+export const LOBBY_KILLS_WARN_THRESHOLD = 99;
 
 /**
  * PRD §F2 V1–V4, checked in order. Pure: failures are returned as values,
- * never thrown.
+ * never thrown. V4 is a soft warning (LOBBY_KILLS_HIGH), never a failure.
  */
 export function validateSquads(
   squads: RawSquad[],
@@ -60,7 +69,7 @@ export function validateSquads(
     }
   }
 
-  // V3: squad size 1–4, name 1–30 chars (trimmed), kills 0–15
+  // V3: squad size 1–4, name 1–30 chars (trimmed), kills 0–MAX_PLAYER_KILLS
   for (const squad of squads) {
     const label = `squad placement ${squad.placement}`;
     if (squad.players.length < 1 || squad.players.length > MAX_PLAYERS) {
@@ -86,33 +95,28 @@ export function validateSquads(
       if (
         !Number.isInteger(player.kills) ||
         player.kills < 0 ||
-        player.kills > MAX_KILLS
+        player.kills > MAX_PLAYER_KILLS
       ) {
         return {
           ok: false,
           failure: {
             code: "BAD_KILLS",
-            detail: `${label}, player "${player.name}": kills ${player.kills} (expected 0–${MAX_KILLS})`,
+            detail: `${label}, player "${player.name}": kills ${player.kills} (expected 0–${MAX_PLAYER_KILLS})`,
           },
         };
       }
     }
   }
 
-  // V4: lobby-wide total kills ≤ 99
+  // V4-as-warning: lobby-wide total kills > threshold → warning, never failure
   const totalKills = squads.reduce(
     (sum, squad) => sum + squad.players.reduce((s, p) => s + p.kills, 0),
     0,
   );
-  if (totalKills > MAX_LOBBY_KILLS) {
-    return {
-      ok: false,
-      failure: {
-        code: "BAD_KILLS",
-        detail: `lobby kills ${totalKills} > ${MAX_LOBBY_KILLS}`,
-      },
-    };
+  const warnings: ValidationWarning[] = [];
+  if (totalKills > LOBBY_KILLS_WARN_THRESHOLD) {
+    warnings.push({ code: "LOBBY_KILLS_HIGH", total: totalKills });
   }
 
-  return { ok: true, squads };
+  return { ok: true, squads, warnings };
 }
