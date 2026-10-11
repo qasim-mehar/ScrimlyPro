@@ -263,6 +263,72 @@ describe("pmpl-light config", () => {
       expect(bg.css).toMatch(/linear-gradient/);
     }
   });
+
+  it("centers every value box on its baked art label (P4b pixel measurement)", () => {
+    // Art label ink centers, art px (1024×1536), segmented in P4b:
+    // left [rank, team, kp, pp, wwcd, total], right ditto.
+    const S = 1080 / 1024;
+    const artCenters: Array<[number, number, number, number, number, number]> = [
+      [79, 183, 296.5, 359.5, 416, 473.5],
+      [550, 650.5, 770.5, 832, 887, 945.5],
+    ];
+    config.standings.columns.forEach((col, i) => {
+      const [rankC, , kpC, ppC, wwcdC, totalC] = artCenters[i].map((v) => v * S);
+      // Whole-px boxes over fractional art centers: within 1 canvas px.
+      expect(Math.abs(col.rankX + 24 - rankC)).toBeLessThanOrEqual(1);
+      const byKey = new Map(col.statColumns.map((c) => [c.key, c.x]));
+      for (const [key, want] of [
+        ["kp", kpC],
+        ["pp", ppC],
+        ["wwcd", wwcdC],
+        ["total", totalC],
+      ] as const) {
+        expect(Math.abs(byKey.get(key)! + 29 - want)).toBeLessThanOrEqual(1);
+      }
+    });
+  });
+
+  it("keeps team/logo boxes clear of the first stat column", () => {
+    for (const col of config.standings.columns) {
+      const kpX = col.statColumns.find((c) => c.key === "kp")!.x;
+      expect(col.teamX).toBeGreaterThan(col.rankX + 48);
+      expect(col.teamX + col.teamW).toBeLessThanOrEqual(kpX - 4);
+    }
+  });
+
+  it("fills the measured table rect (rowsTop 371 / rowsBottom 1469)", () => {
+    const st = config.standings;
+    expect(st.rowY0).toBe(371);
+    for (const col of config.standings.columns) {
+      expect(col.rowsBottom).toBe(1469);
+    }
+    // Strips stay inside their table half (L 42 / divider 540 / R 1038).
+    const [left, right] = st.columns;
+    expect(left.stripX).toBeGreaterThanOrEqual(42);
+    expect(left.stripX + left.stripW).toBeLessThanOrEqual(538);
+    expect(right.stripX).toBeGreaterThanOrEqual(542);
+    expect(right.stripX + right.stripW).toBeLessThanOrEqual(1038);
+  });
+
+  it("lands the match number inside the ribbon, after the baked #", () => {
+    // Ribbon art x 383–679 y 49–95 → canvas x 404–716 y 52–100; "#" ink ends
+    // at art x583 → canvas 615. Slot must start just right of it and fit a
+    // two-digit number before the ribbon's right slant edge.
+    const sub = config.header.subtitle;
+    expect(sub.x).toBeGreaterThanOrEqual(616);
+    expect(sub.x).toBeLessThanOrEqual(630);
+    expect(sub.y).toBeGreaterThanOrEqual(50);
+    expect(sub.y).toBeLessThanOrEqual(60);
+  });
+
+  it("sits the scrim name in the clear top strip", () => {
+    // Strip verified clear (art rows 0–44, canvas 0–46) across x 295–785.
+    const title = config.header.title;
+    expect(title.y).toBeGreaterThanOrEqual(0);
+    expect(title.y + 36).toBeLessThanOrEqual(46);
+    expect(title.x).toBeGreaterThanOrEqual(290);
+    expect(title.x! + title.w!).toBeLessThanOrEqual(790);
+  });
 });
 
 describe("columnPitch / effectivePitch (row auto-fit)", () => {

@@ -185,8 +185,9 @@ const PMPL_LIGHT_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
 
 /** PMPL-light: first real art-backed template (P4). Standings renders over
  * the user's light-theme PNG; mvp/announcement are light gradient
- * placeholders until the sibling art lands. Geometry placeholders —
- * calibrated in P4b against the art's measured table zones. */
+ * placeholders until the sibling art lands. Standings geometry measured from
+ * the art pixels (P4b: 1024×1536 art → ×1.0546875 to the 1080×1620 canvas;
+ * label centers, ribbon, table rects all pixel-segmented). */
 const PMPL_LIGHT: TemplateConfig = {
   ...GEOMETRY,
   id: "pmpl-light",
@@ -199,51 +200,51 @@ const PMPL_LIGHT: TemplateConfig = {
   labelsBakedIn: true,
   subtitleMode: "matchNumber",
   header: {
-    title: { x: 90, y: 24, w: 900, align: "center" },
-    subtitle: { x: 590, y: 48, w: 100, align: "center" },
-    organizer: { x: 340, y: 120, w: 400, align: "center" },
-    titleFont: `600 34px ${FONTS}`,
+    title: { x: 295, y: 6, w: 490, align: "center" },
+    subtitle: { x: 620, y: 54, w: 80, align: "left" },
+    organizer: { x: 340, y: 104, w: 400, align: "center" },
+    titleFont: `600 30px ${FONTS}`,
     subtitleFont: `700 44px ${FONTS}`,
     organizerFont: `500 22px ${FONTS}`,
   },
   standings: {
     columns: [
       {
-        rankX: 70,
-        teamX: 130,
-        teamW: 170,
+        rankX: 59,
+        teamX: 116,
+        teamW: 158,
         statColumns: [
-          { key: "kp", x: 310 },
-          { key: "pp", x: 375 },
-          { key: "wwcd", x: 440 },
-          { key: "total", x: 505 },
+          { key: "kp", x: 284 },
+          { key: "pp", x: 350 },
+          { key: "wwcd", x: 410 },
+          { key: "total", x: 470 },
         ],
-        stripX: 60,
-        stripW: 460,
-        rowsBottom: 1445,
+        stripX: 46,
+        stripW: 490,
+        rowsBottom: 1469,
       },
       {
-        rankX: 610,
-        teamX: 670,
-        teamW: 170,
+        rankX: 556,
+        teamX: 614,
+        teamW: 158,
         statColumns: [
-          { key: "kp", x: 850 },
-          { key: "pp", x: 915 },
-          { key: "wwcd", x: 980 },
-          { key: "total", x: 1045 },
+          { key: "kp", x: 784 },
+          { key: "pp", x: 849 },
+          { key: "wwcd", x: 906 },
+          { key: "total", x: 968 },
         ],
-        stripX: 600,
-        stripW: 460,
-        rowsBottom: 1445,
+        stripX: 544,
+        stripW: 490,
+        rowsBottom: 1469,
       },
     ],
-    headerLabelsY: 372,
-    rowY0: 415,
+    headerLabelsY: 323,
+    rowY0: 371,
     rowPitch: 80,
-    rowHeight: 56,
+    rowHeight: 64,
     maxRowsLeft: 13,
-    nameFont: `600 30px ${FONTS}`,
-    statFont: `600 28px ${FONTS}`,
+    nameFont: `600 28px ${FONTS}`,
+    statFont: `600 30px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
   palette: {
