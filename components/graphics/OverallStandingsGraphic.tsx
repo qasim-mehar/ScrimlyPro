@@ -2,21 +2,21 @@
 
 import type { CSSProperties } from "react";
 import {
+  effectivePitch,
   getTemplate,
   slotToStyle,
   splitRows,
   type AestheticId,
   type StandingsColumnSpec,
-  type StatColumnKey,
   type TemplateConfig,
 } from "@/lib/graphics";
-import { STANDINGS_LABELS, withRanks } from "@/lib/graphics/standings";
+import { STANDINGS_LABELS, subtitleMatchNumber, withRanks } from "@/lib/graphics/standings";
 import type { StandingRow } from "@/lib/scoring";
 
 // Box widths prescribed by the master prompt + types.ts comments, not yet
 // TemplateConfig fields (flagged in README Assumptions for a template phase).
 const RANK_BOX_W = 48; // StandingsColumnSpec.rankX: "48 wide, centered text"
-const STAT_BOX_W = 58; // StandingsColumnSpec.statsX: "58 wide, centered"
+const STAT_BOX_W = 58; // StandingsColumnSpec.statColumns: "58 wide, centered"
 const LOGO_SIZE = 44; // PRD F6: "optional 44px logos"
 const LOGO_NAME_GAP = 52; // StandingsColumnSpec.teamX: "name shifts +52"
 
@@ -34,11 +34,12 @@ function StandingsHeader({
   organizer?: string | null;
 }) {
   const { header, palette } = config;
+  const subtitleText = config.subtitleMode === "matchNumber" ? subtitleMatchNumber(subtitle) : subtitle;
   return (
     <>
       <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>{title}</div>
       <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
-        {subtitle}
+        {subtitleText}
       </div>
       {organizer ? (
         <div style={{ ...slotToStyle(header.organizer), font: header.organizerFont, color: palette.textMuted }}>
@@ -54,15 +55,17 @@ function StandingsRow({
   col,
   row,
   rowIdx,
+  pitch,
 }: {
   config: TemplateConfig;
   col: StandingsColumnSpec;
   row: RankedRow;
   rowIdx: number;
+  pitch: number;
 }) {
   const st = config.standings;
   const { palette } = config;
-  const y = st.rowY0 + rowIdx * st.rowPitch;
+  const y = st.rowY0 + rowIdx * pitch;
   const isRankOne = row.rank === 1;
   const teamStyle: CSSProperties = {
     position: "absolute",
@@ -137,12 +140,12 @@ function StandingsRow({
       ) : (
         <div style={{ ...teamStyle, left: col.teamX, width: col.teamW }}>{row.teamName}</div>
       )}
-      {(Object.keys(col.statsX) as StatColumnKey[]).map((key) => (
+      {col.statColumns.map(({ key, x }) => (
         <div
           key={key}
           style={{
             position: "absolute",
-            left: col.statsX[key],
+            left: x,
             top: y,
             width: STAT_BOX_W,
             height: st.rowHeight,
@@ -175,28 +178,35 @@ function StandingsColumn({
     color: config.palette.textMuted,
     letterSpacing: "0.08em",
   } as const;
+  // Art-backed templates carry their own baked label row — code draws none.
+  const showLabels = !config.labelsBakedIn;
+  const pitch = effectivePitch(st.rowY0, st.rowPitch, col.rowsBottom, rows.length);
   return (
     <>
-      <div style={{ position: "absolute", left: col.rankX, width: RANK_BOX_W, textAlign: "center", ...labelStyle }}>
-        {STANDINGS_LABELS.rank}
-      </div>
-      <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>{STANDINGS_LABELS.team}</div>
-      {(Object.keys(col.statsX) as StatColumnKey[]).map((key) => (
-        <div
-          key={key}
-          style={{
-            position: "absolute",
-            left: col.statsX[key],
-            width: STAT_BOX_W,
-            textAlign: "center",
-            ...labelStyle,
-          }}
-        >
-          {STANDINGS_LABELS[key]}
-        </div>
-      ))}
+      {showLabels ? (
+        <>
+          <div style={{ position: "absolute", left: col.rankX, width: RANK_BOX_W, textAlign: "center", ...labelStyle }}>
+            {STANDINGS_LABELS.rank}
+          </div>
+          <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>{STANDINGS_LABELS.team}</div>
+          {col.statColumns.map(({ key, x }) => (
+            <div
+              key={key}
+              style={{
+                position: "absolute",
+                left: x,
+                width: STAT_BOX_W,
+                textAlign: "center",
+                ...labelStyle,
+              }}
+            >
+              {STANDINGS_LABELS[key]}
+            </div>
+          ))}
+        </>
+      ) : null}
       {rows.map((row, i) => (
-        <StandingsRow key={row.teamId} config={config} col={col} row={row} rowIdx={i} />
+        <StandingsRow key={row.teamId} config={config} col={col} row={row} rowIdx={i} pitch={pitch} />
       ))}
     </>
   );

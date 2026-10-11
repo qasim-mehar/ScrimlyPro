@@ -5,10 +5,10 @@ import { slotToStyle, type DecorShape, type Slot, type TemplateConfig } from "@/
 
 const FONT_STACK = '"Rajdhani", "Noto Sans Symbols 2", sans-serif';
 
-// brand law — do not make configurable (PRD §4: watermark always rendered; it is the growth engine)
+// brand law — position + text fixed (PRD §4: watermark always rendered; it is
+// the growth engine). Only the INK is per-theme (palette.watermarkColor).
 const WATERMARK_SLOT: Slot = { x: 760, y: 1570, w: 280, align: "right" };
 const WATERMARK_FONT = "600 26px Rajdhani, sans-serif";
-const WATERMARK_COLOR = "rgba(255,255,255,0.7)";
 
 function DecorShapeView({ shape }: { shape: DecorShape }) {
   const style: CSSProperties = {
@@ -25,14 +25,17 @@ function DecorShapeView({ shape }: { shape: DecorShape }) {
   return <div style={style} />;
 }
 
+export type GraphicVariant = "standings" | "mvp" | "announcement";
+
 type GraphicCanvasProps = {
   config: TemplateConfig;
+  variant: GraphicVariant;
   stageRef?: RefObject<HTMLDivElement | null>;
   children?: ReactNode;
 };
 
-export function GraphicCanvas({ config, stageRef, children }: GraphicCanvasProps) {
-  const background = config.background;
+export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCanvasProps) {
+  const background = config.backgrounds[variant];
   return (
     <div
       style={{
@@ -83,7 +86,7 @@ export function GraphicCanvas({ config, stageRef, children }: GraphicCanvasProps
             style={{
               ...slotToStyle(WATERMARK_SLOT),
               font: WATERMARK_FONT,
-              color: WATERMARK_COLOR,
+              color: config.palette.watermarkColor,
             }}
           >
             scrimlypro.com

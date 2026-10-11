@@ -2,14 +2,14 @@
 
 import { useRef, useState } from "react";
 
-import { getTemplate, type AestheticId } from "@/lib/graphics";
+import { AESTHETICS, getTemplate, type AestheticId } from "@/lib/graphics";
 import type { MvpDisplayEntry } from "@/lib/graphics/mvp";
 
 import { DownloadPngButton } from "./DownloadPngButton";
 import { GraphicCanvas } from "./GraphicCanvas";
 import { MvpGraphic } from "./MvpGraphic";
 
-const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom"];
+const IDS = Object.keys(AESTHETICS) as AestheticId[];
 
 type MvpPreviewProps = {
   title: string;
@@ -42,7 +42,7 @@ export function MvpPreview({ title, subtitle, organizer, entries }: MvpPreviewPr
           </button>
         ))}
       </div>
-      <GraphicCanvas config={getTemplate(aestheticId)} stageRef={stageRef}>
+      <GraphicCanvas config={getTemplate(aestheticId)} variant="mvp" stageRef={stageRef}>
         <MvpGraphic
           aestheticId={aestheticId}
           title={title}

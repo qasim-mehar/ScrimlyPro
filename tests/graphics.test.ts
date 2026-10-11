@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
 import {
   AESTHETICS,
   announcementGrid,
+  columnPitch,
+  effectivePitch,
   getTemplate,
   slotToStyle,
   splitRows,
@@ -72,9 +75,9 @@ describe("slotToStyle", () => {
 });
 
 describe("AESTHETICS registry", () => {
-  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom"];
+  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
 
-  it("exposes exactly the three aesthetic ids", () => {
+  it("exposes exactly the four aesthetic ids", () => {
     expect(Object.keys(AESTHETICS).sort()).toEqual([...IDS].sort());
   });
 
@@ -116,7 +119,7 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[]
     it("keeps stat boxes inside their column bounds with no overlaps", () => {
       config.standings.columns.forEach((col, i) => {
         const [lo, hi] = COLUMN_BOUNDS[i];
-        const boxes: Rect[] = Object.values(col.statsX).map((x) => ({ x, y: 0, w: STAT_BOX_W, h: 0 }));
+        const boxes: Rect[] = col.statColumns.map(({ x }) => ({ x, y: 0, w: STAT_BOX_W, h: 0 }));
         for (const box of boxes) {
           expect(box.x).toBeGreaterThanOrEqual(lo);
           expect(box.x + box.w).toBeLessThanOrEqual(hi);
@@ -166,7 +169,7 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[]
 
     it("defines a complete palette", () => {
       const p = config.palette;
-      for (const value of [p.accent, p.text, p.textMuted, p.rowAlt, p.wwcdBg, p.wwcdText]) {
+      for (const value of [p.accent, p.text, p.textMuted, p.rowAlt, p.wwcdBg, p.wwcdText, p.watermarkColor]) {
         expect(typeof value).toBe("string");
         expect(value.length).toBeGreaterThan(0);
       }
@@ -175,16 +178,22 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[]
     });
 
     it("uses a linear-gradient background with decor", () => {
-      expect(config.background.type).toBe("gradient");
-      if (config.background.type !== "gradient") return;
-      expect(config.background.css).toMatch(/linear-gradient/);
-      expect(config.background.decor.length).toBeGreaterThanOrEqual(2);
+      expect(config.backgrounds.standings.type).toBe("gradient");
+      if (config.backgrounds.standings.type !== "gradient") return;
+      expect(config.backgrounds.standings.css).toMatch(/linear-gradient/);
+      expect(config.backgrounds.standings.decor.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("renders stat columns in the legacy wwcd→pp→kp→total order", () => {
+      for (const col of config.standings.columns) {
+        expect(col.statColumns.map((c) => c.key)).toEqual(["wwcd", "pp", "kp", "total"]);
+      }
     });
 
     it("keeps decor bounding boxes out of both row strip rects", () => {
-      expect(config.background.type).toBe("gradient");
-      if (config.background.type !== "gradient") return;
-      for (const shape of config.background.decor) {
+      expect(config.backgrounds.standings.type).toBe("gradient");
+      if (config.backgrounds.standings.type !== "gradient") return;
+      for (const shape of config.backgrounds.standings.decor) {
         const bbox: Rect = {
           x: shape.x,
           y: shape.y,
@@ -198,3 +207,94 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[]
     });
   },
 );
+
+describe("pmpl-light config", () => {
+  const config: TemplateConfig = getTemplate("pmpl-light");
+
+  it("uses the exact 1080×1620 canvas", () => {
+    expect(config.canvas).toEqual({ w: 1080, h: 1620 });
+  });
+
+  it("points standings at the real art file, which exists on disk", () => {
+    expect(config.backgrounds.standings).toEqual({
+      type: "image",
+      src: "/templates/pmpl-light/overall.png",
+    });
+    // Public-dir file backing the src above — a missing file fails the build,
+    // not the organizer's export.
+    expect(() => readFileSync("public/templates/pmpl-light/overall.png")).not.toThrow();
+  });
+
+  it("ships art with an exact 2:3 ratio (IHDR header)", () => {
+    const bytes = readFileSync("public/templates/pmpl-light/overall.png");
+    const w = bytes.readUInt32BE(16);
+    const h = bytes.readUInt32BE(20);
+    expect(w * 3).toBe(h * 2);
+  });
+
+  it("orders stat columns kp → pp → wwcd → total, each exactly once", () => {
+    for (const col of config.standings.columns) {
+      expect(col.statColumns.map((c) => c.key)).toEqual(["kp", "pp", "wwcd", "total"]);
+    }
+  });
+
+  it("bakes labels in and takes only the match number for the subtitle", () => {
+    expect(config.labelsBakedIn).toBe(true);
+    expect(config.subtitleMode).toBe("matchNumber");
+  });
+
+  it("uses the light palette values", () => {
+    expect(config.palette.text).toBe("#1c2333");
+    expect(config.palette.textMuted).toBe("#5b6678");
+    expect(config.palette.accent).toBe("#0e7ac4");
+    expect(config.palette.wwcdBg).toBe("rgba(230,160,20,0.16)");
+    expect(config.palette.wwcdText).toBe("#8a5a00");
+  });
+
+  it("renders a dark watermark ink for the light theme", () => {
+    expect(config.palette.watermarkColor).toBe("rgba(20,28,44,0.55)");
+    expect(config.palette.watermarkColor).not.toContain("255,255,255");
+  });
+
+  it("falls mvp/announcement back to the light gradient (never a broken render)", () => {
+    for (const bg of [config.backgrounds.mvp, config.backgrounds.announcement]) {
+      expect(bg.type).toBe("gradient");
+      if (bg.type !== "gradient") continue;
+      expect(bg.css).toMatch(/linear-gradient/);
+    }
+  });
+});
+
+describe("columnPitch / effectivePitch (row auto-fit)", () => {
+  it("19 teams, rowsTop 415 / rowsBottom 1445 → 1030/10 left, 1030/9 right", () => {
+    expect(columnPitch(415, 1445, 10)).toBeCloseTo(103, 10);
+    expect(columnPitch(415, 1445, 9)).toBeCloseTo(1030 / 9, 10);
+  });
+
+  it("25 teams → 13/12, 16 teams → 8/8", () => {
+    expect(columnPitch(415, 1445, 13)).toBeCloseTo(1030 / 13, 10);
+    expect(columnPitch(415, 1445, 12)).toBeCloseTo(1030 / 12, 10);
+    expect(columnPitch(415, 1445, 8)).toBeCloseTo(1030 / 8, 10);
+  });
+
+  it("places the last row inside bounds at 16, 19 and 25 teams", () => {
+    const rowY0 = 415;
+    const rowsBottom = 1445;
+    const rowHeight = 60;
+    for (const [left, right] of [
+      [8, 8],
+      [10, 9],
+      [13, 12],
+    ] as Array<[number, number]>) {
+      for (const count of [left, right]) {
+        const pitch = columnPitch(rowY0, rowsBottom, count);
+        expect(rowY0 + (count - 1) * pitch + rowHeight).toBeLessThanOrEqual(rowsBottom);
+      }
+    }
+  });
+
+  it("falls back to the fixed pitch without rowsBottom", () => {
+    expect(effectivePitch(415, 80, undefined, 10)).toBe(80);
+    expect(effectivePitch(415, 80, 1445, 10)).toBeCloseTo(103, 10);
+  });
+});

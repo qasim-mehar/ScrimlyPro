@@ -20,12 +20,23 @@ type StandingsPreviewProps = {
   subtitle: string;
   organizer?: string | null;
   standings: StandingRow[];
+  /** Match-number-mode templates (pmpl-light) bake "MATCH #" into the art, so
+   * the subtitle carries no parseable number — pass the count directly and the
+   * filename stays correct. Absent → legacy subtitle parsing (gradients). */
+  matchCount?: number;
+  isFinal?: boolean;
 };
 
-export function StandingsPreview({ title, subtitle, organizer, standings }: StandingsPreviewProps) {
+export function StandingsPreview({ title, subtitle, organizer, standings, matchCount, isFinal }: StandingsPreviewProps) {
   const [aestheticId, setAestheticId] = useState<AestheticId>("dark-gold");
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const filename =
+    matchCount !== undefined || isFinal === true
+      ? isFinal
+        ? "scrimlypro-final-standings.png"
+        : `scrimlypro-standings-after-match-${matchCount}.png`
+      : exportFilename(subtitle);
 
   return (
     <section className="flex flex-col gap-3">
@@ -44,7 +55,7 @@ export function StandingsPreview({ title, subtitle, organizer, standings }: Stan
           </button>
         ))}
       </div>
-      <GraphicCanvas config={getTemplate(aestheticId)} stageRef={stageRef}>
+      <GraphicCanvas config={getTemplate(aestheticId)} variant="standings" stageRef={stageRef}>
         <OverallStandingsGraphic
           aestheticId={aestheticId}
           title={title}
@@ -53,7 +64,7 @@ export function StandingsPreview({ title, subtitle, organizer, standings }: Stan
           standings={standings}
         />
       </GraphicCanvas>
-      <DownloadPngButton stageRef={stageRef} filename={exportFilename(subtitle)} onExported={setSize} />
+      <DownloadPngButton stageRef={stageRef} filename={filename} onExported={setSize} />
       <p className="text-xs text-muted">{size ? `PNG: ${size.width}×${size.height}` : "PNG: —"}</p>
     </section>
   );

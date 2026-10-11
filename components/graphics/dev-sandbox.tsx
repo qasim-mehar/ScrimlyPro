@@ -6,7 +6,6 @@ import {
   slotToStyle,
   splitRows,
   type AestheticId,
-  type StatColumnKey,
   type StandingsColumnSpec,
   type TemplateConfig,
 } from "@/lib/graphics";
@@ -34,7 +33,7 @@ const DUMMY_NAMES = [
   "HYDRA OPS PAK",
 ];
 
-function dummyStats(rank: number): Record<StatColumnKey, number> {
+function dummyStats(rank: number): Record<"wwcd" | "pp" | "kp" | "total", number> {
   const total = 100 - rank * 3;
   const wwcd = rank === 1 ? 3 : rank <= 5 ? 1 : 0;
   const kp = 21 - Math.floor(rank / 4);
@@ -122,12 +121,12 @@ function DummyRow({
       >
         {DUMMY_NAMES[rank - 1]}
       </div>
-      {(Object.keys(col.statsX) as StatColumnKey[]).map((key) => (
+      {col.statColumns.map(({ key, x }) => (
         <div
           key={key}
           style={{
             position: "absolute",
-            left: col.statsX[key],
+            left: x,
             top: y,
             width: 58,
             height: st.rowHeight,
@@ -147,17 +146,15 @@ function DummyRow({
 function StandingsColumn({
   config,
   col,
-  colIdx,
-  leftRows,
+  firstRank,
+  rowCount,
 }: {
   config: TemplateConfig;
   col: StandingsColumnSpec;
-  colIdx: 0 | 1;
-  leftRows: number;
+  firstRank: number;
+  rowCount: number;
 }) {
   const st = config.standings;
-  const firstRank = colIdx === 0 ? 1 : leftRows + 1;
-  const rows = colIdx === 0 ? leftRows : 16 - leftRows;
   const labelStyle = {
     top: st.headerLabelsY,
     font: st.labelFont,
@@ -177,12 +174,12 @@ function StandingsColumn({
         RANK
       </div>
       <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>TEAM</div>
-      {(Object.keys(col.statsX) as StatColumnKey[]).map((key) => (
+      {col.statColumns.map(({ key, x }) => (
         <div
           key={key}
           style={{
             position: "absolute",
-            left: col.statsX[key],
+            left: x,
             width: 58,
             textAlign: "center",
             ...labelStyle,
@@ -191,7 +188,7 @@ function StandingsColumn({
           {key.toUpperCase()}
         </div>
       ))}
-      {Array.from({ length: rows }, (_, i) => (
+      {Array.from({ length: rowCount }, (_, i) => (
         <DummyRow key={firstRank + i} config={config} col={col} rank={firstRank + i} rowIdx={i} />
       ))}
     </>
@@ -202,20 +199,22 @@ function SandboxSection({ id }: { id: AestheticId }) {
   const config = AESTHETICS[id];
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  const [leftRows] = splitRows(16);
+  // Generalized team count (C7.1 Pass 4): splitRows(n) instead of a
+  // hardcoded 16 — the render below uses the 16-team default.
+  const [leftRows, rightRows] = splitRows(16);
 
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-lg font-bold tracking-widest text-gold">{config.name}</h2>
-      <GraphicCanvas config={config} stageRef={stageRef}>
+      <GraphicCanvas config={config} variant="standings" stageRef={stageRef}>
         <GraphicHeader config={config} />
         {config.standings.columns.map((col, colIdx) => (
           <StandingsColumn
             key={col.stripX}
             config={config}
             col={col}
-            colIdx={colIdx as 0 | 1}
-            leftRows={leftRows}
+            firstRank={colIdx === 0 ? 1 : leftRows + 1}
+            rowCount={colIdx === 0 ? leftRows : rightRows}
           />
         ))}
       </GraphicCanvas>

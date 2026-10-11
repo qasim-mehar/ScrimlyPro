@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { StatColumnKey } from "@/lib/graphics";
-import { STANDINGS_LABELS, standingsSubtitle, withRanks } from "@/lib/graphics/standings";
+import {
+  STANDINGS_LABELS,
+  standingsSubtitle,
+  subtitleMatchNumber,
+  withRanks,
+} from "@/lib/graphics/standings";
 import type { StandingRow } from "@/lib/scoring";
 
 function row(overrides: Partial<StandingRow>): StandingRow {
@@ -36,6 +41,16 @@ describe("STANDINGS_LABELS", () => {
       total: STANDINGS_LABELS.total,
     };
     expect(statLabels).toEqual({ wwcd: "WWCD", pp: "PP", kp: "KP", total: "TOTAL" });
+  });
+});
+
+describe("subtitleMatchNumber", () => {
+  it("derives the digits from AFTER MATCH N", () => {
+    expect(subtitleMatchNumber("AFTER MATCH 6")).toBe("6");
+  });
+
+  it("FINAL RESULTS has no digits → empty slot", () => {
+    expect(subtitleMatchNumber("FINAL RESULTS")).toBe("");
   });
 });
 

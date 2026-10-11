@@ -2,14 +2,14 @@
 
 import { useRef, useState } from "react";
 
-import { getTemplate, type AestheticId } from "@/lib/graphics";
+import { AESTHETICS, getTemplate, type AestheticId } from "@/lib/graphics";
 import type { TeamRow } from "@/lib/scoring";
 
 import { AnnouncementGraphic } from "./AnnouncementGraphic";
 import { DownloadPngButton } from "./DownloadPngButton";
 import { GraphicCanvas } from "./GraphicCanvas";
 
-const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom"];
+const IDS = Object.keys(AESTHETICS) as AestheticId[];
 
 type AnnouncementPreviewProps = {
   title: string;
@@ -42,7 +42,7 @@ export function AnnouncementPreview({ title, subtitle, organizer, teams }: Annou
           </button>
         ))}
       </div>
-      <GraphicCanvas config={getTemplate(aestheticId)} stageRef={stageRef}>
+      <GraphicCanvas config={getTemplate(aestheticId)} variant="announcement" stageRef={stageRef}>
         <AnnouncementGraphic
           aestheticId={aestheticId}
           title={title}

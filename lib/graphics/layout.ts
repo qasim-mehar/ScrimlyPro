@@ -31,3 +31,27 @@ export function slotToStyle(slot: Slot): CSSProperties {
   if (slot.align !== undefined) style.textAlign = slot.align;
   return style;
 }
+
+/**
+ * Row auto-fit pitch for art-backed templates (P4): rows stretch to fill the
+ * column's table area for ANY team count.
+ * pitch = (rowsBottom − rowY0) / rowsInColumn. rowsInColumn ≤ 0 falls back.
+ */
+export function columnPitch(rowY0: number, rowsBottom: number, rowsInColumn: number): number {
+  if (rowsInColumn <= 0) return 0;
+  return (rowsBottom - rowY0) / rowsInColumn;
+}
+
+/**
+ * Effective pitch for one standings column: auto-fit when the column sets
+ * rowsBottom, else the template's fixed rowPitch.
+ */
+export function effectivePitch(
+  rowY0: number,
+  fallbackPitch: number,
+  rowsBottom: number | undefined,
+  rowsInColumn: number,
+): number {
+  if (rowsBottom === undefined) return fallbackPitch;
+  return columnPitch(rowY0, rowsBottom, rowsInColumn);
+}

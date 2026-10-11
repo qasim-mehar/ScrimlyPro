@@ -4,9 +4,9 @@ import type { AestheticId, TemplateConfig } from "./types";
  * covers the C1.1 glyph set (× · | _ ₛ ≌) that Rajdhani lacks. */
 const FONTS = '"Rajdhani", "Noto Sans Symbols 2", sans-serif';
 
-/** Geometry shared by all three aesthetics — identical until real PNG templates
- * (P4) need per-template geometry. */
-const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "background" | "palette"> = {
+/** Geometry shared by the three gradient aesthetics — identical until real
+ * PNG templates (P4) need per-template geometry. */
+const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> = {
   canvas: { w: 1080, h: 1620 },
   header: {
     title: { x: 90, y: 96, w: 900, align: "center" },
@@ -22,7 +22,12 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "background" | "palette"> =
         rankX: 62,
         teamX: 116,
         teamW: 158,
-        statsX: { wwcd: 265, pp: 330, kp: 395, total: 455 },
+        statColumns: [
+          { key: "wwcd", x: 265 },
+          { key: "pp", x: 330 },
+          { key: "kp", x: 395 },
+          { key: "total", x: 455 },
+        ],
         stripX: 58,
         stripW: 462,
       },
@@ -30,7 +35,12 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "background" | "palette"> =
         rankX: 602,
         teamX: 656,
         teamW: 158,
-        statsX: { wwcd: 805, pp: 870, kp: 935, total: 995 },
+        statColumns: [
+          { key: "wwcd", x: 805 },
+          { key: "pp", x: 870 },
+          { key: "kp", x: 935 },
+          { key: "total", x: 995 },
+        ],
         stripX: 598,
         stripW: 462,
       },
@@ -68,20 +78,26 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "background" | "palette"> =
   },
 };
 
+const DARK_GOLD_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #0b0d12 0%, #12151c 55%, #1a1e28 100%)",
+  decor: [
+    { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#f5c542", opacity: 0.9 },
+    { kind: "bar", x: 0, y: 1500, w: 1080, h: 2, color: "#f5c542", opacity: 0.35 },
+    { kind: "bar", x: 556, y: 368, w: 2, h: 1080, color: "#f5c542", opacity: 0.25 },
+    { kind: "circle", x: 890, y: 90, w: 270, color: "#f5c542", opacity: 0.07 },
+    { kind: "circle", x: -70, y: 1490, w: 230, color: "#f5c542", opacity: 0.06 },
+  ],
+};
+
 const DARK_GOLD: TemplateConfig = {
   ...GEOMETRY,
   id: "dark-gold",
   name: "Dark Gold",
-  background: {
-    type: "gradient",
-    css: "linear-gradient(165deg, #0b0d12 0%, #12151c 55%, #1a1e28 100%)",
-    decor: [
-      { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#f5c542", opacity: 0.9 },
-      { kind: "bar", x: 0, y: 1500, w: 1080, h: 2, color: "#f5c542", opacity: 0.35 },
-      { kind: "bar", x: 556, y: 368, w: 2, h: 1080, color: "#f5c542", opacity: 0.25 },
-      { kind: "circle", x: 890, y: 90, w: 270, color: "#f5c542", opacity: 0.07 },
-      { kind: "circle", x: -70, y: 1490, w: 230, color: "#f5c542", opacity: 0.06 },
-    ],
+  backgrounds: {
+    standings: DARK_GOLD_BG,
+    mvp: DARK_GOLD_BG,
+    announcement: DARK_GOLD_BG,
   },
   palette: {
     accent: "#f5c542",
@@ -91,23 +107,30 @@ const DARK_GOLD: TemplateConfig = {
     rowAltOpacity: 0.04,
     wwcdBg: "rgba(245,197,66,.16)",
     wwcdText: "#f5c542",
+    watermarkColor: "rgba(255,255,255,0.7)",
   },
+};
+
+const PURPLE_BUTTERFLY_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #150e2a 0%, #241640 55%, #2d1b4e 100%)",
+  decor: [
+    { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#c084fc", opacity: 0.9 },
+    { kind: "bar", x: 0, y: 1500, w: 1080, h: 2, color: "#c084fc", opacity: 0.35 },
+    { kind: "bar", x: 556, y: 368, w: 2, h: 1080, color: "#c084fc", opacity: 0.25 },
+    { kind: "circle", x: -90, y: 70, w: 280, color: "#c084fc", opacity: 0.08 },
+    { kind: "circle", x: 910, y: 1490, w: 240, color: "#c084fc", opacity: 0.06 },
+  ],
 };
 
 const PURPLE_BUTTERFLY: TemplateConfig = {
   ...GEOMETRY,
   id: "purple-butterfly",
   name: "Purple Butterfly",
-  background: {
-    type: "gradient",
-    css: "linear-gradient(165deg, #150e2a 0%, #241640 55%, #2d1b4e 100%)",
-    decor: [
-      { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#c084fc", opacity: 0.9 },
-      { kind: "bar", x: 0, y: 1500, w: 1080, h: 2, color: "#c084fc", opacity: 0.35 },
-      { kind: "bar", x: 556, y: 368, w: 2, h: 1080, color: "#c084fc", opacity: 0.25 },
-      { kind: "circle", x: -90, y: 70, w: 280, color: "#c084fc", opacity: 0.08 },
-      { kind: "circle", x: 910, y: 1490, w: 240, color: "#c084fc", opacity: 0.06 },
-    ],
+  backgrounds: {
+    standings: PURPLE_BUTTERFLY_BG,
+    mvp: PURPLE_BUTTERFLY_BG,
+    announcement: PURPLE_BUTTERFLY_BG,
   },
   palette: {
     accent: "#c084fc",
@@ -117,23 +140,30 @@ const PURPLE_BUTTERFLY: TemplateConfig = {
     rowAltOpacity: 0.04,
     wwcdBg: "rgba(192,132,252,.15)",
     wwcdText: "#c084fc",
+    watermarkColor: "rgba(255,255,255,0.7)",
   },
+};
+
+const PINK_BLOSSOM_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #251119 0%, #3d1c2b 55%, #522537 100%)",
+  decor: [
+    { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#ff9ec7", opacity: 0.9 },
+    { kind: "bar", x: 0, y: 1500, w: 1080, h: 2, color: "#ff9ec7", opacity: 0.35 },
+    { kind: "bar", x: 556, y: 368, w: 2, h: 1080, color: "#ff9ec7", opacity: 0.25 },
+    { kind: "circle", x: 860, y: 110, w: 260, color: "#ff9ec7", opacity: 0.07 },
+    { kind: "circle", x: -60, y: 1500, w: 220, color: "#ff9ec7", opacity: 0.07 },
+  ],
 };
 
 const PINK_BLOSSOM: TemplateConfig = {
   ...GEOMETRY,
   id: "pink-blossom",
   name: "Pink Blossom",
-  background: {
-    type: "gradient",
-    css: "linear-gradient(165deg, #251119 0%, #3d1c2b 55%, #522537 100%)",
-    decor: [
-      { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#ff9ec7", opacity: 0.9 },
-      { kind: "bar", x: 0, y: 1500, w: 1080, h: 2, color: "#ff9ec7", opacity: 0.35 },
-      { kind: "bar", x: 556, y: 368, w: 2, h: 1080, color: "#ff9ec7", opacity: 0.25 },
-      { kind: "circle", x: 860, y: 110, w: 260, color: "#ff9ec7", opacity: 0.07 },
-      { kind: "circle", x: -60, y: 1500, w: 220, color: "#ff9ec7", opacity: 0.07 },
-    ],
+  backgrounds: {
+    standings: PINK_BLOSSOM_BG,
+    mvp: PINK_BLOSSOM_BG,
+    announcement: PINK_BLOSSOM_BG,
   },
   palette: {
     accent: "#ff9ec7",
@@ -143,6 +173,88 @@ const PINK_BLOSSOM: TemplateConfig = {
     rowAltOpacity: 0.05,
     wwcdBg: "rgba(255,158,199,.14)",
     wwcdText: "#ff9ec7",
+    watermarkColor: "rgba(255,255,255,0.7)",
+  },
+};
+
+const PMPL_LIGHT_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(170deg, #f4f6fb 0%, #e8ecf5 100%)",
+  decor: [],
+};
+
+/** PMPL-light: first real art-backed template (P4). Standings renders over
+ * the user's light-theme PNG; mvp/announcement are light gradient
+ * placeholders until the sibling art lands. Geometry placeholders —
+ * calibrated in P4b against the art's measured table zones. */
+const PMPL_LIGHT: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmpl-light",
+  name: "PMPL Light",
+  backgrounds: {
+    standings: { type: "image", src: "/templates/pmpl-light/overall.png" },
+    mvp: PMPL_LIGHT_FALLBACK_BG,
+    announcement: PMPL_LIGHT_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  header: {
+    title: { x: 90, y: 24, w: 900, align: "center" },
+    subtitle: { x: 590, y: 48, w: 100, align: "center" },
+    organizer: { x: 340, y: 120, w: 400, align: "center" },
+    titleFont: `600 34px ${FONTS}`,
+    subtitleFont: `700 44px ${FONTS}`,
+    organizerFont: `500 22px ${FONTS}`,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 70,
+        teamX: 130,
+        teamW: 170,
+        statColumns: [
+          { key: "kp", x: 310 },
+          { key: "pp", x: 375 },
+          { key: "wwcd", x: 440 },
+          { key: "total", x: 505 },
+        ],
+        stripX: 60,
+        stripW: 460,
+        rowsBottom: 1445,
+      },
+      {
+        rankX: 610,
+        teamX: 670,
+        teamW: 170,
+        statColumns: [
+          { key: "kp", x: 850 },
+          { key: "pp", x: 915 },
+          { key: "wwcd", x: 980 },
+          { key: "total", x: 1045 },
+        ],
+        stripX: 600,
+        stripW: 460,
+        rowsBottom: 1445,
+      },
+    ],
+    headerLabelsY: 372,
+    rowY0: 415,
+    rowPitch: 80,
+    rowHeight: 56,
+    maxRowsLeft: 13,
+    nameFont: `600 30px ${FONTS}`,
+    statFont: `600 28px ${FONTS}`,
+    labelFont: `700 24px ${FONTS}`,
+  },
+  palette: {
+    accent: "#0e7ac4",
+    text: "#1c2333",
+    textMuted: "#5b6678",
+    rowAlt: "#0b1526",
+    rowAltOpacity: 0.045,
+    wwcdBg: "rgba(230,160,20,0.16)",
+    wwcdText: "#8a5a00",
+    watermarkColor: "rgba(20,28,44,0.55)",
   },
 };
 
@@ -150,6 +262,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
   "pink-blossom": PINK_BLOSSOM,
+  "pmpl-light": PMPL_LIGHT,
 };
 
 /** Look up a template config by aesthetic id. */

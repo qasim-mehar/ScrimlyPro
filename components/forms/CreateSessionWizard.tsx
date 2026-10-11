@@ -229,7 +229,7 @@ export default function CreateSessionWizard() {
 
           <fieldset>
             <legend className={LABEL_CLASS}>Aesthetic</legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(Object.keys(AESTHETICS) as AestheticId[]).map((id) => {
                 const config = AESTHETICS[id];
                 const selected = templateId === id;
@@ -246,12 +246,12 @@ export default function CreateSessionWizard() {
                     <span
                       className="block aspect-[2/3] w-full rounded"
                       style={
-                        config.background.type === "gradient"
-                          ? { background: config.background.css }
+                        config.backgrounds.standings.type === "gradient"
+                          ? { background: config.backgrounds.standings.css }
                           : undefined
                       }
                     >
-                      {config.background.type === "image" ? (
+                      {config.backgrounds.standings.type === "image" ? (
                         <span className="flex h-full items-center justify-center bg-surface-2 text-xs text-muted">
                           Preview
                         </span>
@@ -259,6 +259,7 @@ export default function CreateSessionWizard() {
                     </span>
                     <span className="mt-1 block text-xs text-muted">
                       {config.name}
+                      {config.backgrounds.standings.type === "gradient" ? " (placeholder)" : ""}
                     </span>
                   </button>
                 );

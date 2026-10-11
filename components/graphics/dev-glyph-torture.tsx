@@ -118,17 +118,19 @@ function ExportedPreview({ stageRef }: { stageRef: RefObject<HTMLDivElement | nu
 function TortureSection({
   heading,
   filename,
+  variant,
   children,
 }: {
   heading: string;
   filename: string;
+  variant: "standings" | "mvp" | "announcement";
   children: ReactNode;
 }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-lg font-bold tracking-widest text-gold">{heading}</h2>
-      <GraphicCanvas config={getTemplate("dark-gold")} stageRef={stageRef}>
+      <GraphicCanvas config={getTemplate("dark-gold")} variant={variant} stageRef={stageRef}>
         {children}
       </GraphicCanvas>
       <DownloadPngButton stageRef={stageRef} filename={filename} />
@@ -161,7 +163,7 @@ export function DevGlyphTorture() {
         </div>
       </header>
 
-      <TortureSection heading="STANDINGS (16 teams)" filename="glyph-audit-standings.png">
+      <TortureSection heading="STANDINGS (16 teams)" filename="glyph-audit-standings.png" variant="standings">
         <OverallStandingsGraphic
           aestheticId="dark-gold"
           title={DEV_TITLE}
@@ -171,7 +173,7 @@ export function DevGlyphTorture() {
         />
       </TortureSection>
 
-      <TortureSection heading="MVP (7 wild rows)" filename="glyph-audit-mvp.png">
+      <TortureSection heading="MVP (7 wild rows)" filename="glyph-audit-mvp.png" variant="mvp">
         <MvpGraphic
           aestheticId="dark-gold"
           title={DEV_TITLE}
@@ -181,7 +183,7 @@ export function DevGlyphTorture() {
         />
       </TortureSection>
 
-      <TortureSection heading="ANNOUNCEMENT (16 teams)" filename="glyph-audit-announcement.png">
+      <TortureSection heading="ANNOUNCEMENT (16 teams)" filename="glyph-audit-announcement.png" variant="announcement">
         <AnnouncementGraphic
           aestheticId="dark-gold"
           title={DEV_TITLE}
