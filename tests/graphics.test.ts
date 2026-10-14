@@ -225,11 +225,13 @@ describe("pmpl-light config", () => {
     expect(() => readFileSync("public/templates/pmpl-light/overall.png")).not.toThrow();
   });
 
-  it("ships art with an exact 2:3 ratio (IHDR header)", () => {
+  it("ships art within ratio tolerance and at canvas resolution (IHDR header)", () => {
+    // Amended P5 gate (user-accepted 2132×3200): |w/h − 2/3| ≤ 0.01, width ≥ 1080.
     const bytes = readFileSync("public/templates/pmpl-light/overall.png");
     const w = bytes.readUInt32BE(16);
     const h = bytes.readUInt32BE(20);
-    expect(w * 3).toBe(h * 2);
+    expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(0.01);
+    expect(w).toBeGreaterThanOrEqual(1080);
   });
 
   it("orders stat columns kp → pp → wwcd → total, each exactly once", () => {
@@ -328,6 +330,40 @@ describe("pmpl-light config", () => {
     expect(title.y + 36).toBeLessThanOrEqual(46);
     expect(title.x).toBeGreaterThanOrEqual(290);
     expect(title.x! + title.w!).toBeLessThanOrEqual(790);
+  });
+});
+
+describe("image art quality gates (P5 Fix B)", () => {
+  // objectFit cover absorbs ≤1% ratio deviation as a centered crop of ~1–2px at canvas scale — imperceptible
+  // and below calibration tolerance; AI upscalers output near-2:3 dimension ladders (e.g. 2132×3200) that must pass. Grossly wrong ratios (9:16,
+  // 4:5) still fail.
+  const RATIO_TOLERANCE = 0.01;
+  const MIN_WIDTH = 1080;
+
+  type ArtCase = { id: string; variant: string; file: string };
+  const CASES: ArtCase[] = [];
+  for (const [id, config] of Object.entries(AESTHETICS)) {
+    for (const [variant, bg] of Object.entries(config.backgrounds)) {
+      if (bg.type === "image") CASES.push({ id, variant, file: `public${bg.src}` });
+    }
+  }
+
+  it("covers at least the pmpl-light standings art", () => {
+    expect(CASES).toContainEqual({
+      id: "pmpl-light",
+      variant: "standings",
+      file: "public/templates/pmpl-light/overall.png",
+    });
+  });
+
+  it.each(CASES)("$id/$variant art ($file): ratio within tolerance AND width ≥ 1080", ({ file }) => {
+    // A missing or unreadable art file fails the build, never the
+    // organizer's export.
+    const bytes = readFileSync(file);
+    const w = bytes.readUInt32BE(16);
+    const h = bytes.readUInt32BE(20);
+    expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
+    expect(w).toBeGreaterThanOrEqual(MIN_WIDTH);
   });
 });
 
