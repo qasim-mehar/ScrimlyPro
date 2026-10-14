@@ -1,13 +1,13 @@
 # P5 — Template Completion Report
 
-## 1. Outcome (Partial — art-blocked items deferred; base commit; branch)
+## 1. Outcome (Complete; base commit; branch)
 
-**Outcome: Partial.** Fix A (session wiring) and the palette-only parts of Fix D
-are complete, tested, and verified. Fix B (strict art gates) and Fix C
-(mvp/announcement art calibration) are **deferred by user direction** pending
-the `overall.png` re-export at 2160×3240 — they cannot be completed against
-the current 1024×1536 file, and the 1024px file was deliberately never
-committed on this branch.
+**Outcome: Complete.** Fix A (session wiring), Fix B (art gates, amended per
+user direction — see §4), and the palette-only parts of Fix D are complete,
+tested, and verified. Fix C stays in its documented fallback state because
+`mvp.png` / `announcement.png` were never supplied — fallbacks render,
+are pinned, and are 200-verified; wiring them later is new-art work, not a
+gap in this branch.
 
 - Base commit: `a65a4d1` (P4b pmpl-light calibration; P4a = `c638c3d`).
 - Branch: `qasim/p5-template-completion`, isolated worktree `../Scrimly-p5`.
@@ -16,7 +16,9 @@ committed on this branch.
   - `b7a9fec` feat(graphics): palette-driven polish — plates, medallions, cell cards
   - `530801f` test(graphics): measured contrast and palette coverage
   - `2a80bef` fix(templates): dev routes mirror production prop threading
-  - docs commit (this report).
+  - `a308602` chore(templates): accept user re-exported pmpl-light overall art (2132×3200)
+  - `957d3de` test(templates): enforce image art ratio and resolution gates
+  - docs commits (this report + art-acceptance update).
 
 ## 2. Baseline (P4 commits inspected; dirty-main findings; test baseline)
 
@@ -43,8 +45,9 @@ discarded; all P5 work happened in the `../Scrimly-p5` worktree.
 **Test baseline:** main worktree `npm test` = 19 files / 263 green (includes
 the sibling's +1 uncommitted `matches-confirm` test). Clean worktree at
 `a65a4d1` = 19 files / **262** green — the 1-test delta is exactly the
-sibling's dirty test, not a regression. Post-P5: **21 files / 304 green**
-(+42: 4 filename-matrix, 5 palette-coverage, 18 SSR, 15 contrast).
+sibling's dirty test, not a regression. Post-P5: **21 files / 306 green**
+(+44: 4 filename-matrix, 5 palette-coverage, 18 SSR, 15 contrast, 2 art
+gates).
 
 **Gate baseline (clean worktree, before coding):** `tsc --noEmit` clean;
 `eslint` 0 errors / 0 warnings (main's 3 warnings come from the sibling's
@@ -91,22 +94,31 @@ thread the props (quality-pass P2 fix, commit `2a80bef`).
 ## 4. Fix B gates (measured art dimensions; gate test proof)
 
 **Measured (PNG IHDR, node, read-only):**
-`public/templates/pmpl-light/overall.png` = **1024×1536, 8-bit, colorType 2
-(RGB)**, ratio exactly 2:3, **width 1024 < 1080 → FAILS the ≥1080 gate.**
+`public/templates/pmpl-light/overall.png` = **2132×3200, 8-bit, colorType 6
+(RGBA)**, 5,084,527 bytes — the user's re-export, committed verbatim
+(`a308602`, byte-identical to the file dropped in main; never regenerated
+or edited here).
 
-Per the prompt's STOP condition the user was asked and directed: re-export at
-**2160×3240 (same design, drop-in)** is in progress; proceed with Fix A +
-palette-only Fix D now; re-run the gate when the new file lands; the 1024px
-file must not be committed on the branch (it wasn't — zero art changes in all
-commits).
+Gate history: the original 1024×1536 file failed the width gate, so the user
+was asked and first directed deferral; mid-session the re-export landed in
+main at 2132×3200 — width PASS, but ratio 2132:3200 deviates from exact 2:3
+by 4px (|w/h − 2/3| = 0.0004). The user then directed accepting it as-is and
+amending the gate: **|w/h − 2/3| ≤ 0.01, width ≥ 1080 unchanged**, with the
+rationale that `objectFit: cover` absorbs ≤1% deviation as a centered ~1–2px
+crop at canvas scale (verified: cover scale = max(1080/2132, 1620/3200) crops
+~1px vertically for this file), while grossly wrong ratios (9:16, 4:5) still
+fail. Calibration is unaffected — it lives in canvas space; the ≤0.6px skew
+is noise against the 1px test tolerance.
 
-**Status:** strict gate test (`every image background: exact 2:3 AND width ≥
-1080`) is **not yet added** — adding it now would fail the build against the
-known-pending 1024px file. It lands together with the re-exported art, before
-merge: drop in `overall-2160.png` handling per user instruction, add the IHDR
-gate test (pass + deliberately-failing temp-copy fixture, never committed),
-and re-run. The contrast test in §6 already reads the live file
-resolution-independently, so it re-verifies automatically.
+**Gate test** (`tests/graphics.test.ts`, commit `957d3de`): iterates every
+image-type background across ALL aesthetics (currently the one pmpl-light
+standings case, asserted present), reading IHDR — tolerance + width; a
+missing/unreadable file fails the build. Fixture proof (temp scripts, never
+committed): real 2132×3200 → PASS; crafted 1080×1920 (9:16) → FAIL;
+1080×1350 (4:5) → FAIL; 800×1200 → FAIL (width); old 1024×1536 → FAIL
+(width). The contrast test (§6) re-verified automatically against the new
+file: table-zone mean (252.7, 251.6, 254.8) vs old (250.4, 248.3, 252.8) —
+same design, 15.32:1.
 
 ## 5. Fix C status (art wired + calibration values, or fallback state)
 
@@ -154,14 +166,14 @@ retained in both themes; code-drawn labels uppercase + `0.08em` letter-spaced
 | -------------------------------------------------- | ----------------------------- | -------- |
 | text vs gradient stops (≥ 4.5), all 4 aesthetics   | pink-blossom darkest stop     | 10.84:1 ✓ |
 | pmpl-light fallback gradient                       | `#e8ecf5`                     | 13.27:1 ✓ |
-| **art table zone** vs `#1c2333` (≥ 4.5)            | mean sRGB (250.4,248.3,252.8), L=0.94854 | **14.93:1** ✓ |
+| **art table zone** vs `#1c2333` (≥ 4.5)            | mean sRGB (252.7,251.6,254.8), L=0.97475 | **15.32:1** ✓ |
 | medal ink vs metals, large-text floor (≥ 3.0)      | pmpl gold `#b57e0d`/white     | 3.53:1 ✓  |
 
 Art method: IHDR → IDAT inflate → unfilter (all 5 filters + Paeth) →
 canvas zone x60/y380/w960/h1080 mapped to art px by measured width scale
-(57/360/910/1024 on today's file); 931,840 pixels averaged; block min/max
-0.8283/0.9846 (uniform light zone). Resolution-independent — re-verifies on
-the 2160×3240 file automatically.
+(118/750/1895/2132 on the accepted file); 4,040,140 pixels averaged; block min/max
+0.8974/1.0000 (uniform light zone). Resolution-independent — re-verified
+automatically on the re-export (the old 1024 file measured 14.93:1).
 
 Both-themes verification: SSR presence of every new palette value in
 light + all three dark aesthetics (`tests/graphics-ssr.test.ts`, extended to
@@ -189,11 +201,14 @@ All run in `C:\Users\mianq\Projects\Scrimly-p5` (`node_modules` copied from
 the main worktree — `npm ci` cannot build `better-sqlite3` here: no VS
 toolchain; `package.json`/lockfile untouched, zero new deps):
 
-- `.\node_modules\.bin\vitest.cmd run` → **21 files / 304 tests green**
-  (baseline 262 + 42 new), exit 0.
+- `.\node_modules\.bin\vitest.cmd run` → **21 files / 306 tests green**
+  (baseline 262 + 44 new), exit 0.
 - `.\node_modules\.bin\tsc.cmd --noEmit` → clean, exit 0.
 - `.\node_modules\.bin\eslint.cmd` → 0 errors / 0 warnings, exit 0.
-- `node …/next/dist/bin/next build` → green (all routes), exit 0.
+- `node …/next/dist/bin/next build` → green (all routes, re-run after the art
+  swap), exit 0.
+- Art-gate fixtures (temp scripts, never committed): PASS on 2132×3200;
+  FAIL on 9:16, 4:5, sub-1080 width, and the old 1024 file.
 - Dev server `next dev -p 3040` (port 3000 never touched): after local-only
   `db:migrate` + `db:seed` (gitignored `data/`, seed prints all PASS),
   `dev/calibrate`, `dev/mvp`, `dev/announcement`, `dev/graphics`,
@@ -206,10 +221,9 @@ toolchain; `package.json`/lockfile untouched, zero new deps):
 
 ## 9. Limitations and handoff (what the user still owes)
 
-1. **`overall.png` re-export at 2160×3240 (same design, drop-in).** On
-   landing: verify IHDR (expect 2160×3240, exact 2:3, ≥1080), add the strict
-   Fix B gate test (pass + deliberately-failing temp-copy fixture, never
-   committed), re-run the full suite + contrast (auto re-verifies), then merge.
+1. ~~**`overall.png` re-export at 2160×3240**~~ — DONE as 2132×3200,
+   accepted as-is with the amended gate (see §4). No further action unless a
+   future re-export changes dimensions (gate + contrast re-verify automatically).
 2. **`mvp.png` / `announcement.png` art (lowercase).** On landing: wire into
    `backgrounds`, pixel-measure zones, calibrate specs, pin by test, SSR-assert
    16/19/25 + 5-row MVP. Until then fallbacks render and are pinned.
