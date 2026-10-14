@@ -60,7 +60,14 @@ export default function DevStandingsPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-4">
-      <StandingsPreview title={session.name} subtitle={subtitle} organizer={null} standings={standings} />
+      <StandingsPreview
+        title={session.name}
+        subtitle={subtitle}
+        organizer={null}
+        standings={standings}
+        matchCount={confirmedIds.length}
+        isFinal={session.status === "completed"}
+      />
     </main>
   );
 }

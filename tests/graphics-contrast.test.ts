@@ -66,13 +66,18 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
     const config = getTemplate(id);
     const text = parseHexColor(config.palette.text);
-    let checked = 0;
+    const seenCss = new Set<string>();
     for (const bg of Object.values(config.backgrounds)) {
       if (bg.type !== "gradient") continue;
       expect(minContrastAgainstStops(text, bg.css)).toBeGreaterThanOrEqual(4.5);
-      checked += 1;
+      seenCss.add(bg.css);
     }
-    expect(checked).toBeGreaterThanOrEqual(2);
+    // Every aesthetic backs at least two variants with a gradient; shared
+    // background objects (one css for all three variants) count once.
+    expect(seenCss.size).toBeGreaterThanOrEqual(1);
+    expect(Object.values(config.backgrounds).filter((bg) => bg.type === "gradient").length).toBeGreaterThanOrEqual(
+      2,
+    );
   });
 
   it.each(IDS)("%s: medal digit ink vs each metal ≥ 3:1 (large-text floor)", (id) => {

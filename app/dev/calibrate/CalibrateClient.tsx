@@ -119,6 +119,7 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
               subtitle="AFTER MATCH 6"
               organizer={null}
               standings={rows}
+              matchCount={6}
             />
             {grid ? <GridOverlay /> : null}
           </GraphicCanvas>

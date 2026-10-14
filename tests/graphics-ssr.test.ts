@@ -88,8 +88,10 @@ describe("Fix A — matchCount/isFinal renders (SSR)", () => {
 });
 
 describe("Fix D — palette-driven polish (SSR presence)", () => {
+  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
+
   it("standings logo plates use plateBg/plateRing; rank-1 ring uses accent", () => {
-    for (const id of ["pmpl-light", "dark-gold"] as AestheticId[]) {
+    for (const id of IDS) {
       const p = getTemplate(id).palette;
       const html = renderToStaticMarkup(standings(id, "AFTER MATCH 1", 4, { logos: true, matchCount: 1 }));
       expect(html).toContain(p.plateBg);
@@ -100,7 +102,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
   });
 
   it("MVP medallions use metal fills for 1/2/3 and neutral plates for 4/5", () => {
-    for (const id of ["pmpl-light", "dark-gold"] as AestheticId[]) {
+    for (const id of IDS) {
       const p = getTemplate(id).palette;
       const html = renderToStaticMarkup(
         h(MvpGraphic, {
@@ -121,7 +123,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
   });
 
   it("announcement cells render rounded cards with logo plates", () => {
-    for (const id of ["pmpl-light", "dark-gold"] as AestheticId[]) {
+    for (const id of IDS) {
       const p = getTemplate(id).palette;
       const html = renderToStaticMarkup(
         h(AnnouncementGraphic, {
