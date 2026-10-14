@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { StatColumnKey } from "@/lib/graphics";
 import {
+  resolveStandingsFilename,
   STANDINGS_LABELS,
   standingsSubtitle,
   subtitleMatchNumber,
@@ -51,6 +52,31 @@ describe("subtitleMatchNumber", () => {
 
   it("FINAL RESULTS has no digits → empty slot", () => {
     expect(subtitleMatchNumber("FINAL RESULTS")).toBe("");
+  });
+});
+
+describe("resolveStandingsFilename (P5 Fix A)", () => {
+  it("explicit isFinal wins → final filename, even with a count", () => {
+    expect(resolveStandingsFilename("FINAL RESULTS", 6, true)).toBe("scrimlypro-final-standings.png");
+    expect(resolveStandingsFilename("AFTER MATCH 6", 6, true)).toBe("scrimlypro-final-standings.png");
+  });
+
+  it("explicit matchCount (mid-session) → after-match-N filename", () => {
+    expect(resolveStandingsFilename("AFTER MATCH 2", 2, false)).toBe(
+      "scrimlypro-standings-after-match-2.png",
+    );
+  });
+
+  it("matchCount without isFinal still derives after-match-N", () => {
+    expect(resolveStandingsFilename("whatever", 4, undefined)).toBe(
+      "scrimlypro-standings-after-match-4.png",
+    );
+  });
+
+  it("no props → legacy subtitle parsing (gradient templates unchanged)", () => {
+    expect(resolveStandingsFilename("AFTER MATCH 2")).toBe("scrimlypro-standings-after-match-2.png");
+    expect(resolveStandingsFilename("FINAL RESULTS")).toBe("scrimlypro-final-standings.png");
+    expect(resolveStandingsFilename("something else")).toBe("scrimlypro-standings.png");
   });
 });
 

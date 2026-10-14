@@ -27,14 +27,23 @@ function StandingsHeader({
   title,
   subtitle,
   organizer,
+  matchCount,
 }: {
   config: TemplateConfig;
   title: string;
   subtitle: string;
   organizer?: string | null;
+  matchCount?: number;
 }) {
   const { header, palette } = config;
-  const subtitleText = config.subtitleMode === "matchNumber" ? subtitleMatchNumber(subtitle) : subtitle;
+  // matchNumber art bakes "MATCH #" in: the slot renders ONLY digits. An
+  // explicit matchCount (threaded from the session page) wins — including the
+  // final state, which reads "MATCH 6", never an empty slot. Digit-parsing is
+  // the fallback only (dev routes, gradient callers that omit the prop).
+  const subtitleText =
+    config.subtitleMode === "matchNumber"
+      ? (matchCount !== undefined ? String(matchCount) : subtitleMatchNumber(subtitle))
+      : subtitle;
   return (
     <>
       <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>{title}</div>
@@ -218,6 +227,10 @@ type OverallStandingsGraphicProps = {
   subtitle: string;
   organizer?: string | null;
   standings: StandingRow[];
+  /** Confirmed match count for matchNumber-mode templates (pmpl-light).
+   * Rendered verbatim in the number slot — including finals. Absent →
+   * legacy digit-parsing fallback (gradient templates unaffected). */
+  matchCount?: number;
 };
 
 export function OverallStandingsGraphic({
@@ -226,13 +239,14 @@ export function OverallStandingsGraphic({
   subtitle,
   organizer,
   standings,
+  matchCount,
 }: OverallStandingsGraphicProps) {
   const config = getTemplate(aestheticId);
   const [leftCount] = splitRows(standings.length);
   const ranked = withRanks(standings);
   return (
     <>
-      <StandingsHeader config={config} title={title} subtitle={subtitle} organizer={organizer} />
+      <StandingsHeader config={config} title={title} subtitle={subtitle} organizer={organizer} matchCount={matchCount} />
       {config.standings.columns.map((col, colIdx) => (
         <StandingsColumn
           key={col.stripX}

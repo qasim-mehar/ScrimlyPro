@@ -2,18 +2,11 @@
 
 import { useRef, useState } from "react";
 import { AESTHETICS, getTemplate, type AestheticId } from "@/lib/graphics";
+import { resolveStandingsFilename } from "@/lib/graphics/standings";
 import type { StandingRow } from "@/lib/scoring";
 import { DownloadPngButton } from "./DownloadPngButton";
 import { GraphicCanvas } from "./GraphicCanvas";
 import { OverallStandingsGraphic } from "./OverallStandingsGraphic";
-
-/** Export filename: FINAL RESULTS variant, else AFTER-MATCH-N. Defensive
- * fallback for subtitles that are neither (simplest option; see Assumptions). */
-function exportFilename(subtitle: string): string {
-  if (subtitle === "FINAL RESULTS") return "scrimlypro-final-standings.png";
-  const matchNo = /^AFTER MATCH (\d+)$/.exec(subtitle)?.[1];
-  return matchNo ? `scrimlypro-standings-after-match-${matchNo}.png` : "scrimlypro-standings.png";
-}
 
 type StandingsPreviewProps = {
   title: string;
@@ -31,12 +24,7 @@ export function StandingsPreview({ title, subtitle, organizer, standings, matchC
   const [aestheticId, setAestheticId] = useState<AestheticId>("dark-gold");
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  const filename =
-    matchCount !== undefined || isFinal === true
-      ? isFinal
-        ? "scrimlypro-final-standings.png"
-        : `scrimlypro-standings-after-match-${matchCount}.png`
-      : exportFilename(subtitle);
+  const filename = resolveStandingsFilename(subtitle, matchCount, isFinal);
 
   return (
     <section className="flex flex-col gap-3">
@@ -62,6 +50,7 @@ export function StandingsPreview({ title, subtitle, organizer, standings, matchC
           subtitle={subtitle}
           organizer={organizer}
           standings={standings}
+          matchCount={matchCount}
         />
       </GraphicCanvas>
       <DownloadPngButton stageRef={stageRef} filename={filename} onExported={setSize} />

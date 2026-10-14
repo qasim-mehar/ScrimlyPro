@@ -157,6 +157,7 @@ export default function SessionView({
           standings={standings}
           subtitle={subtitle}
           confirmedCount={confirmedCount}
+          isFinal={isCompleted}
           mvp={mvp}
         />
       ) : null}

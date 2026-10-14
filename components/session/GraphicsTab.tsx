@@ -17,6 +17,7 @@ type GraphicsTabProps = {
   standings: StandingRow[];
   subtitle: string;
   confirmedCount: number;
+  isFinal: boolean;
   mvp: SessionPageData["mvp"];
 };
 
@@ -27,6 +28,7 @@ export function GraphicsTab({
   standings,
   subtitle,
   confirmedCount,
+  isFinal,
   mvp,
 }: GraphicsTabProps) {
   return (
@@ -53,6 +55,8 @@ export function GraphicsTab({
             subtitle={subtitle}
             organizer={null}
             standings={standings}
+            matchCount={confirmedCount}
+            isFinal={isFinal}
           />
         ) : (
           <p className="rounded-lg border border-line bg-surface p-4 text-sm text-muted">
