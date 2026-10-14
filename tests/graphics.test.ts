@@ -331,6 +331,60 @@ describe("pmpl-light config", () => {
   });
 });
 
+describe("palette plate + medal coverage (P5 Fix D)", () => {
+  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
+
+  it.each(IDS)("%s defines non-empty plate/medal strings", (id) => {
+    const p = getTemplate(id).palette;
+    for (const value of [
+      p.plateBg,
+      p.plateRing,
+      p.medalGold,
+      p.medalSilver,
+      p.medalBronze,
+      p.medalText,
+    ]) {
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("pins the exact plate/medal values per aesthetic", () => {
+    expect(getTemplate("dark-gold").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.07)",
+      plateRing: "rgba(245,197,66,0.45)",
+      medalGold: "#f5c542",
+      medalSilver: "#c9d1dd",
+      medalBronze: "#d19a5b",
+      medalText: "#11141b",
+    });
+    expect(getTemplate("purple-butterfly").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.07)",
+      plateRing: "rgba(192,132,252,0.45)",
+      medalGold: "#f0c44c",
+      medalSilver: "#c9d1dd",
+      medalBronze: "#d19a5b",
+      medalText: "#1c1533",
+    });
+    expect(getTemplate("pink-blossom").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.08)",
+      plateRing: "rgba(255,158,199,0.45)",
+      medalGold: "#f0c44c",
+      medalSilver: "#ccd2de",
+      medalBronze: "#d29a5c",
+      medalText: "#2c1521",
+    });
+    expect(getTemplate("pmpl-light").palette).toMatchObject({
+      plateBg: "#ffffff",
+      plateRing: "rgba(28,35,51,0.18)",
+      medalGold: "#b57e0d",
+      medalSilver: "#7d8698",
+      medalBronze: "#9c6327",
+      medalText: "#ffffff",
+    });
+  });
+});
+
 describe("columnPitch / effectivePitch (row auto-fit)", () => {
   it("19 teams, rowsTop 415 / rowsBottom 1445 → 1030/10 left, 1030/9 right", () => {
     expect(columnPitch(415, 1445, 10)).toBeCloseTo(103, 10);
