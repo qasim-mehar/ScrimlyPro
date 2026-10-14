@@ -84,6 +84,12 @@ export type Palette = {
   wwcdBg: string;
   wwcdText: string;
   watermarkColor: string; // per-theme watermark ink (position/text stay fixed brand law)
+  plateBg: string; // circular logo-plate fill (standings rows, announcement cells)
+  plateRing: string; // logo-plate hairline ring; rank-1 plates use accent instead
+  medalGold: string; // MVP rank-1 medallion fill
+  medalSilver: string; // MVP rank-2 medallion fill
+  medalBronze: string; // MVP rank-3 medallion fill
+  medalText: string; // MVP rank 1–3 medallion digit ink (large text)
 };
 
 export type TemplateConfig = {

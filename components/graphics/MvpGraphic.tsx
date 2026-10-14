@@ -13,6 +13,18 @@ type MvpGraphicProps = {
   entries: MvpDisplayEntry[]; // toMvpDisplay output, order authoritative
 };
 
+// Medallion diameter: fits the 120px row height with breathing room on every
+// aesthetic (pmpl-light reuses this geometry until its art lands).
+const MEDAL_D = 88;
+
+/** Rank medallion fill: gold/silver/bronze for 1/2/3, neutral plate after. */
+function medalFill(rank: number, palette: { plateBg: string; medalGold: string; medalSilver: string; medalBronze: string }): string {
+  if (rank === 1) return palette.medalGold;
+  if (rank === 2) return palette.medalSilver;
+  if (rank === 3) return palette.medalBronze;
+  return palette.plateBg;
+}
+
 /** Absolutely-positioned, vertically-centered single-line text box
  * (ellipsis on overflow) — the flex-center pattern on height `h`. */
 function EllipsisText({
@@ -81,6 +93,8 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
       {entries.map((entry, i) => {
         const y = mvp.rowY0 + i * mvp.rowPitch;
         const isRankOne = entry.rank === 1;
+        const isMedal = entry.rank >= 1 && entry.rank <= 3;
+        const rankBoxW = mvp.playerX - mvp.rankX;
         return (
           <div key={`${entry.rank}-${entry.name}`}>
             {isRankOne ? (
@@ -97,17 +111,28 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
                 }}
               />
             ) : null}
-            <EllipsisText
-              x={mvp.rankX}
-              y={y}
-              w={mvp.playerX - mvp.rankX}
-              h={mvp.rowHeight}
-              font={mvp.rankFont}
-              color={isRankOne ? palette.accent : palette.textMuted}
-              align="center"
+            {/* Rank medallion: 1/2/3 metal circle with medal ink; 4/5 a
+                neutral plate circle with the muted digit. */}
+            <div
+              style={{
+                position: "absolute",
+                left: mvp.rankX + (rankBoxW - MEDAL_D) / 2,
+                top: y + (mvp.rowHeight - MEDAL_D) / 2,
+                width: MEDAL_D,
+                height: MEDAL_D,
+                borderRadius: "50%",
+                background: medalFill(entry.rank, palette),
+                border: isMedal ? undefined : `1px solid ${palette.plateRing}`,
+                boxSizing: "border-box",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: mvp.rankFont,
+                color: isMedal ? palette.medalText : palette.textMuted,
+              }}
             >
               {entry.rank}
-            </EllipsisText>
+            </div>
             <EllipsisText
               x={mvp.playerX}
               y={y}

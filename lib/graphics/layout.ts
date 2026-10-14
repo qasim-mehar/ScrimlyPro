@@ -55,3 +55,48 @@ export function effectivePitch(
   if (rowsBottom === undefined) return fallbackPitch;
   return columnPitch(rowY0, rowsBottom, rowsInColumn);
 }
+
+export type Rgb = { r: number; g: number; b: number };
+
+/** Parse a #rgb or #rrggbb hex color. Throws naming the bad value. */
+export function parseHexColor(hex: string): Rgb {
+  const m = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(hex);
+  if (!m) throw new Error(`parseHexColor: not a #rgb/#rrggbb color: "${hex}"`);
+  const h = m[1].length === 3 ? m[1].split("").map((c) => c + c).join("") : m[1];
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16),
+  };
+}
+
+/** WCAG 2.x relative luminance of an sRGB color (0–1). */
+export function relativeLuminance({ r, g, b }: Rgb): number {
+  const linear = (c: number): number => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+/** WCAG 2.x contrast ratio of two sRGB colors (1–21). */
+export function contrastRatio(a: Rgb, b: Rgb): number {
+  const l1 = relativeLuminance(a);
+  const l2 = relativeLuminance(b);
+  const [hi, lo] = l1 >= l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Hex color stops found in a gradient css string, in order. */
+export function gradientStopColors(css: string): Rgb[] {
+  const stops = css.match(/#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?\b/g) ?? [];
+  return stops.map(parseHexColor);
+}
+
+/** Worst-case contrast of a text color against every hex stop in a
+ * gradient css string. Empty (no hex stops) → 1, never a false pass. */
+export function minContrastAgainstStops(text: Rgb, css: string): number {
+  const stops = gradientStopColors(css);
+  if (stops.length === 0) return 1;
+  return Math.min(...stops.map((stop) => contrastRatio(text, stop)));
+}

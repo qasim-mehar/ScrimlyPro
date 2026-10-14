@@ -8,6 +8,10 @@ import type { TeamRow } from "@/lib/scoring";
 // name block occupies the bottom 34px of each announcement cell; the logo
 // centers vertically in the remaining (cellH − NAME_BLOCK_H) space.
 const NAME_BLOCK_H = 34;
+// Cell card inset + radius: the card is a subtle rounded rect inside the
+// grid cell; the logo plate circle sits in the card above the name.
+const CARD_INSET = 5;
+const CARD_RADIUS = 16;
 
 type AnnouncementGraphicProps = {
   aestheticId: AestheticId;
@@ -38,8 +42,42 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
       ) : null}
       {cells.map((cell, i) => {
         const team = teams[i];
+        const plateD = announcement.logoSize + 10;
+        const cardTop = cell.y + CARD_INSET;
+        const nameTop = cell.y + cell.h - CARD_INSET - NAME_BLOCK_H;
+        const plateTop = cardTop + (nameTop - cardTop - plateD) / 2;
+        const plateLeft = cell.x + (cell.w - plateD) / 2;
         return (
           <div key={team.id}>
+            {/* Cell card: subtle rounded rect (plate bg + hairline ring). */}
+            <div
+              style={{
+                position: "absolute",
+                left: cell.x + CARD_INSET,
+                top: cardTop,
+                width: cell.w - CARD_INSET * 2,
+                height: cell.h - CARD_INSET * 2,
+                borderRadius: CARD_RADIUS,
+                background: palette.plateBg,
+                border: `1px solid ${palette.plateRing}`,
+                boxSizing: "border-box",
+              }}
+            />
+            {/* Logo plate circle above the name (ring keeps it legible on
+                the card); the logo ink centers inside it. */}
+            <div
+              style={{
+                position: "absolute",
+                left: plateLeft,
+                top: plateTop,
+                width: plateD,
+                height: plateD,
+                borderRadius: "50%",
+                background: palette.plateBg,
+                border: `1px solid ${palette.plateRing}`,
+                boxSizing: "border-box",
+              }}
+            />
             {team.logoUrl ? (
               // Data URLs — no CORS risk in export.
               // eslint-disable-next-line @next/next/no-img-element
@@ -48,11 +86,12 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                 alt={team.name}
                 style={{
                   position: "absolute",
-                  left: cell.x + (cell.w - announcement.logoSize) / 2,
-                  top: cell.y + (cell.h - NAME_BLOCK_H - announcement.logoSize) / 2,
+                  left: plateLeft + (plateD - announcement.logoSize) / 2,
+                  top: plateTop + (plateD - announcement.logoSize) / 2,
                   width: announcement.logoSize,
                   height: announcement.logoSize,
-                  objectFit: "contain",
+                  borderRadius: "50%",
+                  objectFit: "cover",
                 }}
               />
             ) : null}
@@ -60,7 +99,7 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
               style={{
                 position: "absolute",
                 left: cell.x,
-                top: cell.y + cell.h - NAME_BLOCK_H,
+                top: nameTop,
                 width: cell.w,
                 height: NAME_BLOCK_H,
                 display: "flex",

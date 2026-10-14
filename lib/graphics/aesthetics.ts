@@ -108,6 +108,12 @@ const DARK_GOLD: TemplateConfig = {
     wwcdBg: "rgba(245,197,66,.16)",
     wwcdText: "#f5c542",
     watermarkColor: "rgba(255,255,255,0.7)",
+    plateBg: "rgba(255,255,255,0.07)",
+    plateRing: "rgba(245,197,66,0.45)",
+    medalGold: "#f5c542",
+    medalSilver: "#c9d1dd",
+    medalBronze: "#d19a5b",
+    medalText: "#11141b",
   },
 };
 
@@ -141,6 +147,12 @@ const PURPLE_BUTTERFLY: TemplateConfig = {
     wwcdBg: "rgba(192,132,252,.15)",
     wwcdText: "#c084fc",
     watermarkColor: "rgba(255,255,255,0.7)",
+    plateBg: "rgba(255,255,255,0.07)",
+    plateRing: "rgba(192,132,252,0.45)",
+    medalGold: "#f0c44c",
+    medalSilver: "#c9d1dd",
+    medalBronze: "#d19a5b",
+    medalText: "#1c1533",
   },
 };
 
@@ -174,6 +186,12 @@ const PINK_BLOSSOM: TemplateConfig = {
     wwcdBg: "rgba(255,158,199,.14)",
     wwcdText: "#ff9ec7",
     watermarkColor: "rgba(255,255,255,0.7)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(255,158,199,0.45)",
+    medalGold: "#f0c44c",
+    medalSilver: "#ccd2de",
+    medalBronze: "#d29a5c",
+    medalText: "#2c1521",
   },
 };
 
@@ -256,6 +274,12 @@ const PMPL_LIGHT: TemplateConfig = {
     wwcdBg: "rgba(230,160,20,0.16)",
     wwcdText: "#8a5a00",
     watermarkColor: "rgba(20,28,44,0.55)",
+    plateBg: "#ffffff",
+    plateRing: "rgba(28,35,51,0.18)",
+    medalGold: "#b57e0d",
+    medalSilver: "#7d8698",
+    medalBronze: "#9c6327",
+    medalText: "#ffffff",
   },
 };
 

@@ -146,6 +146,12 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
                 split: { left: leftCount, right: rightCount },
                 pitch: pitches,
                 watermark: config.palette.watermarkColor,
+                plates: {
+                  plateBg: config.palette.plateBg,
+                  plateRing: config.palette.plateRing,
+                  medals: [config.palette.medalGold, config.palette.medalSilver, config.palette.medalBronze],
+                  medalText: config.palette.medalText,
+                },
               },
               null,
               1,

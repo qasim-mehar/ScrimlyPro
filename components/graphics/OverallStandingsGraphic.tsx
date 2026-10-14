@@ -17,7 +17,8 @@ import type { StandingRow } from "@/lib/scoring";
 // TemplateConfig fields (flagged in README Assumptions for a template phase).
 const RANK_BOX_W = 48; // StandingsColumnSpec.rankX: "48 wide, centered text"
 const STAT_BOX_W = 58; // StandingsColumnSpec.statColumns: "58 wide, centered"
-const LOGO_SIZE = 44; // PRD F6: "optional 44px logos"
+const LOGO_PLATE = 44; // PRD F6: "optional 44px logos" — the plate is the 44px circle
+const LOGO_IMG = 34; // logo ink inside the plate (plate ring stays visible)
 const LOGO_NAME_GAP = 52; // StandingsColumnSpec.teamX: "name shifts +52"
 
 type RankedRow = StandingRow & { rank: number };
@@ -129,18 +130,37 @@ function StandingsRow({
         {row.rank}
       </div>
       {row.logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- data URLs: raw <img> required for html-to-image capture
-        <img
-          src={row.logoUrl}
-          alt=""
-          style={{
-            position: "absolute",
-            left: col.teamX,
-            top: y + (st.rowHeight - LOGO_SIZE) / 2,
-            width: LOGO_SIZE,
-            height: LOGO_SIZE,
-          }}
-        />
+        <>
+          {/* Logo plate: palette circle behind the logo ink; rank-1 ring
+              uses accent (emphasis), all others the theme plate ring. */}
+          <div
+            style={{
+              position: "absolute",
+              left: col.teamX,
+              top: y + (st.rowHeight - LOGO_PLATE) / 2,
+              width: LOGO_PLATE,
+              height: LOGO_PLATE,
+              borderRadius: "50%",
+              background: palette.plateBg,
+              border: isRankOne ? `2px solid ${palette.accent}` : `1px solid ${palette.plateRing}`,
+              boxSizing: "border-box",
+            }}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- data URLs: raw <img> required for html-to-image capture */}
+          <img
+            src={row.logoUrl}
+            alt=""
+            style={{
+              position: "absolute",
+              left: col.teamX + (LOGO_PLATE - LOGO_IMG) / 2,
+              top: y + (st.rowHeight - LOGO_IMG) / 2,
+              width: LOGO_IMG,
+              height: LOGO_IMG,
+              borderRadius: "50%",
+              objectFit: "cover",
+            }}
+          />
+        </>
       ) : null}
       {row.logoUrl ? (
         <div style={{ ...teamStyle, left: col.teamX + LOGO_NAME_GAP, width: col.teamW - LOGO_NAME_GAP }}>
