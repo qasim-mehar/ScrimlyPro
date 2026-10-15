@@ -127,6 +127,13 @@ export type TemplateConfig = {
   };
   labelsBakedIn?: boolean; // true → code draws NO label row (art has it)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
+  hideScrimName?: boolean; // true → renderers skip the scrim-name (title) slot
+  // entirely (neon-green: the art's title band is intentionally blank)
+  uniformMvpRows?: boolean; // true → MvpGraphic renders all 5 rows identically:
+  // neutral plates, text ink, no rank-1 accent, no metal medallions (P7)
+  watermarkYOffset?: number; // extra px added to the fixed brand-law watermark y
+  // (announcement variant only; default 0). pmpl-light: drops the watermark
+  // into the art's clear footer strip, below its border line (P7)
   header: HeaderSpec;
   variantHeaders?: Partial<Record<GraphicVariant, Partial<HeaderSpec>>>; // per-variant
   // header overrides, merged over `header` by headerFor() (pmpl-light

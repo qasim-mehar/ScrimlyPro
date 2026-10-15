@@ -1,13 +1,16 @@
 import type { AestheticId, TemplateConfig } from "./types";
 
-/** Font stack appended to EVERY font string in every config. "Noto Sans Symbols 2"
- * covers the C1.1 glyph set (× · | _ ₛ ≌) that Rajdhani lacks. */
-const FONTS = '"Rajdhani", "Noto Sans Symbols 2", sans-serif';
+/** Font stack appended to EVERY font string in every config. Exo 2 is the
+ * primary display face (P7); Rajdhani stays as the metric fallback until the
+ * browser loads Exo 2, and "Noto Sans Symbols 2" covers the C1.1 glyph set
+ * (× · | _ ₛ ≌) that Exo 2 lacks. */
+const FONTS = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif';
 
 /** Geometry shared by the three gradient aesthetics — identical until real
  * PNG templates (P4) need per-template geometry. */
 const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> = {
   canvas: { w: 1080, h: 1620 },
+  uniformMvpRows: true,
   header: {
     title: { x: 90, y: 96, w: 900, align: "center" },
     subtitle: { x: 190, y: 188, w: 700, align: "center" },
@@ -50,8 +53,8 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> 
     rowPitch: 80,
     rowHeight: 60,
     maxRowsLeft: 13,
-    nameFont: `600 32px ${FONTS}`,
-    statFont: `600 28px ${FONTS}`,
+    nameFont: `700 32px ${FONTS}`,
+    statFont: `700 28px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
   mvp: {
@@ -66,8 +69,8 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> 
     killsX: 960,
     killsW: 90,
     rankFont: `700 64px ${FONTS}`,
-    playerFont: `600 36px ${FONTS}`,
-    statFont: `600 34px ${FONTS}`,
+    playerFont: `700 36px ${FONTS}`,
+    statFont: `700 34px ${FONTS}`,
   },
   announcement: {
     // P6 list geometry: vertical rows (slot number, logo plate, team name),
@@ -82,8 +85,8 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> 
     teamW: 700,
     logoSize: 30, // +10 plate ring = 40 ≤ the 41.6px pitch at 25 teams
     rowHeight: 40,
-    slotFont: `600 30px ${FONTS}`,
-    nameFont: `600 30px ${FONTS}`,
+    slotFont: `700 30px ${FONTS}`,
+    nameFont: `700 30px ${FONTS}`,
   },
 };
 
@@ -230,6 +233,10 @@ const PMPL_LIGHT: TemplateConfig = {
   },
   labelsBakedIn: true,
   subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  watermarkYOffset: 16, // announcement art: watermark sits in the clear footer
+  // strip below the border line (ink 1592.8–1617.4 at offset 16: clears the
+  // diagonal notch (ends y≈1595 at x852) and the 1620 canvas bottom by 2.65px)
   header: {
     title: { x: 295, y: 6, w: 490, align: "center" },
     subtitle: { x: 620, y: 54, w: 80, align: "left" },
@@ -282,8 +289,8 @@ const PMPL_LIGHT: TemplateConfig = {
     rowPitch: 80,
     rowHeight: 64,
     maxRowsLeft: 13,
-    nameFont: `600 28px ${FONTS}`,
-    statFont: `600 30px ${FONTS}`,
+    nameFont: `700 28px ${FONTS}`,
+    statFont: `700 30px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
   announcement: {
@@ -296,8 +303,8 @@ const PMPL_LIGHT: TemplateConfig = {
     teamW: 750,
     logoSize: 30,
     rowHeight: 40,
-    slotFont: `600 28px ${FONTS}`,
-    nameFont: `600 32px ${FONTS}`,
+    slotFont: `700 28px ${FONTS}`,
+    nameFont: `700 32px ${FONTS}`,
     subtitleBakedIn: true, // art bakes "PARTICIPATING TEAMS"
   },
   palette: {
@@ -349,9 +356,12 @@ const NEON_GREEN: TemplateConfig = {
   },
   labelsBakedIn: true,
   subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  hideScrimName: true, // P7: the dark band between the top frame and the baked
+  // title is intentionally empty — no scrim-name text renders on the art
   header: {
     title: { x: 140, y: 90, w: 800, align: "center" },
-    subtitle: { x: 609, y: 265, w: 44, align: "left" },
+    subtitle: { x: 609, y: 265, w: 48, align: "left" }, // 48 contains "12" at 700 44px (44.57px) inside the baked chip (right edge 659.8)
     organizer: { x: 140, y: 90, w: 800, align: "center" },
     titleFont: `600 28px ${FONTS}`,
     subtitleFont: `700 44px ${FONTS}`,
@@ -394,8 +404,8 @@ const NEON_GREEN: TemplateConfig = {
     rowHeight: 40,
     maxRowsLeft: 25,
     singleColumn: true,
-    nameFont: `600 28px ${FONTS}`,
-    statFont: `600 28px ${FONTS}`,
+    nameFont: `700 28px ${FONTS}`,
+    statFont: `700 28px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
   palette: {
@@ -445,6 +455,7 @@ const CHALLENGERS_RED: TemplateConfig = {
     mvp: { type: "image", src: "/templates/challengers-red/mvp.png" },
     announcement: CHALLENGERS_RED_FALLBACK_BG,
   },
+  uniformMvpRows: true,
   header: {
     title: { x: 140, y: 18, w: 800, align: "center" },
     subtitle: { x: 190, y: 188, w: 700, align: "center" },
@@ -465,8 +476,8 @@ const CHALLENGERS_RED: TemplateConfig = {
     killsX: 900, // centers the 90-wide box under the baked KILLS ink (944.7)
     killsW: 90,
     rankFont: `700 64px ${FONTS}`,
-    playerFont: `600 36px ${FONTS}`,
-    statFont: `600 34px ${FONTS}`,
+    playerFont: `700 36px ${FONTS}`,
+    statFont: `700 34px ${FONTS}`,
     subtitleBakedIn: true,
   },
   palette: {

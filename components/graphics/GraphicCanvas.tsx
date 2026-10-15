@@ -5,12 +5,13 @@ import { slotToStyle, type DecorShape, type GraphicVariant, type Slot, type Temp
 
 export type { GraphicVariant };
 
-const FONT_STACK = '"Rajdhani", "Noto Sans Symbols 2", sans-serif';
+const FONT_STACK = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif';
 
 // brand law — position + text fixed (PRD §4: watermark always rendered; it is
-// the growth engine). Only the INK is per-theme (palette.watermarkColor).
+// the growth engine). Only the INK is per-theme (palette.watermarkColor) and
+// the announcement variant may drop it lower (config.watermarkYOffset, P7).
 const WATERMARK_SLOT: Slot = { x: 760, y: 1570, w: 280, align: "right" };
-const WATERMARK_FONT = "600 26px Rajdhani, sans-serif";
+const WATERMARK_FONT = `600 26px ${FONT_STACK}`;
 
 function DecorShapeView({ shape }: { shape: DecorShape }) {
   const style: CSSProperties = {
@@ -36,6 +37,9 @@ type GraphicCanvasProps = {
 
 export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCanvasProps) {
   const background = config.backgrounds[variant];
+  // P7: only the announcement variant honors watermarkYOffset (pmpl-light's
+  // footer strip); standings/mvp keep the brand-law y exactly.
+  const watermarkY = WATERMARK_SLOT.y + (variant === "announcement" ? (config.watermarkYOffset ?? 0) : 0);
   return (
     <div
       style={{
@@ -85,6 +89,7 @@ export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCa
           <div
             style={{
               ...slotToStyle(WATERMARK_SLOT),
+              top: watermarkY,
               font: WATERMARK_FONT,
               color: config.palette.watermarkColor,
             }}
