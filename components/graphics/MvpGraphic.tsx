@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { getTemplate, slotToStyle, type AestheticId } from "@/lib/graphics";
+import { getTemplate, headerFor, slotToStyle, type AestheticId } from "@/lib/graphics";
 import type { MvpDisplayEntry } from "@/lib/graphics/mvp";
 
 type MvpGraphicProps = {
@@ -76,15 +76,19 @@ function EllipsisText({
 }
 
 export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }: MvpGraphicProps) {
-  const { header, mvp, palette } = getTemplate(aestheticId);
+  const config = getTemplate(aestheticId);
+  const { mvp, palette } = config;
+  const header = headerFor(config, "mvp");
   return (
     <>
       <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
         {title}
       </div>
-      <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
-        {subtitle}
-      </div>
+      {mvp.subtitleBakedIn ? null : (
+        <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
+          {subtitle}
+        </div>
+      )}
       {organizer ? (
         <div style={{ ...slotToStyle(header.organizer), font: header.organizerFont, color: palette.textMuted }}>
           {organizer}

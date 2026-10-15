@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { AnnouncementSpec, Slot } from "./types";
+import type { AnnouncementSpec, GraphicVariant, Slot, TemplateConfig } from "./types";
 
 /**
  * Two-column split for n teams: [left, right].
@@ -11,17 +11,17 @@ export function splitRows(n: number): [number, number] {
 }
 
 /**
- * Announcement grid: cols = clamp(ceil(sqrt(n)), 4, 6);
- * rows = ceil(n/cols); x0 = round((1080 - cols*cellW)/2).
+ * Announcement list: n rows auto-fitted between rowsTop and rowsBottom.
+ * pitch = (rowsBottom − rowsTop) / n; row i sits at rowsTop + i*pitch.
+ * n ≤ 0 → []. Works 4–25 (rowHeight bounds the card; pitch stretches).
  */
-export function announcementGrid(
+export function announcementRowLayout(
   n: number,
   spec: AnnouncementSpec,
-): { cols: number; rows: number; x0: number; y0: number; cellW: number; cellH: number } {
-  const cols = Math.min(6, Math.max(4, Math.ceil(Math.sqrt(n))));
-  const rows = Math.ceil(n / cols);
-  const x0 = Math.round((1080 - cols * spec.cellW) / 2);
-  return { cols, rows, x0, y0: spec.y0, cellW: spec.cellW, cellH: spec.cellH };
+): Array<{ y: number; pitch: number }> {
+  if (n <= 0) return [];
+  const pitch = (spec.rowsBottom - spec.rowsTop) / n;
+  return Array.from({ length: n }, (_, i) => ({ y: spec.rowsTop + i * pitch, pitch }));
 }
 
 /** Slot → absolute-position style. width only when slot.w defined. */
@@ -30,6 +30,14 @@ export function slotToStyle(slot: Slot): CSSProperties {
   if (slot.w !== undefined) style.width = slot.w;
   if (slot.align !== undefined) style.textAlign = slot.align;
   return style;
+}
+
+/** Effective header for one variant: the shared header with the variant's
+ * partial override merged on top (pmpl-light announcement). No override →
+ * the shared header object itself. */
+export function headerFor(config: TemplateConfig, variant: GraphicVariant): TemplateConfig["header"] {
+  const override = config.variantHeaders?.[variant];
+  return override ? { ...config.header, ...override } : config.header;
 }
 
 /**

@@ -88,7 +88,14 @@ describe("Fix A — matchCount/isFinal renders (SSR)", () => {
 });
 
 describe("Fix D — palette-driven polish (SSR presence)", () => {
-  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
+  const IDS: AestheticId[] = [
+    "dark-gold",
+    "purple-butterfly",
+    "pink-blossom",
+    "pmpl-light",
+    "neon-green",
+    "challengers-red",
+  ];
 
   it("standings logo plates use plateBg/plateRing; rank-1 ring uses accent", () => {
     for (const id of IDS) {
@@ -122,9 +129,10 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     }
   });
 
-  it("announcement cells render rounded cards with logo plates", () => {
+  it("announcement rows render slot numbers, rounded logo plates and names", () => {
     for (const id of IDS) {
       const p = getTemplate(id).palette;
+      const spec = getTemplate(id).announcement;
       const html = renderToStaticMarkup(
         h(AnnouncementGraphic, {
           aestheticId: id,
@@ -134,11 +142,31 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
           teams: announceTeams(16),
         }),
       );
+      expect(html).toContain(">01<"); // first slot number, zero-padded
+      expect(html).toContain(">16<");
+      expect(html).toContain(`left:${spec.slotX}px`);
+      expect(html).toContain(`left:${spec.teamX}px`);
       expect(html).toContain(p.plateBg);
       expect(html).toContain(p.plateRing);
-      expect(html).toContain("border-radius:16px");
       expect(html).toContain("border-radius:50%");
+      expect(html).toContain("SQUAD 16");
     }
+  });
+
+  it("announcement rows auto-fit the pitch (penultimate row lands inside)", () => {
+    const spec = getTemplate("dark-gold").announcement;
+    const html = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "dark-gold",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(4),
+      }),
+    );
+    const pitch = (spec.rowsBottom - spec.rowsTop) / 4;
+    const lastContentY = spec.rowsTop + 3 * pitch + (pitch - spec.rowHeight) / 2;
+    expect(html).toContain(`top:${lastContentY}px`);
   });
 
   it("no graphic hardcodes the legacy raw-logo render (plates always wrap logos)", () => {
@@ -191,5 +219,92 @@ describe("row auto-fit at 16/19/25 teams (SSR)", () => {
     expect(html).toContain(`top:${lastTop}px`);
     if (n === 25) expect(html).not.toContain("top:1331px");
     expect(html).toContain(`SQUAD ${n}`);
+  });
+});
+
+describe("P6 — neon-green single-column standings (SSR)", () => {
+  it("renders all rows in ONE full-width table on the auto-fit pitch", () => {
+    const html = renderToStaticMarkup(standings("neon-green", "AFTER MATCH 6", 16, { matchCount: 6 }));
+    const st = getTemplate("neon-green").standings;
+    const pitch = (st.columns[0].rowsBottom! - st.rowY0) / 16;
+    const lastTop = st.rowY0 + 15 * pitch;
+    expect(html).toContain(`top:${lastTop}px`); // row 16 at the very bottom
+    expect(html).toContain("SQUAD 16");
+    // The second column spec is skipped entirely — every strip is the single
+    // wide one (x116, w848).
+    expect(html).toContain("width:848px");
+  });
+
+  it("draws no code labels (baked into the art) and only the match number", () => {
+    const html = renderToStaticMarkup(standings("neon-green", "FINAL RESULTS", 16, { matchCount: 6 }));
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">TEAM<");
+    expect(html).toContain(">6<");
+    expect(html).not.toContain("FINAL RESULTS");
+  });
+});
+
+describe("P6 — baked-subtitle templates (SSR)", () => {
+  it("challengers-red MVP skips the baked TOP 5 FRAGGERS line", () => {
+    const html = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "challengers-red",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(html).not.toContain("TOP 5 FRAGGERS");
+    expect(html).toContain("ALPHA");
+    expect(html).toContain(">24<");
+  });
+
+  it("neon-green MVP (gradient fallback) still renders its subtitle", () => {
+    const html = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "neon-green",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(html).toContain("TOP 5 FRAGGERS");
+  });
+
+  it("pmpl-light announcement skips the baked title line and moves the scrim name into the strip", () => {
+    const spec = getTemplate("pmpl-light").announcement;
+    const html = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "pmpl-light",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(html).not.toContain("PARTICIPATING TEAMS");
+    // Scrim name at the announcement strip override (x140 y36 w800), not the
+    // standings slot (x295 y6 w490).
+    expect(html).toContain("left:140px");
+    expect(html).toContain("top:36px");
+    expect(html).not.toContain("left:295px");
+    expect(html).toContain(`left:${spec.slotX}px`);
+    expect(html).toContain(">01<");
+  });
+
+  it("challengers-red announcement (gradient fallback) still renders its subtitle", () => {
+    const html = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "challengers-red",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(html).toContain("PARTICIPATING TEAMS");
+    expect(html).toContain(">01<");
   });
 });

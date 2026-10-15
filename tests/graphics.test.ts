@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import {
   AESTHETICS,
-  announcementGrid,
+  announcementRowLayout,
   columnPitch,
   effectivePitch,
   getTemplate,
@@ -29,29 +29,52 @@ describe("splitRows", () => {
   });
 });
 
-describe("announcementGrid", () => {
+describe("announcementRowLayout", () => {
   const spec: AnnouncementSpec = {
-    y0: 410,
-    cellW: 180,
-    cellH: 150,
-    logoSize: 64,
-    nameFont: '600 26px "Rajdhani", sans-serif',
+    rowsTop: 430,
+    rowsBottom: 1470,
+    slotX: 120,
+    slotW: 48,
+    logoX: 187,
+    teamX: 250,
+    teamW: 700,
+    logoSize: 30,
+    rowHeight: 40,
+    slotFont: '600 30px "Rajdhani", sans-serif',
+    nameFont: '600 30px "Rajdhani", sans-serif',
   };
 
-  it.each([
-    { n: 25, cols: 5, rows: 5, x0: 90 },
-    { n: 16, cols: 4, rows: 4, x0: 180 },
-    { n: 6, cols: 4, rows: 2, x0: 180 },
-    { n: 22, cols: 5, rows: 5, x0: 90 },
-  ])("lays out $n teams in ${cols}×$rows at x0 $x0", ({ n, cols, rows, x0 }) => {
-    expect(announcementGrid(n, spec)).toEqual({
-      cols,
-      rows,
-      x0,
-      y0: spec.y0,
-      cellW: spec.cellW,
-      cellH: spec.cellH,
-    });
+  it("16 teams → even 65px pitch from rowsTop, filling the list area", () => {
+    const rows = announcementRowLayout(16, spec);
+    expect(rows).toHaveLength(16);
+    expect(rows[0]).toEqual({ y: 430, pitch: 65 });
+    expect(rows[15]).toEqual({ y: 430 + 15 * 65, pitch: 65 });
+  });
+
+  it("25 teams → 41.6px pitch, still ≥ rowHeight", () => {
+    const rows = announcementRowLayout(25, spec);
+    expect(rows).toHaveLength(25);
+    expect(rows[0].pitch).toBeCloseTo((1470 - 430) / 25, 10);
+    for (const row of rows) expect(row.pitch).toBeGreaterThanOrEqual(spec.rowHeight);
+  });
+
+  it("1 and 4 teams stretch to the full list area", () => {
+    expect(announcementRowLayout(1, spec)).toEqual([{ y: 430, pitch: 1040 }]);
+    expect(announcementRowLayout(4, spec)[3]).toEqual({ y: 430 + 3 * 260, pitch: 260 });
+  });
+
+  it("n ≤ 0 → empty layout", () => {
+    expect(announcementRowLayout(0, spec)).toEqual([]);
+    expect(announcementRowLayout(-3, spec)).toEqual([]);
+  });
+
+  it("keeps last-row content inside rowsBottom for every count 4–25", () => {
+    for (let n = 4; n <= 25; n++) {
+      const rows = announcementRowLayout(n, spec);
+      const last = rows[rows.length - 1];
+      const contentY = last.y + (last.pitch - spec.rowHeight) / 2;
+      expect(contentY + spec.rowHeight).toBeLessThanOrEqual(spec.rowsBottom);
+    }
   });
 });
 
@@ -75,9 +98,16 @@ describe("slotToStyle", () => {
 });
 
 describe("AESTHETICS registry", () => {
-  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
+  const IDS: AestheticId[] = [
+    "dark-gold",
+    "purple-butterfly",
+    "pink-blossom",
+    "pmpl-light",
+    "neon-green",
+    "challengers-red",
+  ];
 
-  it("exposes exactly the four aesthetic ids", () => {
+  it("exposes exactly the six aesthetic ids", () => {
     expect(Object.keys(AESTHETICS).sort()).toEqual([...IDS].sort());
   });
 
@@ -258,12 +288,50 @@ describe("pmpl-light config", () => {
     expect(config.palette.watermarkColor).not.toContain("255,255,255");
   });
 
-  it("falls mvp/announcement back to the light gradient (never a broken render)", () => {
-    for (const bg of [config.backgrounds.mvp, config.backgrounds.announcement]) {
-      expect(bg.type).toBe("gradient");
-      if (bg.type !== "gradient") continue;
-      expect(bg.css).toMatch(/linear-gradient/);
-    }
+  it("falls mvp back to the light gradient (never a broken render)", () => {
+    const bg = config.backgrounds.mvp;
+    expect(bg.type).toBe("gradient");
+    if (bg.type !== "gradient") return;
+    expect(bg.css).toMatch(/linear-gradient/);
+  });
+
+  it("points announcement at the real art file, which exists on disk", () => {
+    expect(config.backgrounds.announcement).toEqual({
+      type: "image",
+      src: "/templates/pmpl-light/announcement.png",
+    });
+    expect(() => readFileSync("public/templates/pmpl-light/announcement.png")).not.toThrow();
+  });
+
+  it("sits the announcement list between the baked divider and bottom border", () => {
+    // Panel art: divider y840 → canvas 425.5; bottom border y3058 → 1549.1.
+    const ann = config.announcement;
+    expect(ann.rowsTop).toBeGreaterThanOrEqual(426);
+    expect(ann.rowsTop).toBeLessThanOrEqual(450);
+    expect(ann.rowsBottom).toBeGreaterThanOrEqual(1530);
+    expect(ann.rowsBottom).toBeLessThanOrEqual(1549);
+    // 25 teams must still fit: pitch ≥ rowHeight.
+    expect((ann.rowsBottom - ann.rowsTop) / 25).toBeGreaterThanOrEqual(ann.rowHeight);
+  });
+
+  it("centers slot numbers on the baked SLOT NO label and names on TEAM", () => {
+    const ann = config.announcement;
+    // "SLOT NO" ink x 203–387 → canvas center 149.4; "TEAM" starts art 499 → 252.8.
+    expect(Math.abs(ann.slotX + ann.slotW / 2 - 149.4)).toBeLessThanOrEqual(1);
+    expect(Math.abs(ann.teamX - 252.8)).toBeLessThanOrEqual(1);
+    // Logo plate (40) fits between the slot box end and the name start.
+    expect(ann.slotX + ann.slotW).toBeLessThanOrEqual(ann.logoX);
+    expect(ann.logoX + ann.logoSize + 10).toBeLessThanOrEqual(ann.teamX);
+  });
+
+  it("bakes the announcement subtitle away and overrides the title into the top strip", () => {
+    expect(config.announcement.subtitleBakedIn).toBe(true);
+    const override = config.variantHeaders?.announcement;
+    expect(override?.title).toEqual({ x: 140, y: 36, w: 800, align: "center" });
+    // Strip art x276–1856 y60–160 → canvas x139.8–940.2 y30.4–81.
+    expect(override?.title?.x).toBeGreaterThanOrEqual(140);
+    expect(override!.title!.x! + override!.title!.w!).toBeLessThanOrEqual(941);
+    expect(override?.title?.y).toBeGreaterThanOrEqual(31);
   });
 
   it("centers every value box on its baked art label (P4b pixel measurement)", () => {
@@ -333,12 +401,172 @@ describe("pmpl-light config", () => {
   });
 });
 
-describe("image art quality gates (P5 Fix B)", () => {
+describe("neon-green config (P6 art calibration)", () => {
+  const config: TemplateConfig = getTemplate("neon-green");
+  // 4096×6144 art → canvas: ×1080/4096 = 0.263671875.
+  const S = 1080 / 4096;
+  const near = (canvasPx: number, artPx: number) => {
+    expect(Math.abs(canvasPx - artPx * S)).toBeLessThanOrEqual(1);
+  };
+
+  it("points standings at the real art file, which exists on disk", () => {
+    expect(config.backgrounds.standings).toEqual({
+      type: "image",
+      src: "/templates/neon-green/overall.png",
+    });
+    expect(() => readFileSync("public/templates/neon-green/overall.png")).not.toThrow();
+  });
+
+  it("is a single full-width table with baked labels and match number", () => {
+    expect(config.standings.singleColumn).toBe(true);
+    expect(config.labelsBakedIn).toBe(true);
+    expect(config.subtitleMode).toBe("matchNumber");
+    expect(config.standings.rowPitch).toBe(42);
+    expect(config.standings.rowHeight).toBe(40);
+  });
+
+  it("centers every value box on its baked art label (P6 pixel measurement)", () => {
+    // Baked label ink (art px): RANK 758, PP 2361.5, KP 2724.5, chicken 3070,
+    // TOTAL 3430.5. Box widths: rank 48, stats 58 — centers compared.
+    const col = config.standings.columns[0];
+    near(col.rankX + 24, 758);
+    const byKey = new Map(col.statColumns.map((c) => [c.key, c.x]));
+    near(byKey.get("pp")! + 29, 2361.5);
+    near(byKey.get("kp")! + 29, 2724.5);
+    near(byKey.get("wwcd")! + 29, 3070);
+    near(byKey.get("total")! + 29, 3430.5);
+    // Names left-align with the baked "TEAM" label start (art 1256).
+    near(col.teamX, 1256);
+    expect(col.teamX + col.teamW).toBeLessThanOrEqual(byKey.get("pp")! - 4);
+  });
+
+  it("fills the measured table panel (art y1584–5568, strip x440–3656)", () => {
+    const st = config.standings;
+    near(st.rowY0, 1584);
+    expect(st.rowY0).toBeGreaterThanOrEqual(413); // below the baked divider (art 1566)
+    const col = st.columns[0];
+    near(col.stripX, 440);
+    near(col.stripW, 3656 - 440);
+    near(col.rowsBottom!, 5568);
+    // 25 rows still fit on the auto-fit pitch.
+    expect((col.rowsBottom! - st.rowY0) / 25).toBeGreaterThanOrEqual(st.rowHeight);
+  });
+
+  it("lands the match number right of the baked #, inside the chip", () => {
+    // Chip art x1594–2502 y994–1186 → canvas x420.3–659.7 y262.1–312.7;
+    // "#" ink ends at art 2290 → canvas 603.8.
+    const sub = config.header.subtitle;
+    expect(sub.x).toBeGreaterThanOrEqual(604);
+    expect(sub.x).toBeLessThanOrEqual(615);
+    expect(sub.x! + 50).toBeLessThanOrEqual(660);
+    expect(sub.y).toBeGreaterThanOrEqual(262);
+    expect(sub.y).toBeLessThanOrEqual(270);
+  });
+
+  it("uses the neon palette values", () => {
+    expect(config.palette.accent).toBe("#00e66a");
+    expect(config.palette.text).toBe("#f0f4f0");
+    expect(config.palette.textMuted).toBe("#7a8a7a");
+    expect(config.palette.watermarkColor).toBe("rgba(255,255,255,0.7)");
+    expect(config.palette.medalText).toBe("#0a0f0a");
+  });
+});
+
+describe("challengers-red config (P6 art calibration)", () => {
+  const config: TemplateConfig = getTemplate("challengers-red");
+  const S = 1080 / 4096;
+  // Measured slot card tops/bottoms (art px). Pitch varies 620–634 in the art
+  // (AI drift) → one config pitch must stay within 3 canvas px of each slot.
+  const TOPS = [1968, 2588, 3216, 3850, 4480];
+  const BOTTOMS = [2500, 3128, 3760, 4390, 5028];
+  const near = (canvasPx: number, artPx: number, tol = 1) => {
+    expect(Math.abs(canvasPx - artPx * S)).toBeLessThanOrEqual(tol);
+  };
+
+  it("points mvp at the real art file, which exists on disk", () => {
+    expect(config.backgrounds.mvp).toEqual({
+      type: "image",
+      src: "/templates/challengers-red/mvp.png",
+    });
+    expect(() => readFileSync("public/templates/challengers-red/mvp.png")).not.toThrow();
+  });
+
+  it("bakes the TOP 5 FRAGGERS subtitle away", () => {
+    expect(config.mvp.subtitleBakedIn).toBe(true);
+  });
+
+  it("seats all five slot cards on the measured tops/bottoms", () => {
+    const mvp = config.mvp;
+    expect(mvp.rowHeight).toBe(140);
+    TOPS.forEach((top, i) => {
+      near(mvp.rowY0 + i * mvp.rowPitch, top, 3);
+      // Text boxes never spill past the painted card bottom.
+      expect(mvp.rowY0 + i * mvp.rowPitch + mvp.rowHeight).toBeLessThanOrEqual(BOTTOMS[i] * S + 1.5);
+    });
+  });
+
+  it("centers the kills box on the baked KILLS ink (art x3464–3702, center 3583)", () => {
+    const mvp = config.mvp;
+    near(mvp.killsX + mvp.killsW / 2, 3583, 1);
+    // Card is art x364–3708 → canvas 96–978; the digit glyphs stay on the
+    // dark interior (the box itself may overhang the painted edge by design).
+    expect(mvp.rankX).toBeGreaterThanOrEqual(96);
+    expect(mvp.killsX + mvp.killsW / 2 + 30).toBeLessThanOrEqual(978);
+    expect(mvp.playerX + mvp.playerW).toBeLessThanOrEqual(mvp.teamX);
+    expect(mvp.teamX + mvp.teamW).toBeLessThanOrEqual(mvp.killsX);
+  });
+
+  it("sits the scrim name in the clear top band (art x531–3565 y18–288)", () => {
+    const title = config.header.title;
+    expect(title.y).toBeGreaterThanOrEqual(5);
+    expect(title.y).toBeLessThanOrEqual(30);
+    near(title.x!, 531);
+    near(title.x! + title.w!, 3565);
+  });
+
+  it("uses the challengers palette values", () => {
+    expect(config.palette.accent).toBe("#ff4655");
+    expect(config.palette.text).toBe("#f0f0f4");
+    expect(config.palette.watermarkColor).toBe("rgba(255,255,255,0.7)");
+    expect(config.palette.medalText).toBe("#0f1015");
+  });
+});
+
+describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
   // objectFit cover absorbs ≤1% ratio deviation as a centered crop of ~1–2px at canvas scale — imperceptible
   // and below calibration tolerance; AI upscalers output near-2:3 dimension ladders (e.g. 2132×3200) that must pass. Grossly wrong ratios (9:16,
   // 4:5) still fail.
   const RATIO_TOLERANCE = 0.01;
   const MIN_WIDTH = 1080;
+
+  /** Dimensions from magic bytes — the P6 arts deliver JPEG payloads inside
+   * .png-named files (neon-green, challengers-red), so the P5 IHDR read-off
+   * is not enough: PNG → IHDR, JPEG → first SOF marker. */
+  function imageSize(bytes: Buffer): { w: number; h: number } {
+    if (bytes.readUInt32BE(0) === 0x89504e47) {
+      return { w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) };
+    }
+    if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+      let pos = 2;
+      while (pos + 8 <= bytes.length) {
+        if (bytes[pos] !== 0xff) {
+          pos += 1;
+          continue;
+        }
+        const marker = bytes[pos + 1];
+        if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+          return { h: bytes.readUInt16BE(pos + 5), w: bytes.readUInt16BE(pos + 7) };
+        }
+        if (marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) {
+          pos += 2;
+          continue;
+        }
+        pos += 2 + bytes.readUInt16BE(pos + 2);
+      }
+      throw new Error("JPEG without an SOF marker");
+    }
+    throw new Error("unrecognized image payload");
+  }
 
   type ArtCase = { id: string; variant: string; file: string };
   const CASES: ArtCase[] = [];
@@ -348,27 +576,48 @@ describe("image art quality gates (P5 Fix B)", () => {
     }
   }
 
-  it("covers at least the pmpl-light standings art", () => {
-    expect(CASES).toContainEqual({
-      id: "pmpl-light",
-      variant: "standings",
-      file: "public/templates/pmpl-light/overall.png",
-    });
+  it("covers all four delivered art variants", () => {
+    expect(CASES).toEqual(
+      expect.arrayContaining([
+        { id: "pmpl-light", variant: "standings", file: "public/templates/pmpl-light/overall.png" },
+        { id: "pmpl-light", variant: "announcement", file: "public/templates/pmpl-light/announcement.png" },
+        { id: "neon-green", variant: "standings", file: "public/templates/neon-green/overall.png" },
+        { id: "challengers-red", variant: "mvp", file: "public/templates/challengers-red/mvp.png" },
+      ]),
+    );
+    expect(CASES).toHaveLength(4);
+  });
+
+  it("sniffs both PNG and JPEG payloads (both new arts are JPEG-in-.png)", () => {
+    const neon = readFileSync("public/templates/neon-green/overall.png");
+    const chal = readFileSync("public/templates/challengers-red/mvp.png");
+    expect(neon[0]).toBe(0xff); // JPEG SOI, not PNG magic
+    expect(chal[0]).toBe(0xff);
+    expect(imageSize(neon)).toEqual({ w: 4096, h: 6144 });
+    expect(imageSize(chal)).toEqual({ w: 4096, h: 6144 });
+    const pmpl = readFileSync("public/templates/pmpl-light/announcement.png");
+    expect(pmpl.readUInt32BE(0)).toBe(0x89504e47);
+    expect(imageSize(pmpl)).toEqual({ w: 2132, h: 3200 });
   });
 
   it.each(CASES)("$id/$variant art ($file): ratio within tolerance AND width ≥ 1080", ({ file }) => {
     // A missing or unreadable art file fails the build, never the
     // organizer's export.
-    const bytes = readFileSync(file);
-    const w = bytes.readUInt32BE(16);
-    const h = bytes.readUInt32BE(20);
+    const { w, h } = imageSize(readFileSync(file));
     expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
     expect(w).toBeGreaterThanOrEqual(MIN_WIDTH);
   });
 });
 
 describe("palette plate + medal coverage (P5 Fix D)", () => {
-  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
+  const IDS: AestheticId[] = [
+    "dark-gold",
+    "purple-butterfly",
+    "pink-blossom",
+    "pmpl-light",
+    "neon-green",
+    "challengers-red",
+  ];
 
   it.each(IDS)("%s defines non-empty plate/medal strings", (id) => {
     const p = getTemplate(id).palette;
@@ -417,6 +666,22 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
       medalSilver: "#7d8698",
       medalBronze: "#9c6327",
       medalText: "#ffffff",
+    });
+    expect(getTemplate("neon-green").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.07)",
+      plateRing: "rgba(0,230,106,0.45)",
+      medalGold: "#f0c44c",
+      medalSilver: "#c9d1dd",
+      medalBronze: "#d19a5b",
+      medalText: "#0a0f0a",
+    });
+    expect(getTemplate("challengers-red").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.07)",
+      plateRing: "rgba(255,70,85,0.45)",
+      medalGold: "#f0c44c",
+      medalSilver: "#c9d1dd",
+      medalBronze: "#d19a5b",
+      medalText: "#0f1015",
     });
   });
 });

@@ -1,4 +1,4 @@
-export type AestheticId = "dark-gold" | "purple-butterfly" | "pink-blossom" | "pmpl-light";
+export type AestheticId = "dark-gold" | "purple-butterfly" | "pink-blossom" | "pmpl-light" | "neon-green" | "challengers-red";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -46,6 +46,9 @@ export type StandingsTableSpec = {
   rowPitch: number;
   rowHeight: number;
   maxRowsLeft: number;
+  singleColumn?: boolean; // true → one full-width table (neon-green art):
+  // OverallStandingsGraphic renders columns[0] with ALL rows and skips
+  // columns[1]; splitRows/maxRowsLeft do not apply.
   nameFont: string;
   statFont: string;
   labelFont: string;
@@ -65,14 +68,24 @@ export type MvpSpec = {
   rankFont: string;
   playerFont: string;
   statFont: string;
+  subtitleBakedIn?: boolean; // true → art bakes the subtitle (challengers-red
+  // "TOP 5 FRAGGERS"): MvpGraphic draws no subtitle line.
 };
 
 export type AnnouncementSpec = {
-  y0: number;
-  cellW: number;
-  cellH: number;
-  logoSize: number;
-  nameFont: string;
+  rowsTop: number; // y of first row (top of list area)
+  rowsBottom: number; // y of last row (bottom of list area)
+  slotX: number; // left edge of the slot-number box (e.g. "01")
+  slotW: number; // width of the slot-number box
+  logoX: number; // left edge of the logo plate
+  teamX: number; // left edge of the team name
+  teamW: number; // max team-name width before CSS ellipsis
+  logoSize: number; // square logo plate size
+  rowHeight: number; // base row height (auto-fit stretches pitch)
+  slotFont: string; // font for slot numbers ("01".."25")
+  nameFont: string; // font for team names
+  subtitleBakedIn?: boolean; // true → art bakes the subtitle (pmpl-light
+  // "PARTICIPATING TEAMS"): AnnouncementGraphic draws no subtitle line.
 };
 
 export type Palette = {
@@ -92,6 +105,17 @@ export type Palette = {
   medalText: string; // MVP rank 1–3 medallion digit ink (large text)
 };
 
+export type GraphicVariant = "standings" | "mvp" | "announcement";
+
+export type HeaderSpec = {
+  title: Slot;
+  subtitle: Slot;
+  organizer: Slot;
+  titleFont: string;
+  subtitleFont: string;
+  organizerFont: string;
+};
+
 export type TemplateConfig = {
   id: AestheticId;
   name: string;
@@ -103,14 +127,11 @@ export type TemplateConfig = {
   };
   labelsBakedIn?: boolean; // true → code draws NO label row (art has it)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
-  header: {
-    title: Slot;
-    subtitle: Slot;
-    organizer: Slot;
-    titleFont: string;
-    subtitleFont: string;
-    organizerFont: string;
-  };
+  header: HeaderSpec;
+  variantHeaders?: Partial<Record<GraphicVariant, Partial<HeaderSpec>>>; // per-variant
+  // header overrides, merged over `header` by headerFor() (pmpl-light
+  // announcement: the scrim name sits in the art's top strip, not the
+  // standings strip).
   standings: StandingsTableSpec;
   mvp: MvpSpec;
   announcement: AnnouncementSpec;

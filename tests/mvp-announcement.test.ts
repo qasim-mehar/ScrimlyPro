@@ -2,11 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { MvpEntry } from "@/lib/db/schema";
 import { getTemplate, type AestheticId } from "@/lib/graphics";
-import { announcementCells, PARTICIPATING_TEAMS } from "@/lib/graphics/announcement";
+import { announcementRows, PARTICIPATING_TEAMS } from "@/lib/graphics/announcement";
 import { MVP_SUBTITLE, toMvpDisplay } from "@/lib/graphics/mvp";
 import type { TeamRow } from "@/lib/scoring";
-
-const SPEC = { y0: 410, cellW: 180, cellH: 150, logoSize: 64, nameFont: "600 26px Rajdhani, sans-serif" };
 
 const TEAMS: Array<Pick<TeamRow, "id" | "name">> = [
   { id: "t1", name: "Alpha" },
@@ -48,47 +46,22 @@ describe("constants", () => {
   });
 });
 
-describe("announcementCells", () => {
-  it("lays 16 teams out 4×4 starting at x0=180, y0=410", () => {
-    const cells = announcementCells(16, SPEC);
-    expect(cells).toHaveLength(16);
-    expect(cells[0]).toEqual({ x: 180, y: 410, w: 180, h: 150 });
-    expect(cells[4]).toMatchObject({ x: 180, y: 560 });
-    expect(cells[15]).toMatchObject({ x: 720, y: 860 });
+describe("announcementRows", () => {
+  it("wraps the auto-fit list for the template spec", () => {
+    const spec = getTemplate("pmpl-light").announcement;
+    const rows = announcementRows(16, spec);
+    expect(rows).toHaveLength(16);
+    expect(rows[0].y).toBe(spec.rowsTop);
+    expect(rows[0].pitch).toBeCloseTo((spec.rowsBottom - spec.rowsTop) / 16, 10);
+    expect(rows[15].y).toBeCloseTo(spec.rowsBottom - rows[15].pitch, 10);
   });
 
-  it("lays 25 teams out 5×5 starting at x0=90", () => {
-    const cells = announcementCells(25, SPEC);
-    expect(cells).toHaveLength(25);
-    expect(cells[0]).toMatchObject({ x: 90, y: 410 });
-    expect(cells[24]).toMatchObject({ x: 810, y: 1010 });
-  });
-
-  it("clamps cols to 4 for 6 teams (2 rows)", () => {
-    const cells = announcementCells(6, SPEC);
-    expect(cells).toHaveLength(6);
-    expect(cells[5]).toMatchObject({ x: 360, y: 560 });
-  });
-
-  it("produces a single cell for 1 team", () => {
-    const cells = announcementCells(1, SPEC);
-    expect(cells).toHaveLength(1);
-    expect(cells[0]).toMatchObject({ x: 180, y: 410 });
-  });
-
-  it("keeps every cell within the 1080×1620 canvas bounds", () => {
-    for (const n of [1, 4, 6, 16, 20, 25]) {
-      for (const cell of announcementCells(n, SPEC)) {
-        expect(cell.x).toBeGreaterThanOrEqual(0);
-        expect(cell.x + cell.w).toBeLessThanOrEqual(1080);
-        expect(cell.y).toBeGreaterThanOrEqual(0);
-        expect(cell.y + cell.h).toBeLessThanOrEqual(1620);
-      }
-    }
+  it("empty teams → empty list", () => {
+    expect(announcementRows(0, getTemplate("dark-gold").announcement)).toEqual([]);
   });
 });
 
-describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[])(
+describe.each(["dark-gold", "purple-butterfly", "pink-blossom", "neon-green", "challengers-red"] as AestheticId[])(
   "MVP geometry integrity (%s)",
   (id) => {
     const mvp = getTemplate(id).mvp;

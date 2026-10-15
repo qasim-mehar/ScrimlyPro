@@ -233,6 +233,14 @@ export default function CreateSessionWizard() {
               {(Object.keys(AESTHETICS) as AestheticId[]).map((id) => {
                 const config = AESTHETICS[id];
                 const selected = templateId === id;
+                // "(placeholder)" only when EVERY variant is a gradient;
+                // "(partial)" when art backs some variants but not all.
+                const backgrounds = Object.values(config.backgrounds);
+                const tag = backgrounds.every((bg) => bg.type === "gradient")
+                  ? " (placeholder)"
+                  : backgrounds.some((bg) => bg.type === "gradient")
+                    ? " (partial)"
+                    : "";
                 return (
                   <button
                     key={id}
@@ -259,7 +267,7 @@ export default function CreateSessionWizard() {
                     </span>
                     <span className="mt-1 block text-xs text-muted">
                       {config.name}
-                      {config.backgrounds.standings.type === "gradient" ? " (placeholder)" : ""}
+                      {tag}
                     </span>
                   </button>
                 );

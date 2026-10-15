@@ -70,11 +70,20 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> 
     statFont: `600 34px ${FONTS}`,
   },
   announcement: {
-    y0: 410,
-    cellW: 180,
-    cellH: 150,
-    logoSize: 64,
-    nameFont: `600 26px ${FONTS}`,
+    // P6 list geometry: vertical rows (slot number, logo plate, team name),
+    // auto-fitted between rowsTop/rowsBottom for 4–25 teams. Shared by the
+    // gradient aesthetics until their real art lands (then per-template).
+    rowsTop: 430,
+    rowsBottom: 1470,
+    slotX: 120,
+    slotW: 48,
+    logoX: 187,
+    teamX: 250,
+    teamW: 700,
+    logoSize: 30, // +10 plate ring = 40 ≤ the 41.6px pitch at 25 teams
+    rowHeight: 40,
+    slotFont: `600 30px ${FONTS}`,
+    nameFont: `600 30px ${FONTS}`,
   },
 };
 
@@ -202,10 +211,14 @@ const PMPL_LIGHT_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
 };
 
 /** PMPL-light: first real art-backed template (P4). Standings renders over
- * the user's light-theme PNG; mvp/announcement are light gradient
- * placeholders until the sibling art lands. Standings geometry measured from
- * the art pixels (P4b: 1024×1536 art → ×1.0546875 to the 1080×1620 canvas;
- * label centers, ribbon, table rects all pixel-segmented). */
+ * the user's light-theme PNG; the announcement art landed in P6 (list panel:
+ * baked logo, "PARTICIPATING TEAMS" title, SLOT NO | TEAM label band and
+ * labels all in the art). Standings geometry measured from the art pixels
+ * (P4b: 1024×1536 art → ×1.0546875); announcement geometry from the P6 art
+ * (2132×3200 → ×1080/2132 = 0.50657): panel 61.3–1016.7 × 381–1549, label
+ * band y 393.6–411.3 ("SLOT NO" center 149.4, "TEAM" starts 252.8),
+ * divider y 425.5, rows auto-fit 440→1540, white scrim strip x139.8–940.2
+ * y30.4–81 (title override below), light interior (text is dark navy). */
 const PMPL_LIGHT: TemplateConfig = {
   ...GEOMETRY,
   id: "pmpl-light",
@@ -213,7 +226,7 @@ const PMPL_LIGHT: TemplateConfig = {
   backgrounds: {
     standings: { type: "image", src: "/templates/pmpl-light/overall.png" },
     mvp: PMPL_LIGHT_FALLBACK_BG,
-    announcement: PMPL_LIGHT_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/pmpl-light/announcement.png" },
   },
   labelsBakedIn: true,
   subtitleMode: "matchNumber",
@@ -224,6 +237,14 @@ const PMPL_LIGHT: TemplateConfig = {
     titleFont: `600 30px ${FONTS}`,
     subtitleFont: `700 44px ${FONTS}`,
     organizerFont: `500 22px ${FONTS}`,
+  },
+  variantHeaders: {
+    announcement: {
+      // Scrim name renders in the announcement art's own top strip
+      // (x139.8–940.2 y30.4–81); the baked title/logo below stay untouched.
+      title: { x: 140, y: 36, w: 800, align: "center" },
+      titleFont: `600 28px ${FONTS}`,
+    },
   },
   standings: {
     columns: [
@@ -265,6 +286,20 @@ const PMPL_LIGHT: TemplateConfig = {
     statFont: `600 30px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
+  announcement: {
+    rowsTop: 440,
+    rowsBottom: 1540,
+    slotX: 125,
+    slotW: 48, // slot numbers center under the baked "SLOT NO" (center 149.4)
+    logoX: 191,
+    teamX: 253, // names left-align with the baked "TEAM" label (starts 252.8)
+    teamW: 750,
+    logoSize: 30,
+    rowHeight: 40,
+    slotFont: `600 28px ${FONTS}`,
+    nameFont: `600 32px ${FONTS}`,
+    subtitleBakedIn: true, // art bakes "PARTICIPATING TEAMS"
+  },
   palette: {
     accent: "#0e7ac4",
     text: "#1c2333",
@@ -283,11 +318,182 @@ const PMPL_LIGHT: TemplateConfig = {
   },
 };
 
+const NEON_GREEN_STANDINGS_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(170deg, #0a0f0a 0%, #101810 100%)",
+  decor: [],
+};
+
+/** Neon-green: dark theme, neon green accent. Standings renders over the
+ * user's art (4096×6144 JPEG → ×0.263671875 to the 1080×1620 canvas).
+ * The art holds ONE full-width table (RANK | TEAM | PP | KP | chicken |
+ * TOTAL baked in a single label row) → singleColumn. Baked label ink
+ * (art px → canvas): RANK 758 → 199.9, TEAM 1256–1482 → starts 331.2,
+ * PP 2361.5 → 622.6, KP 2724.5 → 718.4, chicken 3070 → 809.5, TOTAL
+ * 3430.5 → 904.5; value boxes (58 wide, rank 48) center on them and the
+ * team names left-align with the baked TEAM label (teamX 332). Scrim name:
+ * the dark band between the top frame (ends art y340) and the baked title
+ * (starts art y460) is clear in the middle — title slot y90. MATCH # chip
+ * art x1594–2502 y994–1186, "#" ink ends x2290 → the number slot sits just
+ * right of it, inside the chip. Table zone art y1584–5568 (blank panel —
+ * no baked row separators; rows auto-fit), strip art x440–3656 → 116–964.
+ * PUBG logo art y5700+ (clear of rows); watermark zone verified clear. */
+const NEON_GREEN: TemplateConfig = {
+  ...GEOMETRY,
+  id: "neon-green",
+  name: "Neon Green",
+  backgrounds: {
+    standings: { type: "image", src: "/templates/neon-green/overall.png" },
+    mvp: NEON_GREEN_STANDINGS_FALLBACK_BG,
+    announcement: NEON_GREEN_STANDINGS_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  header: {
+    title: { x: 140, y: 90, w: 800, align: "center" },
+    subtitle: { x: 609, y: 265, w: 44, align: "left" },
+    organizer: { x: 140, y: 90, w: 800, align: "center" },
+    titleFont: `600 28px ${FONTS}`,
+    subtitleFont: `700 44px ${FONTS}`,
+    organizerFont: `500 22px ${FONTS}`,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 176,
+        teamX: 332,
+        teamW: 250,
+        statColumns: [
+          { key: "pp", x: 594 },
+          { key: "kp", x: 689 },
+          { key: "wwcd", x: 780 },
+          { key: "total", x: 876 },
+        ],
+        stripX: 116,
+        stripW: 848,
+        rowsBottom: 1468,
+      },
+      {
+        rankX: 176,
+        teamX: 332,
+        teamW: 250,
+        statColumns: [
+          { key: "pp", x: 594 },
+          { key: "kp", x: 689 },
+          { key: "wwcd", x: 780 },
+          { key: "total", x: 876 },
+        ],
+        stripX: 116,
+        stripW: 848,
+        rowsBottom: 1468,
+      },
+    ],
+    headerLabelsY: 365,
+    rowY0: 418,
+    rowPitch: 42,
+    rowHeight: 40,
+    maxRowsLeft: 25,
+    singleColumn: true,
+    nameFont: `600 28px ${FONTS}`,
+    statFont: `600 28px ${FONTS}`,
+    labelFont: `700 24px ${FONTS}`,
+  },
+  palette: {
+    accent: "#00e66a",
+    text: "#f0f4f0",
+    textMuted: "#7a8a7a",
+    rowAlt: "#ffffff",
+    rowAltOpacity: 0.04,
+    wwcdBg: "rgba(0,230,106,0.14)",
+    wwcdText: "#00e66a",
+    watermarkColor: "rgba(255,255,255,0.7)",
+    plateBg: "rgba(255,255,255,0.07)",
+    plateRing: "rgba(0,230,106,0.45)",
+    medalGold: "#f0c44c",
+    medalSilver: "#c9d1dd",
+    medalBronze: "#d19a5b",
+    medalText: "#0a0f0a",
+  },
+};
+
+const CHALLENGERS_RED_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(170deg, #0f1015 0%, #141821 100%)",
+  decor: [],
+};
+
+/** Challengers-red: dark theme, esports red accent. MVP renders over the
+ * user's art (4096×6144 JPEG → ×0.263671875). NOTE: the delivered art is a
+ * TEAL/dark-navy design (not red) — the red palette still reads on the dark
+ * slot cards (measured 5.45:1) and the aesthetic id is kept per spec.
+ * 5 slot cards art y: 1968–2500, 2588–3128, 3216–3760, 3850–4390, 4480–5028
+ * (pitch ≈630). "TOP 5 FRAGGERS" + "KILLS" baked → subtitleBakedIn, code
+ * draws names + kills numbers only. Kills column centers on the baked KILLS
+ * ink (art x3464–3702, center 3583 → canvas 944.7) over the slots' dark
+ * interior (digit-band mean lum 0.019–0.023 across all five rows — the
+ * chevrons stay clear of the mid-band). Scrim strip is the clear top band
+ * (art y18–285); the title renders in palette.text there — accent red on
+ * that teal is 1.13:1 (unreadable), so the engine's title=text convention
+ * wins. Bottom PUBG logo starts below art y5300 (clear of slot 5); watermark
+ * zone has baked corner ticks (P2, brand-law position kept). */
+const CHALLENGERS_RED: TemplateConfig = {
+  ...GEOMETRY,
+  id: "challengers-red",
+  name: "Challengers Red",
+  backgrounds: {
+    standings: CHALLENGERS_RED_FALLBACK_BG,
+    mvp: { type: "image", src: "/templates/challengers-red/mvp.png" },
+    announcement: CHALLENGERS_RED_FALLBACK_BG,
+  },
+  header: {
+    title: { x: 140, y: 18, w: 800, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 140, y: 18, w: 800, align: "center" },
+    titleFont: `600 44px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 22px ${FONTS}`,
+  },
+  mvp: {
+    rowY0: 519,
+    rowPitch: 165.5, // best fit for the art's drifting 620–634 art (163.5–167 canvas) card pitch
+    rowHeight: 140,
+    rankX: 110,
+    playerX: 280,
+    playerW: 200,
+    teamX: 490,
+    teamW: 210,
+    killsX: 900, // centers the 90-wide box under the baked KILLS ink (944.7)
+    killsW: 90,
+    rankFont: `700 64px ${FONTS}`,
+    playerFont: `600 36px ${FONTS}`,
+    statFont: `600 34px ${FONTS}`,
+    subtitleBakedIn: true,
+  },
+  palette: {
+    accent: "#ff4655",
+    text: "#f0f0f4",
+    textMuted: "#7a7a8a",
+    rowAlt: "#ffffff",
+    rowAltOpacity: 0.04,
+    wwcdBg: "rgba(255,70,85,0.14)",
+    wwcdText: "#ff4655",
+    watermarkColor: "rgba(255,255,255,0.7)",
+    plateBg: "rgba(255,255,255,0.07)",
+    plateRing: "rgba(255,70,85,0.45)",
+    medalGold: "#f0c44c",
+    medalSilver: "#c9d1dd",
+    medalBronze: "#d19a5b",
+    medalText: "#0f1015",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
   "pink-blossom": PINK_BLOSSOM,
   "pmpl-light": PMPL_LIGHT,
+  "neon-green": NEON_GREEN,
+  "challengers-red": CHALLENGERS_RED,
 };
 
 /** Look up a template config by aesthetic id. */

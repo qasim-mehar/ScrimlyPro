@@ -61,7 +61,14 @@ describe("WCAG contrast helpers", () => {
 });
 
 describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
-  const IDS: AestheticId[] = ["dark-gold", "purple-butterfly", "pink-blossom", "pmpl-light"];
+  const IDS: AestheticId[] = [
+    "dark-gold",
+    "purple-butterfly",
+    "pink-blossom",
+    "pmpl-light",
+    "neon-green",
+    "challengers-red",
+  ];
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
     const config = getTemplate(id);
@@ -72,11 +79,11 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
       expect(minContrastAgainstStops(text, bg.css)).toBeGreaterThanOrEqual(4.5);
       seenCss.add(bg.css);
     }
-    // Every aesthetic backs at least two variants with a gradient; shared
-    // background objects (one css for all three variants) count once.
+    // Every aesthetic still carries at least one gradient variant (art-backed
+    // templates keep a fallback for the variants without art: 1–2 each).
     expect(seenCss.size).toBeGreaterThanOrEqual(1);
     expect(Object.values(config.backgrounds).filter((bg) => bg.type === "gradient").length).toBeGreaterThanOrEqual(
-      2,
+      1,
     );
   });
 
@@ -218,5 +225,90 @@ describe("pmpl-light art table-zone contrast (measured from the PNG, ≥ 4.5:1)"
     const textLum = relativeLuminance(parseHexColor(getTemplate("pmpl-light").palette.text));
     const ratio = (zoneLum + 0.05) / (textLum + 0.05);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+// --- P6 zones: the two new arts are JPEG payloads inside .png-named files,
+// so they cannot be zlib-decoded in-process (JPEG chroma/huffman decode is
+// out of scope for node builtins). The zone values below were measured with
+// the identical algorithm (mean per-pixel WCAG relative luminance over the
+// art-px rect) via `sharp` — dev-only script p6-zone-lum2.cjs / probes in
+// Temp\opencode — and are pinned; re-measure there when art changes. The
+// pmpl-light announcement art is a true PNG and is decoded live.
+
+describe("P6 recorded zone luminances → contrast thresholds", () => {
+  const rel = (hex: string) => relativeLuminance(parseHexColor(hex));
+  const ratioOver = (zoneLum: number, fgHex: string) =>
+    (Math.max(zoneLum, rel(fgHex)) + 0.05) / (Math.min(zoneLum, rel(fgHex)) + 0.05);
+
+  // neon-green/overall.png (4096×6144, ×0.263671875)
+  const NEON = {
+    // art(531,2124,3034,3338) = canvas(140,560,800,880) — row interior
+    table: 0.010101,
+    // art(2315,1005,170,170) = canvas(610,265,45,45) — the rendered match-number box
+    chipDigits: 0.004232,
+    // art(531,345,3034,100) = canvas(140,91,800,26) — clear band under the top frame
+    titleBand: 0.004367,
+  };
+
+  it("neon-green: text vs table interior, accent vs chip, text vs title band", () => {
+    const p = getTemplate("neon-green").palette;
+    expect(ratioOver(NEON.table, p.text)).toBeGreaterThanOrEqual(4.5);
+    expect(ratioOver(NEON.chipDigits, p.accent)).toBeGreaterThanOrEqual(4.5);
+    expect(ratioOver(NEON.titleBand, p.text)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // challengers-red/mvp.png (4096×6144, ×0.263671875)
+  const CHAL = {
+    // art(379,1991,2503,3015) = canvas(100,525,660,795) — rank+player+team columns
+    nameBand: 0.027648,
+    // worst of the five per-row digit bands at art x3538–3628 (KILLS center
+    // 3583), row middle ±121 art px: rows 1–5 = .0228/.0194/.0210/.0189/.0199
+    killsBand: 0.0228,
+    // art(531,30,3034,250) = canvas(140,8,800,66) — clear top band
+    titleBand: 0.253283,
+  };
+
+  it("challengers-red: text vs name band, text+accent vs kills band, title ≥ large-text floor", () => {
+    const p = getTemplate("challengers-red").palette;
+    expect(ratioOver(CHAL.nameBand, p.text)).toBeGreaterThanOrEqual(4.5);
+    expect(ratioOver(CHAL.killsBand, p.text)).toBeGreaterThanOrEqual(4.5);
+    // rank-1 kills digits render in accent (64px bold → large text, 3:1 floor)
+    expect(ratioOver(CHAL.killsBand, p.accent)).toBeGreaterThanOrEqual(3);
+    // 44px bold title on the teal band → large-text floor
+    expect(ratioOver(CHAL.titleBand, p.text)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("pmpl-light announcement art contrast (live PNG decode)", () => {
+  it("text vs panel interior, muted slots ≥ 4.5; accent slot ≥ 3; title on strip ≥ 4.5", () => {
+    const { w: artW, px } = decodePngToRgb("public/templates/pmpl-light/announcement.png");
+    const scale = artW / 1080;
+    // canvas(160,500,760,900) → the white panel interior rows render on
+    const interior = averageLuminance(px, artW, {
+      x: Math.round(160 * scale),
+      y: Math.round(500 * scale),
+      w: Math.round(760 * scale),
+      h: Math.round(900 * scale),
+    });
+    // canvas(150,32,780,46) → the white strip the scrim name sits on
+    const strip = averageLuminance(px, artW, {
+      x: Math.round(150 * scale),
+      y: Math.round(32 * scale),
+      w: Math.round(780 * scale),
+      h: Math.round(46 * scale),
+    });
+    const p = getTemplate("pmpl-light").palette;
+    const over = (bg: number, fg: string) =>
+      (Math.max(bg, relativeLuminance(parseHexColor(fg))) + 0.05) /
+      (Math.min(bg, relativeLuminance(parseHexColor(fg))) + 0.05);
+
+    expect(over(interior, p.text)).toBeGreaterThanOrEqual(4.5); // names + count values
+    expect(over(interior, p.textMuted)).toBeGreaterThanOrEqual(4.5); // slot numbers
+    expect(over(interior, p.accent)).toBeGreaterThanOrEqual(3); // rank-1 slot (28px bold)
+    expect(over(strip, p.text)).toBeGreaterThanOrEqual(4.5); // scrim name
+    // Both zones are genuinely light — guards against a black art swap
+    expect(interior).toBeGreaterThan(0.8);
+    expect(strip).toBeGreaterThan(0.9);
   });
 });

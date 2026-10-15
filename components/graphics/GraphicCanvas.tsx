@@ -1,7 +1,9 @@
 "use client";
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { slotToStyle, type DecorShape, type Slot, type TemplateConfig } from "@/lib/graphics";
+import { slotToStyle, type DecorShape, type GraphicVariant, type Slot, type TemplateConfig } from "@/lib/graphics";
+
+export type { GraphicVariant };
 
 const FONT_STACK = '"Rajdhani", "Noto Sans Symbols 2", sans-serif';
 
@@ -24,8 +26,6 @@ function DecorShapeView({ shape }: { shape: DecorShape }) {
   if (shape.kind === "circle") style.borderRadius = "50%";
   return <div style={style} />;
 }
-
-export type GraphicVariant = "standings" | "mvp" | "announcement";
 
 type GraphicCanvasProps = {
   config: TemplateConfig;

@@ -5,6 +5,8 @@ export const VALID_TEMPLATE_IDS = [
   "purple-butterfly",
   "pink-blossom",
   "pmpl-light",
+  "neon-green",
+  "challengers-red",
 ] as const;
 
 export type TeamDraft = { name: string; logoUrl: string | null };
@@ -74,7 +76,7 @@ export function validateSessionDraft(draft: SessionDraft): ValidationIssue[] {
   }
 
   if (!VALID_TEMPLATE_IDS.includes(draft.templateId as AestheticId)) {
-    issues.push({ field: "templateId", message: "Pick one of the four aesthetics." });
+    issues.push({ field: "templateId", message: "Pick one of the six aesthetics." });
   }
 
   if (draft.teams.length !== draft.teamCount) {

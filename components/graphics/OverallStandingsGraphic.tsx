@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import {
   effectivePitch,
   getTemplate,
+  headerFor,
   slotToStyle,
   splitRows,
   type AestheticId,
@@ -36,7 +37,8 @@ function StandingsHeader({
   organizer?: string | null;
   matchCount?: number;
 }) {
-  const { header, palette } = config;
+  const { palette } = config;
+  const header = headerFor(config, "standings");
   // matchNumber art bakes "MATCH #" in: the slot renders ONLY digits. An
   // explicit matchCount (threaded from the session page) wins — including the
   // final state, which reads "MATCH 6", never an empty slot. Digit-parsing is
@@ -262,17 +264,27 @@ export function OverallStandingsGraphic({
   matchCount,
 }: OverallStandingsGraphicProps) {
   const config = getTemplate(aestheticId);
+  const singleColumn = config.standings.singleColumn === true;
   const [leftCount] = splitRows(standings.length);
   const ranked = withRanks(standings);
+  // singleColumn (neon-green): ONE full-width table renders every row and the
+  // second column spec is skipped entirely.
+  const columns = singleColumn ? [config.standings.columns[0]] : config.standings.columns;
   return (
     <>
       <StandingsHeader config={config} title={title} subtitle={subtitle} organizer={organizer} matchCount={matchCount} />
-      {config.standings.columns.map((col, colIdx) => (
+      {columns.map((col, colIdx) => (
         <StandingsColumn
           key={col.stripX}
           config={config}
           col={col}
-          rows={colIdx === 0 ? ranked.slice(0, leftCount) : ranked.slice(leftCount)}
+          rows={
+            singleColumn
+              ? ranked
+              : colIdx === 0
+                ? ranked.slice(0, leftCount)
+                : ranked.slice(leftCount)
+          }
         />
       ))}
     </>
