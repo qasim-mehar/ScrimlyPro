@@ -40,8 +40,8 @@ describe("announcementRowLayout", () => {
     teamW: 700,
     logoSize: 30,
     rowHeight: 40,
-    slotFont: '600 30px "Rajdhani", sans-serif',
-    nameFont: '600 30px "Rajdhani", sans-serif',
+    slotFont: '700 30px "Exo 2", "Rajdhani", sans-serif',
+    nameFont: '700 30px "Exo 2", "Rajdhani", sans-serif',
   };
 
   it("16 teams â†’ even 65px pitch from rowsTop, filling the list area", () => {
@@ -179,7 +179,7 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[]
       expect(st.headerLabelsY + 30).toBeLessThanOrEqual(st.rowY0);
     });
 
-    it("builds every font string on the Rajdhani stack", () => {
+    it("builds every font string on the Exo 2 stack (Rajdhani fallback)", () => {
       const fonts = [
         config.header.titleFont,
         config.header.subtitleFont,
@@ -190,10 +190,14 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[]
         config.mvp.rankFont,
         config.mvp.playerFont,
         config.mvp.statFont,
+        config.announcement.slotFont,
         config.announcement.nameFont,
       ];
       for (const font of fonts) {
-        expect(font).toContain("Rajdhani");
+        expect(font).toContain('"Exo 2"'); // P7 primary face
+        expect(font).toContain("Rajdhani"); // fallback until Exo 2 loads
+        // "fallback position only": Rajdhani never leads a font shorthand
+        expect(font.indexOf('"Exo 2"')).toBeLessThan(font.indexOf("Rajdhani"));
       }
     });
 
@@ -720,5 +724,100 @@ describe("columnPitch / effectivePitch (row auto-fit)", () => {
   it("falls back to the fixed pitch without rowsBottom", () => {
     expect(effectivePitch(415, 80, undefined, 10)).toBe(80);
     expect(effectivePitch(415, 80, 1445, 10)).toBeCloseTo(103, 10);
+  });
+});
+
+describe("P7 — font swap + template flags", () => {
+  const IDS: AestheticId[] = [
+    "dark-gold",
+    "purple-butterfly",
+    "pink-blossom",
+    "pmpl-light",
+    "neon-green",
+    "challengers-red",
+  ];
+
+  it("uniformMvpRows is true for every theme (uniform MVP everywhere)", () => {
+    for (const id of IDS) {
+      expect(getTemplate(id).uniformMvpRows).toBe(true);
+    }
+  });
+
+  it("hideScrimName is set for neon-green only", () => {
+    for (const id of IDS) {
+      expect(getTemplate(id).hideScrimName === true).toBe(id === "neon-green");
+    }
+  });
+
+  it("watermarkYOffset is set for pmpl-light only (16 = measured max clean drop)", () => {
+    for (const id of IDS) {
+      const offset = getTemplate(id).watermarkYOffset;
+      if (id === "pmpl-light") {
+        expect(offset).toBe(16);
+      } else {
+        expect(offset).toBeUndefined();
+      }
+    }
+  });
+
+  it("data-bearing fonts carry weight 700 (readability bump)", () => {
+    for (const id of IDS) {
+      const c = getTemplate(id);
+      for (const font of [
+        c.standings.nameFont,
+        c.standings.statFont,
+        c.mvp.playerFont,
+        c.mvp.statFont,
+        c.announcement.slotFont,
+        c.announcement.nameFont,
+      ]) {
+        expect(font.startsWith("700 ")).toBe(true);
+      }
+    }
+  });
+
+  it("no font string uses Rajdhani as the primary face", () => {
+    for (const id of IDS) {
+      const c = getTemplate(id);
+      for (const font of [
+        c.header.titleFont,
+        c.header.subtitleFont,
+        c.header.organizerFont,
+        c.standings.nameFont,
+        c.standings.statFont,
+        c.standings.labelFont,
+        c.mvp.rankFont,
+        c.mvp.playerFont,
+        c.mvp.statFont,
+        c.announcement.slotFont,
+        c.announcement.nameFont,
+      ]) {
+        expect(font).not.toMatch(/px\s+"Rajdhani"/);
+        expect(font).toContain('"Exo 2"');
+      }
+    }
+  });
+});
+
+describe("P7 — font wiring (source-level)", () => {
+  it("layout imports Exo 2 weights 500-800 and keeps Rajdhani as fallback", () => {
+    const layout = readFileSync("app/layout.tsx", "utf8");
+    for (const w of [500, 600, 700, 800]) {
+      expect(layout).toContain(`@fontsource/exo-2/${w}.css`);
+    }
+    for (const w of [500, 600, 700]) {
+      expect(layout).toContain(`@fontsource/rajdhani/${w}.css`);
+    }
+  });
+
+  it("globals.css --font-display leads with Exo 2", () => {
+    const css = readFileSync("app/globals.css", "utf8");
+    expect(css).toContain('--font-display: "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif;');
+  });
+
+  it("GraphicCanvas watermark uses the Exo 2 stack", () => {
+    const src = readFileSync("components/graphics/GraphicCanvas.tsx", "utf8");
+    expect(src).toContain('const FONT_STACK = \'"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif\';');
+    expect(src).toContain("WATERMARK_FONT = `600 26px ${FONT_STACK}`");
   });
 });

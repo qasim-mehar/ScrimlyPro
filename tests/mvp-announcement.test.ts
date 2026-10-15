@@ -78,8 +78,9 @@ describe.each(["dark-gold", "purple-butterfly", "pink-blossom", "neon-green", "c
       expect(mvp.playerX + mvp.playerW).toBeLessThanOrEqual(mvp.teamX);
     });
 
-    it("builds every MVP font on the Rajdhani stack", () => {
+    it("builds every MVP font on the Exo 2 stack (Rajdhani fallback)", () => {
       for (const font of [mvp.rankFont, mvp.playerFont, mvp.statFont]) {
+        expect(font).toContain('"Exo 2"');
         expect(font).toContain("Rajdhani");
       }
     });
