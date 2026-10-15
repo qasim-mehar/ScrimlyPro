@@ -79,11 +79,16 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
   const config = getTemplate(aestheticId);
   const { mvp, palette } = config;
   const header = headerFor(config, "mvp");
+  // P7: uniformMvpRows → every row renders identically (neutral plate, text
+  // rank digits) with no rank-1 accent strip and no metal medallions.
+  const uniform = config.uniformMvpRows === true;
   return (
     <>
-      <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
-        {title}
-      </div>
+      {config.hideScrimName ? null : (
+        <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
+          {title}
+        </div>
+      )}
       {mvp.subtitleBakedIn ? null : (
         <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
           {subtitle}
@@ -97,11 +102,11 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
       {entries.map((entry, i) => {
         const y = mvp.rowY0 + i * mvp.rowPitch;
         const isRankOne = entry.rank === 1;
-        const isMedal = entry.rank >= 1 && entry.rank <= 3;
+        const isMedal = !uniform && entry.rank >= 1 && entry.rank <= 3;
         const rankBoxW = mvp.playerX - mvp.rankX;
         return (
           <div key={`${entry.rank}-${entry.name}`}>
-            {isRankOne ? (
+            {isRankOne && !uniform ? (
               // Rank-1 highlight strip spans rank→kills (width DERIVED from
               // spec fields, never hardcoded).
               <div
@@ -116,7 +121,8 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
               />
             ) : null}
             {/* Rank medallion: 1/2/3 metal circle with medal ink; 4/5 a
-                neutral plate circle with the muted digit. */}
+                neutral plate circle with the muted digit. uniformMvpRows →
+                neutral plate + text ink for every rank (all rows identical). */}
             <div
               style={{
                 position: "absolute",
@@ -125,14 +131,14 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
                 width: MEDAL_D,
                 height: MEDAL_D,
                 borderRadius: "50%",
-                background: medalFill(entry.rank, palette),
-                border: isMedal ? undefined : `1px solid ${palette.plateRing}`,
+                background: uniform ? palette.plateBg : medalFill(entry.rank, palette),
+                border: uniform || !isMedal ? `1px solid ${palette.plateRing}` : undefined,
                 boxSizing: "border-box",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 font: mvp.rankFont,
-                color: isMedal ? palette.medalText : palette.textMuted,
+                color: uniform ? palette.text : isMedal ? palette.medalText : palette.textMuted,
               }}
             >
               {entry.rank}
@@ -143,7 +149,7 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
               w={mvp.playerW}
               h={mvp.rowHeight}
               font={mvp.playerFont}
-              color={isRankOne ? palette.wwcdText : palette.text}
+              color={isRankOne && !uniform ? palette.wwcdText : palette.text}
             >
               {entry.name}
             </EllipsisText>
@@ -167,7 +173,7 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
               w={mvp.killsW}
               h={mvp.rowHeight}
               font={mvp.statFont}
-              color={isRankOne ? palette.accent : palette.text}
+              color={isRankOne && !uniform ? palette.accent : palette.text}
               align="center"
             >
               {entry.kills}

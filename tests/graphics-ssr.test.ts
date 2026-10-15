@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { AnnouncementGraphic } from "@/components/graphics/AnnouncementGraphic";
+import { GraphicCanvas } from "@/components/graphics/GraphicCanvas";
 import { MvpGraphic } from "@/components/graphics/MvpGraphic";
 import { OverallStandingsGraphic } from "@/components/graphics/OverallStandingsGraphic";
 import { effectivePitch, getTemplate, splitRows, type AestheticId } from "@/lib/graphics";
@@ -108,9 +109,10 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     }
   });
 
-  it("MVP medallions use metal fills for 1/2/3 and neutral plates for 4/5", () => {
+  it("MVP rows render uniformly (P7): neutral plates, no metals, no rank-1 accent", () => {
     for (const id of IDS) {
       const p = getTemplate(id).palette;
+      expect(getTemplate(id).uniformMvpRows).toBe(true);
       const html = renderToStaticMarkup(
         h(MvpGraphic, {
           aestheticId: id,
@@ -120,11 +122,13 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
           entries: mvpEntries(),
         }),
       );
-      expect(html).toContain(p.medalGold);
-      expect(html).toContain(p.medalSilver);
-      expect(html).toContain(p.medalBronze);
-      expect(html).toContain(p.medalText);
+      expect(html).not.toContain(`background:${p.medalGold}`); // no metal fills
+      expect(html).not.toContain(`background:${p.medalSilver}`);
+      expect(html).not.toContain(`background:${p.medalBronze}`);
+      expect(html).not.toContain(`color:${p.medalText}`); // rank digits wear text ink
+      expect(html).not.toContain(p.wwcdBg); // no rank-1 highlight strip
       expect(html).toContain(p.plateBg);
+      expect(html).toContain(p.plateRing);
       expect(html).toContain("border-radius:50%");
     }
   });
@@ -306,5 +310,78 @@ describe("P6 — baked-subtitle templates (SSR)", () => {
     );
     expect(html).toContain("PARTICIPATING TEAMS");
     expect(html).toContain(">01<");
+  });
+});
+
+describe("P7 � font swap + config flags (SSR)", () => {
+  const IDS: AestheticId[] = [
+    "dark-gold",
+    "purple-butterfly",
+    "pink-blossom",
+    "pmpl-light",
+    "neon-green",
+    "challengers-red",
+  ];
+
+  it("rendered graphics carry the Exo 2 font stack in their inline styles", () => {
+    const html = renderToStaticMarkup(standings("dark-gold", "AFTER MATCH 1", 4));
+    // React escapes the quotes in style attributes: `&quot;Exo 2&quot;`
+    expect(html).toContain("Exo 2");
+    expect(html).toContain("Rajdhani"); // fallback position
+    expect(html.indexOf("Exo 2")).toBeLessThan(html.indexOf("Rajdhani"));
+  });
+
+  it.each(IDS)("%s renders 16/19/25 teams cleanly (SSR)", (id) => {
+    for (const n of [16, 19, 25]) {
+      const html = renderToStaticMarkup(standings(id, "AFTER MATCH 1", n, { matchCount: 1 }));
+      expect(html).toContain(`SQUAD ${n}`); // last row rendered
+      expect(html).not.toContain("NaN");
+      expect(html).not.toContain("undefined");
+    }
+  });
+
+  it("hideScrimName skips the scrim-name slot in all three renderers (neon-green only)", () => {
+    for (const id of IDS) {
+      const hidden = getTemplate(id).hideScrimName === true;
+      expect(hidden).toBe(id === "neon-green");
+      const htmls = [
+        renderToStaticMarkup(standings(id, "AFTER MATCH 1", 4, { matchCount: 1 })),
+        renderToStaticMarkup(
+          h(MvpGraphic, {
+            aestheticId: id,
+            title: "SCRIM",
+            subtitle: "TOP 5 FRAGGERS",
+            organizer: null,
+            entries: mvpEntries(),
+          }),
+        ),
+        renderToStaticMarkup(
+          h(AnnouncementGraphic, {
+            aestheticId: id,
+            title: "SCRIM",
+            subtitle: "PARTICIPATING TEAMS",
+            organizer: null,
+            teams: announceTeams(4),
+          }),
+        ),
+      ];
+      for (const html of htmls) {
+        if (hidden) expect(html).not.toContain("SCRIM");
+        else expect(html).toContain("SCRIM");
+      }
+    }
+  });
+
+  it("watermark keeps the brand-law y except the announcement (watermarkYOffset)", () => {
+    for (const id of IDS) {
+      const config = getTemplate(id);
+      const offset = config.watermarkYOffset ?? 0;
+      const standingsHtml = renderToStaticMarkup(h(GraphicCanvas, { config, variant: "standings" }));
+      const annHtml = renderToStaticMarkup(h(GraphicCanvas, { config, variant: "announcement" }));
+      expect(standingsHtml).toContain("top:1570px");
+      expect(annHtml).toContain(`top:${1570 + offset}px`);
+      expect(standingsHtml).toContain("scrimlypro.com");
+      expect(annHtml).toContain("scrimlypro.com");
+    }
   });
 });

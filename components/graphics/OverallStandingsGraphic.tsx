@@ -49,7 +49,9 @@ function StandingsHeader({
       : subtitle;
   return (
     <>
-      <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>{title}</div>
+      {config.hideScrimName ? null : (
+        <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>{title}</div>
+      )}
       <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
         {subtitleText}
       </div>

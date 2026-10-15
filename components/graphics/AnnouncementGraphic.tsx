@@ -26,9 +26,11 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
   const plateD = announcement.logoSize + PLATE_PAD;
   return (
     <>
-      <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
-        {title}
-      </div>
+      {config.hideScrimName ? null : (
+        <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
+          {title}
+        </div>
+      )}
       {announcement.subtitleBakedIn ? null : (
         <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
           {subtitle}
