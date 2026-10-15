@@ -262,10 +262,15 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
   const CHAL = {
     // art(379,1991,2503,3015) = canvas(100,525,660,795) — rank+player+team columns
     nameBand: 0.027648,
-    // worst of the five per-row digit bands at art x3538–3628 (KILLS center
-    // 3583), row middle ±121 art px: rows 1–5 = .0228/.0194/.0210/.0189/.0199
+    // worst of the five per-row DIGIT bands at art x3538–3628 (KILLS center
+    // 3583), row middle ±121 art px: rows 1–5 = .0228/.0194/.0210/.0189/.0199.
+    // This is the glyph-extent window (2-digit ink); the full 90px DOM box
+    // (art 3413–3754) also reaches past the painted card edge (art 3708) in
+    // some rows, so it is intentionally not the pinned zone.
     killsBand: 0.0228,
-    // art(531,30,3034,250) = canvas(140,8,800,66) — clear top band
+    // art(531,30,3034,250) = canvas(140,8,800,66) — clear top band; the
+    // large-text ratio sits at the floor (≈3.0–3.1), so this pin is sensitive
+    // to a band-brightening art re-export.
     titleBand: 0.253283,
   };
 

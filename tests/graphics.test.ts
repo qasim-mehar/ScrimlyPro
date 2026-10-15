@@ -541,14 +541,17 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
 
   /** Dimensions from magic bytes — the P6 arts deliver JPEG payloads inside
    * .png-named files (neon-green, challengers-red), so the P5 IHDR read-off
-   * is not enough: PNG → IHDR, JPEG → first SOF marker. */
+   * is not enough: PNG → IHDR, JPEG → first SOF marker. Malformed input
+   * throws a descriptive error rather than a RangeError. */
   function imageSize(bytes: Buffer): { w: number; h: number } {
+    if (bytes.length < 4) throw new Error("unrecognized image payload (truncated)");
     if (bytes.readUInt32BE(0) === 0x89504e47) {
+      if (bytes.length < 24) throw new Error("truncated PNG (no complete IHDR)");
       return { w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) };
     }
     if (bytes[0] === 0xff && bytes[1] === 0xd8) {
       let pos = 2;
-      while (pos + 8 <= bytes.length) {
+      while (pos + 10 <= bytes.length) {
         if (bytes[pos] !== 0xff) {
           pos += 1;
           continue;
