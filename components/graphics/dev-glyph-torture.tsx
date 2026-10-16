@@ -145,9 +145,10 @@ export function DevGlyphTorture() {
       <header className="flex flex-col gap-2">
         <h1 className="text-xl font-bold tracking-widest text-gold">GLYPH TORTURE AUDIT</h1>
         <p className="text-sm text-muted">
-          C7.1a — dev route. Rajdhani + Noto Sans Symbols 2 do not cover these
-          strings; they render via system fallback. Compare the on-screen lines
-          below against each exported PNG.
+          C7.1a — dev route. The graphics font stack (Exo 2, then Rajdhani and
+          Noto Sans Symbols 2) does not cover these strings; they render via
+          system-font fallback. Compare the on-screen lines below against each
+          exported PNG.
         </p>
         <div className="rounded-md border border-line bg-surface p-3">
           <p className="text-xs font-semibold tracking-widest text-muted">

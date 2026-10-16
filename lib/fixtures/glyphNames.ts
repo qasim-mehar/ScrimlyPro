@@ -3,11 +3,12 @@
  * screenshots. The lone CJK sample 乡 is included because the C7.1a audit brief
  * names it as a glyph class to report (the live list itself carried 卍).
  *
- * These strings are the torture set for the C7.1a glyph audit: Rajdhani and
- * Noto Sans Symbols 2 cover neither Arabic, katakana, CJK, fullwidth forms nor
- * Greek, so those code points exercise the browser's system-font fallback — and
- * whether that fallback survives html-to-image's foreignObject export is
- * exactly what the audit measures. Do NOT "fix" or normalize these strings.
+ * These strings are the torture set for the C7.1a glyph audit: the graphics
+ * font stack (Exo 2, fallbacks Rajdhani and Noto Sans Symbols 2) covers
+ * neither Arabic, katakana, CJK, fullwidth forms nor Greek, so those code
+ * points exercise the browser's system-font fallback — and whether that
+ * fallback survives html-to-image's foreignObject export is exactly what the
+ * audit measures. Do NOT "fix" or normalize these strings.
  */
 
 /** 16 realistic organizer team names (~5 with non-Latin/symbol code points). */
