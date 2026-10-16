@@ -727,7 +727,7 @@ describe("columnPitch / effectivePitch (row auto-fit)", () => {
   });
 });
 
-describe("P7 — font swap + template flags", () => {
+describe("P7 â€” font swap + template flags", () => {
   const IDS: AestheticId[] = [
     "dark-gold",
     "purple-butterfly",
@@ -799,7 +799,7 @@ describe("P7 — font swap + template flags", () => {
   });
 });
 
-describe("P7 — font wiring (source-level)", () => {
+describe("P7 â€” font wiring (source-level)", () => {
   it("layout imports Exo 2 weights 500-800 and keeps Rajdhani as fallback", () => {
     const layout = readFileSync("app/layout.tsx", "utf8");
     for (const w of [500, 600, 700, 800]) {

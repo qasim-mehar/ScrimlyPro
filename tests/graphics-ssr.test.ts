@@ -377,8 +377,10 @@ describe("P7 � font swap + config flags (SSR)", () => {
       const config = getTemplate(id);
       const offset = config.watermarkYOffset ?? 0;
       const standingsHtml = renderToStaticMarkup(h(GraphicCanvas, { config, variant: "standings" }));
+      const mvpHtml = renderToStaticMarkup(h(GraphicCanvas, { config, variant: "mvp" }));
       const annHtml = renderToStaticMarkup(h(GraphicCanvas, { config, variant: "announcement" }));
       expect(standingsHtml).toContain("top:1570px");
+      expect(mvpHtml).toContain("top:1570px"); // offset never leaks into mvp
       expect(annHtml).toContain(`top:${1570 + offset}px`);
       expect(standingsHtml).toContain("scrimlypro.com");
       expect(annHtml).toContain("scrimlypro.com");
