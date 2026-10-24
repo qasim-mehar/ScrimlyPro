@@ -20,6 +20,22 @@ await sql.begin(async (tx) => {
   // drizzle's migrator keeps its bookkeeping in a separate "drizzle" schema —
   // it must go too, or migrate() would consider everything already applied.
   await tx`DROP SCHEMA IF EXISTS drizzle CASCADE`;
+  // Dev-hygiene (M2 review B-4): drop the LOCAL auth SHIM too. If auth.users
+  // survives a reset, the 0011 backfill re-bootstraps a Personal org for
+  // every surviving user (e.g. the seed owner) before the seed creates its
+  // own — one ghost Personal org per reset. 0002's conditional shim block
+  // recreates the schema on the next migrate. GUARD: real Supabase
+  // auth.users has `encrypted_password`; the shim (3 columns) does not —
+  // this script must never drop a hosted project's real auth schema.
+  const realAuth = await tx`
+    select exists (
+      select 1 from information_schema.columns
+      where table_schema = 'auth' and table_name = 'users'
+        and column_name = 'encrypted_password'
+    ) as real`;
+  if (!realAuth[0].real) {
+    await tx`DROP SCHEMA IF EXISTS auth CASCADE`;
+  }
 });
 console.log("✔ schema reset (DROP + CREATE public)");
 

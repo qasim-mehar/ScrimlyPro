@@ -69,10 +69,8 @@ async function seed(): Promise<void> {
     { orgId: ORG_A, userId: MEMBER_A, role: "member" },
     { orgId: ORG_B, userId: OWNER_B, role: "owner" },
   ]);
-  await db.insert(schema.orgQuotas).values([
-    { orgId: ORG_A },
-    { orgId: ORG_B },
-  ]);
+  // Quota rows for both orgs are minted by the 0014 bootstrap trigger on the
+  // organizations INSERT above (org_quotas has no tenant write policy).
   await db.insert(schema.sessions).values([
     {
       id: SESSION_A,
@@ -387,6 +385,132 @@ describe("M2 RLS org isolation", () => {
       sql`select max_sessions from org_quotas where org_id = ${ORG_A}`,
     );
     expect(rowsOf<{ max_sessions: number }>(quota)[0]?.max_sessions).toBe(100);
+  });
+
+  it("quota rows are platform-owned: no principal can raise or mint one (B-1)", async () => {
+    // The 0010 owner INSERT/UPDATE policies are gone (0014): raising a limit
+    // is a platform-side SQL operation. UPDATE is USING-filtered (zero rows);
+    // INSERT with no policy is an outright error.
+    for (const actor of [OWNER_A, ADMIN_A]) {
+      const raised = await asUser(actor, (userDb) =>
+        userDb
+          .update(schema.orgQuotas)
+          .set({ maxSessions: 1_000_000, monthlyOcrCalls: 1_000_000 })
+          .where(sql`org_quotas.org_id = ${ORG_A}`)
+          .returning({ maxSessions: schema.orgQuotas.maxSessions }),
+      );
+      expect(raised, `${actor} UPDATE org_quotas`).toEqual([]);
+
+      await expect(
+        asUser(actor, (userDb) =>
+          userDb.insert(schema.orgQuotas).values({ orgId: ORG_A }),
+        ),
+        `${actor} INSERT org_quotas`,
+      ).rejects.toThrow();
+    }
+
+    // ...and nothing actually changed (superuser read).
+    const quota = await db.execute(
+      sql`select max_sessions, monthly_ocr_calls from org_quotas where org_id = ${ORG_A}`,
+    );
+    expect(rowsOf<{ max_sessions: number; monthly_ocr_calls: number }>(quota)[0]).toEqual({
+      max_sessions: 100,
+      monthly_ocr_calls: 300,
+    });
+  });
+
+  it("org_members invariants live in RLS: no owner-grant or owner-row touch below owner (B-3)", async () => {
+    // Admin self-promote to owner: USING passes (own non-owner row) but the
+    // WITH CHECK refuses the new role — Postgres rejects the statement with
+    // 42501 outright.
+    await expect(
+      asUser(ADMIN_A, (userDb) =>
+        userDb
+          .update(schema.orgMembers)
+          .set({ role: "owner" })
+          .where(
+            sql`org_members.org_id = ${ORG_A} and org_members.user_id = ${ADMIN_A}`,
+          )
+          .returning({ role: schema.orgMembers.role }),
+      ),
+    ).rejects.toThrow(); // 42501 new row violates row-level security policy
+
+    // Admin demotes the owner: USING refuses (old.role='owner').
+    const demoted = await asUser(ADMIN_A, (userDb) =>
+      userDb
+        .update(schema.orgMembers)
+        .set({ role: "member" })
+        .where(
+          sql`org_members.org_id = ${ORG_A} and org_members.user_id = ${OWNER_A}`,
+        )
+        .returning({ role: schema.orgMembers.role }),
+    );
+    expect(demoted).toEqual([]);
+
+    // Admin deletes the owner's row: USING refuses the same way.
+    const deleted = await asUser(ADMIN_A, (userDb) =>
+      userDb
+        .delete(schema.orgMembers)
+        .where(
+          sql`org_members.org_id = ${ORG_A} and org_members.user_id = ${OWNER_A}`,
+        )
+        .returning({ userId: schema.orgMembers.userId }),
+    );
+    expect(deleted).toEqual([]);
+
+    // Positive controls: admins still manage non-owner rows; the owner
+    // still grants admin. (Own-role drop admin→member is allowed — it is
+    // not an escalation.)
+    const demotedSelf = await asUser(ADMIN_A, (userDb) =>
+      userDb
+        .update(schema.orgMembers)
+        .set({ role: "member" })
+        .where(
+          sql`org_members.org_id = ${ORG_A} and org_members.user_id = ${ADMIN_A}`,
+        )
+        .returning({ role: schema.orgMembers.role }),
+    );
+    expect(demotedSelf).toEqual([{ role: "member" }]);
+
+    await asUser(OWNER_A, (userDb) =>
+      userDb
+        .update(schema.orgMembers)
+        .set({ role: "admin" })
+        .where(
+          sql`org_members.org_id = ${ORG_A} and org_members.user_id = ${MEMBER_A}`,
+        ),
+    );
+
+    const roles = await db.execute(
+      sql`select user_id, role from org_members where org_id = ${ORG_A} order by user_id`,
+    );
+    expect(rowsOf<{ user_id: string; role: string }>(roles)).toEqual([
+      { user_id: OWNER_A, role: "owner" },
+      { user_id: ADMIN_A, role: "member" },
+      { user_id: MEMBER_A, role: "admin" },
+    ]);
+  });
+
+  it("invite roles are DB-bounded: 'owner' is never invitable (B-2)", async () => {
+    // Raw SQL on purpose: the drizzle column type already forbids 'owner' —
+    // this proves the DATABASE (org_invites_role_check, 0014) refuses it too,
+    // even for a principal the RLS insert policy would allow.
+    await expect(
+      asUser(OWNER_A, (userDb) =>
+        userDb.execute(
+          sql`insert into org_invites (id, org_id, role, token_hash, expires_at, created_by)
+              values ('aaaaaaaa-0000-4000-8000-00000000aaa6', ${ORG_A}, 'owner',
+                      'hash-owner-invite', now() + interval '1 day', ${OWNER_A})`,
+        ),
+      ),
+    ).rejects.toThrow();
+
+    const roles = await db.execute(
+      sql`select role from org_invites where org_id = ${ORG_A}`,
+    );
+    expect(rowsOf<{ role: string }>(roles).map((r) => r.role)).toEqual([
+      "member",
+    ]);
   });
 
   it("members can collaborate: MEMBER_A inserts a match into org A's session", async () => {

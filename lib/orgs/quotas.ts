@@ -12,7 +12,9 @@ import { orgQuotas, sessions, usageEvents } from "@/lib/db/schema";
  * OCR meter choice: a `usage_events` row per /api/ocr invocation (NOT a
  * match count). Rondo lobby exports inflate matches without OCR calls, and
  * re-OCR of the same draft match re-invokes the paid Gemini API — the route
- * invocation is the thing being limited. See M2 report §6.
+ * invocation is the thing being limited. The meter is per-USER (month-total
+ * across all orgs); the LIMIT is read from the org that owns the resource.
+ * See M2 report §6 and the 0014 hardening migration.
  */
 
 export type QuotaName = "max_sessions" | "monthly_ocr_calls";
@@ -68,14 +70,22 @@ export async function assertSessionQuota(
   return quota;
 }
 
-/** Calendar-month OCR usage count (date_trunc on the server clock). */
-export async function monthlyOcrCount(db: Db, orgId: string): Promise<number> {
+/**
+ * Calendar-month OCR usage count for ONE USER across ALL their orgs
+ * (date_trunc on the server clock). Per-user, not per-org: a per-org COUNT
+ * is evaded by creating a fresh org and restarting the meter at zero —
+ * unlimited org creation would make the paid-API cap unenforceable.
+ * usage_events pins user_id at insert and is append-only under RLS, so the
+ * user-total COUNT is tamper-proof. The RLS select policy includes own rows,
+ * so usage in orgs the user has since left still counts.
+ */
+export async function monthlyOcrCount(db: Db, userId: string): Promise<number> {
   const rows = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(usageEvents)
     .where(
       and(
-        eq(usageEvents.orgId, orgId),
+        eq(usageEvents.userId, userId),
         eq(usageEvents.kind, "ocr"),
         gte(usageEvents.createdAt, sql`date_trunc('month', now())`),
       ),
@@ -83,13 +93,18 @@ export async function monthlyOcrCount(db: Db, orgId: string): Promise<number> {
   return rows[0]?.n ?? 0;
 }
 
-/** OCR-route gate: reject at the monthly limit. */
+/**
+ * OCR-route gate: the limit comes from the org that owns the resource
+ * (display/budget surface), the COUNT is the user's month-total across all
+ * orgs. Reject at the limit.
+ */
 export async function assertOcrQuota(
   db: Db,
   orgId: string,
+  userId: string,
 ): Promise<OrgQuota> {
   const quota = await getOrgQuota(db, orgId);
-  if ((await monthlyOcrCount(db, orgId)) >= quota.monthlyOcrCalls) {
+  if ((await monthlyOcrCount(db, userId)) >= quota.monthlyOcrCalls) {
     throw new QuotaExceededError("monthly_ocr_calls");
   }
   return quota;

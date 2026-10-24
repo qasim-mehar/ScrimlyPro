@@ -76,8 +76,10 @@ export const POST = withTenantRoute(async (request, { user }) => {
       // Monthly OCR quota: a cheap COUNT inside this request tx (M1
       // lesson: nothing slow goes near the quota check) + one usage row
       // AFTER a successful ingest (failed attempts never consume quota).
+      // Per-USER meter (0014): the count is this user's month-total across
+      // all orgs — a fresh org cannot restart the meter.
       try {
-        await assertOcrQuota(userDb, session.orgId);
+        await assertOcrQuota(userDb, session.orgId, user.id);
       } catch (err) {
         if (err instanceof QuotaExceededError) {
           return {

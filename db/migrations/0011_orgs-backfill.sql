@@ -31,8 +31,7 @@ begin
 
       insert into public.org_members (org_id, user_id, role)
       values (new_org, u, 'owner');
-
-      insert into public.org_quotas (org_id) values (new_org);
+      -- Default quota row minted by the 0014 org_quotas_bootstrap trigger.
     end if;
 
     update public.sessions

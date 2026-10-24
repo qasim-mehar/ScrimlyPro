@@ -3,7 +3,6 @@ import { eq, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db/client";
 import {
   orgMembers,
-  orgQuotas,
   organizations,
 } from "@/lib/db/schema";
 
@@ -41,6 +40,7 @@ export async function ensureOrg(
     createdBy: userId,
   });
   await db.insert(orgMembers).values({ orgId, userId, role: "owner" });
-  await db.insert(orgQuotas).values({ orgId });
+  // The 0014 bootstrap trigger mints the default quota row on organizations
+  // INSERT — an explicit org_quotas insert here would collide with it.
   return orgId;
 }

@@ -3,7 +3,6 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db/client";
 import {
   orgMembers,
-  orgQuotas,
   organizations,
   type OrgRole,
 } from "@/lib/db/schema";
@@ -108,7 +107,9 @@ export async function createOrg(
   await db
     .insert(orgMembers)
     .values({ orgId, userId, role: "owner" });
-  await db.insert(orgQuotas).values({ orgId });
+  // The default quota row is minted by the 0014 bootstrap trigger
+  // (org_quotas_bootstrap) — org_quotas is SELECT-only for members under
+  // RLS, so no tenant insert (even with pinned constants) exists.
   return orgId;
 }
 

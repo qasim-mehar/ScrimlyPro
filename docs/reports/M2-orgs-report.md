@@ -108,3 +108,92 @@ Full read-only audit (10 checks, all PASS, no P0):
 6. **Session delete policy is admin+** (tighter than other verbs — no member-level delete feature exists; org deletion still cascades). Members can create/edit/unlock/confirm; only owners/admins could delete via a future feature.
 7. **Pilot limitations:** no emails (SMTP later phase); no ownership transfer (last owner cannot be removed/demoted; promote a second owner first); share links have no expiry by default (revocation only); in-memory rate limiters reset on restart.
 8. **Also during the lane:** 566 stale `m1test_*` throwaway databases (accumulated from timed-out cleanups across runs/lanes) were dropped after `max_connections = 40` saturation produced flaky cleanup hooks. Keep an eye on this on shared clusters.
+
+## 10. Review-fix pass (B-1…B-4, A-confirmations — this section is the fix evidence)
+
+Lane B review verdict: APPROVED WITH CONDITIONS, four blockers. All four are
+fixed in commit `m2(review2)`; full gates re-run green at that HEAD
+(`vitest run` **39 files / 516 tests**, `eslint` 0 problems, `tsc --noEmit`
+clean). New migration: **`0014_quota-role-hardening`** (journaled, hand-written
+like 0011–0013).
+
+### B-1 (P0) Quota enforceability — FIXED
+
+- **Self-service raise:** `org_quotas` is now **SELECT-only for members** — the
+  0010 owner INSERT/UPDATE policies are dropped in 0014 and no tenant
+  principal can create or modify a quota row. The row is minted exclusively by
+  the new `org_quotas_bootstrap()` SECURITY DEFINER trigger on `organizations`
+  INSERT (platform-pinned defaults, `on conflict do nothing`); raising a limit
+  is a platform-side SQL operation (super-admin surface is M3). Call sites
+  updated to rely on the trigger: `createOrg`, tests/helpers `ensureOrg`,
+  `seed.mjs`, and the 0011 backfill (its explicit insert would collide).
+- **Multi-org evasion:** the OCR meter is **per-USER**. `monthlyOcrCount(db,
+  userId)` counts the user's month-total across ALL orgs (usage_events pins
+  `user_id = auth.uid()` at insert and is append-only under RLS — tamper-proof);
+  `assertOcrQuota(db, orgId, userId)` reads the LIMIT from the org that owns
+  the resource and the COUNT from the user. `/api/ocr` passes `user.id`.
+  The `usage_select_events` policy widened with `or user_id = auth.uid()` so
+  usage in orgs the user has since left still counts (no under-charge), plus
+  `usage_events_user_month_idx (user_id, created_at)` for the COUNT.
+- Tests: owner AND admin `UPDATE org_quotas` → zero rows; `INSERT org_quotas`
+  (either) → 42501 rejection; owner `INSERT` invite with `role='owner'` →
+  rejected; multi-org evasion proof — MEMBER at limit in org A with usage
+  recorded in their own org B is refused in org A (per-org meter would have
+  admitted it), while OWNER is unaffected (tests/rls/org-isolation.test.ts,
+  tests/orgs/orgs.test.ts).
+
+### B-2 (P0-verify) SECURITY DEFINER discipline — VERIFIED, then pinned
+
+- `accept_org_invite(p_token_hash text)` — signature verified: hash only.
+  Member identity from `request.jwt.claims` inside the definer (`auth.uid()`),
+  role and org from the invite row. No member_id/role/org_id parameters exist
+  to forge; acceptance result is always `(caller, invite.role, invite.org)`
+  (already proven by the acceptInvite tests).
+- `org_invite_preview(p_token_hash text)` — returns exactly `(org_name, role)`.
+  No member lists, quota values, or session data (verified by reading 0013).
+- Share links: `share_links.token_hash` only, 32-byte tokens via
+  `lib/orgs/tokens.ts` (`randomBytes(32)` → SHA-256 hex, unique index,
+  `timingSafeEqual` on digests). Verified in schema + lib.
+- Pinned in 0014: `org_invites_role_check` (role ∈ member|admin — owner is
+  never invitable) and `org_members_role_check`; `accept_org_invite` additionally
+  clamps the copied role (belt for pre-existing rows). Tests: raw-SQL owner
+  invite rejected at the DB layer; admin-invite acceptance yields role `admin`.
+
+### B-3 (P1) org_members transitions — MOVED INTO RLS
+
+0014 replaces `org_member_update`/`org_member_delete`: below owner, nobody can
+target an owner row (USING sees old.role) or write `role='owner'` (WITH CHECK
+sees new.role). Owner-granting and owner-row mutation are owner-only at the DB
+layer; `lib/orgs/roles.ts` stays as the UX layer (last-owner protection).
+Tests: admin self-promote → 42501; admin demote/delete owner row → zero rows;
+admin demotes self → allowed; owner promotes member → allowed (positive
+controls assert the surviving state).
+
+### B-4 (P1) 0011 idempotency + dev reset — FIXED
+
+The backfill was already membership-keyed (`not exists (select 1 from
+org_members …)`); the "one extra Personal org per reset" artifact came from
+`db:reset` dropping only `public`, letting shim `auth.users` rows survive into
+the next 0011 run (the seed owner then got a backfill org AND its seed org).
+`scripts/reset-db.mjs` now also drops the shim `auth` schema — guarded: it
+refuses to drop `auth` if `auth.users` has `encrypted_password` (real Supabase
+auth), so the script can never nuke a hosted project's auth schema. 0002's
+conditional shim block recreates it on the next migrate. Proof: `db:reset`
+twice → `orgs:memberships:quotas = 1:1:1`, zero non-seed orgs without sessions.
+A dry re-run of 0011's statements is a no-op (membership guard + `org_id is
+null` update scope).
+
+### A-c1 / A-c2 / A-c3 (Lane A confirmations — recorded on the M1 branch)
+
+- **A-c1:** `TRUST_PROXY` default verified distrust-when-unset (XFF read only
+  on explicit `TRUST_PROXY=true`; falls back to `x-real-ip`, else `"unknown"`).
+  Deployment matrix added to M1 `README.md` (rate-limit attribution section).
+- **A-c2:** `persistDraftMatch` confirmed self-contained (own `withUserDb` tx;
+  INSERT-time RLS WITH CHECK re-evaluation) — one-line note added to M1 report
+  §11b C1.
+- **A-c3 (partial, deferred to integration by design):** the share page uses
+  `force-dynamic` + robots noindex with no explicit `Cache-Control` header —
+  the actual header must be recorded with a `curl -I` on the integrated branch
+  (runbook step 2/3 bring M1's CSP `next.config.ts` block to this lane; on the
+  lane alone CSP is absent because the fork predates M1's C2 hardening — not
+  an M2 regression, do not "fix" here, the merge carries it).

@@ -57,6 +57,13 @@
       "when": 1792849599460,
       "tag": "0013_org-invite-preview",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792936000000,
+      "tag": "0014_quota-role-hardening",
+      "breakpoints": true
     }
   ]
 }

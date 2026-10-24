@@ -353,9 +353,8 @@ export async function seedDatabase(sql) {
     await tx`INSERT INTO org_members (org_id, user_id, role)
       VALUES (${SEED_ORG_ID}, ${SEED_OWNER_ID}, 'owner')
       ON CONFLICT (org_id, user_id) DO NOTHING`;
-    await tx`INSERT INTO org_quotas (org_id)
-      VALUES (${SEED_ORG_ID})
-      ON CONFLICT (org_id) DO NOTHING`;
+    // Default quota row: minted by the 0014 org_quotas_bootstrap trigger on
+    // the organizations INSERT above.
 
     await tx`INSERT INTO sessions (id, user_id, org_id, name, planned_matches, team_count, template_id, scoring_rules, status, created_at)
       VALUES (${SESSION_ID}, ${SEED_OWNER_ID}, ${SEED_ORG_ID}, 'Seed Demo Scrim', 6, 16, 'dev-dark-gold', ${tx.json(scoringRules)}, 'active', ${now})`;

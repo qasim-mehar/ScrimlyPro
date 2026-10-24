@@ -204,20 +204,35 @@ describe("orgs: quotas", () => {
     });
   });
 
-  it("OCR meter: recordUsage accumulates per calendar month; limit enforced", async () => {
-    const orgId = await orgIdOf(OWNER);
+  it("OCR meter is per-USER: month-total across orgs; limit from the owning org", async () => {
+    // MEMBER belongs to OWNER's org (quota 2 for this test) AND creates their
+    // own second org — the classic multi-org evasion the per-org meter allowed.
+    const orgA = await orgIdOf(OWNER);
+    const orgB = await asUser(MEMBER, (userDb) =>
+      createOrg(userDb, "Member Own", MEMBER),
+    );
     await db
       .update(schema.orgQuotas)
       .set({ monthlyOcrCalls: 2 })
-      .where(eq(schema.orgQuotas.orgId, orgId));
+      .where(eq(schema.orgQuotas.orgId, orgA));
 
-    expect(await monthlyOcrCount(db, orgId)).toBe(0);
-    await recordUsage(db, orgId, MEMBER);
-    await expect(assertOcrQuota(db, orgId)).resolves.toBeDefined();
-    await recordUsage(db, orgId, MEMBER);
-    await expect(assertOcrQuota(db, orgId)).rejects.toMatchObject({
+    expect(await monthlyOcrCount(db, MEMBER)).toBe(0);
+    await recordUsage(db, orgA, MEMBER);
+    // One call in org A: MEMBER still under the limit, OWNER untouched.
+    await expect(assertOcrQuota(db, orgA, MEMBER)).resolves.toBeDefined();
+    await expect(assertOcrQuota(db, orgA, OWNER)).resolves.toBeDefined();
+
+    // Second call — but recorded in MEMBER's OWN org: a per-org meter would
+    // leave org A's count at 1. The per-user count sees both.
+    await recordUsage(db, orgB, MEMBER);
+    await expect(assertOcrQuota(db, orgA, MEMBER)).rejects.toMatchObject({
       quota: "monthly_ocr_calls",
     });
+    // The limit is the owning org's: MEMBER's own org (default 300) still
+    // admits the same month-total against its own budget surface.
+    await expect(assertOcrQuota(db, orgB, MEMBER)).resolves.toBeDefined();
+    // Other members of org A are not charged for MEMBER's usage.
+    await expect(assertOcrQuota(db, orgA, OWNER)).resolves.toBeDefined();
   });
 });
 
@@ -316,6 +331,30 @@ describe("orgs: invites (hash-at-rest, single-use, expiry)", () => {
     const res = await asUser(MEMBER, (userDb) => acceptInvite(userDb, invite.token));
     expect(res).toEqual({ ok: true, orgId });
     expect(await fetchOrgRole(db, orgId, MEMBER)).toBe("member");
+  });
+
+  it("acceptInvite copies the invite's bounded role (admin); owner invites cannot exist (B-2)", async () => {
+    const orgId = await orgIdOf(OWNER);
+    const invite = await createInvite(db, {
+      orgId,
+      role: "admin",
+      email: null,
+      createdBy: OWNER,
+    });
+    await asUser(OUTSIDER, (userDb) => acceptInvite(userDb, invite.token));
+    expect(await fetchOrgRole(db, orgId, OUTSIDER)).toBe("admin");
+
+    // DB layer: the role CHECK makes an owner invite impossible for ANY
+    // principal, so acceptance can never mint an owner membership. (0014
+    // also clamps inside accept_org_invite as belt for pre-existing rows.)
+    // Raw SQL: the drizzle column type already forbids 'owner'.
+    await expect(
+      db.execute(
+        sql`insert into org_invites (id, org_id, role, token_hash, expires_at, created_by)
+            values ('66666666-6666-6666-6666-666666666666', ${orgId}, 'owner',
+                    'hash-owner-invite', now() + interval '1 day', ${OWNER})`,
+      ),
+    ).rejects.toThrow();
   });
 
   it("revokeInvite deletes the row; afterwards acceptance fails", async () => {
