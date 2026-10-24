@@ -1,3 +1,4 @@
+import { GlobalStopButton } from "@/components/admin/GlobalStopButton";
 import { getDashboardMetrics } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
@@ -77,10 +78,7 @@ export default async function AdminDashboard() {
                     {new Date(imp.expiresAt).toLocaleString()}
                   </td>
                   <td className="py-2">
-                    <span className="text-xs text-muted">
-                      {"—"}{" "}
-                      {/* Global stop lands with the impersonation API (m3(6)). */}
-                    </span>
+                    <GlobalStopButton impersonationId={imp.id} />
                   </td>
                 </tr>
               ))}

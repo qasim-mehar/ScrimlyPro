@@ -2,18 +2,21 @@ import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 
 import { isUserDisabled } from "@/lib/admin/kill-switch";
+import { getEffectiveUser } from "@/lib/admin/impersonation";
 import type { Db } from "@/lib/db/client";
 import { withUserDb, withUserDbForTest } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
-import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
+import type { AuthedUser } from "@/lib/supabase/server";
 
 /**
  * Guard stack for server actions and server components (WP6).
  *
- * - `requireUser()`: the verified user, or redirect("/login"). M3 (Lane C,
- *   single choke point): a tenant carrying the reserved `disabled` marker is
- *   locked out of every authed page/action — bounced to /login?disabled=1
- *   (plain "Account disabled" copy, no detail).
+ * - `requireUser()`: the verified user (M3: EFFECTIVE identity — the
+ *   impersonation target when a valid impersonation cookie is present,
+ *   otherwise the real user), or redirect("/login"). A tenant carrying the
+ *   reserved `disabled` marker is locked out of every authed page/action —
+ *   bounced to /login?disabled=1 (plain "Account disabled" copy, no detail).
+ *   Admin routes use requireAdmin (REAL identity) and never this seam.
  * - `assertSessionOwner(sessionId)`: verified user + proof they own the
  *   session. Missing and foreign sessions are INDISTINGUISHABLE — both
  *   render the 404 page via notFound() (never reveal existence).
@@ -24,7 +27,7 @@ import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
  */
 
 export async function requireUser(): Promise<AuthedUser> {
-  const user = await getAuthedUser();
+  const user = await getEffectiveUser();
   if (!user) redirect("/login");
   if (await isUserDisabled(user.id)) redirect("/login?disabled=1");
   return user;

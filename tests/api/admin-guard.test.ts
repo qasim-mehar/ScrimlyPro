@@ -252,6 +252,9 @@ describe("confinement import graph (static, CI-enforced)", () => {
     for (const f of [...walk("components"), ...walk("lib")]) {
       if (!/\.(ts|tsx)$/.test(f)) continue;
       const norm = f.replace(/\\/g, "/");
+      // Server components under components/admin are sanctioned consumers of
+      // the identity hooks (never admin-db — eslint proves that part).
+      if (norm.startsWith("components/admin/")) continue;
       if (norm.includes("lib/admin/")) continue;
       if (norm.endsWith("lib/auth/route-guard.ts")) continue;
       if (norm.endsWith("lib/auth/action-guard.ts")) continue;

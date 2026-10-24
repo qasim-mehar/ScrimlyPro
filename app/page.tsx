@@ -1,6 +1,7 @@
 // entry point — session list/history arrives with C4.2+
 import Link from "next/link";
 
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { requireUser } from "@/lib/auth/action-guard";
 
 /**
@@ -13,7 +14,9 @@ export default async function Home() {
   await requireUser();
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 p-6">
+    <>
+      <ImpersonationBanner />
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 p-6">
       <h1 className="font-display text-4xl font-bold tracking-widest text-gold">
         SCRIMLY PRO
       </h1>
@@ -27,5 +30,6 @@ export default async function Home() {
         Create a Scrim
       </Link>
     </main>
+    </>
   );
 }

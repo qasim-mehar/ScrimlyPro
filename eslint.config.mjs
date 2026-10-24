@@ -165,6 +165,37 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // Server components under components/admin/** (e.g. the impersonation
+  // banner) may import the identity/validation hooks from lib/admin — but
+  // never the service-role client.
+  {
+    files: ["components/admin/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/admin", "**/db/admin.ts", "**/db/admin/*"],
+              message:
+                "lib/db/admin.ts bypasses RLS with the service-role key and is forbidden in the request path or client code.",
+            },
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. Tenant request paths must use withUserDb from lib/db/user.ts.",
+              allowTypeImports: true,
+            },
+            {
+              group: ["**/lib/admin/admin-db", "**/lib/admin/admin-db.ts"],
+              message:
+                "lib/admin/admin-db.ts wraps the service-role client and is importable ONLY from app/admin/** server files and lib/admin internals.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // app/dev fixture pages render seed/dev data that has no owner — under
   // withUserDb/RLS those reads would be empty. They are hard-404'd in
   // production (NODE_ENV gate in every page) and stay dev-only.
