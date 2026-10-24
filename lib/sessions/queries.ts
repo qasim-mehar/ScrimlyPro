@@ -45,10 +45,15 @@ export type SessionPageData = {
  * Read helper for GET /sessions/[id] (C4.2). Confirmed-only results feed
  * computeStandings; matches carry the placement-1 winner name (null for
  * drafts). raw_squad_data is never selected — it must not leak to the client.
+ *
+ * `userId`, when provided (WP6 request path), adds an explicit ownership
+ * predicate on the root session select — belt AND suspenders with the RLS
+ * backstop. Callers without a verified user (tests, admin tooling) omit it.
  */
 export async function getSessionPageData(
   db: Db,
   sessionId: string,
+  userId?: string,
 ): Promise<SessionPageData | null> {
   const sessionRow =
     (
@@ -64,7 +69,11 @@ export async function getSessionPageData(
           createdAt: sessions.createdAt,
         })
         .from(sessions)
-        .where(eq(sessions.id, sessionId))
+        .where(
+          userId
+            ? and(eq(sessions.id, sessionId), eq(sessions.userId, userId))
+            : eq(sessions.id, sessionId),
+        )
         .limit(1)
     )[0] ?? null;
   if (!sessionRow) return null;

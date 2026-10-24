@@ -1,6 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/lib/auth/action-guard";
+
 import { StandingsPreview } from "@/components/graphics/StandingsPreview";
 import { getDb } from "@/lib/db/client";
 import { matchResults, matches, sessions, teams } from "@/lib/db/schema";
@@ -13,6 +15,8 @@ const SEED_SESSION_ID = "seed-00000000-0000-4000-8000-000000000001";
 
 export default async function DevStandingsPage() {
   if (process.env.NODE_ENV === "production") notFound();
+  // WP6: authenticated users only (dev pages render fixtures; no tenant reads).
+  await requireUser();
 
   const db = getDb();
   const session =

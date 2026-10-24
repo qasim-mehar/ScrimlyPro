@@ -1,7 +1,17 @@
 // entry point — session list/history arrives with C4.2+
 import Link from "next/link";
 
-export default function Home() {
+import { requireUser } from "@/lib/auth/action-guard";
+
+/**
+ * WP6: authenticated users only (the proxy gates too — this is defense in
+ * depth). No tenant data is rendered yet; listRecentSessions lands with
+ * C4.2+ and MUST run under withUserDb with an explicit
+ * eq(sessions.userId, user.id) predicate when it arrives.
+ */
+export default async function Home() {
+  await requireUser();
+
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 p-6">
       <h1 className="font-display text-4xl font-bold tracking-widest text-gold">

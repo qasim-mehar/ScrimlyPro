@@ -7,10 +7,15 @@ import { validateSessionDraft, type SessionDraft } from "./input";
  * Insert session + teams in ONE transaction. Re-validates and THROWS
  * (fail-loud) if issues exist — the action layer validates first, this
  * is defense in depth. Returns the new session id.
+ *
+ * `userId` MUST be the server-verified user id (supabase.auth.getUser) —
+ * never a client-supplied value. It becomes the tenant owner that every
+ * RLS policy keys on.
  */
 export async function createSessionWithTeams(
   db: Db,
   draft: SessionDraft,
+  userId: string,
 ): Promise<string> {
   const issues = validateSessionDraft(draft);
   if (issues.length > 0) {
@@ -28,6 +33,7 @@ export async function createSessionWithTeams(
   await db.transaction(async (tx) => {
     await tx.insert(sessions).values({
       id: sessionId,
+      userId,
       name: draft.name.trim(),
       plannedMatches: draft.plannedMatches,
       teamCount: draft.teamCount,

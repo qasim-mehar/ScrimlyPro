@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/lib/auth/action-guard";
 import SessionView from "@/components/session/SessionView";
-import { getDb } from "@/lib/db/client";
+import { withUserDb } from "@/lib/db/user";
 import { standingsSubtitle, withRanks } from "@/lib/graphics/standings";
 import { computeStandings } from "@/lib/scoring";
 import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/sessions/queries";
@@ -13,8 +14,15 @@ export default async function SessionPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // WP6: verified user or /login (defense in depth — the proxy gates too).
+  const user = await requireUser();
   const { id } = await params;
-  const data = await getSessionPageData(getDb(), id);
+
+  // Tenant read under RLS + explicit ownership predicate; a missing or
+  // foreign session is indistinguishable — both render the 404 page.
+  const data = await withUserDb({ sub: user.id }, (userDb) =>
+    getSessionPageData(userDb, id, user.id),
+  );
   if (!data) notFound();
 
   const standings = withRanks(

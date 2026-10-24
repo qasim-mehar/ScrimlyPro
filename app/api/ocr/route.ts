@@ -1,6 +1,9 @@
-import { NextResponse } from "next/server";
+import { and, eq } from "drizzle-orm";
 
-import { getDb } from "@/lib/db/client";
+import { withTenantRoute } from "@/lib/auth/route-guard";
+import { withUserDb } from "@/lib/db/user";
+import { sessions } from "@/lib/db/schema";
+import { noStore } from "@/lib/http";
 import { parseOcrFormData } from "@/lib/ocr/form";
 import { ingestMatchOcr, type IngestErrorCode } from "@/lib/ocr/ingest";
 
@@ -19,55 +22,83 @@ const STATUS_BY_CODE: Record<IngestErrorCode | "BAD_REQUEST", number> = {
 
 /**
  * POST /api/ocr — the match pipeline's front door (C5.2).
- * FormData (images, sessionId, matchNo) → ONE Gemini call with all images →
- * validated squads → draft match row upsert → typed JSON.
+ * Guarded by withTenantRoute: same-origin (403) → verified user (401) →
+ * per-user rate limit (429). FormData (images, sessionId, matchNo) →
+ * ownership check + ONE Gemini call with all images → validated squads →
+ * draft match row upsert → typed JSON.
+ *
+ * The whole tenant path (session lookup + Gemini call + draft upsert) runs
+ * INSIDE the withUserDb transaction, so RLS scopes every read and write.
+ * A foreign or missing sessionId is indistinguishable: 404 {"error":"not
+ * found"} with zero existence leakage.
  *
  * Raw images are never persisted and never logged.
  */
-export async function POST(request: Request) {
+export const POST = withTenantRoute(async (request, { user }) => {
   let parsed: Awaited<ReturnType<typeof parseOcrFormData>>;
   try {
     parsed = await parseOcrFormData(await request.formData());
   } catch (err) {
     console.error("POST /api/ocr: failed to read multipart body", err);
-    return NextResponse.json(
+    return noStore(
       { ok: false, error: { code: "BAD_REQUEST", message: "Could not read the upload." } },
       { status: 400 },
     );
   }
   if (!parsed.ok) {
-    return NextResponse.json(
-      { ok: false, error: parsed.error },
-      { status: 400 },
-    );
+    return noStore({ ok: false, error: parsed.error }, { status: 400 });
   }
 
   try {
-    const result = await ingestMatchOcr(getDb(), {
-      sessionId: parsed.sessionId,
-      matchNo: parsed.matchNo,
-      images: parsed.images,
+    const result = await withUserDb({ sub: user.id }, async (userDb) => {
+      // Ownership gate (belt): select the session inside the RLS transaction.
+      // RLS (suspenders) already filters foreign rows to the same effect —
+      // missing and foreign both land here as null.
+      const session =
+        (
+          await userDb
+            .select({ id: sessions.id })
+            .from(sessions)
+            .where(
+              and(eq(sessions.id, parsed.sessionId), eq(sessions.userId, user.id)),
+            )
+            .limit(1)
+        )[0] ?? null;
+      if (!session) return { notFound: true as const };
+
+      // Gemini call + draft upsert run inside the same RLS-scoped
+      // transaction: the ingest insert carries the authenticated role +
+      // verified claims (WITH CHECK passes only for owned sessions).
+      const ingest = await ingestMatchOcr(userDb, {
+        sessionId: parsed.sessionId,
+        matchNo: parsed.matchNo,
+        images: parsed.images,
+      });
+      return { notFound: false as const, ingest };
     });
-    if (result.ok) {
-      return NextResponse.json(result, { status: 200 });
+
+    if (result.notFound) {
+      return noStore({ error: "not found" }, { status: 404 });
     }
-    const { error } = result;
+
+    const ingest = result.ingest;
+    if (ingest.ok) {
+      return noStore(ingest, { status: 200 });
+    }
+    const { error } = ingest;
     const body: Record<string, unknown> = {
       code: error.code,
       message: error.message,
     };
     if (error.matchId !== undefined) body.matchId = error.matchId;
     if (error.failure !== undefined) body.failure = error.failure;
-    return NextResponse.json(
-      { ok: false, error: body },
-      { status: STATUS_BY_CODE[error.code] },
-    );
+    return noStore({ ok: false, error: body }, { status: STATUS_BY_CODE[error.code] });
   } catch (err) {
     // Catch-all: detail goes to the server log only, never the client.
     console.error("POST /api/ocr: unexpected failure", err);
-    return NextResponse.json(
+    return noStore(
       { ok: false, error: { code: "UNKNOWN", message: "Unexpected OCR failure." } },
       { status: 500 },
     );
   }
-}
+});

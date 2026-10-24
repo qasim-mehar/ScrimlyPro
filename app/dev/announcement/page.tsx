@@ -1,6 +1,8 @@
 import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/lib/auth/action-guard";
+
 import { AnnouncementPreview } from "@/components/graphics/AnnouncementPreview";
 import { getDb } from "@/lib/db/client";
 import { sessions, teams } from "@/lib/db/schema";
@@ -28,6 +30,8 @@ function placeholderLogo(): string {
 
 export default async function DevAnnouncementPage() {
   if (process.env.NODE_ENV === "production") notFound();
+  // WP6: authenticated users only (dev pages render fixtures; no tenant reads).
+  await requireUser();
 
   const db = getDb();
   const session =
