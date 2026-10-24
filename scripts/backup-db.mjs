@@ -135,6 +135,41 @@ for (const t of tables) {
   const rows = await sql.unsafe(`select count(*)::int as n from "${t}"`);
   counts[t] = rows[0].n;
 }
+
+// Content-level digests (E-5.3): per-session standings digest (computed with
+// the REAL computeStandings via Node's native type-stripping, same as
+// scripts/golden-check.ts) written into the manifest so the restore test can
+// verify restored CONTENT, not just row counts — deterministically, with no
+// race against live writes. Only when the three scoring tables exist.
+let standings = null;
+if (["sessions", "teams", "match_results"].every((t) => counts[t] !== undefined)) {
+  try {
+    const { createHash } = await import("node:crypto");
+    const { computeStandings } = await import("../lib/scoring/standings.ts");
+    standings = {};
+    const sessionIds = (await sql`select id from sessions order by id`).map((r) => r.id);
+    for (const sessionId of sessionIds) {
+      const s = await sql`select scoring_rules from sessions where id = ${sessionId}`;
+      const teams = (
+        await sql`select id, name, logo_url from teams where session_id = ${sessionId}`
+      ).map((t) => ({ id: t.id, name: t.name, logoUrl: t.logo_url }));
+      const results = (
+        await sql`
+          select r.team_id, r.placement, r.kills, r.placement_points
+          from match_results r join matches m on m.id = r.match_id
+          where m.session_id = ${sessionId}`
+      ).map((r) => ({
+        teamId: r.team_id, placement: r.placement,
+        kills: r.kills, placementPoints: r.placement_points,
+      }));
+      standings[sessionId] = createHash("sha256")
+        .update(JSON.stringify(computeStandings(results, teams, s[0]?.scoring_rules ?? {})))
+        .digest("hex");
+    }
+  } catch (e) {
+    console.log(`· standings digests SKIP — ${String(e.message).split("\n")[0]}`);
+  }
+}
 await sql.end();
 
 const manifest = {
@@ -144,6 +179,7 @@ const manifest = {
   pgDumpVersion,
   dumpFile: "db.dump",
   tables: counts,
+  standings,
 };
 writeFileSync(path.join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
 

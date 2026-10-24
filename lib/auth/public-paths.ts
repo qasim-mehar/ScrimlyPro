@@ -19,7 +19,9 @@ export const PUBLIC_PAGES = [
   "/auth/error",
 ] as const;
 
-/** Exact-match public API paths. Liveness only — never tenant data. */
+/** Exact-match public API paths. Liveness only — never tenant data.
+ *  Matching is EXACT (never prefix): a new public API path must be added
+ *  here explicitly and will never match by accident. */
 export const PUBLIC_API_PATHS = ["/api/health"] as const;
 
 export function isPublicPath(pathname: string): boolean {

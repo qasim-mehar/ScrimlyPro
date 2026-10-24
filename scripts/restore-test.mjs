@@ -173,11 +173,73 @@ try {
         fails++;
       }
     }
+    // --- content-level check (E-5.3 / M1 golden-check pattern): recompute
+    // standings from the RESTORED rows and compare against the digests the
+    // backup wrote into its manifest at backup time — deterministic (no race
+    // with live writes) and catches content drift that identical counts
+    // cannot. Uses the real computeStandings via Node's native
+    // type-stripping (same as scripts/golden-check.ts); on a runtime without
+    // type-stripping, or for a manifest without digests, it reports SKIP
+    // visibly instead of silently passing.
+    let standingsFail = null; // null = check unavailable, number = failing sessions
+    let standingsTotal = 0;
+    let standingsRan = false;
+    if (manifest.standings && Object.keys(manifest.standings).length > 0) {
+      try {
+        const { createHash } = await import("node:crypto");
+        const { computeStandings } = await import("../lib/scoring/standings.ts");
+        const digest = (rows) =>
+          createHash("sha256").update(JSON.stringify(rows)).digest("hex");
+        standingsRan = true;
+        for (const [sessionId, expected] of Object.entries(manifest.standings).sort(([a], [b]) => a.localeCompare(b))) {
+          standingsTotal++;
+          const s = await target`select scoring_rules from sessions where id = ${sessionId}`;
+          const teams = (
+            await target`select id, name, logo_url from teams where session_id = ${sessionId}`
+          ).map((t) => ({ id: t.id, name: t.name, logoUrl: t.logo_url }));
+          const results = (
+            await target`
+              select r.team_id, r.placement, r.kills, r.placement_points
+              from match_results r join matches m on m.id = r.match_id
+              where m.session_id = ${sessionId}`
+          ).map((r) => ({
+            teamId: r.team_id, placement: r.placement,
+            kills: r.kills, placementPoints: r.placement_points,
+          }));
+          const got = digest(computeStandings(results, teams, s[0]?.scoring_rules ?? {}));
+          if (got !== expected) {
+            standingsFail = (standingsFail ?? 0) + 1;
+            console.log(`  standings content DIFFERS for session ${sessionId}`);
+          }
+        }
+        if (standingsFail === null) standingsFail = 0; // ran clean
+      } catch (e) {
+        console.log(
+          `  · content-level standings check SKIP — ${String(e.message).split("\n")[0]}`,
+        );
+        standingsFail = null;
+        standingsTotal = 0;
+        standingsRan = false;
+      }
+    }
+
     await target.end();
 
     console.log("\n" + `-`.repeat(72));
-    if (fails === 0) {
-      console.log(`RESTORE TEST PASS — ${manifestTables.length}/${manifestTables.length} tables match the manifest`);
+    if (fails === 0 && standingsRan && standingsFail === 0) {
+      console.log(
+        `RESTORE TEST PASS — ${manifestTables.length}/${manifestTables.length} tables match the manifest` +
+          (standingsTotal > 0 ? `, standings identical for ${standingsTotal}/${standingsTotal} sessions` : ""),
+      );
+    } else if (fails === 0 && !standingsRan) {
+      console.log(
+        `RESTORE TEST PASS (count-level) — ${manifestTables.length}/${manifestTables.length} tables match the manifest; standings check unavailable (see SKIP above)`,
+      );
+    } else if (fails === 0) {
+      console.log(
+        `RESTORE TEST FAIL — counts match the manifest but standings differ in ${standingsFail}/${standingsTotal} session(s)`,
+      );
+      exitCode = 1;
     } else {
       console.log(`RESTORE TEST FAIL — ${fails}/${manifestTables.length} tables differ from the manifest`);
       exitCode = 1;
