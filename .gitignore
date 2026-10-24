@@ -37,6 +37,10 @@ yarn-error.log*
 # local sqlite data
 data/
 
+# supabase local stack temp files
+supabase/.temp
+supabase/.branches
+
 # vercel
 .vercel
 
