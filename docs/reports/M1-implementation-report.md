@@ -143,7 +143,7 @@ brief's fallback mode explicitly anticipates.
   Sign out (POST `/api/auth/logout`); post-login redirect via `sanitizeNext`.
 
 ### WP5 — Tenancy schema + RLS (`2317574`)
-- Migration `0001`: `sessions.user_id uuid` (nullable until WP8 backfill).
+- Migration `0001`: `sessions.user_id uuid`; migration `0003` (added after the quality pass) enforces NOT NULL — the legacy flow backfills via the migration script BEFORE the next `db:migrate` applies `0003`.
 - Migration `0002` (hand-written, reviewed against Appendix C):
   - conditional auth stand-in (schema `auth`, `auth.users` table, `auth.uid()`
     / `auth.jwt()` shim) created ONLY when no auth schema exists — no-ops on a
@@ -421,7 +421,7 @@ Idempotent re-apply: ✔ 0 inserted. NOT NULL on `sessions.user_id`: ✔ (0 null
 
 - [x] G1–G11 green with evidence (G3/G8 authenticated columns need hosted stack — §8.4, §9)
 - [x] G0 ordering proven (§5 G0 row)
-- [ ] Quality-agent pass: zero findings — **pending, run after this report**
+- [x] Quality-agent pass: 18 findings (0 P0, 2 P1, 12 P2/QoL) — all substantive items fixed in commit `4d45aa7` (idempotent trigger + default privileges, migration `0003` NOT NULL + seed owner, AuthForm sanitizeNextOr, `lib/db/admin.ts`, redirectTo origin via forwarded headers, test cleanups, 503 fail-closed, hygiene); remaining accepted items are documented as limitations/QoL (CSP header, ERD-governed FK cascade on match_results.team_id, handler-level enumeration parity test pending hosted stack)
 - [x] All pre-existing tests green (6 files fixture-adapted, 365→455 count reconciled)
 - [x] §9 matrix green for every route (fail-closed columns live + handler-level; positive paths via tests/stack)
 - [x] Zero secrets in bundles, logs, git history
