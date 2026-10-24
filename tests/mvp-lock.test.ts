@@ -1,10 +1,3 @@
-import path from "node:path";
-import Database from "better-sqlite3";
-import {
-  type BetterSQLite3Database,
-  drizzle,
-} from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -13,7 +6,11 @@ import { aggregatePlayers, draftMvpTop5 } from "@/lib/mvp";
 import { validateMvpEntries, type MvpValidationEntry } from "@/lib/mvp/lock";
 import { lockMvpList, unlockMvp } from "@/lib/mvp/lifecycle";
 
+import { testDb } from "./helpers/pg";
+
 const { matchResults, matches, mvpLists, sessions, teams } = schema;
+
+type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 
 const RULES = {
   kill_points: 1,
@@ -125,50 +122,38 @@ describe("validateMvpEntries", () => {
   });
 });
 
-function testDb(): {
-  sqlite: Database.Database;
-  db: BetterSQLite3Database<typeof schema>;
-} {
-  const sqlite = new Database(":memory:");
-  sqlite.pragma("foreign_keys = ON");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, {
-    migrationsFolder: path.join(process.cwd(), "db", "migrations"),
-  });
-  return { sqlite, db };
-}
-
 describe("mvp lifecycle", () => {
-  let sqlite: Database.Database;
-  let db: BetterSQLite3Database<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let db: PgDb;
 
-  beforeEach(() => {
-    ({ sqlite, db } = testDb());
-    db.insert(sessions)
-      .values({
-        id: "s1",
-        name: "S",
-        plannedMatches: 6,
-        teamCount: 16,
-        scoringRules: RULES,
-        createdAt: "2025-01-01T00:00:00.000Z",
-      })
-      .run();
-    db.insert(teams).values({ id: "t1", sessionId: "s1", name: "Alpha" }).run();
-    db.insert(teams).values({ id: "t2", sessionId: "s1", name: "Beta" }).run();
+  beforeEach(async () => {
+    ({ db, cleanup } = await testDb());
+    await db.insert(sessions).values({
+      id: "s1",
+      userId: "99999999-9999-9999-9999-999999999992",
+      name: "S",
+      plannedMatches: 6,
+      teamCount: 16,
+      scoringRules: RULES,
+      createdAt: "2025-01-01T00:00:00.000Z",
+    });
+    await db.insert(teams).values({ id: "t1", sessionId: "s1", name: "Alpha" });
+    await db.insert(teams).values({ id: "t2", sessionId: "s1", name: "Beta" });
   });
 
-  afterEach(() => sqlite.close());
+  afterEach(async () => cleanup());
 
-  it("lockMvpList writes rank 1..5, trimmed names, locked + lockedAt", () => {
+  it("lockMvpList writes rank 1..5, trimmed names, locked + lockedAt", async () => {
     const padded = fiveValid().map((row, index) =>
       index === 0 ? { ...row, name: "  BULL  " } : row,
     );
-    const result = lockMvpList(db, "s1", padded);
+    const result = await lockMvpList(db, "s1", padded);
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected lock to succeed");
 
-    const saved = db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1")).get()!;
+    const saved = (
+      await db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1"))
+    )[0]!;
     expect(saved.locked).toBe(true);
     expect(typeof saved.lockedAt).toBe("string");
     expect(saved.entries).toEqual([
@@ -180,8 +165,8 @@ describe("mvp lifecycle", () => {
     ]);
   });
 
-  it("re-lock replaces the previous locked list", () => {
-    expect(lockMvpList(db, "s1", fiveValid()).ok).toBe(true);
+  it("re-lock replaces the previous locked list", async () => {
+    expect((await lockMvpList(db, "s1", fiveValid())).ok).toBe(true);
     const other: MvpValidationEntry[] = [
       entry("ONE", "t2", 9),
       entry("TWO", "t2", 8),
@@ -189,10 +174,13 @@ describe("mvp lifecycle", () => {
       entry("FOUR", "t1", 6),
       entry("FIVE", "t1", 5),
     ];
-    const result = lockMvpList(db, "s1", other);
+    const result = await lockMvpList(db, "s1", other);
     expect(result.ok).toBe(true);
 
-    const rows = db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1")).all();
+    const rows = await db
+      .select()
+      .from(mvpLists)
+      .where(eq(mvpLists.sessionId, "s1"));
     expect(rows).toHaveLength(1);
     expect(rows[0]!.entries.map((row) => row.name)).toEqual([
       "ONE",
@@ -204,24 +192,28 @@ describe("mvp lifecycle", () => {
     expect(rows[0]!.locked).toBe(true);
   });
 
-  it("invalid input writes nothing", () => {
-    const result = lockMvpList(db, "s1", fiveValid().slice(0, 4));
+  it("invalid input writes nothing", async () => {
+    const result = await lockMvpList(db, "s1", fiveValid().slice(0, 4));
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected lock to fail");
     expect(result.issues).toHaveLength(1);
-    expect(db.select().from(mvpLists).all()).toHaveLength(0);
+    expect(await db.select().from(mvpLists)).toHaveLength(0);
   });
 
-  it("unlockMvp flips locked off and retains entries", () => {
-    expect(lockMvpList(db, "s1", fiveValid()).ok).toBe(true);
-    const before = db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1")).get()!;
-    unlockMvp(db, "s1");
-    const after = db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1")).get()!;
+  it("unlockMvp flips locked off and retains entries", async () => {
+    expect((await lockMvpList(db, "s1", fiveValid())).ok).toBe(true);
+    const before = (
+      await db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1"))
+    )[0]!;
+    await unlockMvp(db, "s1");
+    const after = (
+      await db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1"))
+    )[0]!;
     expect(after.locked).toBe(false);
     expect(after.entries).toEqual(before.entries);
   });
 
-  it("integration: aggregate confirmed matches → draft top-5 → lock holds the 5", () => {
+  it("integration: aggregate confirmed matches → draft top-5 → lock holds the 5", async () => {
     const squads: Record<string, Array<{ name: string; kills: number }>> = {
       m1: [
         { name: "BULL", kills: 4 },
@@ -239,32 +231,28 @@ describe("mvp lifecycle", () => {
     let placement = 1;
     for (const [matchId, players] of Object.entries(squads)) {
       const matchNo = matchId === "m1" ? 1 : 2;
-      db.insert(matches)
-        .values({
-          id: matchId,
-          sessionId: "s1",
-          matchNo,
-          status: "confirmed",
-          createdAt: "2025-01-01T00:00:00.000Z",
-          confirmedAt: "2025-01-01T00:05:00.000Z",
-        })
-        .run();
+      await db.insert(matches).values({
+        id: matchId,
+        sessionId: "s1",
+        matchNo,
+        status: "confirmed",
+        createdAt: "2025-01-01T00:00:00.000Z",
+        confirmedAt: "2025-01-01T00:05:00.000Z",
+      });
       const teamId = matchNo === 1 ? "t1" : "t2";
-      db.insert(matchResults)
-        .values({
-          id: `r-${matchId}`,
-          matchId,
-          teamId,
-          placement,
-          kills: players.reduce((sum, player) => sum + player.kills, 0),
-          placementPoints: 10,
-          players,
-        })
-        .run();
+      await db.insert(matchResults).values({
+        id: `r-${matchId}`,
+        matchId,
+        teamId,
+        placement,
+        kills: players.reduce((sum, player) => sum + player.kills, 0),
+        placementPoints: 10,
+        players,
+      });
       placement += 1;
     }
 
-    const sourceRows = db
+    const sourceRows = await db
       .select({
         teamId: matchResults.teamId,
         matchNo: matches.matchNo,
@@ -272,12 +260,11 @@ describe("mvp lifecycle", () => {
       })
       .from(matchResults)
       .innerJoin(matches, eq(matchResults.matchId, matches.id))
-      .where(eq(matches.sessionId, "s1"))
-      .all();
+      .where(eq(matches.sessionId, "s1"));
     const draft = draftMvpTop5(aggregatePlayers(sourceRows));
     expect(draft).toHaveLength(5);
 
-    const result = lockMvpList(
+    const result = await lockMvpList(
       db,
       "s1",
       draft.map((player) => ({
@@ -287,7 +274,9 @@ describe("mvp lifecycle", () => {
       })),
     );
     expect(result.ok).toBe(true);
-    const saved = db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1")).get()!;
+    const saved = (
+      await db.select().from(mvpLists).where(eq(mvpLists.sessionId, "s1"))
+    )[0]!;
     expect(saved.entries).toHaveLength(5);
     expect(saved.entries.map((row) => row.rank)).toEqual([1, 2, 3, 4, 5]);
   });

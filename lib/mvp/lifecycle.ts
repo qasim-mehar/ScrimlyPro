@@ -22,17 +22,16 @@ export type LockMvpResult =
  * returns { ok: false, issues } and writes NOTHING. Re-lock replaces
  * the previous locked list (rank = position, 1..5).
  */
-export function lockMvpList(
+export async function lockMvpList(
   db: Db,
   sessionId: string,
   entries: ReadonlyArray<MvpValidationEntry>,
-): LockMvpResult {
-  return db.transaction((tx) => {
-    const teamRows = tx
+): Promise<LockMvpResult> {
+  return db.transaction(async (tx): Promise<LockMvpResult> => {
+    const teamRows = await tx
       .select({ id: teams.id })
       .from(teams)
-      .where(eq(teams.sessionId, sessionId))
-      .all();
+      .where(eq(teams.sessionId, sessionId));
     const issues = validateMvpEntries(entries, teamRows);
     if (issues.length > 0) return { ok: false, issues } satisfies LockMvpResult;
     const normalized: MvpEntry[] = entries.map((entry, index) => ({
@@ -42,21 +41,21 @@ export function lockMvpList(
       kills: entry.kills,
     }));
     const lockedAt = new Date().toISOString();
-    tx.insert(mvpLists)
+    await tx
+      .insert(mvpLists)
       .values({ sessionId, entries: normalized, locked: true, lockedAt })
       .onConflictDoUpdate({
         target: mvpLists.sessionId,
         set: { entries: normalized, locked: true, lockedAt },
-      })
-      .run();
+      });
     return { ok: true, entries: normalized } satisfies LockMvpResult;
   });
 }
 
 /** Re-open the editor: entries are retained, only the lock flips off. */
-export function unlockMvp(db: Db, sessionId: string): void {
-  db.update(mvpLists)
+export async function unlockMvp(db: Db, sessionId: string): Promise<void> {
+  await db
+    .update(mvpLists)
     .set({ locked: false, lockedAt: null })
-    .where(eq(mvpLists.sessionId, sessionId))
-    .run();
+    .where(eq(mvpLists.sessionId, sessionId));
 }
