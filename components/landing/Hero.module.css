@@ -1,0 +1,877 @@
+/* Laura.io-style "Design Wizard" hero — converted from the single-file
+   index.html prototype. All controller internals are sized in cqw so the
+   rig scales as one piece. Classes toggled from JS (hop/pressed/nudge-*)
+   are matched via :global() because CSS Modules hash local names. */
+
+.page {
+  /* SNES face-button palette (EU/SFC) */
+  --snes-blue: #3e6ff0; /* X — top */
+  --snes-red: #e5473b; /* A — right */
+  --snes-yellow: #f5b62e; /* B — bottom */
+  --snes-green: #3ea55c; /* Y — left */
+
+  --badge-purple: #7c5cff;
+  --badge-orange: #ff7a29;
+
+  --shell-1: #e6e7ec;
+  --shell-2: #d3d4da;
+  --shell-3: #c3c4cc;
+  --face-1: #34353f;
+  --face-2: #26272f;
+  --well: #1b1c23;
+
+  --ink: #0b0b0d;
+  --ink-soft: #55565e;
+
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+  color: var(--ink);
+  font-family: var(--font-lexend), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle, #e2e2e8 1.1px, transparent 1.4px) 0 0 / 26px 26px,
+    #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------
+   Navbar
+   ------------------------------------------------------------ */
+.nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px clamp(20px, 4vw, 56px);
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 3.5px;
+  background: var(--ink);
+  transform: rotate(45deg);
+  transition: transform 0.45s var(--ease-pop);
+}
+.brand:hover::before {
+  transform: rotate(225deg);
+}
+
+.navPill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 999px;
+  background: #f3f3f6;
+}
+.navPill a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #52535c;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 0.25s var(--ease-out),
+    color 0.25s var(--ease-out),
+    box-shadow 0.25s var(--ease-out);
+}
+.navPill a .arr {
+  font-size: 13px;
+  color: #8a8b96;
+  transition:
+    transform 0.25s var(--ease-pop),
+    color 0.25s;
+}
+.navPill a:hover {
+  background: #ffffffb0;
+  color: var(--ink);
+}
+.navPill a:hover .arr {
+  transform: translateX(2px);
+  color: var(--ink);
+}
+.navPill a[aria-current="page"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow:
+    0 1px 3px rgba(11, 11, 13, 0.1),
+    0 0 0 1px rgba(11, 11, 13, 0.04);
+}
+
+.navCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.25s var(--ease-out),
+    color 0.25s var(--ease-out),
+    transform 0.25s var(--ease-pop);
+}
+.navCta .arr {
+  font-size: 13px;
+  transition: transform 0.25s var(--ease-pop);
+}
+.navCta:hover {
+  background: var(--ink);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.navCta:hover .arr {
+  transform: translate(2px, -2px);
+}
+.navCta:active {
+  transform: translateY(0);
+}
+
+/* ------------------------------------------------------------
+   Hero
+   ------------------------------------------------------------ */
+.hero {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(12px, 2vh, 28px) 20px 52px;
+  gap: clamp(16px, 2.6vh, 30px);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+.eyebrow svg {
+  display: block;
+}
+
+.headline {
+  font-size: clamp(34px, 5.6vw, 72px);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.line {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.sparkle {
+  display: inline-block;
+  vertical-align: 0.42em;
+  margin-left: 0.06em;
+  width: 0.26em;
+  height: 0.26em;
+  color: var(--snes-yellow);
+  filter: drop-shadow(0 0 5px rgba(245, 182, 46, 0.45));
+  animation: twinkle 3.6s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  45% {
+    transform: scale(0.55) rotate(45deg);
+    opacity: 0.55;
+  }
+  60% {
+    transform: scale(1.15) rotate(20deg);
+    opacity: 1;
+  }
+}
+
+/* primary CTA under the headline */
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 15px 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    0 12px 26px -10px rgba(11, 11, 13, 0.45),
+    0 2px 6px rgba(11, 11, 13, 0.14);
+  transition:
+    transform 0.25s var(--ease-pop),
+    box-shadow 0.25s var(--ease-out),
+    background 0.25s;
+}
+.heroCta .arr {
+  font-size: 14px;
+  transition: transform 0.25s var(--ease-pop);
+}
+.heroCta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 30px -10px rgba(11, 11, 13, 0.5),
+    0 3px 8px rgba(11, 11, 13, 0.16);
+}
+.heroCta:hover .arr {
+  transform: translate(2px, -2px);
+}
+.heroCta:active {
+  transform: translateY(0);
+}
+
+/* ------------------------------------------------------------
+   Stage — controller + floating badges
+   ------------------------------------------------------------ */
+.stage {
+  position: relative;
+  margin-top: clamp(12px, 2.2vh, 24px);
+}
+
+.pad {
+  position: relative;
+  width: clamp(360px, 46vw, 560px);
+  aspect-ratio: 100 / 74;
+  container-type: inline-size;
+  perspective: 1100px;
+}
+
+/* ground shadow — breathes counter-phase to the float bob */
+.padShadow {
+  position: absolute;
+  left: 50%;
+  top: 52cqw;
+  width: 78cqw;
+  height: 11cqw;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(13, 14, 20, 0.3),
+    rgba(13, 14, 20, 0.12) 58%,
+    transparent 78%
+  );
+  animation: shadow-breathe 5.6s ease-in-out infinite;
+}
+@keyframes shadow-breathe {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.92, 0.86);
+    opacity: 0.62;
+  }
+  50% {
+    transform: translateX(-50%) scale(1, 1);
+    opacity: 1;
+  }
+}
+
+/* transform stack, outer → inner:
+   .sway (pointer parallax) → .float (idle bob) → .hopWrap (hop)
+   → .tilt (base −5° tilt + d-pad nudges + hover lift) */
+.sway {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 60cqw;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+}
+.float {
+  position: absolute;
+  inset: 0;
+  animation: bob 5.6s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(-1.4cqw);
+  }
+  50% {
+    transform: translateY(1.4cqw);
+  }
+}
+.hopWrap {
+  position: absolute;
+  inset: 0;
+}
+.pad:global(.hop) .hopWrap {
+  animation: hop 0.62s var(--ease-pop);
+}
+@keyframes hop {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-4cqw);
+  }
+  62% {
+    transform: translateY(0.8cqw) scale(1.015, 0.985);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+.tilt {
+  position: absolute;
+  inset: 0;
+  transform: rotate(var(--tilt, -5deg)) translateY(var(--lift, 0cqw));
+  transition: transform 0.22s var(--ease-out);
+}
+.pad:hover .tilt {
+  --lift: -0.9cqw;
+}
+.pad:global(.nudge-left) .tilt {
+  --tilt: -7.4deg;
+}
+.pad:global(.nudge-right) .tilt {
+  --tilt: -2.6deg;
+}
+.pad:global(.nudge-up) .tilt {
+  --tilt: -5deg;
+  --lift: -1.8cqw;
+}
+.pad:global(.nudge-down) .tilt {
+  --tilt: -5deg;
+  --lift: 0.8cqw;
+}
+
+/* ---- shell + grips (same clay, molded as separate parts) ---- */
+.grip {
+  position: absolute;
+  top: 19cqw;
+  width: 29cqw;
+  height: 35cqw;
+  border-radius: 48% 52% 46% 46% / 64% 64% 40% 40%;
+  background: radial-gradient(circle at 50% 24%, var(--shell-1), var(--shell-2) 56%, #b4b5bf);
+  box-shadow:
+    inset 0 -1.8cqw 2.6cqw rgba(21, 22, 30, 0.2),
+    inset 0 0.6cqw 1cqw rgba(255, 255, 255, 0.5);
+}
+.gripGl {
+  left: -3cqw;
+}
+.gripGr {
+  right: -3cqw;
+}
+
+.shell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44cqw;
+  border-radius: 5.6cqw;
+  background: linear-gradient(180deg, var(--shell-1) 0%, var(--shell-2) 55%, var(--shell-3) 100%);
+  box-shadow:
+    inset 0 0.45cqw 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1.6cqw 2.6cqw rgba(21, 22, 30, 0.13),
+    0 1.4cqw 2cqw rgba(21, 22, 30, 0.14),
+    0 0 0 0.15cqw rgba(21, 22, 30, 0.05);
+}
+
+/* ---- dark face panel ---- */
+.face {
+  position: absolute;
+  top: 3cqw;
+  left: 3cqw;
+  right: 3cqw;
+  height: 38cqw;
+  border-radius: 3.6cqw;
+  background: linear-gradient(180deg, var(--face-1), var(--face-2));
+  box-shadow:
+    inset 0 0.2cqw 0 rgba(255, 255, 255, 0.07),
+    inset 0 -0.6cqw 1.4cqw rgba(0, 0, 0, 0.38);
+}
+
+/* circular wells that seat the D-pad and the ABXY diamond */
+.well {
+  position: absolute;
+  top: 6cqw;
+  width: 26cqw;
+  height: 26cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #202129, var(--well) 72%);
+  box-shadow:
+    inset 0 0.55cqw 1.1cqw rgba(0, 0, 0, 0.55),
+    inset 0 -0.2cqw 0 rgba(255, 255, 255, 0.05);
+}
+.wLeft {
+  left: 5cqw;
+}
+.wRight {
+  right: 5cqw;
+}
+
+/* ---- D-pad ---- */
+.dpad {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 17cqw;
+  height: 17cqw;
+  transform: translate(-50%, -50%);
+}
+.arm,
+.dCenter {
+  position: absolute;
+  background: #101117;
+  box-shadow:
+    inset 0 0.22cqw 0 rgba(255, 255, 255, 0.09),
+    inset 0 -0.22cqw 0.35cqw rgba(0, 0, 0, 0.55);
+}
+.arm {
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.arm:hover {
+  background: #1b1c26;
+}
+.arm:active,
+.arm:global(.pressed) {
+  background: #26273a;
+  transform: translateY(0.28cqw);
+  box-shadow: inset 0 0.3cqw 0.5cqw rgba(0, 0, 0, 0.6);
+}
+
+.dUp {
+  left: 5.7cqw;
+  top: 0;
+  width: 5.6cqw;
+  height: 9.3cqw;
+  border-radius: 1.2cqw 1.2cqw 0 0;
+}
+.dDown {
+  left: 5.7cqw;
+  bottom: 0;
+  width: 5.6cqw;
+  height: 9.3cqw;
+  border-radius: 0 0 1.2cqw 1.2cqw;
+}
+.dLeft {
+  top: 5.7cqw;
+  left: 0;
+  width: 9.3cqw;
+  height: 5.6cqw;
+  border-radius: 1.2cqw 0 0 1.2cqw;
+}
+.dRight {
+  top: 5.7cqw;
+  right: 0;
+  width: 9.3cqw;
+  height: 5.6cqw;
+  border-radius: 0 1.2cqw 1.2cqw 0;
+}
+.dCenter {
+  left: 5.7cqw;
+  top: 5.7cqw;
+  width: 5.6cqw;
+  height: 5.6cqw;
+  background: radial-gradient(circle at 50% 44%, #08090c, #14151d 78%);
+}
+
+/* ---- center strip: wordmark + start/select pills ---- */
+.mid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30cqw;
+}
+.mark {
+  transform: skewX(-9deg);
+  text-align: center;
+  line-height: 1.45;
+  user-select: none;
+}
+.m1 {
+  display: block;
+  font-size: 2.45cqw;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #9a9db2;
+}
+.m2 {
+  display: block;
+  font-size: 1.25cqw;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: #7e8196;
+}
+
+.pills {
+  display: flex;
+  gap: 3cqw;
+  margin-top: 3.4cqw;
+}
+.pillWrap {
+  position: relative;
+  display: block;
+}
+.pillBtn {
+  position: relative;
+  width: 10.5cqw;
+  height: 3.3cqw;
+  border: 0;
+  border-radius: 2cqw;
+  cursor: pointer;
+  background: linear-gradient(180deg, #5b5d68, #383a43);
+  box-shadow:
+    inset 0 0.3cqw 0 rgba(255, 255, 255, 0.14),
+    inset 0 -0.35cqw 0.6cqw rgba(0, 0, 0, 0.5),
+    0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.12s var(--ease-out),
+    box-shadow 0.12s var(--ease-out),
+    filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pillBtn:hover {
+  filter: brightness(1.18);
+}
+.pillBtn:active,
+.pillBtn:global(.pressed) {
+  transform: translateY(0.3cqw);
+  box-shadow:
+    inset 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.55),
+    0 0.1cqw 0.2cqw rgba(0, 0, 0, 0.3);
+}
+.pillLabel {
+  position: absolute;
+  top: 4.6cqw;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.7cqw;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #b0b3c6;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.pillWrap:hover .pillLabel,
+.pillBtn:focus-visible + .pillLabel {
+  color: #d6d8e4;
+}
+
+/* ---- ABXY diamond: well center 13cqw, radius 7cqw, button 9.6cqw;
+   color comes from each button's inline --c ---- */
+.abxy {
+  position: absolute;
+  inset: 0;
+}
+
+.faceBtn {
+  position: absolute;
+  width: 9.6cqw;
+  height: 9.6cqw;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 118%, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0) 52%),
+    var(--c);
+  box-shadow:
+    inset 0 -0.8cqw 0.9cqw rgba(0, 0, 0, 0.3),
+    inset 0 0.45cqw 0.55cqw rgba(255, 255, 255, 0.3),
+    0 0.6cqw 1.2cqw rgba(0, 0, 0, 0.42);
+  transition:
+    transform 0.14s var(--ease-pop),
+    box-shadow 0.14s var(--ease-out),
+    filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.faceBtn:hover {
+  filter: brightness(1.08) saturate(1.1);
+}
+.faceBtn:active,
+.faceBtn:global(.pressed) {
+  transform: translateY(0.8cqw) scale(0.97);
+  box-shadow:
+    inset 0 0.4cqw 0.8cqw rgba(0, 0, 0, 0.4),
+    inset 0 0.3cqw 0.4cqw rgba(255, 255, 255, 0.18),
+    0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.35);
+}
+
+.fx {
+  left: 8.2cqw;
+  top: 1.2cqw;
+}
+.fa {
+  left: 15.2cqw;
+  top: 8.2cqw;
+}
+.fb {
+  left: 8.2cqw;
+  top: 15.2cqw;
+}
+.fy {
+  left: 1.2cqw;
+  top: 8.2cqw;
+}
+
+/* letters molded on the face, just outside each button */
+.key {
+  position: absolute;
+  font-size: 2cqw;
+  font-weight: 800;
+  color: #8d92a8;
+  user-select: none;
+}
+.kx {
+  left: 50%;
+  top: -2.2cqw;
+  transform: translateX(-50%);
+}
+.ka {
+  right: -2.2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.kb {
+  left: 50%;
+  bottom: -2.6cqw;
+  transform: translateX(-50%);
+}
+.ky {
+  left: -2.2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ---- floating name badges + hand-built cursor arrows ---- */
+.badge {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow:
+    0 12px 28px -8px var(--bc),
+    0 3px 10px rgba(11, 11, 13, 0.14);
+  animation: badge-bob 6s ease-in-out infinite;
+}
+.badge svg {
+  display: block;
+  flex: none;
+}
+.amirali {
+  --bc: rgba(124, 92, 255, 0.5);
+  left: -18cqw;
+  top: 8cqw;
+  background: var(--badge-purple);
+  animation-delay: -1.6s;
+}
+.sina {
+  --bc: rgba(255, 122, 41, 0.5);
+  left: 100cqw;
+  top: 18cqw;
+  background: var(--badge-orange);
+  animation-delay: -3.7s;
+}
+@keyframes badge-bob {
+  0%,
+  100% {
+    transform: translateY(-0.9cqw) rotate(-1.6deg);
+  }
+  50% {
+    transform: translateY(0.9cqw) rotate(1.4deg);
+  }
+}
+
+/* ------------------------------------------------------------
+   Bottom links — square bullets echo the face-button palette
+   ------------------------------------------------------------ */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 44px;
+  margin-top: clamp(16px, 3vh, 32px);
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 16.5px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  transition: text-decoration-color 0.2s;
+}
+.links a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 7px;
+  text-decoration-color: color-mix(in srgb, var(--c) 65%, transparent);
+}
+.bullet {
+  width: 13px;
+  height: 13px;
+  border-radius: 4.5px;
+  background: var(--c);
+  box-shadow:
+    inset 0 -3px 4px rgba(0, 0, 0, 0.2),
+    inset 0 2px 2px rgba(255, 255, 255, 0.4);
+  transition: transform 0.35s var(--ease-pop);
+}
+.links a:hover .bullet {
+  transform: rotate(135deg) scale(1.22);
+}
+.lPortfolio {
+  --c: var(--snes-green);
+}
+.lAchievements {
+  --c: var(--snes-blue);
+}
+.lFeedback {
+  --c: var(--snes-yellow);
+}
+.lFaq {
+  --c: var(--snes-red);
+}
+
+/* ------------------------------------------------------------
+   FX layer (score pops, star burst) — page-fixed, transform-agnostic.
+   The .pop/.star-fly children are created from JS with plain class
+   names, so their styles live in app/globals.css.
+   ------------------------------------------------------------ */
+.fxLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  overflow: clip;
+}
+
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
+@media (max-width: 920px) {
+  .navPill {
+    display: none;
+  }
+}
+@media (max-width: 680px) {
+  .page {
+    background:
+      radial-gradient(circle, #ececf1 1.1px, transparent 1.4px) 0 0 / 26px 26px,
+      #ffffff;
+  }
+  .nav {
+    padding: 16px 18px;
+  }
+  .navCta {
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+  .badge {
+    font-size: 12px;
+    padding: 7px 12px;
+    gap: 6px;
+  }
+  /* pad nearly fills the viewport — perch the badges on the controller
+     instead of beside it, like cursors hovering over it */
+  .amirali {
+    left: 4cqw;
+    top: -7cqw;
+  }
+  .sina {
+    left: auto;
+    right: 2cqw;
+    top: 3cqw;
+  }
+  .links {
+    gap: 12px 26px;
+  }
+  .links a {
+    font-size: 14.5px;
+  }
+}
+@media (max-width: 480px) {
+  .headline {
+    font-size: 8.4vw;
+    letter-spacing: -0.04em;
+  }
+  .pad {
+    width: 88vw;
+  }
+  .heroCta {
+    padding: 13px 24px;
+    font-size: 14.5px;
+  }
+}
+
+/* ------------------------------------------------------------
+   Reduced motion — floats, twinkles and parallax switch off;
+   press feedback stays (it confirms input, not decoration)
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .padShadow,
+  .badge,
+  .sparkle {
+    animation: none;
+  }
+  .sway {
+    transform: none;
+  }
+  .pad:global(.hop) .hopWrap {
+    animation: none;
+  }
+}

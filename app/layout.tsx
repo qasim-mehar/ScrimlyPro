@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+import { Inter, Inter_Tight, Lexend } from "next/font/google";
 import "./globals.css";
 
 const interTight = Inter_Tight({
@@ -13,6 +13,12 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const lexend = Lexend({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-lexend",
+});
+
 export const metadata: Metadata = {
   title: "bear.io — Design Wizard",
   description:
@@ -24,7 +30,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${interTight.variable} ${inter.variable}`}>
+      <body className={`${interTight.variable} ${inter.variable} ${lexend.variable}`}>
         {children}
       </body>
     </html>

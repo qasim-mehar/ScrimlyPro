@@ -30,26 +30,58 @@ body {
   border-radius: 9999px;
 }
 
-/* Staggered hero entrance — pair .hero-fade with an inline animation-delay. */
-.hero-fade {
-  opacity: 0;
-  animation: hero-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+/* Hero FX layer children (components/landing/Hero.tsx) — created from JS
+   with plain class names, so they can't be CSS-Module hashed. */
+.pop {
+  position: absolute;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--c);
+  transform: translate(-50%, -50%);
+  animation: pop-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  text-shadow: 0 1px 0 #fff;
 }
 
-@keyframes hero-fade-up {
+@keyframes pop-rise {
   from {
-    opacity: 0;
-    transform: translateY(18px);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  25% {
+    transform: translate(-50%, -70%) scale(1.12);
   }
   to {
+    opacity: 0;
+    transform: translate(-50%, -190%) scale(1);
+  }
+}
+
+.star-fly {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  color: var(--c);
+  animation: star-fly 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes star-fly {
+  from {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
+      scale(1.15) rotate(260deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-fade {
-    animation: none;
-    opacity: 1;
+  .pop,
+  .star-fly {
+    animation-duration: 0.01s;
   }
 }
