@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AccountHeader } from "@/components/auth/AccountHeader";
 import "@fontsource/exo-2/500.css";
 import "@fontsource/exo-2/600.css";
 import "@fontsource/exo-2/700.css";
@@ -20,7 +21,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AccountHeader />
+        {children}
+      </body>
     </html>
   );
 }
