@@ -266,3 +266,63 @@ by design.
    rather than false-PASSes.
 5. Backups are machine-local (gitignored, off-host copy is runbook step
    10.3); pg binaries resolve via `PG_BIN_DIR` with the lane's default.
+
+## 9. Post-approval review response (E-1…E-5)
+
+The critical review APPROVED the lane with findings E-1…E-5. Disposition:
+
+- **E-1 (backup coverage boundary) — FIXED (docs + decision).** Runbook
+  step 10.4 now states the boundary explicitly (dump = `public` app schema
+  only; NO `auth.users`/identities, NO Storage objects), records the
+  mitigation decision (Supabase platform backups for the auth schema —
+  plan tier verified at step 1; re-invite procedure as the pilot fallback;
+  auth-schema dumps are credential material and never go into `backups/`
+  unencrypted), and the sign-off table carries the acknowledgment. Step 11
+  gained 11.3 (re-provision what the dump does not contain).
+- **E-2 (step 5 breaks on integrated schema) — FIXED (re-sequenced, zero
+  script changes).** Step 5 now: push 0000–0003 → legacy dry-run/apply →
+  push 0010+ (Lane B's `0011` backfill stamps orgs on migrated rows) →
+  assert zero NULL `org_id` → golden check → count reconciliation, with a
+  never-NULL-buster warning. Step 3 asserts the FULL chain, `pg_policies
+  ≥ 58` (exact floor pinned at rehearsal) and integrated-table presence.
+  Step 12 kill-switch is un-deferred (in-sequence; M3 merges before
+  cut-over per the wave runbook v3). The header mandates the local
+  scratch-DB rehearsal of the whole sequence — including first real
+  exercise of the legacy script's auth-user provisioning path — before
+  anyone opens the hosted console; that rehearsal is necessarily
+  post-merge (this lane may not merge/rebase other lanes' branches).
+- **E-3 (table enumeration hardcoded?) — VERIFIED DYNAMIC, no fix.** Both
+  `backup-db.mjs` and `restore-test.mjs` enumerate via
+  `information_schema.tables where table_schema='public'`; post-merge
+  tables are covered automatically. Documented in runbook step 10.1.
+- **E-4 (share-link verifier row) — SCHEDULED post-merge.** Cannot exist on
+  this M1-era base (Lane B's surface is absent); runbook now carries a
+  "Post-integration verifier extension" section defining the row exactly
+  (create → 200 + no-store + noindex + zero-PII markers → revoke → 404)
+  for the merge sequencer.
+- **E-5.1 — DONE.** `PUBLIC_API_PATHS` matching was already exact; the
+  invariant is now stated in the file comment.
+- **E-5.2 — FIXED.** Rollback step 11.1: maintenance mode / traffic stop
+  precedes `pg_restore --clean`; resume is step 11.5.
+- **E-5.3 (content-level restore check) — IMPLEMENTED.** `db:backup` now
+  writes a per-session standings digest (real `computeStandings` via Node
+  type-stripping, sha-256) into the manifest; `db:restore-test` recomputes
+  standings from the RESTORED rows and compares against the backup-time
+  digests — deterministic (no race against live writes), count-level PASS
+  degrades visibly to "PASS (count-level)" with a SKIP note when digests
+  are unavailable. Proof (real runs on `scrimlypro_ops`):
+
+```
+RESTORE TEST PASS — 7/7 tables match the manifest, standings identical for 1/1 sessions
+```
+  Tamper drill (flipped digest char in a manifest copy):
+```
+  standings content DIFFERS for session seed-00000000-…-0001
+RESTORE TEST FAIL — counts match the manifest but standings differ in 1/1 session(s)
+```
+  exit 1; throwaway still dropped.
+
+Gates after the review fixes: tsc 0 · build unaffected · `npm test`
+460/460 (one transient 5s timeout in `tests/api/auth-matrix.test.ts` on a
+loaded machine re-ran green — flake, no repo delta touches that path) ·
+backup + restore-test green with content-level check.
