@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import {
@@ -183,4 +183,57 @@ export function nextMatchNumber(
   planned: number,
 ): number | null {
   return matchCount < planned ? matchCount + 1 : null;
+}
+
+export type RecentSession = {
+  id: string;
+  name: string;
+  status: "active" | "completed";
+  plannedMatches: number;
+  confirmedCount: number;
+  createdAt: string;
+};
+
+/**
+ * Landing-page list (C7.1 Pass 4): the newest sessions with confirmed-match
+ * progress. Query-only — raw squad data, rosters, results never selected.
+ */
+export function listRecentSessions(db: Db, limit = 8): RecentSession[] {
+  const sessionRows = db
+    .select({
+      id: sessions.id,
+      name: sessions.name,
+      status: sessions.status,
+      plannedMatches: sessions.plannedMatches,
+      createdAt: sessions.createdAt,
+    })
+    .from(sessions)
+    .orderBy(desc(sessions.createdAt))
+    .limit(limit)
+    .all();
+
+  if (sessionRows.length === 0) return [];
+  const ids = sessionRows.map((s) => s.id);
+
+  const confirmedRows = db
+    .select({ sessionId: matches.sessionId })
+    .from(matches)
+    .where(and(eq(matches.status, "confirmed"), inArray(matches.sessionId, ids)))
+    .all();
+  const confirmedBySession = new Map<string, number>();
+  for (const row of confirmedRows) {
+    confirmedBySession.set(
+      row.sessionId,
+      (confirmedBySession.get(row.sessionId) ?? 0) + 1,
+    );
+  }
+
+  return sessionRows.map((s) => ({
+    id: s.id,
+    name: s.name,
+    status: s.status,
+    plannedMatches: s.plannedMatches,
+    confirmedCount: confirmedBySession.get(s.id) ?? 0,
+    createdAt: s.createdAt,
+  }));
 }

@@ -256,4 +256,23 @@ describe("confirmMatch", () => {
 
     expect(result.ok).toBe(false);
   });
+
+  it("15-mapped confirm (one team has no row) → rejected, no write (C7.1)", () => {
+    const { teamIds } = seedSixteen(db);
+    // 15 squads, each mapped to a distinct team — still not confirmable.
+    const rows = mappedRows(teamIds).slice(0, 15);
+
+    const result = confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.message).toMatch(/15 of 16/);
+    expect(
+      db.select().from(matchResults).where(eq(matchResults.matchId, "m1")).all(),
+    ).toHaveLength(0);
+    expect(db.select().from(rosters).all()).toHaveLength(0);
+    expect(
+      db.select().from(matches).where(eq(matches.id, "m1")).get()?.status,
+    ).toBe("draft");
+  });
 });

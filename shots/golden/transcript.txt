@@ -1,0 +1,42 @@
+[01] --- wizard: basics
+[02] PASS — wizard step 2 reached (6 matches, named)
+[03] --- wizard: teams + logos
+[04] PASS — 2 logos uploaded onto the sample teams
+[05] --- wizard: confirm step → create
+[06] PASS — redirected to the new session page :: 807d0ecc-7382-4e71-910e-4104a2555ce8
+[07] PASS — SSR: session page shows 0/6 matches
+[08] --- graphics: announcement download
+[09] PASS — announcement PNG downloaded (1080×1620 verified on-page) :: scrimlypro-participating-teams.png 902KB
+[10] --- match 1: upload + parse
+[11] PASS — match 1: review form rendered from SAMPLE_OCR fixture
+[12] --- match 1: accept suggestions + fix wrong rows
+[13] PASS — match 1: all 16 rows map to the intended teams :: []
+[14] PASS — match 1: suggestions confirmed, 8 row(s) fixed by hand (incl. weak tier)
+[15] --- match 1: confirm
+[16] PASS — SSR: 1/6 matches confirmed
+[17] --- match 2: upload + parse
+[18] PASS — match 2: review form rendered from SAMPLE_OCR fixture
+[19] --- match 2: accept suggestions + fix wrong rows
+[20] PASS — match 2: all 16 rows map to the intended teams :: []
+[21] PASS — match 2: suggestions confirmed, 0 row(s) fixed by hand (incl. weak tier)
+[22] --- match 2: confirm
+[23] PASS — SSR: 2/6 matches confirmed
+[24] --- standings: documented invariant
+[25] PASS — standings: TF Squad #1 total 40 :: ["1","TF Squad","1","16","24","40"]
+[26] PASS — standings: TRB Gaming #2 total 38 :: ["2","TRB Gaming","1","15","23","38"]
+[27] PASS — standings: 4NM Esports #3 total 32 :: ["3","4NM Esports","0","11","21","32"]
+[28] --- mvp: editor
+[29] PASS — MVP draft has 5 entries :: ["4NM | BROKEN","TF VORTX","TRB HANAN","4NM | VIPER","AAHIL"]
+[30] PASS — both drift spellings present for merge :: ["4NM | BROKEN","TF VORTX","TRB HANAN","4NM | VIPER","AAHIL","TF×MAₛOOR","TFxMA_SODOR"]
+[31] PASS — drift pair merged (kills summed, spellings unioned) :: ["4NM | BROKEN","TF VORTX","TRB HANAN","4NM | VIPER","AAHIL","TF×MAₛOOR"]
+[32] PASS — merged kills sum 3+2 = 5 :: 5
+[33] PASS — merged-by-hand flag shown
+[34] PASS — dropped lowest non-merged entry (rank 4) → exactly 5 :: ["4NM | BROKEN","TF VORTX","TRB HANAN","AAHIL","TF×MAₛOOR"]
+[35] PASS — merged kills sum 3+2 = 5 :: 5
+[36] PASS — merged-by-hand flag shown
+[37] --- mvp: lock
+[38] PASS — MVP list locked; graphic renders from the locked list
+[39] --- graphics: standings + MVP downloads
+[40] PASS — overall standings graphic PNG downloaded (button #2 of 3)
+[41] FAIL — MVP graphic PNG downloaded (button #3 of 3)
+ERROR: Error: assertion failed: MVP graphic PNG downloaded (button #3 of 3)
