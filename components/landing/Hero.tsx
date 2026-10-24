@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ArrowUpRight, Phone, Sparkles } from "lucide-react";
 
 const CHIPS = [
@@ -11,6 +12,18 @@ export default function Hero() {
   return (
     <main className="min-h-screen">
       <section className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6">
+        {/* Background — SNES controller glowing out of black on the right */}
+        <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
+          <Image
+            src="/hero_bg.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[84%_60%] opacity-30 [mask-image:radial-gradient(34%_42%_at_82%_58%,black_20%,transparent_60%)] md:opacity-90"
+          />
+        </div>
+
         <div className="flex flex-1 flex-col justify-center pb-16 pt-28 md:pt-32">
           {/* Eyebrow */}
           <div
