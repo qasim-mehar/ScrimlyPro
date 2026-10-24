@@ -5,7 +5,6 @@ import * as schema from "@/lib/db/schema";
 import type { Db } from "@/lib/db/client";
 import { testDb } from "../helpers/pg";
 import { ensureOrg } from "../helpers/orgs";
-import { withUserDb } from "@/lib/db/user";
 import { computeStandings } from "@/lib/scoring";
 import { withRanks } from "@/lib/graphics/standings";
 import { createShareLink, listShareLinks, revokeShareLink } from "@/lib/share/links";
@@ -169,7 +168,7 @@ describe("share links: projection contract", () => {
         ],
         RULES,
       ),
-    ).map(({ logoUrl: _drop, ...row }) => row);
+    ).map(({ logoUrl: _drop, ...row }) => row); // eslint-disable-line @typescript-eslint/no-unused-vars
     expect(data!.standings).toEqual(golden);
   });
 

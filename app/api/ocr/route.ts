@@ -4,6 +4,11 @@ import { withTenantRoute } from "@/lib/auth/route-guard";
 import { withUserDb } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
 import { orgMemberPredicate } from "@/lib/orgs/orgs";
+import {
+  assertOcrQuota,
+  QuotaExceededError,
+  recordUsage,
+} from "@/lib/orgs/quotas";
 import { noStore } from "@/lib/http";
 import { parseOcrFormData } from "@/lib/ocr/form";
 import { ingestMatchOcr, type IngestErrorCode } from "@/lib/ocr/ingest";
@@ -59,7 +64,7 @@ export const POST = withTenantRoute(async (request, { user }) => {
       const session =
         (
           await userDb
-            .select({ id: sessions.id })
+            .select({ id: sessions.id, orgId: sessions.orgId })
             .from(sessions)
             .where(
               and(eq(sessions.id, parsed.sessionId), orgMemberPredicate(user.id)),
@@ -67,6 +72,21 @@ export const POST = withTenantRoute(async (request, { user }) => {
             .limit(1)
         )[0] ?? null;
       if (!session) return { notFound: true as const };
+
+      // Monthly OCR quota: a cheap COUNT inside this request tx (M1
+      // lesson: nothing slow goes near the quota check) + one usage row
+      // AFTER a successful ingest (failed attempts never consume quota).
+      try {
+        await assertOcrQuota(userDb, session.orgId);
+      } catch (err) {
+        if (err instanceof QuotaExceededError) {
+          return {
+            notFound: false as const,
+            quotaExceeded: err.quota,
+          };
+        }
+        throw err;
+      }
 
       // Gemini call + draft upsert run inside the same RLS-scoped
       // transaction: the ingest insert carries the authenticated role +
@@ -76,11 +96,30 @@ export const POST = withTenantRoute(async (request, { user }) => {
         matchNo: parsed.matchNo,
         images: parsed.images,
       });
+      if (ingest.ok) {
+        await recordUsage(userDb, session.orgId, user.id);
+      }
       return { notFound: false as const, ingest };
     });
 
     if (result.notFound) {
       return noStore({ error: "not found" }, { status: 404 });
+    }
+
+    if ("quotaExceeded" in result) {
+      // Envelope stays intact: ok/error.code/message + quota field.
+      return noStore(
+        {
+          ok: false as const,
+          error: {
+            code: "QUOTA_EXCEEDED",
+            message:
+              "Monthly OCR limit reached for this organization. Contact support to raise limits.",
+            quota: result.quotaExceeded,
+          },
+        },
+        { status: 409 },
+      );
     }
 
     const ingest = result.ingest;

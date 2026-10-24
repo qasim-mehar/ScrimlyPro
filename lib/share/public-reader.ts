@@ -75,8 +75,17 @@ export async function getSharedStandings(
   const ranked = withRanks(
     computeStandings(resultRows, teamRows, link.scoring_rules),
   );
-  // Minimal projection: strip the logoUrl key StandingRow carries.
-  const standings = ranked.map(({ logoUrl, ...row }) => row);
+  // Minimal projection: only names + numbers (StandingRow's logoUrl key
+  // deliberately omitted).
+  const standings = ranked.map((row) => ({
+    teamId: row.teamId,
+    teamName: row.teamName,
+    wwcd: row.wwcd,
+    pp: row.pp,
+    kp: row.kp,
+    total: row.total,
+    rank: row.rank,
+  }));
 
   return {
     scrimName: link.name,
