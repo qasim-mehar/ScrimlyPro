@@ -1,0 +1,318 @@
+/* Tokens duplicated per component by design — shared via components/fonts.ts
+   for type, these custom properties carry the color system. */
+.root {
+  --ink: #171712;
+  --body: #52524e;
+  --faint: #8a8a86;
+  --faint-link: #6e6e69;
+  --green: #0e4b3b;
+  --green-deep: #0a3d30;
+  --mint-hi: #eaf3d6;
+  --mint-lo: #d9e8bc;
+  --sage-hi: #c3d79e;
+  --sage-lo: #aac57f;
+  --wave: rgba(52, 84, 28, 0.12);
+  --wash-1: #ffffff;
+  --wash-2: #fafcf5;
+  --wash-3: #eff6e3;
+  --wash-4: #e7f1d7;
+  --pill: #141414;
+  --pill-hover: #242424;
+  --pill-ink: #ffffff;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gap: clamp(300px, 45vh, 560px);
+
+  /* THE HUGE GAP. margin-top per spec; the ::before paints that margin
+     pure white so the gap stays white even where the page body isn't. */
+  margin-top: var(--gap);
+  position: relative;
+  background: #ffffff;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+}
+
+.root::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: var(--gap);
+  background: #ffffff;
+  pointer-events: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 0 32px 28px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 32px;
+  align-items: start;
+}
+
+/* Row 1 — identity + link grid */
+.wordmark {
+  display: inline-block;
+  font-family: var(--font-logo), cursive;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.logoSpin {
+  animation: logo-spin 0.6s var(--ease);
+}
+
+.copyright {
+  margin: 10px 0 0;
+  font-size: 10px;
+  color: var(--faint);
+}
+
+.links {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  column-gap: 40px;
+  row-gap: 14px;
+  padding-top: 4px;
+}
+
+.link {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.link:hover {
+  opacity: 0.6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Row 2 — legal + disclaimers */
+.row2 {
+  margin-top: 48px;
+}
+
+.legal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
+}
+
+.legal p {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
+.disclaimers {
+  margin: 0;
+  padding-left: 16px;
+  max-width: 420px;
+  list-style: decimal;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.disclaimers li {
+  padding-left: 6px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
+.inlineLink {
+  color: var(--faint-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.inlineLink:hover {
+  color: var(--ink);
+}
+
+/* Row 3 — refresh pill */
+.pillRow {
+  margin-top: 48px;
+}
+
+.pill {
+  display: flex;
+  gap: 4px;
+  width: fit-content;
+  margin-inline: auto;
+  padding: 7px;
+  border-radius: 12px;
+  background: var(--pill);
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.4);
+}
+
+.pillBtn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), transform 0.15s var(--ease);
+}
+
+.pillBtn:hover {
+  background: var(--pill-hover);
+}
+
+.pillBtn:active {
+  transform: scale(0.95);
+}
+
+/* Pure-CSS refresh icon: open ring + border-triangle arrowhead */
+.icon {
+  position: relative;
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--pill-ink);
+  border-radius: 50%;
+  border-bottom-color: transparent;
+}
+
+.icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1.5px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 2.5px solid transparent;
+  border-right: 2.5px solid transparent;
+  border-bottom: 3.5px solid var(--pill-ink);
+}
+
+.iconCcw {
+  transform: rotate(45deg);
+}
+
+.iconCw {
+  transform: rotate(225deg);
+}
+
+.iconSpinCcw {
+  animation: icon-spin-ccw 0.6s var(--ease);
+}
+
+.iconSpinCw {
+  animation: icon-spin-cw 0.6s var(--ease);
+}
+
+@keyframes icon-spin-ccw {
+  from {
+    transform: rotate(45deg);
+  }
+  to {
+    transform: rotate(-315deg);
+  }
+}
+
+@keyframes icon-spin-cw {
+  from {
+    transform: rotate(225deg);
+  }
+  to {
+    transform: rotate(585deg);
+  }
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Focus */
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.pillBtn:focus-visible {
+  outline-color: var(--pill-ink);
+}
+
+/* Reveal choreography: row 1 → row 2 (+0.08s) → pill (+0.16s) */
+.row1,
+.row2,
+.pillRow {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.6s var(--ease),
+    transform 0.6s var(--ease);
+}
+
+.row2 {
+  transition-delay: 0.08s;
+}
+
+.pillRow {
+  transition-delay: 0.16s;
+}
+
+.revealed .row1,
+.revealed .row2,
+.revealed .pillRow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive: collapse to one column, everything left-aligned */
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 32px;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    column-gap: 40px;
+    row-gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row1,
+  .row2,
+  .pillRow {
+    transform: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .iconSpinCcw,
+  .iconSpinCw,
+  .logoSpin {
+    animation: none;
+  }
+}
