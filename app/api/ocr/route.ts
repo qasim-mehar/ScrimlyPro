@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { withTenantRoute } from "@/lib/auth/route-guard";
 import { withUserDb } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import { noStore } from "@/lib/http";
 import { parseOcrFormData } from "@/lib/ocr/form";
 import { ingestMatchOcr, type IngestErrorCode } from "@/lib/ocr/ingest";
@@ -51,8 +52,9 @@ export const POST = withTenantRoute(async (request, { user }) => {
 
   try {
     const result = await withUserDb({ sub: user.id }, async (userDb) => {
-      // Ownership gate (belt): select the session inside the RLS transaction.
-      // RLS (suspenders) already filters foreign rows to the same effect —
+      // Membership gate (belt, M2): select the session inside the RLS
+      // transaction with the explicit org-membership predicate. RLS
+      // (suspenders) already filters foreign rows to the same effect —
       // missing and foreign both land here as null.
       const session =
         (
@@ -60,7 +62,7 @@ export const POST = withTenantRoute(async (request, { user }) => {
             .select({ id: sessions.id })
             .from(sessions)
             .where(
-              and(eq(sessions.id, parsed.sessionId), eq(sessions.userId, user.id)),
+              and(eq(sessions.id, parsed.sessionId), orgMemberPredicate(user.id)),
             )
             .limit(1)
         )[0] ?? null;

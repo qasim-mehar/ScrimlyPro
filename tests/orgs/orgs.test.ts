@@ -20,7 +20,6 @@ import {
   setMemberRole,
 } from "@/lib/orgs/roles";
 import {
-  QuotaExceededError,
   assertOcrQuota,
   assertSessionQuota,
   getOrgQuota,

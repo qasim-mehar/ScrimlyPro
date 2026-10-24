@@ -13,6 +13,7 @@ import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
 function validDraft(overrides: Partial<SessionDraft> = {}): SessionDraft {
   return {
     name: "Wassup Open Scrims",
+    orgId: "aaaaaaaa-0000-4000-8000-000000000001",
     plannedMatches: 4,
     teamCount: 16,
     templateId: "dark-gold",

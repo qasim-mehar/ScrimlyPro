@@ -18,6 +18,7 @@ type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 function validDraft() {
   return {
     name: "Wassup Open Scrims",
+    orgId: "aaaaaaaa-0000-4000-8000-0000000000m1".replace("m1", "01"),
     plannedMatches: 4,
     teamCount: 16,
     templateId: "dark-gold",

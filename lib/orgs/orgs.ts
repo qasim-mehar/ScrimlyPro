@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import {
@@ -13,6 +13,19 @@ import {
  * userId (never request input) and runs INSIDE a withUserDb transaction at
  * the call site — RLS is the backstop, the explicit predicates are the belt.
  */
+
+/**
+ * Explicit org-membership predicate on `sessions` (the belt to RLS's
+ * suspenders). Use in WHERE clauses whose FROM/JOIN exposes
+ * sessions.org_id — replaces the M1 eq(sessions.userId, user.id) predicate
+ * now that tenancy is the org.
+ */
+export function orgMemberPredicate(userId: string) {
+  return sql`exists (
+    select 1 from org_members m
+    where m.org_id = sessions.org_id and m.user_id = ${userId}
+  )`;
+}
 
 /** owner > admin > member. */
 export const ROLE_ORDER: Record<OrgRole, number> = {

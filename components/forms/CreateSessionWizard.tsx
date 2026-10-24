@@ -12,6 +12,7 @@ import {
   type ValidationIssue,
 } from "@/lib/sessions/input";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
+import type { ActiveOrg } from "@/lib/orgs/orgs";
 import { resizeLogoFile } from "./resize-logo";
 
 const STEP_LABELS = ["Basics", "Teams", "Confirm"] as const;
@@ -23,7 +24,7 @@ const ERROR_CLASS = "mt-1 text-sm text-red-400";
 
 function issueMessage(
   issues: ValidationIssue[],
-  field: "name" | "plannedMatches" | "teamCount" | "templateId" | "teams",
+  field: "name" | "plannedMatches" | "teamCount" | "templateId" | "teams" | "orgId",
 ): string | undefined {
   return issues.find((issue) => issue.field === field)?.message;
 }
@@ -43,13 +44,15 @@ function ordinal(n: number): string {
   return `${n}${suffix}`;
 }
 
-export default function CreateSessionWizard() {
+export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
   const [plannedMatches, setPlannedMatches] = useState("4");
   const [teamCount, setTeamCount] = useState("16");
   const [templateId, setTemplateId] = useState<AestheticId>("dark-gold");
+  // Default to the user's first org (oldest membership); server re-verifies.
+  const [orgId, setOrgId] = useState(orgs[0]?.id ?? "");
   const [rawTeams, setRawTeams] = useState("");
   // Logos are keyed by NAME so re-parsing the textarea doesn't orphan
   // uploads — editing a name after uploading loses that association
@@ -72,8 +75,9 @@ export default function CreateSessionWizard() {
         name: teamName,
         logoUrl: logos[teamName] ?? null,
       })),
+      orgId,
     }),
-    [name, plannedMatches, teamCount, templateId, parsed, logos],
+    [name, plannedMatches, teamCount, templateId, parsed, logos, orgId],
   );
 
   const allIssues = useMemo(() => validateSessionDraft(draft), [draft]);
@@ -168,6 +172,27 @@ export default function CreateSessionWizard() {
 
       {step === 1 && (
         <section className="flex flex-col gap-4">
+          <div>
+            <label htmlFor="scrim-org" className={LABEL_CLASS}>
+              Organization
+            </label>
+            <select
+              id="scrim-org"
+              value={orgId}
+              onChange={(e) => setOrgId(e.target.value)}
+              className={INPUT_CLASS}
+            >
+              {orgs.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+            {issueMessage(basicsIssues, "orgId") && (
+              <p className={ERROR_CLASS}>{issueMessage(basicsIssues, "orgId")}</p>
+            )}
+          </div>
+
           <div>
             <label htmlFor="scrim-name" className={LABEL_CLASS}>
               Scrim name
