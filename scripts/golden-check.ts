@@ -49,7 +49,7 @@ for (const { id: sessionId } of sessionIds) {
        where m.session_id = ?`,
     )
     .all(sessionId)
-    .map((r) => ({
+    .map((r: { team_id: string; placement: number; kills: number; placement_points: number }) => ({
       teamId: r.team_id,
       placement: r.placement,
       kills: r.kills,
