@@ -13,7 +13,8 @@ import { getAdminDb } from "./admin-db";
  * PII discipline: no tokens, no emails, no raw IPs — the client IP is stored
  * as sha256(ip + AUDIT_SALT) so ops can correlate without storing PII.
  */
-export function auditIpHash(req: Request): string | null {
+export function auditIpHash(req?: Request | null): string | null {
+  if (!req) return null; // server actions: no request object → no ip correlation
   const salt = process.env.AUDIT_SALT;
   if (!salt) {
     // Fail-closed on correlation data, not on the action itself: without the

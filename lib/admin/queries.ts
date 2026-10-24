@@ -115,3 +115,82 @@ export async function getTenantList(query: string): Promise<TenantRow[]> {
     disabled: Boolean(r.disabled),
   }));
 }
+
+export type FlagRow = {
+  id: string;
+  subjectType: string;
+  subjectId: string | null;
+  flag: string;
+  value: Record<string, unknown>;
+  updatedBy: string | null;
+  updatedAt: string;
+};
+
+/** All feature-flag rows (admin console listing). */
+export async function getFlagRows(): Promise<FlagRow[]> {
+  const db = getAdminDb();
+  const res = (await db.execute(sql`
+    select id, subject_type, subject_id, flag, value, updated_by, updated_at
+    from feature_flags
+    order by updated_at desc
+    limit 200
+  `)) as unknown as Array<Record<string, unknown>> | { rows?: Array<Record<string, unknown>> };
+  const rows = Array.isArray(res) ? res : res.rows ?? [];
+  return rows.map((r) => ({
+    id: String(r.id),
+    subjectType: String(r.subject_type),
+    subjectId: (r.subject_id as string | null) ?? null,
+    flag: String(r.flag),
+    value: (r.value as Record<string, unknown>) ?? {},
+    updatedBy: (r.updated_by as string | null) ?? null,
+    updatedAt: new Date(r.updated_at as string).toISOString(),
+  }));
+}
+
+export type AuditRow = {
+  id: string;
+  actorUserId: string | null;
+  effectiveUserId: string | null;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+/**
+ * Filterable audit log (admin console). ip_hash is deliberately NOT
+ * exposed in the console output (correlation data, not operator reading).
+ */
+export async function getAuditRows(filters: {
+  actionPrefix?: string;
+  actorUserId?: string;
+}): Promise<AuditRow[]> {
+  const db = getAdminDb();
+  const prefix = (filters.actionPrefix ?? "").trim();
+  const actor = (filters.actorUserId ?? "").trim();
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // Conditions assembled in JS; every value is a bound parameter.
+  const conditions = [sql`true`];
+  if (prefix) conditions.push(sql`action like ${prefix + "%"}`);
+  if (actor && UUID_RE.test(actor)) conditions.push(sql`actor_user_id = ${actor}::uuid`);
+  const res = (await db.execute(sql`
+    select id, actor_user_id, effective_user_id, action, target_type, target_id,
+           metadata, created_at
+    from audit_log
+    where ${sql.join(conditions, sql` and `)}
+    order by created_at desc
+    limit 200
+  `)) as unknown as Array<Record<string, unknown>> | { rows?: Array<Record<string, unknown>> };
+  const rows = Array.isArray(res) ? res : res.rows ?? [];
+  return rows.map((r) => ({
+    id: String(r.id),
+    actorUserId: (r.actor_user_id as string | null) ?? null,
+    effectiveUserId: (r.effective_user_id as string | null) ?? null,
+    action: String(r.action),
+    targetType: (r.target_type as string | null) ?? null,
+    targetId: (r.target_id as string | null) ?? null,
+    metadata: (r.metadata as Record<string, unknown>) ?? {},
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+}
