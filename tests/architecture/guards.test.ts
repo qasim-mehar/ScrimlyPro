@@ -42,7 +42,14 @@ const PUBLIC_PAGE_PREFIXES = [
   "auth/",
 ];
 
-const GUARD_MARKERS = ["withTenantRoute", "requireUser", "getAuthedUser", "assertSessionOwner"];
+const GUARD_MARKERS = [
+  "withTenantRoute",
+  "requireUser",
+  "getAuthedUser",
+  "assertSessionOwner",
+  // M3 Lane C: the admin panel's own gate (real identity + DB role → 404).
+  "requireAdmin",
+];
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
