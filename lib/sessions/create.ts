@@ -9,13 +9,16 @@ import { validateSessionDraft, type SessionDraft } from "./input";
  * is defense in depth. Returns the new session id.
  *
  * `userId` MUST be the server-verified user id (supabase.auth.getUser) —
- * never a client-supplied value. It becomes the tenant owner that every
- * RLS policy keys on.
+ * never a client-supplied value. `orgId` is REQUIRED (M2): every session
+ * lives in an org and the RLS policies key on org membership; the caller
+ * resolves it server-side (membership-verified selection or the user's
+ * Personal org) — it is never an optional/null column.
  */
 export async function createSessionWithTeams(
   db: Db,
   draft: SessionDraft,
   userId: string,
+  orgId: string,
 ): Promise<string> {
   const issues = validateSessionDraft(draft);
   if (issues.length > 0) {
@@ -34,6 +37,7 @@ export async function createSessionWithTeams(
     await tx.insert(sessions).values({
       id: sessionId,
       userId,
+      orgId,
       name: draft.name.trim(),
       plannedMatches: draft.plannedMatches,
       teamCount: draft.teamCount,

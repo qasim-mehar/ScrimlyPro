@@ -11,6 +11,7 @@ import {
 import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/sessions/queries";
 
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
 
 const { matchResults, matches, mvpLists, rosters, sessions, teams } = schema;
 
@@ -32,6 +33,7 @@ async function seedTwoConfirmed(db: PgDb): Promise<Fixture> {
   await db.insert(sessions).values({
     id: "s1",
     userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
     name: "Session Page Fixture",
     plannedMatches: 6,
     teamCount: 3,
@@ -237,6 +239,7 @@ describe("session page", () => {
     await db.insert(sessions).values({
       id: "s2",
       userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
       name: "Other",
       plannedMatches: 6,
       teamCount: 4,
@@ -263,6 +266,7 @@ describe("session page", () => {
     await db.insert(sessions).values({
       id: "solo",
       userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
       name: "Solo",
       plannedMatches: 6,
       teamCount: 4,
@@ -392,6 +396,7 @@ describe("session page", () => {
     await db.insert(sessions).values({
       id: "s2",
       userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
       name: "Other",
       plannedMatches: 6,
       teamCount: 4,

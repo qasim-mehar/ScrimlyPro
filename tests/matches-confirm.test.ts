@@ -9,6 +9,7 @@ import { normalizeName } from "@/lib/matching";
 import { pointsForMatch, SUPER_RULES } from "@/lib/scoring";
 
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
 
 const { matchResults, matches, rosters, sessions, teams } = schema;
 
@@ -19,6 +20,7 @@ async function seedSixteen(db: PgDb): Promise<{ teamIds: string[] }> {
   await db.insert(sessions).values({
     id: "s1",
     userId: "99999999-9999-9999-9999-999999999991",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999991"),
     name: "Confirm Session",
     plannedMatches: 6,
     teamCount: 16,

@@ -5,6 +5,7 @@ import * as schema from "@/lib/db/schema";
 import { POST } from "@/app/api/ocr/route";
 
 import { testDb } from "../helpers/pg";
+import { ensureOrg } from "../helpers/orgs";
 
 /**
  * WP6 guard suite for POST /api/ocr. The auth layer is mocked at its ONLY
@@ -53,6 +54,7 @@ async function seedSessions() {
     {
       id: OWNED_SESSION,
       userId: OWNER,
+      orgId: await ensureOrg(db, OWNER),
       name: "Owned Session",
       plannedMatches: 3,
       teamCount: 16,
@@ -62,6 +64,7 @@ async function seedSessions() {
     {
       id: FOREIGN_SESSION,
       userId: ATTACKER,
+      orgId: await ensureOrg(db, ATTACKER),
       name: "Foreign Session",
       plannedMatches: 3,
       teamCount: 16,
