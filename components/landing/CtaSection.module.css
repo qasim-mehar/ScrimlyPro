@@ -1,0 +1,184 @@
+.root {
+  --bg: #000000;
+  --ink: #ffffff;
+  --soft: rgba(255, 255, 255, 0.72);
+  --cream: #eff2dc;
+  --cream-bright: #f8faee;
+  --btn-ink: #14201a;
+
+  background: var(--bg);
+  width: 100%;
+  padding-block: clamp(96px, 14vh, 152px);
+  padding-inline: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg {
+  object-fit: cover;
+  object-position: center bottom;
+  z-index: 0;
+  user-select: none;
+}
+
+/* Soft scrim keeps the type readable over the crates. */
+.root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.15) 75%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.inner {
+  max-width: 640px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.headline {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(2.75rem, 6vw, 4.5rem);
+  font-weight: 560;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.script {
+  font-family: var(--font-script), cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.12em;
+  line-height: 0;
+  margin-inline: 0.04em;
+  color: var(--ink);
+}
+
+.sub {
+  margin: 20px 0 0;
+  max-width: 480px;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--soft);
+}
+
+.ctaRow {
+  margin-top: 32px;
+}
+
+.btn {
+  display: inline-block;
+  background: var(--cream);
+  color: var(--btn-ink);
+  border-radius: 999px;
+  padding: 13px 28px;
+  border: none;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--cream-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(239, 242, 220, 0.18);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 3px;
+}
+
+/* Reveal: fade-up, staggered via transition-delay. */
+.headline,
+.sub,
+.ctaRow {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.headline {
+  transition-delay: 0s;
+}
+
+.sub {
+  transition-delay: 0.1s;
+}
+
+.ctaRow {
+  transition-delay: 0.2s;
+}
+
+.root[data-inview="true"] .headline,
+.root[data-inview="true"] .sub,
+.root[data-inview="true"] .ctaRow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Script word draws in left→right after the headline lands. */
+.root[data-inview="true"] .script {
+  clip-path: inset(0 0 0 0);
+}
+
+.script {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+}
+
+@media (max-width: 480px) {
+  .root {
+    padding-block: 96px;
+  }
+
+  .sub {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headline,
+  .sub,
+  .ctaRow {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .script {
+    clip-path: inset(0 0 0 0);
+    transition: none;
+  }
+
+  .btn {
+    transition: none;
+  }
+}
