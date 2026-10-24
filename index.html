@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Laura.io — Design Wizard</title>
+<meta name="description" content="Laura.io — a playful designer portfolio. I craft ideas through design. Press START." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0b0d'/%3E%3Cpath d='M16 6l2.2 7.8L26 16l-7.8 2.2L16 26l-2.2-7.8L6 16l7.8-2.2z' fill='%23F5B62E'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   Laura.io — Design Wizard · hero
+   One file. Zero image assets — every graphic is CSS or SVG.
+   ============================================================ */
+
+:root {
+  --ink: #0b0b0d;
+  --ink-soft: #55565e;
+  --ink-faint: #9c9daa;
+  --paper: #ffffff;
+  --dot: #e2e2e8;
+
+  /* SNES face-button palette (EU/SFC) */
+  --snes-blue: #3e6ff0;   /* X — top    */
+  --snes-red: #e5473b;    /* A — right  */
+  --snes-yellow: #f5b62e; /* B — bottom */
+  --snes-green: #3ea55c;  /* Y — left   */
+
+  --badge-purple: #7c5cff;
+  --badge-orange: #ff7a29;
+
+  --shell-1: #e6e7ec;
+  --shell-2: #d3d4da;
+  --shell-3: #c3c4cc;
+  --face-1: #34353f;
+  --face-2: #26272f;
+  --well: #1b1c23;
+
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* gentle overshoot */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: "Lexend", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle, var(--dot) 1.1px, transparent 1.4px) 0 0 / 26px 26px,
+    var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+::selection { background: var(--snes-yellow); color: var(--ink); }
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------
+   Navbar
+   ------------------------------------------------------------ */
+.nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px clamp(20px, 4vw, 56px);
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 3.5px;
+  background: var(--ink);
+  transform: rotate(45deg);
+  transition: transform 0.45s var(--ease-pop);
+}
+.brand:hover::before { transform: rotate(225deg); }
+
+.nav-pill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 999px;
+  background: #f3f3f6;
+}
+.nav-pill a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #52535c;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.25s var(--ease-out), color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+}
+.nav-pill a .arr { font-size: 13px; color: #8a8b96; transition: transform 0.25s var(--ease-pop), color 0.25s; }
+.nav-pill a:hover { background: #ffffffb0; color: var(--ink); }
+.nav-pill a:hover .arr { transform: translateX(2px); color: var(--ink); }
+.nav-pill a[aria-current="page"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(11, 11, 13, 0.1), 0 0 0 1px rgba(11, 11, 13, 0.04);
+}
+
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.25s var(--ease-out), color 0.25s var(--ease-out), transform 0.25s var(--ease-pop);
+}
+.nav-cta .arr { font-size: 13px; transition: transform 0.25s var(--ease-pop); }
+.nav-cta:hover { background: var(--ink); color: #fff; transform: translateY(-2px); }
+.nav-cta:hover .arr { transform: translate(2px, -2px); }
+.nav-cta:active { transform: translateY(0); }
+
+/* ------------------------------------------------------------
+   Hero
+   ------------------------------------------------------------ */
+.hero {
+  position: relative;
+  min-height: calc(100svh - 76px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(12px, 2vh, 28px) 20px 52px;
+  gap: clamp(16px, 2.6vh, 30px);
+}
+.hero .eyebrow { margin-bottom: -4px; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+.eyebrow svg { display: block; }
+
+.headline {
+  font-size: clamp(48px, 9.2vw, 118px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+.headline .line { display: inline-block; white-space: nowrap; }
+
+.sparkle {
+  display: inline-block;
+  vertical-align: 0.42em;
+  margin-left: 0.06em;
+  width: 0.26em;
+  height: 0.26em;
+  color: var(--snes-yellow);
+  filter: drop-shadow(0 0 5px rgba(245, 182, 46, 0.45));
+  animation: twinkle 3.6s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  45%      { transform: scale(0.55) rotate(45deg); opacity: 0.55; }
+  60%      { transform: scale(1.15) rotate(20deg); opacity: 1; }
+}
+
+/* ------------------------------------------------------------
+   Stage — controller + floating badges
+   Everything inside .pad is measured in cqw (1cqw = 1% of the
+   controller's width), so the whole rig scales as one piece.
+   ------------------------------------------------------------ */
+.stage {
+  position: relative;
+  margin-top: clamp(12px, 2.2vh, 24px);
+}
+
+.pad {
+  position: relative;
+  width: clamp(360px, 46vw, 560px);
+  aspect-ratio: 100 / 74;
+  container-type: inline-size;
+  perspective: 1100px;
+}
+
+/* ground shadow — its own element so it can breathe counter-phase
+   to the float bob: controller rises, shadow shrinks + fades */
+.pad-shadow {
+  position: absolute;
+  left: 50%;
+  top: 52cqw;
+  width: 78cqw;
+  height: 11cqw;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(13, 14, 20, 0.3), rgba(13, 14, 20, 0.12) 58%, transparent 78%);
+  animation: shadow-breathe 5.6s ease-in-out infinite;
+}
+@keyframes shadow-breathe {
+  0%, 100% { transform: translateX(-50%) scale(0.92, 0.86); opacity: 0.62; }
+  50%      { transform: translateX(-50%) scale(1, 1); opacity: 1; }
+}
+
+/* transform stack, outer → inner:
+   .sway  (pointer parallax, JS-driven vars)
+   .float (idle bob)
+   .hopwrap (celebration hop)
+   .tilt  (base −5° tilt + d-pad nudges + hover lift) */
+.sway {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 60cqw;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+}
+.float {
+  position: absolute;
+  inset: 0;
+  animation: bob 5.6s ease-in-out infinite;
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(-1.4cqw); }
+  50%      { transform: translateY(1.4cqw); }
+}
+.hopwrap { position: absolute; inset: 0; }
+.pad.hop .hopwrap { animation: hop 0.62s var(--ease-pop); }
+@keyframes hop {
+  0%   { transform: translateY(0); }
+  35%  { transform: translateY(-4cqw); }
+  62%  { transform: translateY(0.8cqw) scale(1.015, 0.985); }
+  100% { transform: translateY(0); }
+}
+.tilt {
+  position: absolute;
+  inset: 0;
+  transform: rotate(var(--tilt, -5deg)) translateY(var(--lift, 0cqw));
+  transition: transform 0.22s var(--ease-out);
+}
+.pad:hover .tilt { --lift: -0.9cqw; }
+.pad.nudge-left  .tilt { --tilt: -7.4deg; }
+.pad.nudge-right .tilt { --tilt: -2.6deg; }
+.pad.nudge-up    .tilt { --tilt: -5deg; --lift: -1.8cqw; }
+.pad.nudge-down  .tilt { --tilt: -5deg; --lift: 0.8cqw; }
+
+/* ---- shell + grips (same clay, molded as separate parts) ---- */
+.grip {
+  position: absolute;
+  top: 19cqw;
+  width: 29cqw;
+  height: 35cqw;
+  border-radius: 48% 52% 46% 46% / 64% 64% 40% 40%;
+  background:
+    radial-gradient(circle at 50% 24%, var(--shell-1), var(--shell-2) 56%, #b4b5bf);
+  box-shadow: inset 0 -1.8cqw 2.6cqw rgba(21, 22, 30, 0.2), inset 0 0.6cqw 1cqw rgba(255, 255, 255, 0.5);
+}
+.grip.gl { left: -3cqw; }
+.grip.gr { right: -3cqw; }
+
+.shell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44cqw;
+  border-radius: 5.6cqw;
+  background: linear-gradient(180deg, var(--shell-1) 0%, var(--shell-2) 55%, var(--shell-3) 100%);
+  box-shadow:
+    inset 0 0.45cqw 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1.6cqw 2.6cqw rgba(21, 22, 30, 0.13),
+    0 1.4cqw 2cqw rgba(21, 22, 30, 0.14),
+    0 0 0 0.15cqw rgba(21, 22, 30, 0.05);
+}
+
+/* ---- dark face panel ---- */
+.face {
+  position: absolute;
+  top: 3cqw;
+  left: 3cqw;
+  right: 3cqw;
+  height: 38cqw;
+  border-radius: 3.6cqw;
+  background: linear-gradient(180deg, var(--face-1), var(--face-2));
+  box-shadow:
+    inset 0 0.2cqw 0 rgba(255, 255, 255, 0.07),
+    inset 0 -0.6cqw 1.4cqw rgba(0, 0, 0, 0.38);
+}
+
+/* circular wells that seat the D-pad and the ABXY diamond */
+.well {
+  position: absolute;
+  top: 6cqw;
+  width: 26cqw;
+  height: 26cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #202129, var(--well) 72%);
+  box-shadow:
+    inset 0 0.55cqw 1.1cqw rgba(0, 0, 0, 0.55),
+    inset 0 -0.2cqw 0 rgba(255, 255, 255, 0.05);
+}
+.well.w-left { left: 5cqw; }
+.well.w-right { right: 5cqw; }
+
+/* ---- D-pad: cross of four arms + dimpled center ---- */
+.dpad {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 17cqw;
+  height: 17cqw;
+  transform: translate(-50%, -50%);
+}
+.dpad .arm,
+.dpad .d-center {
+  position: absolute;
+  background: #101117;
+  box-shadow:
+    inset 0 0.22cqw 0 rgba(255, 255, 255, 0.09),
+    inset 0 -0.22cqw 0.35cqw rgba(0, 0, 0, 0.55);
+}
+.dpad .arm { border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.dpad .arm:hover { background: #1b1c26; }
+.dpad .arm:active,
+.dpad .arm.pressed { background: #26273a; transform: translateY(0.28cqw); box-shadow: inset 0 0.3cqw 0.5cqw rgba(0, 0, 0, 0.6); }
+
+.d-up    { left: 5.7cqw; top: 0;     width: 5.6cqw; height: 9.3cqw; border-radius: 1.2cqw 1.2cqw 0 0; }
+.d-down  { left: 5.7cqw; bottom: 0;  width: 5.6cqw; height: 9.3cqw; border-radius: 0 0 1.2cqw 1.2cqw; }
+.d-left  { top: 5.7cqw;  left: 0;    width: 9.3cqw; height: 5.6cqw; border-radius: 1.2cqw 0 0 1.2cqw; }
+.d-right { top: 5.7cqw;  right: 0;   width: 9.3cqw; height: 5.6cqw; border-radius: 0 1.2cqw 1.2cqw 0; }
+.d-center {
+  left: 5.7cqw; top: 5.7cqw; width: 5.6cqw; height: 5.6cqw;
+  background: radial-gradient(circle at 50% 44%, #08090c, #14151d 78%);
+}
+
+/* ---- center strip: wordmark + start/select pills ---- */
+.mid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30cqw;
+}
+.mark {
+  transform: skewX(-9deg);
+  text-align: center;
+  line-height: 1.45;
+  user-select: none;
+}
+.mark .m1 { display: block; font-size: 2.45cqw; font-weight: 800; letter-spacing: 0.12em; color: #9a9db2; }
+.mark .m2 { display: block; font-size: 1.25cqw; font-weight: 600; letter-spacing: 0.22em; color: #7e8196; }
+
+.pills { display: flex; gap: 3cqw; margin-top: 3.4cqw; }
+.pill-wrap { position: relative; display: block; }
+.pill-btn {
+  position: relative;
+  width: 10.5cqw;
+  height: 3.3cqw;
+  border: 0;
+  border-radius: 2cqw;
+  cursor: pointer;
+  background: linear-gradient(180deg, #5b5d68, #383a43);
+  box-shadow:
+    inset 0 0.3cqw 0 rgba(255, 255, 255, 0.14),
+    inset 0 -0.35cqw 0.6cqw rgba(0, 0, 0, 0.5),
+    0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out), filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pill-btn:hover { filter: brightness(1.18); }
+.pill-btn:active,
+.pill-btn.pressed {
+  transform: translateY(0.3cqw);
+  box-shadow: inset 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.55), 0 0.1cqw 0.2cqw rgba(0, 0, 0, 0.3);
+}
+.pill-label {
+  position: absolute;
+  top: 4.6cqw;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.7cqw;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #b0b3c6;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.pill-wrap:hover .pill-label,
+.pill-btn:focus-visible + .pill-label { color: #d6d8e4; }
+
+/* ---- ABXY diamond ---- */
+.abxy { position: absolute; inset: 0; }
+
+.face-btn {
+  position: absolute;
+  width: 9.6cqw;
+  height: 9.6cqw;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 50% 118%, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0) 52%),
+    var(--c);
+  box-shadow:
+    inset 0 -0.8cqw 0.9cqw rgba(0, 0, 0, 0.3),
+    inset 0 0.45cqw 0.55cqw rgba(255, 255, 255, 0.3),
+    0 0.6cqw 1.2cqw rgba(0, 0, 0, 0.42);
+  transition: transform 0.14s var(--ease-pop), box-shadow 0.14s var(--ease-out), filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.face-btn:hover { filter: brightness(1.08) saturate(1.1); }
+.face-btn:active,
+.face-btn.pressed {
+  transform: translateY(0.8cqw) scale(0.97);
+  box-shadow:
+    inset 0 0.4cqw 0.8cqw rgba(0, 0, 0, 0.4),
+    inset 0 0.3cqw 0.4cqw rgba(255, 255, 255, 0.18),
+    0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.35);
+}
+
+/* diamond: well center 13cqw, radius 7cqw, button 9.6cqw;
+   color comes from each button's inline --c */
+.fx { left: 8.2cqw;  top: 1.2cqw; }
+.fa { left: 15.2cqw; top: 8.2cqw; }
+.fb { left: 8.2cqw;  top: 15.2cqw; }
+.fy { left: 1.2cqw;  top: 8.2cqw; }
+
+/* letters molded on the face, just outside each button */
+.key {
+  position: absolute;
+  font-size: 2cqw;
+  font-weight: 800;
+  color: #8d92a8;
+  user-select: none;
+}
+.kx { left: 50%; top: -2.2cqw; transform: translateX(-50%); }
+.ka { right: -2.2cqw; top: 50%; transform: translateY(-50%); }
+.kb { left: 50%; bottom: -2.6cqw; transform: translateX(-50%); }
+.ky { left: -2.2cqw; top: 50%; transform: translateY(-50%); }
+
+/* ---- floating name badges + hand-built cursor arrows ---- */
+.badge {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 12px 28px -8px var(--bc), 0 3px 10px rgba(11, 11, 13, 0.14);
+  animation: badge-bob 6s ease-in-out infinite;
+}
+.badge svg { display: block; flex: none; }
+.badge.amirali {
+  --bc: rgba(124, 92, 255, 0.5);
+  left: -18cqw;
+  top: 8cqw;
+  background: var(--badge-purple);
+  animation-delay: -1.6s;
+}
+.badge.sina {
+  --bc: rgba(255, 122, 41, 0.5);
+  left: 100cqw;
+  top: 18cqw;
+  background: var(--badge-orange);
+  animation-delay: -3.7s;
+}
+@keyframes badge-bob {
+  0%, 100% { transform: translateY(-0.9cqw) rotate(-1.6deg); }
+  50%      { transform: translateY(0.9cqw) rotate(1.4deg); }
+}
+
+/* ------------------------------------------------------------
+   Bottom links — square bullets echo the face-button palette
+   ------------------------------------------------------------ */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 44px;
+  margin-top: clamp(16px, 3vh, 32px);
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 16.5px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  transition: text-decoration-color 0.2s;
+}
+.links a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 7px;
+  text-decoration-color: color-mix(in srgb, var(--c) 65%, transparent);
+}
+.links .bullet {
+  width: 13px;
+  height: 13px;
+  border-radius: 4.5px;
+  background: var(--c);
+  box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.4);
+  transition: transform 0.35s var(--ease-pop);
+}
+.links a:hover .bullet { transform: rotate(135deg) scale(1.22); }
+.l-portfolio    { --c: var(--snes-green); }
+.l-achievements { --c: var(--snes-blue); }
+.l-feedback     { --c: var(--snes-yellow); }
+.l-faq          { --c: var(--snes-red); }
+
+/* ------------------------------------------------------------
+   FX layer (score pops, star burst) — page-fixed, transform-agnostic
+   ------------------------------------------------------------ */
+.fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: clip; }
+
+.pop {
+  position: absolute;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--c);
+  transform: translate(-50%, -50%);
+  animation: pop-rise 0.75s var(--ease-out) forwards;
+  text-shadow: 0 1px 0 #fff;
+}
+@keyframes pop-rise {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+  25%  { transform: translate(-50%, -70%) scale(1.12); }
+  to   { opacity: 0; transform: translate(-50%, -190%) scale(1); }
+}
+
+.star-fly {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  color: var(--c);
+  animation: star-fly 0.85s var(--ease-out) forwards;
+}
+@keyframes star-fly {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(0.5) rotate(0deg); }
+  30%  { opacity: 1; }
+  to   { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.15) rotate(260deg); }
+}
+
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
+@media (max-width: 920px) {
+  .nav-pill { display: none; }
+}
+@media (max-width: 680px) {
+  body {
+    background:
+      radial-gradient(circle, #ececf1 1.1px, transparent 1.4px) 0 0 / 26px 26px,
+      var(--paper);
+  }
+  .nav { padding: 16px 18px; }
+  .nav-cta { padding: 9px 16px; font-size: 13px; }
+  .badge { font-size: 12px; padding: 7px 12px; gap: 6px; }
+  /* pad nearly fills the viewport — perch the badges on the controller
+     instead of beside it, like cursors hovering over it */
+  .badge.amirali { left: 4cqw; top: -7cqw; }
+  .badge.sina { left: auto; right: 2cqw; top: 3cqw; }
+  .links { gap: 12px 26px; }
+  .links a { font-size: 14.5px; }
+}
+@media (max-width: 480px) {
+  .headline { font-size: 11.4vw; letter-spacing: -0.045em; }
+  .pad { width: 88vw; }
+}
+
+/* ------------------------------------------------------------
+   Reduced motion — floats, twinkles and parallax switch off;
+   press feedback stays (it confirms input, not decoration)
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .float, .pad-shadow, .badge, .sparkle { animation: none; }
+  .sway { transform: none; }
+  .pad.hop .hopwrap { animation: none; }
+}
+</style>
+</head>
+
+<body>
+
+<header class="nav">
+  <a class="brand" href="#">Laura.io</a>
+
+  <nav class="nav-pill" aria-label="Primary">
+    <a href="#" aria-current="page">Home <span class="arr">→</span></a>
+    <a href="#">Socials <span class="arr">↗</span></a>
+    <a href="#">Comparison <span class="arr">↗</span></a>
+  </nav>
+
+  <a class="nav-cta" href="#" id="bookCall">Book a Call <span class="arr">↗</span></a>
+</header>
+
+<main class="hero" id="hero">
+
+  <p class="eyebrow">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#63656e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+    Design Wizard
+  </p>
+
+  <h1 class="headline">
+    <span class="line">I craft Ideas</span><br />
+    <span class="line">through Design<svg class="sparkle" id="sparkle" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.7l2.5 7.8 7.8 2.5-7.8 2.5L12 22.3l-2.5-7.8-7.8-2.5 7.8-2.5z"/></svg></span>
+  </h1>
+
+  <div class="stage">
+    <div class="pad" id="pad" role="group" aria-label="Interactive SNES controller — try the buttons">
+      <div class="pad-shadow" aria-hidden="true"></div>
+
+      <div class="sway" id="sway">
+        <div class="float">
+          <div class="hopwrap">
+            <div class="tilt">
+
+              <div class="grip gl" aria-hidden="true"></div>
+              <div class="grip gr" aria-hidden="true"></div>
+
+              <div class="shell">
+                <div class="face">
+                  <div class="well w-left">
+                    <div class="dpad" aria-label="D-pad">
+                      <button class="arm d-up"    data-dir="up"    aria-label="D-pad up"></button>
+                      <button class="arm d-down"  data-dir="down"  aria-label="D-pad down"></button>
+                      <button class="arm d-left"  data-dir="left"  aria-label="D-pad left"></button>
+                      <button class="arm d-right" data-dir="right" aria-label="D-pad right"></button>
+                      <div class="d-center" aria-hidden="true"></div>
+                    </div>
+                  </div>
+
+                  <div class="mid">
+                    <div class="mark" aria-hidden="true">
+                      <span class="m1">SUPER LAURA</span>
+                      <span class="m2">ENTERTAINMENT SYSTEM</span>
+                    </div>
+                    <div class="pills">
+                      <span class="pill-wrap">
+                        <button class="pill-btn" data-pill="pricing" aria-label="Pricing (select button)" title="Pricing"></button>
+                        <span class="pill-label">Pricing</span>
+                      </span>
+                      <span class="pill-wrap">
+                        <button class="pill-btn" data-pill="about" aria-label="About (start button)" title="About"></button>
+                        <span class="pill-label">About</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="well w-right">
+                    <div class="abxy">
+                      <span class="key kx" aria-hidden="true">X</span>
+                      <span class="key ka" aria-hidden="true">A</span>
+                      <span class="key kb" aria-hidden="true">B</span>
+                      <span class="key ky" aria-hidden="true">Y</span>
+                      <button class="face-btn fx" data-btn="x" style="--c: var(--snes-blue)"   aria-label="X button"></button>
+                      <button class="face-btn fa" data-btn="a" style="--c: var(--snes-red)"    aria-label="A button"></button>
+                      <button class="face-btn fb" data-btn="b" style="--c: var(--snes-yellow)" aria-label="B button"></button>
+                      <button class="face-btn fy" data-btn="y" style="--c: var(--snes-green)"  aria-label="Y button"></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="badge amirali" aria-label="Amirali is viewing">
+        Amirali
+        <svg width="17" height="21" viewBox="0 0 17 21" aria-hidden="true">
+          <path d="M1 1.5v16.2l4.4-4 3.3 6.2 2.9-1.5-3.3-6.2h6Z"
+                fill="#fff" stroke="var(--badge-purple)" stroke-width="1.4" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <div class="badge sina" aria-label="Sina is viewing">
+        <svg width="17" height="21" viewBox="0 0 17 21" aria-hidden="true" style="transform: scaleX(-1)">
+          <path d="M1 1.5v16.2l4.4-4 3.3 6.2 2.9-1.5-3.3-6.2h6Z"
+                fill="#fff" stroke="var(--badge-orange)" stroke-width="1.4" stroke-linejoin="round" />
+        </svg>
+        Sina
+      </div>
+    </div>
+  </div>
+
+  <nav class="links" aria-label="Sections">
+    <a class="l-portfolio" href="#"><span class="bullet" aria-hidden="true"></span>Portfolio</a>
+    <a class="l-achievements" href="#"><span class="bullet" aria-hidden="true"></span>Achievements</a>
+    <a class="l-feedback" href="#"><span class="bullet" aria-hidden="true"></span>Client&rsquo;s Feedback</a>
+    <a class="l-faq" href="#"><span class="bullet" aria-hidden="true"></span>FAQ</a>
+  </nav>
+
+</main>
+
+<div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const hero = document.getElementById("hero");
+  const pad = document.getElementById("pad");
+  const sway = document.getElementById("sway");
+  const fxLayer = document.getElementById("fxLayer");
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  /* ---------- pointer parallax: the controller leans toward the cursor ----------
+     Targets are lerped in a rAF loop so the motion has a little inertia. */
+  let tx = 0, ty = 0, cx = 0, cy = 0, raf = null;
+
+  function loop() {
+    cx += (tx - cx) * 0.085;
+    cy += (ty - cy) * 0.085;
+    sway.style.setProperty("--ry", (cx * 7).toFixed(2) + "deg");
+    sway.style.setProperty("--rx", (cy * -5.5).toFixed(2) + "deg");
+    if (Math.abs(tx - cx) + Math.abs(ty - cy) > 0.002) {
+      raf = requestAnimationFrame(loop);
+    } else {
+      raf = null;
+    }
+  }
+
+  function kick() { if (!raf && !reducedMotion.matches) raf = requestAnimationFrame(loop); }
+
+  addEventListener("pointermove", (e) => {
+    if (reducedMotion.matches || e.pointerType === "touch") return;
+    const r = hero.getBoundingClientRect();
+    const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+    const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
+    tx = Math.max(-1, Math.min(1, nx));
+    ty = Math.max(-1, Math.min(1, ny));
+    kick();
+  }, { passive: true });
+
+  document.addEventListener("pointerleave", () => { tx = 0; ty = 0; kick(); });
+
+  /* ---------- fx helpers: "+1" pops and star bursts ---------- */
+  const BTN_COLOR = { x: "var(--snes-blue)", a: "var(--snes-red)", b: "var(--snes-yellow)", y: "var(--snes-green)" };
+  const STAR_PATH = "M12 1.7l2.5 7.8 7.8 2.5-7.8 2.5L12 22.3l-2.5-7.8-7.8-2.5 7.8-2.5z";
+
+  function centerOf(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  function popPlusOne(el, color) {
+    const { x, y } = centerOf(el);
+    const s = document.createElement("span");
+    s.className = "pop";
+    s.textContent = "+1";
+    s.style.left = x + (Math.random() * 18 - 9) + "px";
+    s.style.top = y + "px";
+    s.style.setProperty("--c", color);
+    fxLayer.appendChild(s);
+    s.addEventListener("animationend", () => s.remove());
+  }
+
+  function starBurst(x, y, count = 9) {
+    const palette = ["var(--snes-blue)", "var(--snes-red)", "var(--snes-yellow)", "var(--snes-green)", "var(--ink)"];
+    for (let i = 0; i < count; i++) {
+      const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      star.setAttribute("viewBox", "0 0 24 24");
+      star.classList.add("star-fly");
+      const ang = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+      const dist = 46 + Math.random() * 58;
+      star.style.left = x + "px";
+      star.style.top = y + "px";
+      star.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+      star.style.setProperty("--dy", Math.sin(ang) * dist + "px");
+      star.style.setProperty("--c", palette[i % palette.length]);
+      star.innerHTML = '<path d="' + STAR_PATH + '" fill="currentColor"/>';
+      fxLayer.appendChild(star);
+      star.addEventListener("animationend", () => star.remove());
+    }
+  }
+
+  /* ---------- face buttons: X / A / B / Y ---------- */
+  document.querySelectorAll(".face-btn").forEach((btn) => {
+    btn.addEventListener("click", () => popPlusOne(btn, BTN_COLOR[btn.dataset.btn]));
+  });
+
+  /* ---------- start / select pills ---------- */
+  document.querySelectorAll(".pill-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const { x, y } = centerOf(btn);
+      starBurst(x, y, 7);
+    });
+  });
+
+  /* ---------- D-pad: press nudges the whole controller ---------- */
+  const NUDGE = { left: "nudge-left", right: "nudge-right", up: "nudge-up", down: "nudge-down" };
+  const arms = {};
+  document.querySelectorAll(".dpad .arm").forEach((arm) => { arms[arm.dataset.dir] = arm; });
+
+  function dpadPress(dir) {
+    arms[dir]?.classList.add("pressed");
+    pad.classList.add(NUDGE[dir]);
+  }
+  function dpadRelease(dir) {
+    arms[dir]?.classList.remove("pressed");
+    pad.classList.remove(NUDGE[dir]);
+  }
+  document.querySelectorAll(".dpad .arm").forEach((arm) => {
+    const dir = arm.dataset.dir;
+    arm.addEventListener("pointerdown", (e) => { e.preventDefault(); dpadPress(dir); });
+    arm.addEventListener("click", () => {
+      const { x, y } = centerOf(arm);
+      starBurst(x, y, 4);
+    });
+    for (const ev of ["pointerup", "pointerleave", "pointercancel"]) {
+      arm.addEventListener(ev, () => dpadRelease(dir));
+    }
+  });
+
+  /* ---------- keyboard: arrows = D-pad, letters = face buttons ---------- */
+  const KEY_BTN = { x: "x", a: "a", b: "b", y: "y" };
+  const btnBy = {};
+  document.querySelectorAll(".face-btn").forEach((b) => { btnBy[b.dataset.btn] = b; });
+
+  addEventListener("keydown", (e) => {
+    if (e.repeat) return;
+    const t = e.target instanceof Element ? e.target : null;
+    if (t && t.closest("input, textarea, [contenteditable]")) return;
+    const k = e.key.toLowerCase();
+    if (k.startsWith("arrow")) {
+      const dir = k.replace("arrow", "").toLowerCase();
+      if (arms[dir]) {
+        e.preventDefault();
+        dpadPress(dir);
+        const { x, y } = centerOf(arms[dir]);
+        starBurst(x, y, 4);
+      }
+    } else if (KEY_BTN[k] && btnBy[k]) {
+      e.preventDefault();
+      btnBy[k].classList.add("pressed");
+      popPlusOne(btnBy[k], BTN_COLOR[k]);
+    }
+  });
+  addEventListener("keyup", (e) => {
+    const k = e.key.toLowerCase();
+    if (k.startsWith("arrow")) {
+      dpadRelease(k.replace("arrow", "").toLowerCase());
+    } else if (KEY_BTN[k] && btnBy[k]) {
+      btnBy[k].classList.remove("pressed");
+    }
+  });
+
+  /* ---------- "Book a Call": the controller does a happy hop + sparkle burst ---------- */
+  const cta = document.getElementById("bookCall");
+  const sparkle = document.getElementById("sparkle");
+  cta.addEventListener("click", (e) => {
+    e.preventDefault();
+    pad.classList.remove("hop");
+    void pad.offsetWidth; // restart the animation
+    pad.classList.add("hop");
+    pad.addEventListener("animationend", function clean() {
+      pad.classList.remove("hop");
+      pad.removeEventListener("animationend", clean);
+    });
+    const { x, y } = centerOf(sparkle);
+    starBurst(x, y, 11);
+  });
+})();
+</script>
+</body>
+</html>
