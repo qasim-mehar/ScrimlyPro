@@ -207,9 +207,17 @@ export type RecentSession = {
 /**
  * Landing-page list (C7.1 Pass 4): the newest sessions with confirmed-match
  * progress. Query-only — raw squad data, rosters, results never selected.
+ *
+ * `userId` is REQUIRED (WP2 sibling port): the root select carries an
+ * explicit ownership predicate — belt AND suspenders with the RLS backstop,
+ * same API break as getSessionPageData. Run the call inside withUserDb.
  */
-export function listRecentSessions(db: Db, limit = 8): RecentSession[] {
-  const sessionRows = db
+export async function listRecentSessions(
+  db: Db,
+  userId: string,
+  limit = 8,
+): Promise<RecentSession[]> {
+  const sessionRows = await db
     .select({
       id: sessions.id,
       name: sessions.name,
@@ -218,18 +226,17 @@ export function listRecentSessions(db: Db, limit = 8): RecentSession[] {
       createdAt: sessions.createdAt,
     })
     .from(sessions)
+    .where(eq(sessions.userId, userId))
     .orderBy(desc(sessions.createdAt))
-    .limit(limit)
-    .all();
+    .limit(limit);
 
   if (sessionRows.length === 0) return [];
   const ids = sessionRows.map((s) => s.id);
 
-  const confirmedRows = db
+  const confirmedRows = await db
     .select({ sessionId: matches.sessionId })
     .from(matches)
-    .where(and(eq(matches.status, "confirmed"), inArray(matches.sessionId, ids)))
-    .all();
+    .where(and(eq(matches.status, "confirmed"), inArray(matches.sessionId, ids)));
   const confirmedBySession = new Map<string, number>();
   for (const row of confirmedRows) {
     confirmedBySession.set(
