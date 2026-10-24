@@ -181,13 +181,36 @@ body {
 .eyebrow svg { display: block; }
 
 .headline {
-  font-size: clamp(48px, 9.2vw, 118px);
+  font-size: clamp(34px, 5.6vw, 72px);
   font-weight: 900;
-  line-height: 1.0;
-  letter-spacing: -0.035em;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   color: var(--ink);
 }
 .headline .line { display: inline-block; white-space: nowrap; }
+
+/* primary CTA under the headline */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 15px 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 12px 26px -10px rgba(11, 11, 13, 0.45), 0 2px 6px rgba(11, 11, 13, 0.14);
+  transition: transform 0.25s var(--ease-pop), box-shadow 0.25s var(--ease-out), background 0.25s;
+}
+.hero-cta .arr { font-size: 14px; transition: transform 0.25s var(--ease-pop); }
+.hero-cta:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(11, 11, 13, 0.5), 0 3px 8px rgba(11, 11, 13, 0.16); }
+.hero-cta:hover .arr { transform: translate(2px, -2px); }
+.hero-cta:active { transform: translateY(0); }
 
 .sparkle {
   display: inline-block;
@@ -612,8 +635,9 @@ body {
   .links a { font-size: 14.5px; }
 }
 @media (max-width: 480px) {
-  .headline { font-size: 11.4vw; letter-spacing: -0.045em; }
+  .headline { font-size: 8.4vw; letter-spacing: -0.04em; }
   .pad { width: 88vw; }
+  .hero-cta { padding: 13px 24px; font-size: 14.5px; }
 }
 
 /* ------------------------------------------------------------
@@ -655,6 +679,8 @@ body {
     <span class="line">I craft Ideas</span><br />
     <span class="line">through Design<svg class="sparkle" id="sparkle" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.7l2.5 7.8 7.8 2.5-7.8 2.5L12 22.3l-2.5-7.8-7.8-2.5 7.8-2.5z"/></svg></span>
   </h1>
+
+  <a class="hero-cta" href="#" id="heroCta">View My Work <span class="arr">→</span></a>
 
   <div class="stage">
     <div class="pad" id="pad" role="group" aria-label="Interactive SNES controller — try the buttons">
