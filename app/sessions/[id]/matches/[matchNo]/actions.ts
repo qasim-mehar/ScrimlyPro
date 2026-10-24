@@ -3,23 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 
-import { assertSessionOwner } from "@/lib/auth/action-guard";
+import { requireSessionAccess } from "@/lib/orgs/roles";
 import { withUserDb } from "@/lib/db/user";
 import { matches, sessions } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import { confirmMatch, type ConfirmMatchResult } from "@/lib/matches/confirm";
 import type { SquadRowDraft } from "@/lib/matches/mapping";
 
 /**
- * Guarded wrappers (WP6): assertSessionOwner (verified user + session
- * ownership, 404 on missing/foreign) → withUserDb (RLS-scoped queries) →
- * revalidate. Zero validation logic of their own — lib/matches owns it.
+ * Guarded wrappers (WP6/M2): requireSessionAccess (verified user + org
+ * membership, 404 on missing/foreign) → withUserDb (RLS-scoped queries,
+ * explicit org-membership predicate as the belt) → revalidate. Zero
+ * validation logic of their own — lib/matches owns it.
  */
 export async function confirmMatchAction(
   sessionId: string,
   matchNo: number,
   rows: SquadRowDraft[],
 ): Promise<ConfirmMatchResult> {
-  const { user } = await assertSessionOwner(sessionId);
+  const { user } = await requireSessionAccess(sessionId);
   const result = await withUserDb({ sub: user.id }, async (userDb) => {
     const matchRow =
       (
@@ -31,7 +33,7 @@ export async function confirmMatchAction(
             and(
               eq(matches.sessionId, sessionId),
               eq(matches.matchNo, matchNo),
-              eq(sessions.userId, user.id),
+              orgMemberPredicate(user.id),
             ),
           )
           .limit(1)
@@ -50,7 +52,7 @@ export async function reparseAction(
   sessionId: string,
   matchNo: number,
 ): Promise<ConfirmMatchResult> {
-  const { user } = await assertSessionOwner(sessionId);
+  const { user } = await requireSessionAccess(sessionId);
   const result = await withUserDb({ sub: user.id }, async (userDb) => {
     const matchRow =
       (
@@ -62,7 +64,7 @@ export async function reparseAction(
             and(
               eq(matches.sessionId, sessionId),
               eq(matches.matchNo, matchNo),
-              eq(sessions.userId, user.id),
+              orgMemberPredicate(user.id),
             ),
           )
           .limit(1)

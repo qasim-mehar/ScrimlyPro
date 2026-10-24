@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import * as schema from "@/lib/db/schema";
@@ -11,6 +11,8 @@ import {
 import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/sessions/queries";
 
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
+import { withUserDb } from "@/lib/db/user";
 
 const { matchResults, matches, mvpLists, rosters, sessions, teams } = schema;
 
@@ -32,6 +34,7 @@ async function seedTwoConfirmed(db: PgDb): Promise<Fixture> {
   await db.insert(sessions).values({
     id: "s1",
     userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
     name: "Session Page Fixture",
     plannedMatches: 6,
     teamCount: 3,
@@ -237,6 +240,7 @@ describe("session page", () => {
     await db.insert(sessions).values({
       id: "s2",
       userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
       name: "Other",
       plannedMatches: 6,
       teamCount: 4,
@@ -263,6 +267,7 @@ describe("session page", () => {
     await db.insert(sessions).values({
       id: "solo",
       userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
       name: "Solo",
       plannedMatches: 6,
       teamCount: 4,
@@ -343,6 +348,35 @@ describe("session page", () => {
     expect(nextMatchNumber(6, 6)).toBeNull();
   });
 
+  it("getSessionPageData userId predicate is org-membership (M2): member reads, outsider does not", async () => {
+    await seedTwoConfirmed(db);
+    const orgId = (
+      await db.select({ orgId: schema.sessions.orgId }).from(schema.sessions).where(eq(schema.sessions.id, "s1")).limit(1)
+    )[0]!.orgId;
+    const member = "77777777-7777-7777-7777-777777777771";
+    const outsider = "77777777-7777-7777-7777-777777777772";
+    for (const u of [member, outsider]) {
+      await db.execute(
+        sql`insert into auth.users (id, email) values (${u}, ${u + "@test.dev"}) on conflict (id) do nothing`,
+      );
+    }
+    await db.insert(schema.orgMembers).values({ orgId, userId: member, role: "member" });
+
+    // RLS context (withUserDb): the member (not the creator) reads the page.
+    const asMember = await withUserDb({ sub: member }, (userDb) =>
+      getSessionPageData(userDb, "s1", member), db,
+    );
+    expect(asMember).not.toBeNull();
+
+    // The outsider gets the same null a missing session gets (existence
+    // never confirmed), with AND without the belt predicate.
+    const asOutsider = await withUserDb({ sub: outsider }, (userDb) =>
+      getSessionPageData(userDb, "s1", outsider), db,
+    );
+    expect(asOutsider).toBeNull();
+    expect(await getSessionPageData(db, "s1", outsider)).toBeNull();
+  });
+
   it("getSessionPageData projects winners and never leaks rawSquadData", async () => {
     await seedTwoConfirmed(db);
     const page = (await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!;
@@ -392,6 +426,7 @@ describe("session page", () => {
     await db.insert(sessions).values({
       id: "s2",
       userId: "99999999-9999-9999-9999-999999999994",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999994"),
       name: "Other",
       plannedMatches: 6,
       teamCount: 4,

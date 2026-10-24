@@ -19,6 +19,7 @@ export function dbUrl() {
 
 const SESSION_ID = "seed-00000000-0000-4000-8000-000000000001";
 const SEED_OWNER_ID = "00000000-0000-4000-8000-0000000000aa";
+const SEED_ORG_ID = "00000000-0000-4000-8000-0000000000ab";
 
 // duplicated from PRD §6 — the app's source is C2.1 lib/scoring; seed is an offline script
 const PLACEMENT_POINTS = { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1 };
@@ -347,8 +348,20 @@ export async function seedDatabase(sql) {
       VALUES (${SEED_OWNER_ID}, 'seed-owner@scrimlypro.local')
       ON CONFLICT (id) DO NOTHING`;
 
-    await tx`INSERT INTO sessions (id, user_id, name, planned_matches, team_count, template_id, scoring_rules, status, created_at)
-      VALUES (${SESSION_ID}, ${SEED_OWNER_ID}, 'Seed Demo Scrim', 6, 16, 'dev-dark-gold', ${tx.json(scoringRules)}, 'active', ${now})`;
+    // M2: sessions.org_id is NOT NULL (migration 0012) — the seed owner gets
+    // a Personal org with owner membership + default quota (same shape the
+    // 0011 backfill gives real users). Fixed ids keep re-runs idempotent.
+    await tx`INSERT INTO organizations (id, name, slug, created_by)
+      VALUES (${SEED_ORG_ID}, 'Personal', 'u-seed0000', ${SEED_OWNER_ID})
+      ON CONFLICT (id) DO NOTHING`;
+    await tx`INSERT INTO org_members (org_id, user_id, role)
+      VALUES (${SEED_ORG_ID}, ${SEED_OWNER_ID}, 'owner')
+      ON CONFLICT (org_id, user_id) DO NOTHING`;
+    // Default quota row: minted by the 0014 org_quotas_bootstrap trigger on
+    // the organizations INSERT above.
+
+    await tx`INSERT INTO sessions (id, user_id, org_id, name, planned_matches, team_count, template_id, scoring_rules, status, created_at)
+      VALUES (${SESSION_ID}, ${SEED_OWNER_ID}, ${SEED_ORG_ID}, 'Seed Demo Scrim', 6, 16, 'dev-dark-gold', ${tx.json(scoringRules)}, 'active', ${now})`;
 
     for (const name of TEAMS) {
       await tx`INSERT INTO teams (id, session_id, name, logo_url) VALUES (${teamId(name)}, ${SESSION_ID}, ${name}, NULL)`;

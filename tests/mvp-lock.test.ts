@@ -7,6 +7,7 @@ import { validateMvpEntries, type MvpValidationEntry } from "@/lib/mvp/lock";
 import { lockMvpList, unlockMvp } from "@/lib/mvp/lifecycle";
 
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
 
 const { matchResults, matches, mvpLists, sessions, teams } = schema;
 
@@ -131,6 +132,7 @@ describe("mvp lifecycle", () => {
     await db.insert(sessions).values({
       id: "s1",
       userId: "99999999-9999-9999-9999-999999999992",
+      orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999992"),
       name: "S",
       plannedMatches: 6,
       teamCount: 16,

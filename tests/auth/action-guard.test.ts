@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as schema from "@/lib/db/schema";
 
 import { testDb } from "../helpers/pg";
+import { ensureOrg } from "../helpers/orgs";
 
 /**
  * WP6 guard suite for server actions: assertSessionOwner proves ownership
@@ -64,6 +65,7 @@ async function seedSession(owner: string) {
   await state.db!.insert(schema.sessions).values({
     id: SESSION_ID,
     userId: owner,
+    orgId: await ensureOrg(state.db!, owner),
     name: "Guard Fixture",
     plannedMatches: 2,
     teamCount: 4,

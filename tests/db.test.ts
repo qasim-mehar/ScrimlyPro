@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 
 import * as schema from "@/lib/db/schema";
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
 
 const { matchResults, matches, sessions, teams } = schema;
 
@@ -29,6 +30,7 @@ describe("data layer", () => {
     await db.insert(sessions).values({
       id: "s1",
       userId: "11111111-1111-1111-1111-111111111111",
+      orgId: await ensureOrg(db, "11111111-1111-1111-1111-111111111111"),
       name: "T",
       plannedMatches: 6,
       teamCount: 16,

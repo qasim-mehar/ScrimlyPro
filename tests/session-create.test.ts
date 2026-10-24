@@ -6,6 +6,7 @@ import { createSessionWithTeams } from "@/lib/sessions/create";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
 
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
 
 const { sessions, teams } = schema;
 
@@ -17,6 +18,7 @@ type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 function validDraft() {
   return {
     name: "Wassup Open Scrims",
+    orgId: "aaaaaaaa-0000-4000-8000-0000000000m1".replace("m1", "01"),
     plannedMatches: 4,
     teamCount: 16,
     templateId: "dark-gold",
@@ -40,7 +42,8 @@ describe("createSessionWithTeams", () => {
   afterEach(async () => cleanup());
 
   it("happy path: 16-team draft inserts a session graph in one go", async () => {
-    const sessionId = await createSessionWithTeams(db, validDraft(), OWNER);
+    const sessionId = await createSessionWithTeams(
+      db, validDraft(), OWNER, await ensureOrg(db, OWNER));
 
     expect(sessionId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
@@ -76,13 +79,16 @@ describe("createSessionWithTeams", () => {
   it("throws (fail-loud) on an invalid draft with duplicate names", async () => {
     const draft = validDraft();
     draft.teams[1] = { name: "straight forward", logoUrl: null };
-    await expect(createSessionWithTeams(db, draft, OWNER)).rejects.toThrow();
+    await expect(
+      createSessionWithTeams(db, draft, OWNER, await ensureOrg(db, OWNER)),
+    ).rejects.toThrow();
     expect(await db.select().from(sessions)).toHaveLength(0);
   });
 
   it("two sequential creates: distinct ids, 32 team rows (same names across sessions)", async () => {
-    const id1 = await createSessionWithTeams(db, validDraft(), OWNER);
-    const id2 = await createSessionWithTeams(db, validDraft(), OWNER);
+    const orgId = await ensureOrg(db, OWNER);
+    const id1 = await createSessionWithTeams(db, validDraft(), OWNER, orgId);
+    const id2 = await createSessionWithTeams(db, validDraft(), OWNER, orgId);
 
     expect(id1).not.toBe(id2);
     expect(await db.select().from(sessions)).toHaveLength(2);

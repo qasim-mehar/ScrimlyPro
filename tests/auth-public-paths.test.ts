@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PUBLIC_PAGES, isPublicPath } from "@/lib/auth/public-paths";
 
 describe("public path classifier", () => {
-  it("exposes exactly the brief's public page list", () => {
+  it("exposes exactly the brief's public page list (M2 adds /invite + /share)", () => {
     expect([...PUBLIC_PAGES].sort()).toEqual(
       [
         "/login",
@@ -11,6 +11,8 @@ describe("public path classifier", () => {
         "/reset-password",
         "/auth/callback",
         "/auth/error",
+        "/invite",
+        "/share",
       ].sort(),
     );
   });
@@ -19,6 +21,9 @@ describe("public path classifier", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
     expect(isPublicPath("/auth/error")).toBe(true);
+    // M2 share/invite surfaces (token pages are still server-guarded).
+    expect(isPublicPath("/share/abc")).toBe(true);
+    expect(isPublicPath("/invite/abc")).toBe(true);
   });
 
   it("never classifies API routes or tenant pages as public", () => {

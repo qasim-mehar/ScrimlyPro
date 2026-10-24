@@ -5,6 +5,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/action-guard";
 import { withUserDb } from "@/lib/db/user";
 import { matches, rosters, sessions, teams, type RawSquad } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import { sanitizeSquads } from "@/lib/matches/mapping";
 import { suggestMappings } from "@/lib/matching";
 import { ReviewForm, type ReviewSuggestion } from "@/components/matches/ReviewForm";
@@ -22,8 +23,8 @@ export default async function MatchPage({
   const { id: sessionId, matchNo: matchNoRaw } = await params;
   const matchNo = Number(matchNoRaw);
 
-  // Tenant reads under RLS + explicit ownership predicate; a missing or
-  // foreign session is indistinguishable — both render the 404 page.
+  // Tenant reads under RLS + explicit org-membership predicate (M2); a
+  // missing or foreign session is indistinguishable — both render 404.
   const data = await withUserDb({ sub: user.id }, async (userDb) => {
     const session =
       (
@@ -36,7 +37,7 @@ export default async function MatchPage({
             status: sessions.status,
           })
           .from(sessions)
-          .where(and(eq(sessions.id, sessionId), eq(sessions.userId, user.id)))
+          .where(and(eq(sessions.id, sessionId), orgMemberPredicate(user.id)))
           .limit(1)
       )[0] ?? null;
     if (!session) return null;

@@ -17,6 +17,7 @@ import {
   sessions,
   teams,
 } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import { MVP_SUBTITLE, toMvpDisplay } from "@/lib/graphics/mvp";
 import { aggregatePlayers, draftMvpTop5 } from "@/lib/mvp";
 
@@ -28,9 +29,9 @@ export const dynamic = "force-dynamic";
  * edits never rewrite match_results (PRD). The MVP graphic renders ONLY
  * from the locked mvp_lists row (ERD §5 iron rule 2).
  *
- * WP6: verified user or /login; every tenant read runs inside withUserDb
- * (RLS + explicit ownership predicate on the session select). A missing or
- * foreign session is indistinguishable — both render the 404 page.
+ * WP6/M2: verified user or /login; every tenant read runs inside withUserDb
+ * (RLS + explicit org-membership predicate on the session select). A missing
+ * or foreign session is indistinguishable — both render the 404 page.
  */
 export default async function MvpPage({
   params,
@@ -46,7 +47,7 @@ export default async function MvpPage({
         await userDb
           .select()
           .from(sessions)
-          .where(and(eq(sessions.id, sessionId), eq(sessions.userId, user.id)))
+          .where(and(eq(sessions.id, sessionId), orgMemberPredicate(user.id)))
           .limit(1)
       )[0] ?? null;
     if (!session) return null;

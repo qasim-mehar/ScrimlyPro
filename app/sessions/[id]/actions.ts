@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { assertSessionOwner } from "@/lib/auth/action-guard";
 import { withUserDb } from "@/lib/db/user";
+import { requireSessionAccess } from "@/lib/orgs/roles";
 import {
   markComplete,
   reopenSession,
@@ -12,15 +12,16 @@ import {
 } from "@/lib/sessions/lifecycle";
 
 /**
- * Guarded wrappers: assertSessionOwner (verified user + session ownership,
- * 404 on missing/foreign) → withUserDb (RLS-scoped lib call) → revalidate.
- * Zero logic of their own — lib/sessions/lifecycle owns it.
+ * Guarded wrappers: requireSessionAccess (verified user + org membership,
+ * 404 on missing/foreign — existence never revealed) → withUserDb
+ * (RLS-scoped lib call) → revalidate. Zero logic of their own —
+ * lib/sessions/lifecycle owns it.
  */
 export async function unlockMatchAction(
   sessionId: string,
   matchId: string,
 ): Promise<LifecycleResult> {
-  const { user } = await assertSessionOwner(sessionId);
+  const { user } = await requireSessionAccess(sessionId);
   const result = await withUserDb({ sub: user.id }, (userDb) =>
     unlockMatch(userDb, sessionId, matchId),
   );
@@ -31,7 +32,7 @@ export async function unlockMatchAction(
 export async function markCompleteAction(
   sessionId: string,
 ): Promise<LifecycleResult> {
-  const { user } = await assertSessionOwner(sessionId);
+  const { user } = await requireSessionAccess(sessionId);
   const result = await withUserDb({ sub: user.id }, (userDb) =>
     markComplete(userDb, sessionId),
   );
@@ -42,7 +43,7 @@ export async function markCompleteAction(
 export async function reopenSessionAction(
   sessionId: string,
 ): Promise<LifecycleResult> {
-  const { user } = await assertSessionOwner(sessionId);
+  const { user } = await requireSessionAccess(sessionId);
   const result = await withUserDb({ sub: user.id }, (userDb) =>
     reopenSession(userDb, sessionId),
   );

@@ -2,6 +2,9 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
 import { testDb } from "@/tests/helpers/pg";
+import { ensureOrg } from "@/tests/helpers/orgs";
+// Lane A's C3 test-DI split: the throwaway per-test client is injected —
+// the production getDb() path stays out of tests.
 import { withUserDbForTest } from "@/lib/db/user";
 import type { Db } from "@/lib/db/client";
 
@@ -37,6 +40,8 @@ async function seedAsAdmin(): Promise<string> {
   await db.insert(schema.sessions).values({
     id: sessionId,
     userId: OWNER,
+    // M2: tenancy is org-scoped — the seed owner gets their Personal org.
+    orgId: await ensureOrg(db, OWNER),
     name: "RLS Session",
     plannedMatches: 2,
     teamCount: 4,
@@ -115,6 +120,7 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
     await db.insert(schema.sessions).values({
       id: "rls-session-2",
       userId: ATTACKER,
+      orgId: await ensureOrg(db, ATTACKER),
       name: "Attacker Session",
       plannedMatches: 2,
       teamCount: 4,
@@ -141,12 +147,17 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
     expect(rowsOf<{ id: string }>(rows)).toEqual([]);
   });
 
-  it("attacker cannot INSERT a session with a foreign user_id (WITH CHECK)", async () => {
+  it("attacker cannot INSERT a session into a foreign org (WITH CHECK)", async () => {
+    // M2 tenancy: the tenant root is the org, not the raw user_id (kept as an
+    // audit column). Spoofing tenancy now means claiming a foreign org_id —
+    // the WITH CHECK must reject it and write nothing.
+    const ownerOrg = await ensureOrg(db, OWNER);
     await expect(
       asUser(ATTACKER, async (userDb) => {
         await userDb.insert(schema.sessions).values({
           id: "evil-session",
-          userId: OWNER, // spoofed — WITH CHECK must reject
+          userId: ATTACKER,
+          orgId: ownerOrg, // spoofed org membership — WITH CHECK must reject
           name: "Evil",
           plannedMatches: 2,
           teamCount: 4,
@@ -186,11 +197,12 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
 
   it("profiles: self-select only; role escalation blocked for authenticated", async () => {
     // Create users directly in the auth stand-in → trigger creates profiles.
+    // ensureOrg (seed) already created the auth.users stand-ins — idempotent.
     await db.execute(
-      sql`insert into auth.users (id, email) values (${OWNER}, ${"owner@test.dev"})`,
+      sql`insert into auth.users (id, email) values (${OWNER}, ${"owner@test.dev"}) on conflict (id) do nothing`,
     );
     await db.execute(
-      sql`insert into auth.users (id, email) values (${ATTACKER}, ${"attacker@test.dev"})`,
+      sql`insert into auth.users (id, email) values (${ATTACKER}, ${"attacker@test.dev"}) on conflict (id) do nothing`,
     );
 
     // Owner sees exactly their own profile.

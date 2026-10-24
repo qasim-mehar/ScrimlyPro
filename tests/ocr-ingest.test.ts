@@ -7,6 +7,7 @@ import { SAMPLE_MATCHES } from "@/lib/fixtures/sampleMatches";
 import { ingestMatchOcr } from "@/lib/ocr/ingest";
 
 import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
 
 const { matches, sessions } = schema;
 
@@ -79,6 +80,7 @@ describe("ingestMatchOcr", () => {
     await db.insert(sessions).values({
       id: "s1",
       userId: "99999999-9999-9999-9999-999999999993",
+      orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999993"),
       name: "Sample Session",
       plannedMatches: 6,
       teamCount: 16,

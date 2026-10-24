@@ -29,6 +29,41 @@
       "when": 1792841000000,
       "tag": "0003_sessions-user-id-not-null",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792849571366,
+      "tag": "0010_orgs-schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792849597460,
+      "tag": "0011_orgs-backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792849598460,
+      "tag": "0012_sessions-org-id-not-null",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792849599460,
+      "tag": "0013_org-invite-preview",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792936000000,
+      "tag": "0014_quota-role-hardening",
+      "breakpoints": true
     }
   ]
 }

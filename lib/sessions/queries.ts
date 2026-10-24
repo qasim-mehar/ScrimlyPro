@@ -10,6 +10,7 @@ import {
   type MvpEntry,
   type ScoringRules,
 } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import type { ResultRow, TeamRow } from "@/lib/scoring";
 
 export type SessionPageSession = {
@@ -46,9 +47,13 @@ export type SessionPageData = {
  * computeStandings; matches carry the placement-1 winner name (null for
  * drafts). raw_squad_data is never selected — it must not leak to the client.
  *
- * `userId`, when provided (WP6 request path), adds an explicit ownership
- * predicate on the root session select — belt AND suspenders with the RLS
- * backstop. Callers without a verified user (tests, admin tooling) omit it.
+ * `userId` (REQUIRED — the server-verified caller, getAuthedUser; never
+ * request input) adds an explicit ORG-MEMBERSHIP predicate on the root
+ * session select (M2: tenancy is the org; any member may read) — belt AND
+ * suspenders with the RLS backstop. Making the predicate mandatory removes
+ * the "caller forgot the userId" bug class — deliberate API break of the
+ * earlier optional-param shape. Callers without a verified user (tests,
+ * admin tooling) are not served by this helper.
  */
 export async function getSessionPageData(
   db: Db,
@@ -72,7 +77,7 @@ export async function getSessionPageData(
           createdAt: sessions.createdAt,
         })
         .from(sessions)
-        .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)))
+        .where(and(eq(sessions.id, sessionId), orgMemberPredicate(userId)))
         .limit(1)
     )[0] ?? null;
   if (!sessionRow) return null;

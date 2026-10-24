@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { testDb } from "@/tests/helpers/pg";
+import { ensureOrg } from "@/tests/helpers/orgs";
 import * as schema from "@/lib/db/schema";
 import type { Db } from "@/lib/db/client";
 
@@ -36,6 +37,7 @@ beforeEach(async () => {
   await db.insert(schema.sessions).values({
     id: "matrix-session",
     userId: MOCKED_USER.id,
+    orgId: await ensureOrg(db, MOCKED_USER.id),
     name: "Matrix",
     plannedMatches: 2,
     teamCount: 4,
