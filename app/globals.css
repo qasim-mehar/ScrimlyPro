@@ -1,17 +1,55 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif;
-  --color-gold: #f5c542;
-  --color-bg: #0b0d12;
-  --color-surface: #12151c;
-  --color-surface-2: #1a1e28;
-  --color-line: #272d3b;
-  --color-muted: #8b93a7;
+  --font-display: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+
+  --color-snes-green: #22c55e;
+  --color-snes-blue: #3b82f6;
+  --color-snes-yellow: #facc15;
+  --color-cta: #ffd23f;
+  --color-snes-red: #ef4444;
+  --color-ink: #050505;
 }
 
 body {
-  background-color: var(--color-bg);
-  color: #e8eaf0;
-  font-family: var(--font-display);
+  background-color: var(--color-ink);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-cta);
+  color: var(--color-ink);
+}
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+/* Staggered hero entrance — pair .hero-fade with an inline animation-delay. */
+.hero-fade {
+  opacity: 0;
+  animation: hero-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-fade {
+    animation: none;
+    opacity: 1;
+  }
 }

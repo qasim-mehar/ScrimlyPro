@@ -1,21 +1,11 @@
-// entry point — session list/history arrives with C4.2+
-import Link from "next/link";
+import Navbar from "@/components/landing/Navbar";
+import Hero from "@/components/landing/Hero";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 p-6">
-      <h1 className="font-display text-4xl font-bold tracking-widest text-gold">
-        SCRIMLY PRO
-      </h1>
-      <p className="text-center text-sm text-muted">
-        Scrim results, standings &amp; MVP graphics — in minutes.
-      </p>
-      <Link
-        href="/sessions/new"
-        className="flex min-h-11 w-full items-center justify-center rounded-lg bg-gold font-display text-lg font-semibold text-bg"
-      >
-        Create a Scrim
-      </Link>
-    </main>
+    <>
+      <Navbar />
+      <Hero />
+    </>
   );
 }

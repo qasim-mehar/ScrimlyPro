@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
-import "@fontsource/exo-2/500.css";
-import "@fontsource/exo-2/600.css";
-import "@fontsource/exo-2/700.css";
-import "@fontsource/exo-2/800.css";
-// Rajdhani stays loaded as the fallback face in every font stack (P7).
-import "@fontsource/rajdhani/500.css";
-import "@fontsource/rajdhani/600.css";
-import "@fontsource/rajdhani/700.css";
-import "@fontsource/noto-sans-symbols-2/index.css";
+import { Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
 
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter-tight",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "ScrimlyPro",
-  description: "Scrim results, standings & MVP graphics for organizers.",
+  title: "bear.io — Design Wizard",
+  description:
+    "Independent designer turning wild ideas into playful, pixel-perfect products.",
 };
 
 export default function RootLayout({
@@ -20,7 +24,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${interTight.variable} ${inter.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }
