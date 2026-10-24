@@ -12,7 +12,7 @@ import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/session
 
 import { testDb } from "./helpers/pg";
 import { ensureOrg } from "./helpers/orgs";
-import { withUserDb } from "@/lib/db/user";
+import { withUserDbForTest } from "@/lib/db/user";
 
 const { matchResults, matches, mvpLists, rosters, sessions, teams } = schema;
 
@@ -363,14 +363,14 @@ describe("session page", () => {
     await db.insert(schema.orgMembers).values({ orgId, userId: member, role: "member" });
 
     // RLS context (withUserDb): the member (not the creator) reads the page.
-    const asMember = await withUserDb({ sub: member }, (userDb) =>
+    const asMember = await withUserDbForTest({ sub: member }, (userDb) =>
       getSessionPageData(userDb, "s1", member), db,
     );
     expect(asMember).not.toBeNull();
 
     // The outsider gets the same null a missing session gets (existence
     // never confirmed), with AND without the belt predicate.
-    const asOutsider = await withUserDb({ sub: outsider }, (userDb) =>
+    const asOutsider = await withUserDbForTest({ sub: outsider }, (userDb) =>
       getSessionPageData(userDb, "s1", outsider), db,
     );
     expect(asOutsider).toBeNull();

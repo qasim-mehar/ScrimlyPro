@@ -5,7 +5,7 @@ import * as schema from "@/lib/db/schema";
 import type { Db } from "@/lib/db/client";
 import { testDb } from "@/tests/helpers/pg";
 import { ensureOrg } from "@/tests/helpers/orgs";
-import { withUserDb } from "@/lib/db/user";
+import { withUserDbForTest } from "@/lib/db/user";
 import {
   createOrg,
   ensurePersonalOrg,
@@ -79,7 +79,7 @@ async function orgIdOf(user: string): Promise<string> {
 }
 
 function asUser<T>(user: string, fn: (userDb: Db) => Promise<T>): Promise<T> {
-  return withUserDb({ sub: user }, fn, db);
+  return withUserDbForTest({ sub: user }, fn, db);
 }
 
 describe("orgs: create + membership", () => {

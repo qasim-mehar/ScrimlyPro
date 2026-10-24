@@ -40,9 +40,26 @@ const PUBLIC_PAGE_PREFIXES = [
   "forgot-password/",
   "reset-password/",
   "auth/",
+  // M2 (Lane B): public share + invite surfaces, mirrored from
+  // lib/auth/public-paths.ts PUBLIC_PAGES. /invite redirects anonymous
+  // users to login; /share renders only the token's public projection.
+  "invite/",
+  "share/",
 ];
 
-const GUARD_MARKERS = ["withTenantRoute", "requireUser", "getAuthedUser", "assertSessionOwner"];
+// M2 (Lane B) org guards — entries ADDED, never removed. withOrgRoute is
+// B's route wrapper over the same identity checks (folded into
+// withTenantRoute at WP6); requireOrgRole/requireSessionAccess verify user +
+// org membership before any tenant access (successor of assertSessionOwner).
+const GUARD_MARKERS = [
+  "withTenantRoute",
+  "requireUser",
+  "getAuthedUser",
+  "assertSessionOwner",
+  "withOrgRoute",
+  "requireOrgRole",
+  "requireSessionAccess",
+];
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
@@ -82,7 +99,9 @@ describe("architecture: every request path is auth-guarded (A2)", () => {
       .map(rel)
       .filter((r) => {
         const src = readFileSync(join(ROOT, r), "utf8");
-        return !["assertSessionOwner", "requireUser"].some((m) => src.includes(m));
+        // requireOrgRole/requireSessionAccess added for M2 (Lane B) —
+        // verified user + org-membership guards on server actions.
+        return !["assertSessionOwner", "requireUser", "requireOrgRole", "requireSessionAccess"].some((m) => src.includes(m));
       });
     expect(unguarded).toEqual([]);
   });

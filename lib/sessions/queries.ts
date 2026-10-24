@@ -213,9 +213,12 @@ export type RecentSession = {
  * Landing-page list (C7.1 Pass 4): the newest sessions with confirmed-match
  * progress. Query-only — raw squad data, rosters, results never selected.
  *
- * `userId` is REQUIRED (WP2 sibling port): the root select carries an
- * explicit ownership predicate — belt AND suspenders with the RLS backstop,
- * same API break as getSessionPageData. Run the call inside withUserDb.
+ * `userId` (REQUIRED — the server-verified caller, getAuthedUser; never
+ * request input) adds an explicit ORG-MEMBERSHIP predicate on the root
+ * session select (M2: tenancy is the org; any member may read) — belt AND
+ * suspenders with the RLS backstop. Making the predicate mandatory removes
+ * the "caller forgot the userId" bug class — deliberate API break of the
+ * earlier optional-param shape. Run the call inside withUserDb.
  */
 export async function listRecentSessions(
   db: Db,
@@ -231,7 +234,7 @@ export async function listRecentSessions(
       createdAt: sessions.createdAt,
     })
     .from(sessions)
-    .where(eq(sessions.userId, userId))
+    .where(orgMemberPredicate(userId))
     .orderBy(desc(sessions.createdAt))
     .limit(limit);
 

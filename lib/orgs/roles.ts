@@ -20,7 +20,9 @@ export { roleAtLeast, fetchOrgRole };
  * stay redirect-free. Missing and foreign resources are INDISTINGUISHABLE:
  * both render the 404 page (existence never confirmed to non-members).
  *
- * `client` is test dependency-injection (mirrors withUserDb).
+ * `client` was Lane B's test dependency-injection param — wave-1 integration
+ * drops it: no caller ever passed it, and Lane A's C3 split confines test
+ * injection to withUserDbForTest so production code cannot grow a hidden knob.
  */
 
 export type OrgRoleContext = {
@@ -35,13 +37,10 @@ export type OrgRoleContext = {
 export async function requireOrgRole(
   orgId: string,
   minRole: OrgRole,
-  client?: Db,
 ): Promise<OrgRoleContext> {
   const user = await requireUser();
-  const role = await withUserDb(
-    { sub: user.id },
-    (userDb) => fetchOrgRole(userDb, orgId, user.id),
-    client,
+  const role = await withUserDb({ sub: user.id }, (userDb) =>
+    fetchOrgRole(userDb, orgId, user.id),
   );
   if (!role || !roleAtLeast(role, minRole)) notFound();
   return { user, orgId, role };
@@ -62,31 +61,26 @@ export type SessionAccessContext = {
 export async function requireSessionAccess(
   sessionId: string,
   minRole: OrgRole = "member",
-  client?: Db,
 ): Promise<SessionAccessContext> {
   const user = await requireUser();
-  const found = await withUserDb(
-    { sub: user.id },
-    async (userDb) => {
-      return (
-        (
-          await userDb
-            .select({ orgId: sessions.orgId, role: orgMembers.role })
-            .from(sessions)
-            .innerJoin(
-              orgMembers,
-              and(
-                eq(orgMembers.orgId, sessions.orgId),
-                eq(orgMembers.userId, user.id),
-              ),
-            )
-            .where(eq(sessions.id, sessionId))
-            .limit(1)
-        )[0] ?? null
-      );
-    },
-    client,
-  );
+  const found = await withUserDb({ sub: user.id }, async (userDb) => {
+    return (
+      (
+        await userDb
+          .select({ orgId: sessions.orgId, role: orgMembers.role })
+          .from(sessions)
+          .innerJoin(
+            orgMembers,
+            and(
+              eq(orgMembers.orgId, sessions.orgId),
+              eq(orgMembers.userId, user.id),
+            ),
+          )
+          .where(eq(sessions.id, sessionId))
+          .limit(1)
+      )[0] ?? null
+    );
+  });
   if (!found || !roleAtLeast(found.role, minRole)) notFound();
   return {
     user,
