@@ -17,19 +17,19 @@ export default async function Home() {
     <>
       <ImpersonationBanner />
       <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 p-6">
-      <h1 className="font-display text-4xl font-bold tracking-widest text-gold">
-        SCRIMLY PRO
-      </h1>
-      <p className="text-center text-sm text-muted">
-        Scrim results, standings &amp; MVP graphics — in minutes.
-      </p>
-      <Link
-        href="/sessions/new"
-        className="flex min-h-11 w-full items-center justify-center rounded-lg bg-gold font-display text-lg font-semibold text-bg"
-      >
-        Create a Scrim
-      </Link>
-    </main>
+        <h1 className="font-display text-4xl font-bold tracking-widest text-gold">
+          SCRIMLY PRO
+        </h1>
+        <p className="text-center text-sm text-muted">
+          Scrim results, standings &amp; MVP graphics — in minutes.
+        </p>
+        <Link
+          href="/sessions/new"
+          className="flex min-h-11 w-full items-center justify-center rounded-lg bg-gold font-display text-lg font-semibold text-bg"
+        >
+          Create a Scrim
+        </Link>
+      </main>
     </>
   );
 }
