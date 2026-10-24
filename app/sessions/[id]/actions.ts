@@ -15,7 +15,7 @@ export async function unlockMatchAction(
   sessionId: string,
   matchId: string,
 ): Promise<LifecycleResult> {
-  const result = unlockMatch(getDb(), sessionId, matchId);
+  const result = await unlockMatch(getDb(), sessionId, matchId);
   if (result.ok) revalidatePath("/sessions/" + sessionId);
   return result;
 }
@@ -23,7 +23,7 @@ export async function unlockMatchAction(
 export async function markCompleteAction(
   sessionId: string,
 ): Promise<LifecycleResult> {
-  const result = markComplete(getDb(), sessionId);
+  const result = await markComplete(getDb(), sessionId);
   if (result.ok) revalidatePath("/sessions/" + sessionId);
   return result;
 }
@@ -31,7 +31,7 @@ export async function markCompleteAction(
 export async function reopenSessionAction(
   sessionId: string,
 ): Promise<LifecycleResult> {
-  const result = reopenSession(getDb(), sessionId);
+  const result = await reopenSession(getDb(), sessionId);
   if (result.ok) revalidatePath("/sessions/" + sessionId);
   return result;
 }

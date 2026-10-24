@@ -24,7 +24,7 @@ export async function createSessionAction(
   if (issues.length > 0) return { ok: false, issues };
 
   try {
-    const sessionId = createSessionWithTeams(getDb(), draft);
+    const sessionId = await createSessionWithTeams(getDb(), draft);
     return { ok: true, sessionId };
   } catch (error) {
     console.error("createSessionAction failed:", error);

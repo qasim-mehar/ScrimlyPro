@@ -1,10 +1,3 @@
-import path from "node:path";
-import Database from "better-sqlite3";
-import {
-  type BetterSQLite3Database,
-  drizzle,
-} from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "@/lib/db/schema";
@@ -12,21 +5,11 @@ import { SUPER_RULES } from "@/lib/scoring";
 import { createSessionWithTeams } from "@/lib/sessions/create";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
 
+import { testDb } from "./helpers/pg";
+
 const { sessions, teams } = schema;
 
-// In-memory DB pattern copied from tests/db.test.ts.
-function testDb(): {
-  sqlite: Database.Database;
-  db: BetterSQLite3Database<typeof schema>;
-} {
-  const sqlite = new Database(":memory:");
-  sqlite.pragma("foreign_keys = ON");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, {
-    migrationsFolder: path.join(process.cwd(), "db", "migrations"),
-  });
-  return { sqlite, db };
-}
+type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 
 function validDraft() {
   return {
@@ -44,27 +27,25 @@ function validDraft() {
 }
 
 describe("createSessionWithTeams", () => {
-  let sqlite: Database.Database;
-  let db: BetterSQLite3Database<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let db: PgDb;
 
-  beforeEach(() => {
-    ({ sqlite, db } = testDb());
+  beforeEach(async () => {
+    ({ db, cleanup } = await testDb());
   });
 
-  afterEach(() => sqlite.close());
+  afterEach(async () => cleanup());
 
-  it("happy path: 16-team draft inserts a session graph in one go", () => {
-    const sessionId = createSessionWithTeams(db, validDraft());
+  it("happy path: 16-team draft inserts a session graph in one go", async () => {
+    const sessionId = await createSessionWithTeams(db, validDraft());
 
     expect(sessionId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     );
 
-    const session = db
-      .select()
-      .from(sessions)
-      .where(eq(sessions.id, sessionId))
-      .all()[0]!;
+    const session = (
+      await db.select().from(sessions).where(eq(sessions.id, sessionId))
+    )[0]!;
     expect(session.name).toBe("Wassup Open Scrims");
     expect(session.status).toBe("active");
     expect(session.templateId).toBe("dark-gold");
@@ -76,11 +57,10 @@ describe("createSessionWithTeams", () => {
     session.scoringRules.placement_points["1"] = 99;
     expect(SUPER_RULES.placement_points["1"]).toBe(10);
 
-    const teamRows = db
+    const teamRows = await db
       .select()
       .from(teams)
-      .where(eq(teams.sessionId, sessionId))
-      .all();
+      .where(eq(teams.sessionId, sessionId));
     expect(teamRows).toHaveLength(16);
     expect(teamRows.find((t) => t.name === "Straight Forward")).toBeDefined();
     const withLogo = teamRows.find((t) => t.name === "4NM Esports");
@@ -88,19 +68,19 @@ describe("createSessionWithTeams", () => {
     expect(teamRows.filter((t) => t.logoUrl === null)).toHaveLength(15);
   });
 
-  it("throws (fail-loud) on an invalid draft with duplicate names", () => {
+  it("throws (fail-loud) on an invalid draft with duplicate names", async () => {
     const draft = validDraft();
     draft.teams[1] = { name: "straight forward", logoUrl: null };
-    expect(() => createSessionWithTeams(db, draft)).toThrow();
-    expect(db.select().from(sessions).all()).toHaveLength(0);
+    await expect(createSessionWithTeams(db, draft)).rejects.toThrow();
+    expect(await db.select().from(sessions)).toHaveLength(0);
   });
 
-  it("two sequential creates: distinct ids, 32 team rows (same names across sessions)", () => {
-    const id1 = createSessionWithTeams(db, validDraft());
-    const id2 = createSessionWithTeams(db, validDraft());
+  it("two sequential creates: distinct ids, 32 team rows (same names across sessions)", async () => {
+    const id1 = await createSessionWithTeams(db, validDraft());
+    const id2 = await createSessionWithTeams(db, validDraft());
 
     expect(id1).not.toBe(id2);
-    expect(db.select().from(sessions).all()).toHaveLength(2);
-    expect(db.select().from(teams).all()).toHaveLength(32);
+    expect(await db.select().from(sessions)).toHaveLength(2);
+    expect(await db.select().from(teams)).toHaveLength(32);
   });
 });

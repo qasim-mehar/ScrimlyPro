@@ -1,19 +1,23 @@
 import {
+  boolean,
   index,
   integer,
+  jsonb,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 /* ============================================================
-   ScrimlyPro schema — EXACTLY per ERD.md §1–2.
+   ScrimlyPro schema — EXACTLY per ERD.md §1–2 (Postgres port per ERD §6).
    Iron rule: do not change without updating ERD.md first.
 
    - ids: TEXT uuid v4, generated in app code (crypto.randomUUID)
-   - timestamps: TEXT ISO-8601 UTC, app-generated
-   - JSON columns: text mode "json", typed via $type<>
+   - timestamps: timestamptz (app passes ISO-8601 strings, read back as
+     PG-rendered strings via mode "string")
+   - JSON columns: jsonb, typed via $type<>
    - range constraints (planned_matches 1–6 etc.) are app-layer
      per ERD §2 — deliberately NOT SQL CHECKs.
    ============================================================ */
@@ -40,23 +44,23 @@ export type MvpEntry = {
   kills: number;
 };
 
-export const sessions = sqliteTable("sessions", {
+export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   plannedMatches: integer("planned_matches").notNull(),
   teamCount: integer("team_count").notNull(),
   templateId: text("template_id").notNull().default("dev-dark-gold"),
-  scoringRules: text("scoring_rules", { mode: "json" })
-    .$type<ScoringRules>()
-    .notNull(),
+  scoringRules: jsonb("scoring_rules").$type<ScoringRules>().notNull(),
   status: text("status")
     .$type<"active" | "completed">()
     .notNull()
     .default("active"),
-  createdAt: text("created_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
 });
 
-export const teams = sqliteTable(
+export const teams = pgTable(
   "teams",
   {
     id: text("id").primaryKey(),
@@ -73,7 +77,7 @@ export const teams = sqliteTable(
 );
 
 // ERD's rosters(team_id) index is covered by the composite PK prefix.
-export const rosters = sqliteTable(
+export const rosters = pgTable(
   "rosters",
   {
     teamId: text("team_id")
@@ -85,7 +89,7 @@ export const rosters = sqliteTable(
   (t) => [primaryKey({ columns: [t.teamId, t.playerNorm] })],
 );
 
-export const matches = sqliteTable(
+export const matches = pgTable(
   "matches",
   {
     id: text("id").primaryKey(),
@@ -97,9 +101,11 @@ export const matches = sqliteTable(
       .$type<"draft" | "confirmed">()
       .notNull()
       .default("draft"),
-    rawSquadData: text("raw_squad_data", { mode: "json" }).$type<RawSquad[]>(),
-    createdAt: text("created_at").notNull(),
-    confirmedAt: text("confirmed_at"),
+    rawSquadData: jsonb("raw_squad_data").$type<RawSquad[]>(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true, mode: "string" }),
   },
   (t) => [
     uniqueIndex("matches_session_no_uq").on(t.sessionId, t.matchNo),
@@ -107,7 +113,7 @@ export const matches = sqliteTable(
   ],
 );
 
-export const matchResults = sqliteTable(
+export const matchResults = pgTable(
   "match_results",
   {
     id: text("id").primaryKey(),
@@ -120,9 +126,7 @@ export const matchResults = sqliteTable(
     placement: integer("placement").notNull(),
     kills: integer("kills").notNull(),
     placementPoints: integer("placement_points").notNull(),
-    players: text("players", { mode: "json" })
-      .$type<PlayerKill[]>()
-      .notNull(),
+    players: jsonb("players").$type<PlayerKill[]>().notNull(),
   },
   (t) => [
     index("match_results_match_idx").on(t.matchId),
@@ -130,11 +134,11 @@ export const matchResults = sqliteTable(
   ],
 );
 
-export const mvpLists = sqliteTable("mvp_lists", {
+export const mvpLists = pgTable("mvp_lists", {
   sessionId: text("session_id")
     .primaryKey()
     .references(() => sessions.id, { onDelete: "cascade" }),
-  entries: text("entries", { mode: "json" }).$type<MvpEntry[]>().notNull(),
-  locked: integer("locked", { mode: "boolean" }).notNull().default(false),
-  lockedAt: text("locked_at"),
+  entries: jsonb("entries").$type<MvpEntry[]>().notNull(),
+  locked: boolean("locked").notNull().default(false),
+  lockedAt: timestamp("locked_at", { withTimezone: true, mode: "string" }),
 });

@@ -20,31 +20,37 @@ export default async function MatchPage({
   const matchNo = Number(matchNoRaw);
 
   const db = getDb();
-  const session = db
-    .select({
-      id: sessions.id,
-      name: sessions.name,
-      plannedMatches: sessions.plannedMatches,
-      teamCount: sessions.teamCount,
-      status: sessions.status,
-    })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .get();
+  const session =
+    (
+      await db
+        .select({
+          id: sessions.id,
+          name: sessions.name,
+          plannedMatches: sessions.plannedMatches,
+          teamCount: sessions.teamCount,
+          status: sessions.status,
+        })
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!session) notFound();
   if (!Number.isInteger(matchNo) || matchNo < 1 || matchNo > session.plannedMatches) {
     notFound();
   }
 
-  const match = db
-    .select({
-      id: matches.id,
-      status: matches.status,
-      rawSquadData: matches.rawSquadData,
-    })
-    .from(matches)
-    .where(and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)))
-    .get();
+  const match =
+    (
+      await db
+        .select({
+          id: matches.id,
+          status: matches.status,
+          rawSquadData: matches.rawSquadData,
+        })
+        .from(matches)
+        .where(and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)))
+        .limit(1)
+    )[0] ?? null;
 
   // Confirmed matches are edited via Unlock on the session page.
   if (match && match.status === "confirmed") {
@@ -87,25 +93,27 @@ async function MatchReview({
   teamCount: number;
 }) {
   const db = getDb();
-  const match = db
-    .select({ rawSquadData: matches.rawSquadData })
-    .from(matches)
-    .where(and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)))
-    .get();
+  const match =
+    (
+      await db
+        .select({ rawSquadData: matches.rawSquadData })
+        .from(matches)
+        .where(and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)))
+        .limit(1)
+    )[0] ?? null;
   const squads = match?.rawSquadData;
   if (!squads) return <UploadPanel sessionId={sessionId} matchNo={matchNo} />;
 
-  const teamRows = db
+  const teamRows = await db
     .select({ id: teams.id, name: teams.name })
     .from(teams)
     .where(eq(teams.sessionId, sessionId))
-    .orderBy(asc(teams.name))
-    .all();
+    .orderBy(asc(teams.name));
 
   const teamIds = teamRows.map((team) => team.id);
   const rosterRows =
     teamIds.length > 0
-      ? db
+      ? await db
           .select({
             teamId: rosters.teamId,
             playerNorm: rosters.playerNorm,
@@ -113,7 +121,6 @@ async function MatchReview({
           })
           .from(rosters)
           .where(inArray(rosters.teamId, teamIds))
-          .all()
       : [];
 
   const ordered = sanitizeSquads(squads);

@@ -18,20 +18,23 @@ export type LifecycleResult = { ok: true } | { ok: false; message: string };
  * delete its match_results → match status draft + confirmedAt null →
  * rebuild rosters from the REMAINING confirmed matches only.
  */
-export function unlockMatch(
+export async function unlockMatch(
   db: Db,
   sessionId: string,
   matchId: string,
-): LifecycleResult {
-  const matchRow = db
-    .select({
-      id: matches.id,
-      sessionId: matches.sessionId,
-      status: matches.status,
-    })
-    .from(matches)
-    .where(eq(matches.id, matchId))
-    .get();
+): Promise<LifecycleResult> {
+  const matchRow =
+    (
+      await db
+        .select({
+          id: matches.id,
+          sessionId: matches.sessionId,
+          status: matches.status,
+        })
+        .from(matches)
+        .where(eq(matches.id, matchId))
+        .limit(1)
+    )[0] ?? null;
 
   if (!matchRow || matchRow.sessionId !== sessionId) {
     return { ok: false, message: "Match not found in this session." };
@@ -40,27 +43,25 @@ export function unlockMatch(
     return { ok: false, message: "Only a confirmed match can be unlocked." };
   }
 
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     // 1. Delete this match's results first (iron rule order).
-    tx.delete(matchResults).where(eq(matchResults.matchId, matchId)).run();
+    await tx.delete(matchResults).where(eq(matchResults.matchId, matchId));
 
     // 2. Return the match to draft.
-    tx
+    await tx
       .update(matches)
       .set({ status: "draft", confirmedAt: null })
-      .where(eq(matches.id, matchId))
-      .run();
+      .where(eq(matches.id, matchId));
 
     // 3. Rebuild rosters from REMAINING confirmed matches, matchNo ASC
     // (first-seen display names win via rebuildRosters).
-    const teamIds = tx
+    const teamRows = await tx
       .select({ id: teams.id })
       .from(teams)
-      .where(eq(teams.sessionId, sessionId))
-      .all()
-      .map((t) => t.id);
+      .where(eq(teams.sessionId, sessionId));
+    const teamIds = teamRows.map((t) => t.id);
 
-    const remaining = tx
+    const remaining = await tx
       .select({
         teamId: matchResults.teamId,
         matchNo: matches.matchNo,
@@ -74,11 +75,10 @@ export function unlockMatch(
           eq(matches.status, "confirmed"),
         ),
       )
-      .orderBy(asc(matches.matchNo))
-      .all();
+      .orderBy(asc(matches.matchNo));
 
     if (teamIds.length > 0) {
-      tx.delete(rosters).where(inArray(rosters.teamId, teamIds)).run();
+      await tx.delete(rosters).where(inArray(rosters.teamId, teamIds));
     }
 
     const rebuilt = rebuildRosters(
@@ -89,7 +89,7 @@ export function unlockMatch(
       })),
     );
     if (rebuilt.length > 0) {
-      tx.insert(rosters).values(rebuilt).run();
+      await tx.insert(rosters).values(rebuilt);
     }
   });
 
@@ -97,37 +97,47 @@ export function unlockMatch(
 }
 
 /** active → completed. Idempotent: completing a completed session is ok. */
-export function markComplete(db: Db, sessionId: string): LifecycleResult {
-  const sessionRow = db
-    .select({ id: sessions.id, status: sessions.status })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .get();
+export async function markComplete(
+  db: Db,
+  sessionId: string,
+): Promise<LifecycleResult> {
+  const sessionRow =
+    (
+      await db
+        .select({ id: sessions.id, status: sessions.status })
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!sessionRow) return { ok: false, message: "Session not found." };
   if (sessionRow.status === "completed") return { ok: true };
 
-  db
+  await db
     .update(sessions)
     .set({ status: "completed" })
-    .where(eq(sessions.id, sessionId))
-    .run();
+    .where(eq(sessions.id, sessionId));
   return { ok: true };
 }
 
 /** completed → active. Idempotent: reopening an active session is ok. */
-export function reopenSession(db: Db, sessionId: string): LifecycleResult {
-  const sessionRow = db
-    .select({ id: sessions.id, status: sessions.status })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .get();
+export async function reopenSession(
+  db: Db,
+  sessionId: string,
+): Promise<LifecycleResult> {
+  const sessionRow =
+    (
+      await db
+        .select({ id: sessions.id, status: sessions.status })
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!sessionRow) return { ok: false, message: "Session not found." };
   if (sessionRow.status === "active") return { ok: true };
 
-  db
+  await db
     .update(sessions)
     .set({ status: "active" })
-    .where(eq(sessions.id, sessionId))
-    .run();
+    .where(eq(sessions.id, sessionId));
   return { ok: true };
 }

@@ -14,7 +14,7 @@ export default async function SessionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const data = getSessionPageData(getDb(), id);
+  const data = await getSessionPageData(getDb(), id);
   if (!data) notFound();
 
   const standings = withRanks(

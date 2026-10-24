@@ -8,7 +8,10 @@ import { validateSessionDraft, type SessionDraft } from "./input";
  * (fail-loud) if issues exist — the action layer validates first, this
  * is defense in depth. Returns the new session id.
  */
-export function createSessionWithTeams(db: Db, draft: SessionDraft): string {
+export async function createSessionWithTeams(
+  db: Db,
+  draft: SessionDraft,
+): Promise<string> {
   const issues = validateSessionDraft(draft);
   if (issues.length > 0) {
     throw new Error(
@@ -21,31 +24,27 @@ export function createSessionWithTeams(db: Db, draft: SessionDraft): string {
   // Deep copy — never share the module-level SUPER_RULES object across rows.
   const scoringRules = JSON.parse(JSON.stringify(SUPER_RULES)) as ScoringRules;
 
-  // better-sqlite3 driver: the transaction callback is synchronous.
-  db.transaction((tx) => {
-    tx.insert(sessions)
-      .values({
-        id: sessionId,
-        name: draft.name.trim(),
-        plannedMatches: draft.plannedMatches,
-        teamCount: draft.teamCount,
-        templateId: draft.templateId,
-        scoringRules,
-        status: "active",
-        createdAt,
-      })
-      .run();
+  // postgres.js driver: the transaction callback is async.
+  await db.transaction(async (tx) => {
+    await tx.insert(sessions).values({
+      id: sessionId,
+      name: draft.name.trim(),
+      plannedMatches: draft.plannedMatches,
+      teamCount: draft.teamCount,
+      templateId: draft.templateId,
+      scoringRules,
+      status: "active",
+      createdAt,
+    });
 
-    tx.insert(teams)
-      .values(
-        draft.teams.map((team) => ({
-          id: crypto.randomUUID(),
-          sessionId,
-          name: team.name.trim(),
-          logoUrl: team.logoUrl,
-        })),
-      )
-      .run();
+    await tx.insert(teams).values(
+      draft.teams.map((team) => ({
+        id: crypto.randomUUID(),
+        sessionId,
+        name: team.name.trim(),
+        logoUrl: team.logoUrl,
+      })),
+    );
   });
 
   return sessionId;

@@ -15,13 +15,13 @@ export async function lockMvpAction(
   sessionId: string,
   entries: MvpValidationEntry[],
 ): Promise<LockMvpResult> {
-  const result = lockMvpList(getDb(), sessionId, entries);
+  const result = await lockMvpList(getDb(), sessionId, entries);
   if (result.ok) revalidatePath(`/sessions/${sessionId}/mvp`);
   return result;
 }
 
 export async function unlockMvpAction(sessionId: string): Promise<{ ok: true }> {
-  unlockMvp(getDb(), sessionId);
+  await unlockMvp(getDb(), sessionId);
   revalidatePath(`/sessions/${sessionId}/mvp`);
   return { ok: true };
 }

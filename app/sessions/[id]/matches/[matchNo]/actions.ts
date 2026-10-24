@@ -15,17 +15,20 @@ export async function confirmMatchAction(
   rows: SquadRowDraft[],
 ): Promise<ConfirmMatchResult> {
   const db = getDb();
-  const matchRow = db
-    .select({ id: matches.id })
-    .from(matches)
-    .where(
-      and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)),
-    )
-    .get();
+  const matchRow =
+    (
+      await db
+        .select({ id: matches.id })
+        .from(matches)
+        .where(
+          and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)),
+        )
+        .limit(1)
+    )[0] ?? null;
   if (!matchRow) {
     return { ok: false, message: "Match not found in this session." };
   }
-  const result = confirmMatch(db, { sessionId, matchId: matchRow.id, rows });
+  const result = await confirmMatch(db, { sessionId, matchId: matchRow.id, rows });
   if (result.ok) revalidatePath(`/sessions/${sessionId}`);
   return result;
 }
@@ -36,21 +39,23 @@ export async function reparseAction(
   matchNo: number,
 ): Promise<ConfirmMatchResult> {
   const db = getDb();
-  const matchRow = db
-    .select({ id: matches.id })
-    .from(matches)
-    .where(
-      and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)),
-    )
-    .get();
+  const matchRow =
+    (
+      await db
+        .select({ id: matches.id })
+        .from(matches)
+        .where(
+          and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)),
+        )
+        .limit(1)
+    )[0] ?? null;
   if (!matchRow) {
     return { ok: false, message: "Match not found in this session." };
   }
-  db
+  await db
     .update(matches)
     .set({ rawSquadData: null })
-    .where(eq(matches.id, matchRow.id))
-    .run();
+    .where(eq(matches.id, matchRow.id));
   revalidatePath(`/sessions/${sessionId}/matches/${matchNo}`);
   return { ok: true };
 }

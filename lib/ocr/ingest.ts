@@ -66,11 +66,14 @@ export async function ingestMatchOcr(
 ): Promise<IngestResult> {
   const { sessionId, matchNo, images } = input;
 
-  const session = db
-    .select()
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .all()[0];
+  const session =
+    (
+      await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!session) {
     return {
       ok: false,
@@ -104,13 +107,16 @@ export async function ingestMatchOcr(
     };
   }
 
-  const existing = db
-    .select()
-    .from(matches)
-    .where(
-      and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)),
-    )
-    .all()[0];
+  const existing =
+    (
+      await db
+        .select()
+        .from(matches)
+        .where(
+          and(eq(matches.sessionId, sessionId), eq(matches.matchNo, matchNo)),
+        )
+        .limit(1)
+    )[0] ?? null;
   if (existing && existing.status === "confirmed") {
     return {
       ok: false,
@@ -186,25 +192,21 @@ export async function ingestMatchOcr(
   let matchId: string;
   if (existing) {
     // Draft re-parse: replace the OCR snapshot, keep the row identity.
-    db
+    await db
       .update(matches)
       .set({ rawSquadData: squads, status: "draft" })
-      .where(eq(matches.id, existing.id))
-      .run();
+      .where(eq(matches.id, existing.id));
     matchId = existing.id;
   } else {
     matchId = crypto.randomUUID();
-    db
-      .insert(matches)
-      .values({
-        id: matchId,
-        sessionId,
-        matchNo,
-        status: "draft",
-        rawSquadData: squads,
-        createdAt: now,
-      })
-      .run();
+    await db.insert(matches).values({
+      id: matchId,
+      sessionId,
+      matchNo,
+      status: "draft",
+      rawSquadData: squads,
+      createdAt: now,
+    });
   }
 
   return { ok: true, matchId, model, retried, warnings, squads };

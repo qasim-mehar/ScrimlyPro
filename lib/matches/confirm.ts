@@ -29,17 +29,20 @@ export type ConfirmMatchResult = { ok: true } | { ok: false; message: string };
  * points computed at confirm-time per ERD §3; standings never re-derive them
  * (computeStandings sums the stored placementPoints/kills).
  */
-export function confirmMatch(
+export async function confirmMatch(
   db: Db,
   input: ConfirmMatchInput,
-): ConfirmMatchResult {
+): Promise<ConfirmMatchResult> {
   const { sessionId, matchId, rows } = input;
 
-  const matchRow = db
-    .select({ id: matches.id, sessionId: matches.sessionId, status: matches.status })
-    .from(matches)
-    .where(eq(matches.id, matchId))
-    .get();
+  const matchRow =
+    (
+      await db
+        .select({ id: matches.id, sessionId: matches.sessionId, status: matches.status })
+        .from(matches)
+        .where(eq(matches.id, matchId))
+        .limit(1)
+    )[0] ?? null;
   if (!matchRow || matchRow.sessionId !== sessionId) {
     return { ok: false, message: "Match not found in this session." };
   }
@@ -47,21 +50,23 @@ export function confirmMatch(
     return { ok: false, message: "Match is already confirmed. Unlock the match first." };
   }
 
-  const sessionRow = db
-    .select({ scoringRules: sessions.scoringRules })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .get();
+  const sessionRow =
+    (
+      await db
+        .select({ scoringRules: sessions.scoringRules })
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!sessionRow) {
     return { ok: false, message: "Session not found." };
   }
 
   const teamNames = new Map<string, string>();
-  for (const team of db
+  for (const team of await db
     .select({ id: teams.id, name: teams.name })
     .from(teams)
-    .where(eq(teams.sessionId, sessionId))
-    .all()) {
+    .where(eq(teams.sessionId, sessionId))) {
     teamNames.set(team.id, team.name);
   }
 
@@ -86,9 +91,9 @@ export function confirmMatch(
 
   const confirmedAt = new Date().toISOString();
 
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     // Idempotent re-confirm: replace this match's results cleanly.
-    tx.delete(matchResults).where(eq(matchResults.matchId, matchId)).run();
+    await tx.delete(matchResults).where(eq(matchResults.matchId, matchId));
 
     for (const row of mapped) {
       const kills = row.players.reduce((sum, player) => sum + player.kills, 0);
@@ -97,34 +102,30 @@ export function confirmMatch(
         kills,
         sessionRow.scoringRules,
       );
-      tx
-        .insert(matchResults)
-        .values({
-          id: crypto.randomUUID(),
-          matchId,
-          teamId: row.teamId,
-          placement: row.placement,
-          kills,
-          placementPoints,
-          players: row.players.map((player) => ({
-            name: player.name,
-            kills: player.kills,
-          })),
-        })
-        .run();
+      await tx.insert(matchResults).values({
+        id: crypto.randomUUID(),
+        matchId,
+        teamId: row.teamId,
+        placement: row.placement,
+        kills,
+        placementPoints,
+        players: row.players.map((player) => ({
+          name: player.name,
+          kills: player.kills,
+        })),
+      });
 
       // Roster learning: first-seen display names win (insert ignores
       // existing (teamId, playerNorm) pairs).
       for (const entry of learnRosterDelta(row.teamId, row.players)) {
-        tx.insert(rosters).values(entry).onConflictDoNothing().run();
+        await tx.insert(rosters).values(entry).onConflictDoNothing();
       }
     }
 
-    tx
+    await tx
       .update(matches)
       .set({ status: "confirmed", confirmedAt })
-      .where(eq(matches.id, matchId))
-      .run();
+      .where(eq(matches.id, matchId));
   });
 
   return { ok: true };

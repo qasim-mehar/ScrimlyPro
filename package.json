@@ -12,7 +12,8 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
     "typecheck": "tsc --noEmit",
-    "verify:secrets": "node scripts/check-secrets-in-bundle.mjs"
+    "verify:secrets": "node scripts/check-secrets-in-bundle.mjs",
+    "db:reset": "node scripts/reset-db.mjs"
   },
   "dependencies": {
     "@fontsource/exo-2": "^5.3.0",
@@ -21,7 +22,6 @@
     "@google/genai": "^2.21.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
-    "better-sqlite3": "^13.0.3",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "html-to-image": "^1.11.13",
@@ -36,6 +36,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "better-sqlite3": "^13.0.3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",

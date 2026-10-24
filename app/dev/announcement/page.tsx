@@ -26,11 +26,18 @@ function placeholderLogo(): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export default function DevAnnouncementPage() {
+export default async function DevAnnouncementPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const db = getDb();
-  const session = db.select().from(sessions).where(eq(sessions.id, SEED_SESSION_ID)).get();
+  const session =
+    (
+      await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, SEED_SESSION_ID))
+        .limit(1)
+    )[0] ?? null;
   if (!session) {
     return (
       <main className="mx-auto max-w-2xl p-4">
@@ -40,12 +47,11 @@ export default function DevAnnouncementPage() {
     );
   }
 
-  const teamRows = db
+  const teamRows = (await db
     .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
     .from(teams)
     .where(eq(teams.sessionId, SEED_SESSION_ID))
-    .orderBy(asc(teams.name))
-    .all()
+    .orderBy(asc(teams.name)))
     .map((team, i) => ({
       ...team,
       // Every 4th team (index % 4 === 0) carries the placeholder logo; the

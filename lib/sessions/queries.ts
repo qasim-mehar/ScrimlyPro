@@ -46,38 +46,40 @@ export type SessionPageData = {
  * computeStandings; matches carry the placement-1 winner name (null for
  * drafts). raw_squad_data is never selected — it must not leak to the client.
  */
-export function getSessionPageData(
+export async function getSessionPageData(
   db: Db,
   sessionId: string,
-): SessionPageData | null {
-  const sessionRow = db
-    .select({
-      id: sessions.id,
-      name: sessions.name,
-      plannedMatches: sessions.plannedMatches,
-      teamCount: sessions.teamCount,
-      templateId: sessions.templateId,
-      scoringRules: sessions.scoringRules,
-      status: sessions.status,
-      createdAt: sessions.createdAt,
-    })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .get();
+): Promise<SessionPageData | null> {
+  const sessionRow =
+    (
+      await db
+        .select({
+          id: sessions.id,
+          name: sessions.name,
+          plannedMatches: sessions.plannedMatches,
+          teamCount: sessions.teamCount,
+          templateId: sessions.templateId,
+          scoringRules: sessions.scoringRules,
+          status: sessions.status,
+          createdAt: sessions.createdAt,
+        })
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!sessionRow) return null;
 
-  const teamRows: TeamRow[] = db
+  const teamRows: TeamRow[] = await db
     .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
     .from(teams)
     .where(eq(teams.sessionId, sessionId))
-    .orderBy(asc(teams.name))
-    .all();
+    .orderBy(asc(teams.name));
 
   const teamNameById = new Map<string, string>();
   for (const team of teamRows) teamNameById.set(team.id, team.name);
 
   // Deliberately no rawSquadData projection — drafts stay opaque here.
-  const matchRows = db
+  const matchRows = await db
     .select({
       id: matches.id,
       matchNo: matches.matchNo,
@@ -85,8 +87,7 @@ export function getSessionPageData(
     })
     .from(matches)
     .where(eq(matches.sessionId, sessionId))
-    .orderBy(asc(matches.matchNo))
-    .all();
+    .orderBy(asc(matches.matchNo));
 
   const confirmedIds = matchRows
     .filter((m) => m.status === "confirmed")
@@ -94,7 +95,7 @@ export function getSessionPageData(
 
   const resultRows: ResultRow[] =
     confirmedIds.length > 0
-      ? db
+      ? await db
           .select({
             teamId: matchResults.teamId,
             placement: matchResults.placement,
@@ -103,12 +104,11 @@ export function getSessionPageData(
           })
           .from(matchResults)
           .where(inArray(matchResults.matchId, confirmedIds))
-          .all()
       : [];
 
   const winnerByMatchId = new Map<string, string | null>();
   if (confirmedIds.length > 0) {
-    const winners = db
+    const winners = await db
       .select({ matchId: matchResults.matchId, teamId: matchResults.teamId })
       .from(matchResults)
       .where(
@@ -116,8 +116,7 @@ export function getSessionPageData(
           inArray(matchResults.matchId, confirmedIds),
           eq(matchResults.placement, 1),
         ),
-      )
-      .all();
+      );
     for (const w of winners) {
       winnerByMatchId.set(w.matchId, teamNameById.get(w.teamId) ?? null);
     }
@@ -131,11 +130,14 @@ export function getSessionPageData(
       m.status === "confirmed" ? (winnerByMatchId.get(m.id) ?? null) : null,
   }));
 
-  const mvpRow = db
-    .select({ locked: mvpLists.locked, entries: mvpLists.entries })
-    .from(mvpLists)
-    .where(eq(mvpLists.sessionId, sessionId))
-    .get();
+  const mvpRow =
+    (
+      await db
+        .select({ locked: mvpLists.locked, entries: mvpLists.entries })
+        .from(mvpLists)
+        .where(eq(mvpLists.sessionId, sessionId))
+        .limit(1)
+    )[0] ?? null;
 
   return {
     session: sessionRow,

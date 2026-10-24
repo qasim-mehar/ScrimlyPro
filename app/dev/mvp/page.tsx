@@ -11,11 +11,18 @@ export const dynamic = "force-dynamic";
 
 const SEED_SESSION_ID = "seed-00000000-0000-4000-8000-000000000001";
 
-export default function DevMvpPage() {
+export default async function DevMvpPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const db = getDb();
-  const session = db.select().from(sessions).where(eq(sessions.id, SEED_SESSION_ID)).get();
+  const session =
+    (
+      await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, SEED_SESSION_ID))
+        .limit(1)
+    )[0] ?? null;
   if (!session) {
     return (
       <main className="mx-auto max-w-2xl p-4">
@@ -27,13 +34,12 @@ export default function DevMvpPage() {
 
   // Confirmed matches only, matchNo ASC — the MVP aggregate is a whole-session
   // view over every ingested match (ERD §5: no aggregate columns, always derived).
-  const rows = db
+  const rows = await db
     .select({ teamId: matchResults.teamId, matchNo: matches.matchNo, players: matchResults.players })
     .from(matchResults)
     .innerJoin(matches, eq(matchResults.matchId, matches.id))
     .where(and(eq(matches.sessionId, SEED_SESSION_ID), eq(matches.status, "confirmed")))
-    .orderBy(asc(matches.matchNo))
-    .all();
+    .orderBy(asc(matches.matchNo));
 
   const top5 = draftMvpTop5(aggregatePlayers(rows));
   // DEV SIMULATION of a locked list — the real lock flow is C6.1; the graphic
@@ -45,11 +51,10 @@ export default function DevMvpPage() {
     kills: p.kills,
   }));
 
-  const teamRows = db
+  const teamRows = await db
     .select({ id: teams.id, name: teams.name })
     .from(teams)
-    .where(eq(teams.sessionId, SEED_SESSION_ID))
-    .all();
+    .where(eq(teams.sessionId, SEED_SESSION_ID));
 
   return (
     <main className="mx-auto max-w-2xl p-4">

@@ -35,16 +35,27 @@ export default async function MvpPage({
   const { id: sessionId } = await params;
   const db = getDb();
 
-  const session = db.select().from(sessions).where(eq(sessions.id, sessionId)).get();
+  const session =
+    (
+      await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+    )[0] ?? null;
   if (!session) notFound();
 
-  const teamRows = db.select().from(teams).where(eq(teams.sessionId, sessionId)).all();
+  const teamRows = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.sessionId, sessionId));
 
-  const confirmedCount = db
-    .select({ id: matches.id })
-    .from(matches)
-    .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
-    .all().length;
+  const confirmedCount = (
+    await db
+      .select({ id: matches.id })
+      .from(matches)
+      .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
+  ).length;
 
   if (confirmedCount === 0) {
     return (
@@ -63,7 +74,7 @@ export default async function MvpPage({
     );
   }
 
-  const sourceRows = db
+  const sourceRows = await db
     .select({
       teamId: matchResults.teamId,
       matchNo: matches.matchNo,
@@ -72,12 +83,18 @@ export default async function MvpPage({
     .from(matchResults)
     .innerJoin(matches, eq(matchResults.matchId, matches.id))
     .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
-    .orderBy(asc(matches.matchNo))
-    .all();
+    .orderBy(asc(matches.matchNo));
 
   const players = aggregatePlayers(sourceRows);
   const draft = draftMvpTop5(players);
-  const saved = db.select().from(mvpLists).where(eq(mvpLists.sessionId, sessionId)).get();
+  const saved =
+    (
+      await db
+        .select()
+        .from(mvpLists)
+        .where(eq(mvpLists.sessionId, sessionId))
+        .limit(1)
+    )[0] ?? null;
 
   if (saved && saved.locked) {
     return (

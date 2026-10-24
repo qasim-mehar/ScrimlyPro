@@ -11,11 +11,18 @@ export const dynamic = "force-dynamic";
 
 const SEED_SESSION_ID = "seed-00000000-0000-4000-8000-000000000001";
 
-export default function DevStandingsPage() {
+export default async function DevStandingsPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const db = getDb();
-  const session = db.select().from(sessions).where(eq(sessions.id, SEED_SESSION_ID)).get();
+  const session =
+    (
+      await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, SEED_SESSION_ID))
+        .limit(1)
+    )[0] ?? null;
   if (!session) {
     return (
       <main className="mx-auto max-w-2xl p-4">
@@ -27,17 +34,17 @@ export default function DevStandingsPage() {
 
   // Confirmed matches only — F4: standings derive exclusively from confirmed
   // match_results (ERD §5: never stored, always derived).
-  const confirmedIds = db
-    .select({ id: matches.id })
-    .from(matches)
-    .where(and(eq(matches.sessionId, session.id), eq(matches.status, "confirmed")))
-    .all()
-    .map((m) => m.id);
+  const confirmedIds = (
+    await db
+      .select({ id: matches.id })
+      .from(matches)
+      .where(and(eq(matches.sessionId, session.id), eq(matches.status, "confirmed")))
+  ).map((m) => m.id);
 
   // ResultRow subset — matchResults.players (notNull JSON) is deliberately not selected.
   const results =
     confirmedIds.length > 0
-      ? db
+      ? await db
           .select({
             teamId: matchResults.teamId,
             placement: matchResults.placement,
@@ -46,14 +53,12 @@ export default function DevStandingsPage() {
           })
           .from(matchResults)
           .where(inArray(matchResults.matchId, confirmedIds))
-          .all()
       : [];
 
-  const teamRows = db
+  const teamRows = await db
     .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
     .from(teams)
-    .where(eq(teams.sessionId, session.id))
-    .all();
+    .where(eq(teams.sessionId, session.id));
 
   const standings = computeStandings(results, teamRows, session.scoringRules);
   const subtitle = standingsSubtitle(confirmedIds.length, session.status === "completed");
