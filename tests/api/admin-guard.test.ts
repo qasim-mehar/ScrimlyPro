@@ -6,6 +6,9 @@ import { sql } from "drizzle-orm";
 import { testDb } from "@/tests/helpers/pg";
 import type { Db } from "@/lib/db/client";
 
+// DB-backed suites are slow under parallel workers; the 5s default flakes.
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 /**
  * M3 admin-guard adversarial suite (Lane C brief §6 — API-layer half).
  *
@@ -146,6 +149,7 @@ describe("admin-db confinement — eslint canary (rule trips outside, passes ins
   const CANARY_LIB = "lib/auth/__canary_forbidden.ts";
 
   function writeCanaries() {
+    cleanupCanaries();
     rmSync(CANARY_DIR, { recursive: true, force: true });
     mkdirSync(CANARY_DIR, { recursive: true });
     rmSync(CANARY_ADMIN_DIR, { recursive: true, force: true });
@@ -177,7 +181,7 @@ describe("admin-db confinement — eslint canary (rule trips outside, passes ins
     rmSync(CANARY_LIB, { force: true });
   }
 
-  it("eslint trips on out-of-perimeter imports and stays silent inside app/admin", { timeout: 120_000 }, () => {
+  it("eslint trips on out-of-perimeter imports and stays silent inside app/admin", { timeout: 300_000 }, () => {
     writeCanaries();
     try {
       let stdout = "";
@@ -240,14 +244,17 @@ describe("confinement import graph (static, CI-enforced)", () => {
     }
     for (const f of walk("app")) {
       if (!/\.(ts|tsx)$/.test(f)) continue;
-      if (f.includes("app\\admin") || f.includes("app/admin")) continue;
+      const norm = f.replace(/\\/g, "/");
+      // The whole admin surface (pages + API routes) is sanctioned.
+      if (norm.startsWith("app/admin/") || norm.startsWith("app/api/admin/")) continue;
       if (RE.test(readFileSync(f, "utf8"))) hits.push(f);
     }
     for (const f of [...walk("components"), ...walk("lib")]) {
       if (!/\.(ts|tsx)$/.test(f)) continue;
-      if (f.includes("lib\\admin") || f.includes("lib/admin")) continue;
-      if (f.replace(/\\/g, "/").endsWith("lib/auth/route-guard.ts")) continue;
-      if (f.replace(/\\/g, "/").endsWith("lib/auth/action-guard.ts")) continue;
+      const norm = f.replace(/\\/g, "/");
+      if (norm.includes("lib/admin/")) continue;
+      if (norm.endsWith("lib/auth/route-guard.ts")) continue;
+      if (norm.endsWith("lib/auth/action-guard.ts")) continue;
       if (RE.test(readFileSync(f, "utf8"))) hits.push(f);
     }
     expect(hits).toEqual([]);

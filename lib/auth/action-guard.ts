@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 
+import { isUserDisabled } from "@/lib/admin/kill-switch";
 import type { Db } from "@/lib/db/client";
 import { withUserDb, withUserDbForTest } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
@@ -9,7 +10,10 @@ import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
 /**
  * Guard stack for server actions and server components (WP6).
  *
- * - `requireUser()`: the verified user, or redirect("/login").
+ * - `requireUser()`: the verified user, or redirect("/login"). M3 (Lane C,
+ *   single choke point): a tenant carrying the reserved `disabled` marker is
+ *   locked out of every authed page/action — bounced to /login?disabled=1
+ *   (plain "Account disabled" copy, no detail).
  * - `assertSessionOwner(sessionId)`: verified user + proof they own the
  *   session. Missing and foreign sessions are INDISTINGUISHABLE — both
  *   render the 404 page via notFound() (never reveal existence).
@@ -22,6 +26,7 @@ import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
 export async function requireUser(): Promise<AuthedUser> {
   const user = await getAuthedUser();
   if (!user) redirect("/login");
+  if (await isUserDisabled(user.id)) redirect("/login?disabled=1");
   return user;
 }
 
