@@ -2,6 +2,9 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
 import { testDb } from "@/tests/helpers/pg";
+import { acceptInvite } from "@/lib/orgs/invites";
+import { hashToken } from "@/lib/orgs/tokens";
+import { createShareLink } from "@/lib/share/links";
 import { withUserDbForTest } from "@/lib/db/user";
 import type { Db } from "@/lib/db/client";
 
@@ -575,5 +578,102 @@ describe("M2 RLS org isolation", () => {
       sql`select kind from usage_events where id = ${eventId}`,
     );
     expect(rowsOf<{ kind: string }>(rows)[0]?.kind).toBe("ocr");
+  });
+});
+
+/**
+ * SECURITY DEFINER discipline (B-2, wave1(4b) — tests-only: the definer
+ * signatures were already claims-derived on the lane tip, so the commit adds
+ * the adversarial proofs the brief requires).
+ */
+describe("SECURITY DEFINER discipline (B-2, wave1(4b))", () => {
+  beforeEach(seed);
+
+  it("accept_org_invite takes ONLY (token_hash) — no forged-parameter surface", async () => {
+    // drizzle wraps driver errors ("Failed query: ...") — the Postgres
+    // message is on .cause.
+    const err = await db
+      .execute(sql`select public.accept_org_invite('hash-invite-a1', 'owner')`)
+      .then(
+        () => null,
+        (e: Error & { cause?: Error }) => e,
+      );
+    expect(err?.cause?.message).toMatch(/function public\.accept_org_invite\(.*\) does not exist/);
+  });
+
+  it("acceptance is claims- and row-derived: identity = auth.uid(), role/org from the invite row", async () => {
+    // A real pending invite to org A (member role), hash at rest.
+    const raw = "raw-attacker-facing-token-0000000000000000000000";
+    await db.insert(schema.orgInvites).values({
+      id: "aaaaaaaa-0000-4000-8000-00000000b001",
+      orgId: ORG_A,
+      role: "member",
+      tokenHash: hashToken(raw),
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+      createdBy: ADMIN_A,
+    });
+
+    // The ATTACKER (OWNER_B — zero org A grants) accepts with the token.
+    const result = await asUser(OWNER_B, (userDb) => acceptInvite(userDb, raw));
+    expect(result).toEqual({ ok: true, orgId: ORG_A });
+
+    // The membership row: identity from the jwt claims (OWNER_B), role from
+    // the invite row (member), org from the invite row — no attacker input.
+    const rows = await db.execute(
+      sql`select user_id, role from org_members where org_id = ${ORG_A} and user_id = ${OWNER_B}`,
+    );
+    expect(rowsOf<{ user_id: string; role: string }>(rows)).toEqual([
+      { user_id: OWNER_B, role: "member" },
+    ]);
+  });
+
+  it("forged owner invite impossible: org_invites_role_check rejects 'owner' even as superuser", async () => {
+    // CHECK constraints apply regardless of RLS/superuser status — a forged
+    // owner invite row cannot exist to be accepted. (drizzle wraps driver
+    // errors — the Postgres message is on .cause.)
+    const err = await db
+      .insert(schema.orgInvites).values({
+        id: "aaaaaaaa-0000-4000-8000-00000000b002",
+        orgId: ORG_A,
+        role: "owner" as "member",
+        tokenHash: "hash-forged-owner",
+        expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+        createdBy: ADMIN_A,
+      })
+      .then(
+        () => null,
+        (e: Error & { cause?: Error }) => e,
+      );
+    expect(err?.cause?.message).toMatch(/org_invites_role_check/);
+  });
+
+  it("org_invite_preview exposes only (org_name, role) — no PII columns", async () => {
+    const raw = "raw-preview-token-00000000000000000000000000";
+    await db.insert(schema.orgInvites).values({
+      id: "aaaaaaaa-0000-4000-8000-00000000b003",
+      orgId: ORG_A,
+      role: "member",
+      tokenHash: hashToken(raw),
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+      createdBy: ADMIN_A,
+    });
+    const res = await asUser(OWNER_B, (userDb) =>
+      userDb.execute(
+        sql`select * from public.org_invite_preview(${hashToken(raw)})`,
+      ),
+    );
+    const row = rowsOf<Record<string, unknown>>(res)[0];
+    expect(Object.keys(row).sort()).toEqual(["org_name", "role"]);
+    expect(row.org_name).toBe("Org A");
+  });
+
+  it("share tokens are hash-at-rest: the raw token never lands in share_links", async () => {
+    const created = await asUser(MEMBER_A, (userDb) =>
+      createShareLink(userDb, SESSION_A, MEMBER_A),
+    );
+    const rows = await db.execute(sql`select token_hash from share_links`);
+    const hashes = rowsOf<{ token_hash: string }>(rows).map((r) => r.token_hash);
+    expect(hashes).not.toContain(created.token);
+    expect(hashes).toContain(hashToken(created.token));
   });
 });
