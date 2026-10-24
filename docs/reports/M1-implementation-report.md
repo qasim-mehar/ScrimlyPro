@@ -419,6 +419,26 @@ Idempotent re-apply: ✔ 0 inserted. NOT NULL on `sessions.user_id`: ✔ (0 null
    (no TS build step / no new deps); pre-values snapshot is raw standings
    inputs, and equality is asserted on the recomputed standings.
 
+## 11b. Post-review hardening pass (M1 review flags & fixes — commit `aada109`)
+
+Independent report review verdict was APPROVED WITH CONDITIONS. All A/C items and the actionable B items were implemented on the M1 branch:
+
+- **A2** `tests/architecture/guards.test.ts` — filesystem meta-test: every API route must use the guard stack or the explicit allowlist, every 'use server' module must import the action guard, every non-public page must gate auth. Canary-proven (fails on a planted unguarded route; immediately caught the genuinely-public `/auth/callback` and it was allowlisted with rationale).
+- **A3/C4** eslint perimeter extended: `lib/db/client` (owner-role `getDb()`) banned from the request path (`allowTypeImports` keeps type-only `Db` imports legal; `lib/db/**` self-wiring and `app/dev/**` fixture pages excepted — dev pages are hard-404 in production); `supabase.auth.getSession()` restricted to the one sanctioned UI-hint consumer (`AccountHeader`).
+- **A4** verified: all 7 dev pages already carry `NODE_ENV === "production" → notFound()` (added in WP6) — no prod surface. Their 3 unscoped fixture reads are now dev-only by eslint exception.
+- **A5** `getSessionPageData(db, sessionId, userId)` — the tenant predicate parameter is now REQUIRED (callers updated).
+- **C1** OCR transaction split: `resolveIngestTarget` (short RLS tx: ownership + guards) → `runSquadsExtraction` (NO transaction — the ~15s Gemini call no longer pins a pooled connection) → `persistDraftMatch` (short RLS tx). `ingestMatchOcr` remains as the sequential composition for lib tests.
+- **C3** test DI removed from the production surface: `withUserDb(claims, fn)` has exactly 2 params; test paths use `withUserDbForTest` / `assertSessionOwnerForTest`.
+- **C5** `sanitizeNext` first segment is case-sensitive. **C2** CSP added: `frame-ancestors 'none'; object-src 'none'; base-uri 'self'` (verified live).
+- **B2** per-email attribution-independent buckets (signup 5/h, forgot 5/h, login 10 failures/15min — the stuffing/bombing defense when IP buckets are spoofable) + `TRUST_PROXY` env (XFF honored only when explicitly trusted; startup warning in production otherwise).
+- **B3** production without `APP_ORIGIN` fails the recovery flow closed (503) instead of trusting forwarded headers.
+- **B6** `db:reset`/`db:seed` refuse to run when `NODE_ENV=production`.
+- **E** matrix script sends a correct `Origin` on POST probes (prod origin-guard compatible; 11/11 re-verified live); local PG cluster start/stop documented in README; `shots/`, `sweep-out.txt`, `smoke.mjs` gitignored.
+
+**A6 truth files:** ERD.md §6 rewritten as-built (types/tenancy/RLS/auth/access law/deferred deltas); PLAN.md gained an M1 section and the future-phases list was renumbered.
+
+**A7 fresh gate evidence at final HEAD (`aada109`):** lint 0 problems · `tsc --noEmit` clean · `next build` green · `vitest run` **32 files / 460 tests green** (was 455; +3 architecture meta-tests, +2 rate-limit cases) · `verify:secrets` OK · live matrix 11/11 on :3042 · G11 scan clean (single grep hit is this report's own evidence row quoting the pattern). Commit count reconcile: the TLDR's "16 commits" counted through the first QA round; the branch now carries 18 through `aada109` (9 M1 WPs incl. two WP8 type-fix commits, QA rounds 1–3, hardening pass).
+
 ## 12. Final sign-off checklist
 
 - [x] G1–G11 green with evidence (G3/G8 authenticated columns need hosted stack — §8.4, §9)
