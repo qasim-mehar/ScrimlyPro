@@ -90,6 +90,30 @@ const eslintConfig = defineConfig([
       "no-restricted-properties": "off",
     },
   },
+  // Wave-1 (WP5): the ONE sanctioned admin-client consumer in the request
+  // path. lib/share/public-reader.ts serves the PUBLIC /share/[token] page:
+  // an anonymous visitor has no RLS identity, so the projection must read
+  // via the service-role key — scoped to a single share-token hash lookup
+  // and a deliberate column projection (see its PII tests, its permanent
+  // gate). One-file allowlist; the ban stays in force everywhere else.
+  {
+    files: ["lib/share/public-reader.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. Tenant request paths must use withUserDb from lib/db/user.ts (tests and app/dev fixture pages excepted — see overrides below).",
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
