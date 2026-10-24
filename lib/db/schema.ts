@@ -50,13 +50,15 @@ export const sessions = pgTable("sessions", {
   // Tenant owner (ERD §6). NOT NULL per migration 0003; legacy rows are
   // backfilled by scripts/migrate-local-to-supabase.mjs before it applies.
   userId: uuid("user_id").notNull(),
-  // M2 org tenancy: the owning organization. Nullable until migration 0012
+  // M2 org tenancy: the owning organization. NOT NULL per migration 0012
   // (backfilled in 0011 with one "Personal" org per existing user); RLS keys
   // on org membership via public.org_role(). user_id is kept as an audit
   // trail of the creator.
-  orgId: uuid("org_id").references(() => organizations.id, {
-    onDelete: "cascade",
-  }),
+  orgId: uuid("org_id")
+    .notNull()
+    .references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
   name: text("name").notNull(),
   plannedMatches: integer("planned_matches").notNull(),
   teamCount: integer("team_count").notNull(),
