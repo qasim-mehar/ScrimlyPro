@@ -25,7 +25,7 @@ export default async function AdminLayout({
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
           <span className="font-display text-lg font-bold tracking-widest text-gold">
-            SCRIMLY<span className="text-white">//ADMIN</span>
+            SCRIMLY<span className="text-white">{"//"}ADMIN</span>
           </span>
           <nav className="flex gap-1">
             {nav.map((item) => (
