@@ -18,13 +18,41 @@ npm run build / npm test / npm run lint
 
 Env: copy `.env.example` → `.env.local`. All optional in C1.1.
 
-## Database
+## Database (M1: Postgres via Supabase-compatible schema)
 
-- `npm run db:generate` — regenerate SQL migrations from the Drizzle schema (`lib/db/schema.ts`) into `db/migrations/` (committed, versioned).
-- `npm run db:migrate` — apply committed migrations to `data/scrimly.db` (created automatically).
-- `npm run db:seed` — (re-)insert the deterministic demo session (16 teams, matches 1–2 confirmed). Idempotent: safe to run repeatedly.
+Since M1 the data layer runs on Postgres (postgres.js + Drizzle pg-core), not SQLite.
 
-`data/` is local and gitignored. `db/migrations/` is committed.
+- `npm run db:generate` — regenerate SQL migrations from `lib/db/schema.ts` into `db/migrations/` (committed, versioned).
+- `npm run db:migrate` — apply committed migrations to the Postgres at `SUPABASE_DB_URL` (from `.env.local`).
+- `npm run db:reset` — drop/recreate `public`, re-apply migrations, reseed. Idempotent.
+- `npm run db:seed` — (re-)insert the deterministic demo session. Idempotent.
+
+### Dev setup (no Docker needed)
+
+1. Any Postgres 14+ reachable via `SUPABASE_DB_URL` works locally; the auth
+   schema stand-in (in migration `0002`) provides `auth.users`/`auth.uid()` for
+   RLS when GoTrue is absent. With Docker, `supabase start` is the canonical path.
+2. `.env.local` needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_DB_URL` (+ `SUPABASE_SERVICE_ROLE_KEY` only for scripts).
+   See `.env.example`.
+
+### Auth architecture (M1)
+
+- Email/password auth via Supabase Auth (GoTrue); all credential operations are
+  server-mediated through `/api/auth/*` (rate-limited, enumeration-safe copy).
+- Identity = `supabase.auth.getUser()` only (`lib/supabase/server.ts#getAuthedUser`);
+  browser session state is a UI hint, never an authorization basis.
+- Tenant queries run inside `withUserDb` (`lib/db/user.ts`): a transaction that
+  switches to the `authenticated` role with the verified JWT claims — Postgres
+  FORCE RLS (all 7 tables, USING+WITH CHECK) is the backstop; explicit
+  ownership predicates + `assertSessionOwner` (404 for foreign resources) are
+  the first line.
+- Public surface: `/login`, `/signup`, `/forgot-password`, `/reset-password`,
+  `/auth/callback`, `/auth/error` + static assets (see `lib/auth/public-paths.ts`).
+- Security gates: `npm run verify:secrets` (after build),
+  `npx vitest run tests/rls`, `BASE_URL=http://127.0.0.1:3042 bash scripts/verify-auth-matrix.sh`.
+- Migration from the legacy SQLite DB: `node scripts/migrate-local-to-supabase.mjs` (dry-run / `--apply`) + `node scripts/golden-check.ts`.
+- Cloud cut-over: see `docs/reports/M1-implementation-report.md` §9.
 
 ## Assumptions
 
