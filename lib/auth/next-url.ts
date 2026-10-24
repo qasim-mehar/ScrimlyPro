@@ -16,6 +16,9 @@ const FIRST_SEGMENTS = new Set([
   "reset-password",
   "auth",
   "dev",
+  // M2 (Lane B): in-app destinations for the invite ?next= round-trip.
+  "orgs",
+  "invite",
 ]);
 
 function hasControlChars(s: string): boolean {

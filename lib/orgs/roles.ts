@@ -12,6 +12,8 @@ import {
 import type { AuthedUser } from "@/lib/supabase/server";
 import { fetchOrgRole, roleAtLeast } from "./orgs";
 
+export { roleAtLeast, fetchOrgRole };
+
 /**
  * Action/component-layer org guards (mirror lib/auth/action-guard.ts, but
  * org-scoped). notFound()/redirect() only ever run here — lib functions

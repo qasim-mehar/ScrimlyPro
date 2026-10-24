@@ -6,6 +6,7 @@ import { fetchOrgRole } from "@/lib/orgs/orgs";
 import {
   assertSessionQuota,
   QuotaExceededError,
+  QUOTA_UPGRADE_COPY,
 } from "@/lib/orgs/quotas";
 import { createSessionWithTeams } from "@/lib/sessions/create";
 import {
@@ -18,9 +19,6 @@ export type CreateSessionResult =
   | { ok: true; sessionId: string }
   | { ok: false; issues: ValidationIssue[] }
   | { ok: false; message: string }; // unexpected/internal/quota
-
-export const QUOTA_UPGRADE_COPY =
-  "You've reached this organization's scrim limit. Contact support to raise limits.";
 
 /**
  * Guarded thin wrapper (WP6): requireUser (redirect /login) → validate →

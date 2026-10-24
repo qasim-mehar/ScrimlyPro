@@ -17,6 +17,10 @@ import { orgQuotas, sessions, usageEvents } from "@/lib/db/schema";
 
 export type QuotaName = "max_sessions" | "monthly_ocr_calls";
 
+/** Pilot upgrade copy (M2 brief): friendly, non-blocking, support contact. */
+export const QUOTA_UPGRADE_COPY =
+  "You've reached this organization's scrim limit. Contact support to raise limits.";
+
 export class QuotaExceededError extends Error {
   constructor(public quota: QuotaName) {
     super(`quota exceeded: ${quota}`);
