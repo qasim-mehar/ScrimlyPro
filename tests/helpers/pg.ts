@@ -21,6 +21,8 @@ function baseUrl(): string {
  */
 export async function testDb(): Promise<{
   db: PostgresJsDatabase<typeof schema>;
+  /** Raw postgres.js client behind `db` (admin-seam mocks, raw SQL asserts). */
+  sql: postgres.Sql;
   cleanup: () => Promise<void>;
 }> {
   const base = baseUrl();
@@ -47,6 +49,7 @@ export async function testDb(): Promise<{
 
   return {
     db,
+    sql,
     cleanup: async () => {
       await sql.end();
       const dropper = postgres(base, { prepare: false, max: 1 });

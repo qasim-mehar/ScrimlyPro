@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/action-guard";
 import SessionView from "@/components/session/SessionView";
 import { withUserDb } from "@/lib/db/user";
+import { listShareLinks } from "@/lib/share/links";
 import { standingsSubtitle, withRanks } from "@/lib/graphics/standings";
 import { computeStandings } from "@/lib/scoring";
 import { getSessionPageData, nextMatchNumber, sessionNudge } from "@/lib/sessions/queries";
@@ -24,6 +25,11 @@ export default async function SessionPage({
     getSessionPageData(userDb, id, user.id),
   );
   if (!data) notFound();
+
+  // Share links for this session (member-visible; hashes never selected).
+  const shareLinks = await withUserDb({ sub: user.id }, (userDb) =>
+    listShareLinks(userDb, id),
+  );
 
   const standings = withRanks(
     computeStandings(data.results, data.teams, data.session.scoringRules),
@@ -54,6 +60,7 @@ export default async function SessionPage({
       nextMatch={next}
       mvp={data.mvp}
       nudge={nudge}
+      shareLinks={shareLinks}
     />
   );
 }
