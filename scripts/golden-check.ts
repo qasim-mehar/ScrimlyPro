@@ -41,7 +41,11 @@ for (const { id: sessionId } of sessionIds) {
   const legacyTeams = legacy
     .prepare("select id, name, logo_url from teams where session_id = ?")
     .all(sessionId)
-    .map((t) => ({ id: t.id, name: t.name, logoUrl: t.logo_url }));
+    .map((t) => ({
+      id: (t as { id: string }).id,
+      name: (t as { name: string }).name,
+      logoUrl: (t as { logo_url: string | null }).logo_url,
+    }));
   const legacyResults = legacy
     .prepare(
       `select r.team_id, r.placement, r.kills, r.placement_points
