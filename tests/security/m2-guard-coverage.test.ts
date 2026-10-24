@@ -30,13 +30,17 @@ const M2_ROUTES = [
 ];
 
 const M2_ACTION_OR_PAGE = [
+  "app/orgs/page.tsx",
   "app/orgs/[id]/actions.ts",
   "app/orgs/[id]/page.tsx",
   "app/orgs/new/actions.ts",
+  "app/orgs/new/page.tsx",
   "app/sessions/[id]/actions.ts",
+  "app/sessions/[id]/page.tsx",
   "app/sessions/[id]/mvp/actions.ts",
   "app/sessions/[id]/matches/[matchNo]/actions.ts",
   "app/invite/[token]/actions.ts",
+  "app/invite/[token]/page.tsx",
 ];
 
 describe("M2 guard coverage meta-test", () => {

@@ -141,7 +141,7 @@ create policy org_delete_organizations on public.organizations
 --> statement-breakpoint
 -- org_members: creator bootstraps their own owner row in the create-org tx;
 -- admins manage everyone else. Last-owner protection is app-layer
--- (lib/orgs/members.ts) on top of these policies.
+-- (lib/orgs/roles.ts) on top of these policies.
 alter table public.org_members enable row level security;
 alter table public.org_members force row level security;
 create policy org_member_select on public.org_members
