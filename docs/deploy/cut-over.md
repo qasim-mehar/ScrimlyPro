@@ -22,6 +22,17 @@ deployment runs `next ≥ 16.4` (M1 report §8.6: baseline `next` 16.3.4 carries
 a critical audit finding in an unused surface; Lane D's upgrade is the fix).
 Do not cut over from a tree that lacks the deps lane.
 
+**This runbook targets the INTEGRATED tree** (M1 + Lanes A/B/C/D/E merged,
+per the wave's runbook v3 merge order: D → A → B → C → E). Steps 3, 5 and 12
+assume the merged schema (org tables from Lane B, admin/feature-flag tables
+from Lane C). Before touching the hosted console, rehearse the full
+sequence end-to-end on a local scratch database (fresh DB → migrate to head
+→ legacy `--apply` → B's 0011 org backfill → golden check → counts →
+`db:backup` → `db:restore-test`); the rehearsal is also where the exact
+`pg_policies` floor is reconciled and where the legacy script's
+auth-user provisioning path (service-role insert vs GoTrue invites — never
+live-tested, M1 §8.4) gets its first real exercise.
+
 ---
 
 ## 1. Hosted project creation
@@ -56,12 +67,13 @@ Observable: `grep -r "SUPABASE_SERVICE_ROLE_KEY\|SUPABASE_DB_URL" app components
 
 ## 3. Schema push + post-conditions
 
-3.1 **[AUTO]** Push migrations in order 0000→0003 (0003 enforces
-    `sessions.user_id NOT NULL`). Either
-    `supabase db push` after `supabase link`, or run each file of
-    `db/migrations/*.sql` in numeric order in the SQL editor.
+3.1 **[AUTO]** Push the FULL migration chain in order 0000→latest
+    (`supabase db push` after `supabase link`, or run each file of
+    `db/migrations/*.sql` in numeric order in the SQL editor).
     The GoTrue-dependent conditional blocks in `0002` no-op on hosted
-    (`auth` schema and `authenticated` role already exist there).
+    (`auth` schema and `authenticated` role already exist there). On the
+    integrated tree this includes Lane B's 0010–0019 (orgs, invites, share
+    links) and Lane C's 0020–0029 (admin, audit log, feature flags).
 3.2 **[AUTO]** Assert the trigger exists:
 
     psql "<direct-dsn>" -tAc "select tgname from pg_trigger where tgname='on_auth_user_created';"
@@ -71,10 +83,17 @@ Observable: `grep -r "SUPABASE_SERVICE_ROLE_KEY\|SUPABASE_DB_URL" app components
 
     psql "<direct-dsn>" -tAc "select count(*) from pg_policies;"
 
-    Expected: **≥ 27** (M1 report §6: 27 policies, all `to authenticated`,
-    every insert/update/delete paired USING + WITH CHECK).
+    Expected: **≥ 58** on the integrated tree (M1's 27 + Lane B's org/share
+    policies + Lane C's admin policies — pin the exact floor at the local
+    rehearsal; M1-only trees have ≥ 27).
+3.4 **[AUTO]** Assert the integrated tables exist:
 
-Observable: both commands print the expected values; anything less = STOP.
+    psql "<direct-dsn>" -tAc "select table_name from information_schema.tables where table_schema='public' order by 1;"
+
+    Expected: the 7 M1 tables PLUS Lane B's org/invite/share tables and
+    Lane C's `audit_log`/`feature_flags`. Any missing table = STOP.
+
+Observable: all three assertions print the expected values; anything less = STOP.
 
 ## 4. Pilot user + profile verification
 
@@ -89,24 +108,48 @@ Observable: both commands print the expected values; anything less = STOP.
 
 ## 5. Legacy data migration (only if migrating the local SQLite data)
 
-5.1 **[AUTO]** Dry-run (prints per-table source→target→delta reconciliation,
+**Order matters (E-2):** `migrate-local-to-supabase.mjs` is M1-era — it
+inserts `sessions` rows directly. On the integrated schema `sessions.org_id`
+is NOT NULL (Lane B), so the legacy migration MUST run against the 0000–0003
+schema, and Lane B's `0011` backfill (creates one Personal org per user,
+stamps every session) then assigns orgs to the migrated rows. Never "fix"
+a failing `--apply` with NULL-busters at cut-over — the sequence below is
+the fix.
+
+5.1 **[AUTO]** Push ONLY 0000–0003 (hold back 0010+ until 5.3 — the legacy
+    script predates `org_id`).
+5.2 **[AUTO]** Dry-run (prints per-table source→target→delta reconciliation,
     writes `.tmp/m1-pre-standings.json`):
 
     SUPABASE_DB_URL="<direct-dsn>" SUPABASE_PILOT_OWNER_EMAIL="<pilot>" node scripts/migrate-local-to-supabase.mjs
 
-    Expected: `delta = 0` on every table, no target rows yet.
-5.2 **[AUTO]** Apply (single transaction, idempotent `on conflict do nothing`,
+    Expected: `delta = 0` on every table, no target rows yet. While here,
+    confirm HOW the script provisions the pilot's `auth.users` row on
+    hosted (direct service-role insert vs GoTrue invite) — this path was
+    never live-tested; if it needs a dashboard-created user, do step 4
+    before this step and record the finding.
+5.3 **[AUTO]** Apply (single transaction, idempotent `on conflict do nothing`,
     backfills `sessions.user_id`, enforces NOT NULL):
 
     SUPABASE_DB_URL="<direct-dsn>" SUPABASE_PILOT_OWNER_EMAIL="<pilot>" node scripts/migrate-local-to-supabase.mjs --apply
-5.3 **[AUTO]** Golden check (recomputes standings for every migrated session
+5.4 **[AUTO]** Push the REMAINING chain (0010→latest). Lane B's `0011`
+    backfill creates the pilot's Personal org and stamps every migrated
+    session with `org_id` — verify:
+
+    psql "<direct-dsn>" -tAc "select count(*) from sessions where org_id is null;"
+
+    Expected: `0`.
+5.5 **[AUTO]** Golden check (recomputes standings for every migrated session
     with the real `computeStandings` and diffs legacy vs migrated):
 
     SUPABASE_DB_URL="<direct-dsn>" node scripts/golden-check.ts
 
     Expected: zero failures printed, exit 0.
+5.6 **[AUTO]** Row-count reconciliation vs the dry-run table (5.2) — every
+    target count must equal the source count from the dry run.
 
-Observable: golden check exit 0. Any mismatch = STOP before deploy.
+Observable: golden check exit 0, zero NULL org_ids, counts reconciled. Any
+mismatch = STOP before deploy.
 
 ## 6. Dependency gate (Lane D)
 
@@ -182,24 +225,42 @@ Observable: golden check exit 0. Any mismatch = STOP before deploy.
      SUPABASE_DB_URL="<direct-dsn>" npm run db:backup
 
      Expected: `✔ backup written to backups/<ts>/`, manifest with table
-     counts, exit 0. The connection string is never printed.
+     counts + per-session standings digests, exit 0. The connection string
+     is never printed. Table enumeration is dynamic
+     (`information_schema`, `public` schema only) — new tables from any lane
+     are covered automatically, never by a hardcoded list.
 10.2 **[AUTO]** Prove the backup is restorable:
 
      SUPABASE_DB_URL="<direct-dsn>" npm run db:restore-test
 
-     Expected: `RESTORE TEST PASS — N/N tables match the manifest`, throwaway
-     `ops_restore_test_*` dropped, exit 0. An untested backup is a hope, not
-     a plan — this step is mandatory before declaring cut-over complete.
+     Expected: `RESTORE TEST PASS — N/N tables match the manifest, standings
+     identical for M/M sessions`, throwaway `ops_restore_test_*` dropped,
+     exit 0. An untested backup is a hope, not a plan — this step is
+     mandatory before declaring cut-over complete.
 10.3 **[MANUAL]** Schedule recurring `db:backup` (platform cron/scheduler)
      and a periodic `db:restore-test`; copy `backups/` off-host (it is
      gitignored and machine-local by design).
+10.4 **[MANUAL] Backup boundary sign-off (E-1).** The dump covers the
+     `public` app schema ONLY — it does **NOT** contain user accounts
+     (`auth.users`/identities, incl. credential hashes), auth sessions, or
+     Storage objects. Restoring it after a disaster brings the app data
+     back with every login gone. Decision (recorded): rely on the Supabase
+     platform's own backups for the auth schema (Pro plan daily backups —
+     verify the plan tier at step 1); for pilot scale, accept the
+     re-invite procedure (users re-sign-up or password-reset via the
+     hosted dashboard) as the fallback. Do NOT dump the auth schema into
+     `backups/` unencrypted — it is credential material. Sign below.
 
 ## 11. Rollback procedure
 
 Trigger: verifier FAIL, golden-check mismatch after new data, or live
 data-integrity incident.
 
-11.1 **[AUTO]** Restore the previous good backup into the live project —
+11.1 **[MANUAL]** Quiesce first: put the app in maintenance mode / stop
+     traffic (platform pause or deployment lock). A `pg_restore --clean`
+     against a live serving app is a corruption window — never restore
+     under load.
+11.2 **[AUTO]** Restore the previous good backup into the live project —
      NEVER with this repo's tooling into the live DSN (restore-test only
      ever targets throwaway DBs). On the host:
 
@@ -208,21 +269,39 @@ data-integrity incident.
 
      Expected: exit 0; then re-run `verify-production.sh` (step 8) and
      `db:restore-test` — both must pass.
-11.2 **[MANUAL]** If the deploy itself is the problem: revert the hosting
+11.3 **[AUTO]** Re-provision what the dump does NOT contain (E-1 boundary):
+     user accounts come from the platform backup or the re-invite
+     procedure (10.4); Storage objects from the platform backup.
+11.4 **[MANUAL]** If the deploy itself is the problem: revert the hosting
      platform to the previous deployment (Vercel: *Instant Rollback* or
      `vercel rollback <previous-deployment>`), and/or revert DNS TTL to the
      previous origin. Expected observable: `/api/health` reports the
      previous app version and the verifier passes against it.
-11.3 **[MANUAL]** Post-incident: re-run the manual tests of step 9 before
-     re-opening traffic.
+11.5 **[MANUAL]** Resume traffic (lift maintenance mode), then re-run the
+     manual tests of step 9 before re-opening signups.
 
-## 12. Kill-switch rehearsal (post-M3 — after Lane C merges)
+## 12. Kill-switch rehearsal
 
-12.1 **[MANUAL]** (Requires the M3 admin panel.) In the admin panel, disable
-     a TEST tenant's feature flag; verify its users see the disabled state
-     and the audit log row is written. Re-enable, verify restored.
-     NOTE: cannot be rehearsed until M3 lands — do NOT attempt with SQL by
-     hand; the feature-flag path is admin-panel-only by design.
+12.1 **[MANUAL]** In the M3 admin panel (merged before this lane per the
+     wave's merge order — this is an in-sequence step, not deferred):
+     disable a TEST tenant's feature flag / disable the test user; verify
+     the tenant's users see the disabled state and the audit log row is
+     written. Re-enable, verify restored.
+     NOTE: never attempt this with hand SQL — the feature-flag path is
+     admin-panel-only by design.
+
+---
+
+## Post-integration verifier extension (E-4 — add when Lane B merges)
+
+The verifier predates the org/share-link surface; after Lane B merges,
+extend the authenticated block of `scripts/verify-production.sh` (it already
+signs in an owner and scrapes a session id) with a share-link row:
+create a share link → `GET` the public share URL → assert 200 +
+`Cache-Control: no-store` + the `noindex` meta + zero-PII markers (no `@`
+emails, no bare uuid patterns in the body) → revoke → `GET` again → 404.
+This converts the pending manual A-c3 check into an automated cut-over gate;
+the same pattern covers the invite page.
 
 ---
 
@@ -230,17 +309,17 @@ data-integrity incident.
 
 | # | Step | Status | Evidence |
 |---|---|---|---|
-| 1 | Hosted project created | | |
+| 1 | Hosted project created (plan tier noted — auth-schema backups, step 10.4) | | |
 | 2 | Env matrix entered | | |
-| 3 | Migrations + trigger + ≥27 policies | | |
+| 3 | Full migration chain + trigger + policies ≥ 58 + integrated tables | | |
 | 4 | Pilot user + profile row | | |
-| 5 | Dry-run → apply → golden-check exit 0 | | |
+| 5 | Dry-run → apply → 0010+ push (orgs stamped) → golden-check exit 0 → counts | | |
 | 6 | `next >= 16.4` | | |
 | 7 | Deploy + `/api/health` 200 | | |
 | 8 | `verify-production.sh` 0 fail 0 skip | | |
 | 9 | Manual: cross-device, cookies, timing ack | | |
-| 10 | `db:backup` + `db:restore-test` pass | | |
-| 11 | Rollback rehearsed (dry knowledge check) | | |
-| 12 | Kill-switch rehearsal (post-M3) | | |
+| 10 | `db:backup` + `db:restore-test` pass + **backup-boundary acknowledgment (10.4)** | | |
+| 11 | Rollback rehearsed (maintenance-mode → restore → re-provision → resume) | | |
+| 12 | Kill-switch rehearsal (admin panel, in-sequence) | | |
 
 Signed: ______________  Date: ________
