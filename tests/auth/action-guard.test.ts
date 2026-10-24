@@ -76,11 +76,11 @@ beforeEach(async () => {
   mockedGetAuthedUser.mockReset();
 });
 
-afterAll(() => state.cleanup?.());
 
-afterEach(() => {
-  state.db = undefined;
+afterEach(async () => {
+  await state.cleanup?.();
   state.cleanup = undefined;
+  state.db = undefined;
 });
 
 describe("assertSessionOwner", () => {

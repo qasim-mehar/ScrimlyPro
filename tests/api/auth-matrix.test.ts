@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { testDb } from "@/tests/helpers/pg";
 import * as schema from "@/lib/db/schema";
 import type { Db } from "@/lib/db/client";
@@ -24,8 +24,15 @@ vi.mock("@/lib/supabase/server", () => ({
 let db: Db;
 let cleanup: () => Promise<void>;
 
+afterEach(async () => {
+  await cleanup?.();
+  cleanup = undefined as unknown as () => Promise<void>;
+});
+
 beforeEach(async () => {
-  ({ db, cleanup } = await testDb());
+  const { db: d, cleanup: c } = await testDb();
+  db = d;
+  cleanup = c;
   await db.insert(schema.sessions).values({
     id: "matrix-session",
     userId: MOCKED_USER.id,
@@ -37,7 +44,6 @@ beforeEach(async () => {
   });
 });
 
-afterAll(() => cleanup?.());
 
 async function ocrRequest(init: RequestInit): Promise<Response> {
   const { POST } = await import("@/app/api/ocr/route");

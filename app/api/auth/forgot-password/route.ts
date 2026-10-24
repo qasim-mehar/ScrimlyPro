@@ -31,17 +31,19 @@ export async function POST(req: Request) {
 
   try {
     const supabase = await createServerSupabaseClient();
-    // redirectTo routes the recovery link through the PKCE callback. Behind a
-    // reverse proxy, req.url can carry an internal origin — derive the public
-    // origin from forwarded headers when present, then req.url.
-    const forwardedHost = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
-    const forwardedProto = req.headers.get("x-forwarded-proto") ?? "https";
+    // redirectTo routes the recovery link through the PKCE callback.
+    // Origin resolution order (anti-phishing: the emailed link carries the
+    // one-time recovery code, so its origin must never be attacker-chosen):
+    //   1. APP_ORIGIN env — the configured public origin (set in production);
+    //   2. forwarded headers, but ONLY in dev (x-forwarded-host is
+    //      client-spoofable when the app is directly reachable);
+    //   3. req.url origin as last resort.
     const siteOrigin =
-      process.env.NODE_ENV !== "production" && forwardedHost?.startsWith("localhost")
-        ? `http://${forwardedHost}`
-        : forwardedHost
-          ? `${forwardedProto}://${forwardedHost}`
-          : new URL(req.url).origin;
+      process.env.APP_ORIGIN ??
+      (process.env.NODE_ENV !== "production" &&
+      (req.headers.get("x-forwarded-host") ?? req.headers.get("host"))?.startsWith("localhost")
+        ? `http://${req.headers.get("x-forwarded-host") ?? req.headers.get("host")}`
+        : new URL(req.url).origin);
     const { error } = await supabase.auth.resetPasswordForEmail(
       body.email as string,
       { redirectTo: new URL("/auth/callback", siteOrigin).toString() },

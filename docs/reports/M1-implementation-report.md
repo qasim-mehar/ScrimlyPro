@@ -343,7 +343,9 @@ Idempotent re-apply: ✔ 0 inserted. NOT NULL on `sessions.user_id`: ✔ (0 null
 6. **`npm audit` findings are pre-existing** (baseline `next` 16.3.4 critical
    in an unused surface + transitive deps); M1 introduced no new dependency
    beyond the allowlist. Upgrade to `next ≥16.4` recommended at cut-over.
-7. **Token refresh in proxy calls `getUser()`** (auth-server round trip per
+7. **Recovery-link origin**: `APP_ORIGIN` env is the authoritative origin for emailed reset links (set at cut-over); forwarded headers are trusted only in dev — `x-forwarded-host` is client-spoofable when the app is directly reachable. GoTrue's own redirect-URL allowlist is the second gate.
+8. **`sanitizeNext` first-segment match is case-insensitive** (e.g. `/SESSIONS` accepted) — it decodes to an in-app 404, harmless; noted for completeness.
+9. **Token refresh in proxy calls `getUser()`** (auth-server round trip per
    request) — correct but chatty; the hosted-stack setup can switch to
    `getClaims()` when the Supabase version supports it.
 
@@ -352,7 +354,7 @@ Idempotent re-apply: ✔ 0 inserted. NOT NULL on `sessions.user_id`: ✔ (0 null
 1. Create the hosted Supabase project; note URL + anon key; copy the
    service-role key and the pooled connection string.
 2. `supabase link` + `supabase db push` (or run `db/migrations/*.sql` via the
-   SQL editor in order 0000→0002). The conditional blocks in `0002` no-op on
+   SQL editor in order 0000→0003 — 0003 enforces `sessions.user_id NOT NULL`). The conditional blocks in `0002` no-op on
    hosted (auth schema + `authenticated` role already exist); VERIFY after:
    `select tgname from pg_trigger where tgname='on_auth_user_created';` and
    `select count(*) from pg_policies;` (≥27).
@@ -421,7 +423,7 @@ Idempotent re-apply: ✔ 0 inserted. NOT NULL on `sessions.user_id`: ✔ (0 null
 
 - [x] G1–G11 green with evidence (G3/G8 authenticated columns need hosted stack — §8.4, §9)
 - [x] G0 ordering proven (§5 G0 row)
-- [x] Quality-agent pass: 18 findings (0 P0, 2 P1, 12 P2/QoL) — all substantive items fixed in commit `4d45aa7` (idempotent trigger + default privileges, migration `0003` NOT NULL + seed owner, AuthForm sanitizeNextOr, `lib/db/admin.ts`, redirectTo origin via forwarded headers, test cleanups, 503 fail-closed, hygiene); remaining accepted items are documented as limitations/QoL (CSP header, ERD-governed FK cascade on match_results.team_id, handler-level enumeration parity test pending hosted stack)
+- [x] Quality-agent pass: 18 findings (0 P0, 2 P1, 12 P2/QoL) — all substantive items fixed in commit `4d45aa7` (idempotent trigger + default privileges, migration `0003` NOT NULL + seed owner, AuthForm sanitizeNextOr, `lib/db/admin.ts`, redirectTo origin via forwarded headers, test cleanups, 503 fail-closed, hygiene); all blocking items resolved (migration 0003 journaled + empirically verified on a fresh DB, per-test throwaway-DB cleanup in afterEach, APP_ORIGIN allowlist for recovery-link origin); remaining accepted items documented in §8 (CSP header, ERD-governed FK cascade on match_results.team_id, handler-level enumeration parity test pending hosted stack, case-insensitive next-path segments)
 - [x] All pre-existing tests green (6 files fixture-adapted, 365→455 count reconciled)
 - [x] §9 matrix green for every route (fail-closed columns live + handler-level; positive paths via tests/stack)
 - [x] Zero secrets in bundles, logs, git history

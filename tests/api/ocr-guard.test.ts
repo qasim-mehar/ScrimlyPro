@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as schema from "@/lib/db/schema";
 import { POST } from "@/app/api/ocr/route";
@@ -112,12 +112,12 @@ beforeEach(async () => {
   mockedGetAuthedUser.mockReset();
 });
 
-afterAll(() => state.cleanup?.());
 
 afterEach(async () => {
+  await state.cleanup?.();
+  state.cleanup = undefined;
   vi.unstubAllEnvs();
   state.db = undefined;
-  state.cleanup = undefined;
 });
 
 describe("POST /api/ocr guard stack", () => {
