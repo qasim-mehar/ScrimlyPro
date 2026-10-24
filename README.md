@@ -67,6 +67,24 @@ listens on 5432 with unknown credentials — leave it alone.)
 - Migration from the legacy SQLite DB: `node scripts/migrate-local-to-supabase.mjs` (dry-run / `--apply`) + `node scripts/golden-check.ts`.
 - Cloud cut-over: see `docs/reports/M1-implementation-report.md` §9.
 
+### TRUST_PROXY deployment matrix (rate-limit attribution)
+
+`TRUST_PROXY` is **distrust by default** (`lib/auth/rate-limit.ts`): `x-forwarded-for`
+is read only when `TRUST_PROXY=true` is set explicitly, and startup warns in
+production when it is not. Consequences per deployment:
+
+| Deployment | TRUST_PROXY | Effect |
+| --- | --- | --- |
+| Direct/local (`:3000`, no proxy) | unset (default) | Correct: client IP is the socket peer; XFF would be spoofable and is ignored. |
+| Behind a proxy that OVERWRITES XFF (Vercel, NGINX with `proxy_set_header X-Real-IP`) | `true` | Correct: per-IP buckets key on the real client. |
+| Behind a proxy that APPENDS to XFF | `true` | First XFF hop is client-controlled — buckets can be spoofed/evaded; per-EMAIL buckets (signup/forgot/login-failure) are attribution-independent and unaffected. |
+| Behind a proxy, TRUST_PROXY unset | unset | XFF ignored (spoofable); falls back to `x-real-ip`: if the platform sets it (Vercel etc.) attribution is correct; if not, every IP-keyed limiter collapses into ONE shared bucket — safe but over-limiting. Per-email buckets are attribution-independent and unaffected in all cases. |
+
+At pilot scale only `/share` (60/min) is a public IP-keyed limiter, so the
+collapse case is an availability nuisance, not a security hole. Revisit with a
+shared-store limiter (Redis) when the app runs multi-replica.
+
+
 ## Assumptions
 
 (agent records autonomous decisions here, per chunk)
