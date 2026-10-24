@@ -31,6 +31,9 @@ const PUBLIC_API_ALLOWLIST = new Set([
   // callback (the /auth/callback URL), not under /api. No tenant access,
   // redirects only. Public by design (§5.4 /auth/callback).
   "auth/callback/route.ts",
+  // Liveness-only health endpoint (M4E): constant body {status, version},
+  // no DB ping, no auth by design; registered in PUBLIC_API_PATHS.
+  "api/health/route.ts",
 ]);
 
 // Public pages per lib/auth/public-paths.ts (prefix match).
