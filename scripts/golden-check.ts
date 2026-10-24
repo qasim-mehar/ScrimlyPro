@@ -49,11 +49,11 @@ for (const { id: sessionId } of sessionIds) {
        where m.session_id = ?`,
     )
     .all(sessionId)
-    .map((r: { team_id: string; placement: number; kills: number; placement_points: number }) => ({
-      teamId: r.team_id,
-      placement: r.placement,
-      kills: r.kills,
-      placementPoints: r.placement_points,
+    .map((r) => ({
+      teamId: (r as { team_id: string }).team_id,
+      placement: (r as { placement: number }).placement,
+      kills: (r as { kills: number }).kills,
+      placementPoints: (r as { placement_points: number }).placement_points,
     }));
 
   const pgSession = await sql`select scoring_rules from sessions where id = ${sessionId}`;
