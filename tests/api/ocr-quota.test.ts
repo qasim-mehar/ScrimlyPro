@@ -138,4 +138,63 @@ describe("POST /api/ocr — monthly OCR quota", () => {
     expect(res.status).toBe(400);
     expect(await state.db!.select().from(schema.usageEvents)).toHaveLength(0);
   });
+
+  it("meter is per-USER across orgs: spend spread over two orgs → 409 in both (B-1b)", async () => {
+    // Second org, same MEMBER — the evasion vector 0014 closes: a fresh org
+    // must NOT restart the meter. Both orgs' limit is 2; the user spends 1
+    // in each (user-total 2). A per-org meter would allow one more call in
+    // each org; the per-user meter rejects in both.
+    const db = state.db!;
+    const orgB = crypto.randomUUID();
+    await db.insert(schema.organizations).values({
+      id: orgB,
+      name: "Second Org",
+      slug: `u-${crypto.randomUUID().slice(0, 8)}`,
+      createdBy: MEMBER,
+    });
+    await db
+      .insert(schema.orgMembers)
+      .values({ orgId: orgB, userId: MEMBER, role: "member" });
+    const sessionB = "aaaaa002-0000-4000-8000-000000000002";
+    await db.insert(schema.sessions).values({
+      id: sessionB,
+      userId: OWNER,
+      orgId: orgB,
+      name: "Second Org Session",
+      plannedMatches: 3,
+      teamCount: 4,
+      scoringRules: { kill_points: 1, placement_points: {}, default_placement_points: 0 },
+    });
+
+    await db.execute(sql`update org_quotas set monthly_ocr_calls = 2`);
+
+    // Spend 1 in org A's session, 1 in org B's session.
+    const a1 = await ocrRequest(1);
+    expect(a1.status).toBe(200);
+    async function ocrRequestB(matchNo: number) {
+      const form = new FormData();
+      form.set("sessionId", sessionB);
+      form.set("matchNo", String(matchNo));
+      const bytes = Buffer.from(PNG_B64, "base64");
+      form.append("images", new File([bytes], "shot.png", { type: "image/png" }));
+      return POST(
+        new Request("http://localhost:3054/api/ocr", {
+          method: "POST",
+          headers: { "x-scrimly-no-origin-test": "1" },
+          body: form,
+        }),
+      );
+    }
+    const b1res = await ocrRequestB(1);
+    expect(b1res.status).toBe(200);
+    expect(await db.select().from(schema.usageEvents)).toHaveLength(2);
+
+    // Over the limit now: both orgs refuse (limit 2, user-total 2).
+    const againA = await ocrRequest(2);
+    expect(againA.status).toBe(409);
+    const againB = await ocrRequestB(2);
+    expect(againB.status).toBe(409);
+    // ...and no usage row for either blocked call.
+    expect(await db.select().from(schema.usageEvents)).toHaveLength(2);
+  });
 });
