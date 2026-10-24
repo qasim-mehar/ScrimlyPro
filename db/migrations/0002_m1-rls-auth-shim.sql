@@ -49,13 +49,18 @@ create table if not exists public.profiles (
 
 --> statement-breakpoint
 -- 4. Profile creation trigger on auth.users (C.4) + role-escalation guard (C.5).
-create function public.handle_new_user() returns trigger
+-- Idempotent by design (drop-if-exists / or-replace): on a hosted project that
+-- already ships a same-named quickstart trigger, this migration REPLACES it —
+-- this repo's migrations own profile creation. Verified by cut-over §9 step 2.
+create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, email) values (new.id, new.email);
+  insert into public.profiles (id, email) values (new.id, new.email)
+  on conflict (id) do nothing;
   return new;
 end $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
@@ -288,3 +293,6 @@ create policy profiles_update_own on public.profiles
 --    remains RLS's job — grants only open the table, policies scope the rows.
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
+-- Future tables are reachable by the role-switch too (no silent empty reads).
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;

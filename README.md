@@ -6,7 +6,7 @@ Truth: PRD.md (what) · ERD.md (data) · PLAN.md (build order).
 
 ## Prerequisites
 
-Node 20 or 22 LTS.
+Node 22 LTS (dev/CI has also run on Node 25 with the documented better-sqlite3 `--ignore-scripts` workaround).
 
 ## Run
 
@@ -16,7 +16,7 @@ npm run dev     # http://localhost:3000
 npm run build / npm test / npm run lint
 ```
 
-Env: copy `.env.example` → `.env.local`. All optional in C1.1.
+Env: copy `.env.example` → `.env.local`. `SUPABASE_DB_URL` (+ the Supabase URL/anon key) is required for anything beyond static pages; `GEMINI_API_KEY` only for OCR.
 
 ## Database (M1: Postgres via Supabase-compatible schema)
 

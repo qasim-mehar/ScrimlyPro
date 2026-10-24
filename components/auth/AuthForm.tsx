@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { sanitizeNextOr } from "@/lib/auth/next-url";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
 
@@ -48,8 +49,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
       };
       if (res.ok && data.ok) {
         if (mode === "login" || mode === "reset") {
-          const next = params.get("next");
-          router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
+          // Same audited sanitizer as the server (first-segment allowlist,
+          // scheme/backslash/encoded-slash rejection).
+          router.push(sanitizeNextOr(params.get("next"), "/"));
           router.refresh();
           return;
         }

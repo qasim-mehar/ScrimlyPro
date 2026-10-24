@@ -47,8 +47,9 @@ export type MvpEntry = {
 
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
-  // Tenant owner (ERD §6). Nullable until the WP8 backfill enforces NOT NULL.
-  userId: uuid("user_id"),
+  // Tenant owner (ERD §6). NOT NULL per migration 0003; legacy rows are
+  // backfilled by scripts/migrate-local-to-supabase.mjs before it applies.
+  userId: uuid("user_id").notNull(),
   name: text("name").notNull(),
   plannedMatches: integer("planned_matches").notNull(),
   teamCount: integer("team_count").notNull(),

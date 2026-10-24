@@ -9,6 +9,9 @@ import { testDb } from "./helpers/pg";
 
 const { sessions, teams } = schema;
 
+// Verified-owner uuid (WP6): every created session must carry user_id.
+const OWNER = "11111111-1111-1111-1111-111111111111";
+
 type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 
 function validDraft() {
@@ -37,7 +40,7 @@ describe("createSessionWithTeams", () => {
   afterEach(async () => cleanup());
 
   it("happy path: 16-team draft inserts a session graph in one go", async () => {
-    const sessionId = await createSessionWithTeams(db, validDraft());
+    const sessionId = await createSessionWithTeams(db, validDraft(), OWNER);
 
     expect(sessionId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
@@ -48,6 +51,8 @@ describe("createSessionWithTeams", () => {
     )[0]!;
     expect(session.name).toBe("Wassup Open Scrims");
     expect(session.status).toBe("active");
+    // The verified owner becomes the tenant owner (WP6).
+    expect(session.userId).toBe(OWNER);
     expect(session.templateId).toBe("dark-gold");
     expect(session.plannedMatches).toBe(4);
     expect(session.teamCount).toBe(16);
@@ -71,13 +76,13 @@ describe("createSessionWithTeams", () => {
   it("throws (fail-loud) on an invalid draft with duplicate names", async () => {
     const draft = validDraft();
     draft.teams[1] = { name: "straight forward", logoUrl: null };
-    await expect(createSessionWithTeams(db, draft)).rejects.toThrow();
+    await expect(createSessionWithTeams(db, draft, OWNER)).rejects.toThrow();
     expect(await db.select().from(sessions)).toHaveLength(0);
   });
 
   it("two sequential creates: distinct ids, 32 team rows (same names across sessions)", async () => {
-    const id1 = await createSessionWithTeams(db, validDraft());
-    const id2 = await createSessionWithTeams(db, validDraft());
+    const id1 = await createSessionWithTeams(db, validDraft(), OWNER);
+    const id2 = await createSessionWithTeams(db, validDraft(), OWNER);
 
     expect(id1).not.toBe(id2);
     expect(await db.select().from(sessions)).toHaveLength(2);

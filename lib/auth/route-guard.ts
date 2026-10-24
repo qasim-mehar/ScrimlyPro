@@ -82,6 +82,13 @@ export function withTenantRoute(handler: TenantRouteHandler) {
     try {
       return await handler(request, { user });
     } catch (err) {
+      // Unconfigured deployment (no Supabase env): 503, fail-closed, no detail.
+      if (
+        err instanceof Error &&
+        err.message.startsWith("Supabase env is not configured")
+      ) {
+        return noStore({ error: "auth_unavailable" }, { status: 503 });
+      }
       // Defense in depth: handlers own their error envelopes; this catch-all
       // only guarantees JSON (no-stack) responses for unexpected throws.
       console.warn("tenant route handler failed unexpectedly");

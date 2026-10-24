@@ -28,6 +28,7 @@ describe("data layer", () => {
     ({ db, cleanup } = await testDb());
     await db.insert(sessions).values({
       id: "s1",
+      userId: "11111111-1111-1111-1111-111111111111",
       name: "T",
       plannedMatches: 6,
       teamCount: 16,

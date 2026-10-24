@@ -31,6 +31,7 @@ type Fixture = {
 async function seedTwoConfirmed(db: PgDb): Promise<Fixture> {
   await db.insert(sessions).values({
     id: "s1",
+    userId: "99999999-9999-9999-9999-999999999994",
     name: "Session Page Fixture",
     plannedMatches: 6,
     teamCount: 3,
@@ -235,6 +236,7 @@ describe("session page", () => {
     await seedTwoConfirmed(db);
     await db.insert(sessions).values({
       id: "s2",
+      userId: "99999999-9999-9999-9999-999999999994",
       name: "Other",
       plannedMatches: 6,
       teamCount: 4,
@@ -260,6 +262,7 @@ describe("session page", () => {
   it("unlocking the only confirmed match empties rosters", async () => {
     await db.insert(sessions).values({
       id: "solo",
+      userId: "99999999-9999-9999-9999-999999999994",
       name: "Solo",
       plannedMatches: 6,
       teamCount: 4,
@@ -388,6 +391,7 @@ describe("session page", () => {
     const { matchIds } = await seedTwoConfirmed(db);
     await db.insert(sessions).values({
       id: "s2",
+      userId: "99999999-9999-9999-9999-999999999994",
       name: "Other",
       plannedMatches: 6,
       teamCount: 4,

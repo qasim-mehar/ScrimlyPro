@@ -76,7 +76,7 @@ function asUser<T>(user: string, fn: (userDb: Db) => Promise<T>): Promise<T> {
 
 async function countAs(user: string, table: string): Promise<number> {
   return asUser(user, async (userDb) => {
-    const res = await userDb.execute(sql.raw(`select count(*)::int as n from ${table}`));
+    const res = await userDb.execute(sql`select count(*)::int as n from ${sql.identifier(table)}`);
     const rows = rowsOf<{ n: number }>(res);
     return rows[0]?.n ?? 0;
   });
@@ -122,7 +122,7 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
       createdAt: new Date().toISOString(),
     });
     const ownerRows = await asUser(OWNER, async (userDb) => {
-      const r = await userDb.execute(sql.raw("select id from sessions"));
+      const r = await userDb.execute(sql`select id from sessions`);
       return rowsOf<{ id: string }>(r);
     });
     expect(ownerRows.map((r) => r.id)).toEqual([sessionId]);
@@ -137,7 +137,7 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
       }),
     ).rejects.toThrow();
     // And the row was NOT written (withUserDb rolled back).
-    const rows = await db.execute(sql.raw("select id from teams where id = 'evil-team'"));
+    const rows = await db.execute(sql`select id from teams where id = ${"evil-team"}`);
     expect(rowsOf<{ id: string }>(rows)).toEqual([]);
   });
 
@@ -155,7 +155,7 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
         });
       }),
     ).rejects.toThrow();
-    const rows = await db.execute(sql.raw("select id from sessions where id = 'evil-session'"));
+    const rows = await db.execute(sql`select id from sessions where id = ${"evil-session"}`);
     expect(rowsOf<{ id: string }>(rows)).toEqual([]);
   });
 
@@ -164,7 +164,7 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
       return userDb
         .update(schema.sessions)
         .set({ name: "HACKED" })
-        .where(sql.raw(`sessions.id = '${sessionId}'`))
+        .where(sql`sessions.id = ${sessionId}`)
         .returning({ id: schema.sessions.id });
     });
     expect(updated).toEqual([]);
@@ -172,14 +172,14 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
     const deleted = await asUser(ATTACKER, async (userDb) => {
       return userDb
         .delete(schema.sessions)
-        .where(sql.raw(`sessions.id = '${sessionId}'`))
+        .where(sql`sessions.id = ${sessionId}`)
         .returning({ id: schema.sessions.id });
     });
     expect(deleted).toEqual([]);
 
     // And nothing actually changed or vanished.
     const rows = await db.execute(
-      sql.raw("select name from sessions where id = 'rls-session-1'"),
+      sql`select name from sessions where id = ${"rls-session-1"}`,
     );
     expect(rowsOf<{ name: string }>(rows)[0]?.name).toBe("RLS Session");
   });
@@ -187,10 +187,10 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
   it("profiles: self-select only; role escalation blocked for authenticated", async () => {
     // Create users directly in the auth stand-in → trigger creates profiles.
     await db.execute(
-      sql.raw(`insert into auth.users (id, email) values ('${OWNER}', 'owner@test.dev')`),
+      sql`insert into auth.users (id, email) values (${OWNER}, ${"owner@test.dev"})`,
     );
     await db.execute(
-      sql.raw(`insert into auth.users (id, email) values ('${ATTACKER}', 'attacker@test.dev')`),
+      sql`insert into auth.users (id, email) values (${ATTACKER}, ${"attacker@test.dev"})`,
     );
 
     // Owner sees exactly their own profile.
@@ -202,12 +202,12 @@ describe("RLS tenant isolation (owner vs attacker)", () => {
     await expect(
       asUser(OWNER, async (userDb) => {
         await userDb.execute(
-          sql.raw(`update profiles set role = 'admin' where id = '${OWNER}'`),
+          sql`update profiles set role = 'admin' where id = ${OWNER}`,
         );
       }),
     ).rejects.toThrow();
     const prof = await db.execute(
-      sql.raw(`select role from profiles where id = '${OWNER}'`),
+      sql`select role from profiles where id = ${OWNER}`,
     );
     const profRows = rowsOf<{ role: string }>(prof);
     expect(profRows[0]?.role).toBe("user");

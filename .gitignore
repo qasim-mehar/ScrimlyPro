@@ -54,3 +54,7 @@ next-env.d.ts
 # local logs
 studio.log
 dev.log
+
+# local tooling artifacts
+.tmp/
+dev-server.log

@@ -14,6 +14,7 @@ export function dbUrl() {
 }
 
 const SESSION_ID = "seed-00000000-0000-4000-8000-000000000001";
+const SEED_OWNER_ID = "00000000-0000-4000-8000-0000000000aa";
 
 // duplicated from PRD §6 — the app's source is C2.1 lib/scoring; seed is an offline script
 const PLACEMENT_POINTS = { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1 };
@@ -334,8 +335,16 @@ export async function seedDatabase(sql) {
     // idempotency: drop the previous seed session; children cascade
     await tx`DELETE FROM sessions WHERE id = ${SESSION_ID}`;
 
-    await tx`INSERT INTO sessions (id, name, planned_matches, team_count, template_id, scoring_rules, status, created_at)
-      VALUES (${SESSION_ID}, 'Seed Demo Scrim', 6, 16, 'dev-dark-gold', ${tx.json(scoringRules)}, 'active', ${now})`;
+    // sessions.user_id is NOT NULL (migration 0003) — the seed owns a fixed
+    // stand-in user (profile row created by the on_auth_user_created trigger).
+    // On a hosted project this creates a phantom auth user usable only as the
+    // seed's data owner; it cannot authenticate (no credentials).
+    await tx`INSERT INTO auth.users (id, email)
+      VALUES (${SEED_OWNER_ID}, 'seed-owner@scrimlypro.local')
+      ON CONFLICT (id) DO NOTHING`;
+
+    await tx`INSERT INTO sessions (id, user_id, name, planned_matches, team_count, template_id, scoring_rules, status, created_at)
+      VALUES (${SESSION_ID}, ${SEED_OWNER_ID}, 'Seed Demo Scrim', 6, 16, 'dev-dark-gold', ${tx.json(scoringRules)}, 'active', ${now})`;
 
     for (const name of TEAMS) {
       await tx`INSERT INTO teams (id, session_id, name, logo_url) VALUES (${teamId(name)}, ${SESSION_ID}, ${name}, NULL)`;

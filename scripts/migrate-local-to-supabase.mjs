@@ -14,7 +14,6 @@
 // Sequences: no identity/serial columns exist in this schema (all TEXT uuid
 // PKs generated app-side per ERD) — setval is a documented no-op.
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
-import path from "node:path";
 import Database from "better-sqlite3";
 import postgres from "postgres";
 
@@ -50,9 +49,17 @@ const j = (v) => (v == null ? null : sql.json(JSON.parse(v)));
 const legacy = new Database(sqlitePath, { readonly: true });
 
 // --- pilot user must exist (verified via admin SQL, never created here) ---
+// An existing auth user with a missing profile row (e.g. after a local
+// db:reset, which drops public/ but keeps the auth stand-in) is repaired —
+// this script runs with admin trust and the insert is idempotent.
+await sql`
+  insert into profiles (id, email)
+  select u.id, u.email from auth.users u
+  where lower(u.email) = lower(${pilotEmail})
+  and not exists (select 1 from profiles p where p.id = u.id)`;
 const pilot = await sql`
   select u.id, p.email from auth.users u
-  left join public.profiles p on p.id = u.id
+  join public.profiles p on p.id = u.id
   where lower(p.email) = lower(${pilotEmail}) limit 1`;
 if (pilot.length !== 1) {
   console.error(

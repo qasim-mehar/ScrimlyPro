@@ -130,6 +130,7 @@ describe("mvp lifecycle", () => {
     ({ db, cleanup } = await testDb());
     await db.insert(sessions).values({
       id: "s1",
+      userId: "99999999-9999-9999-9999-999999999992",
       name: "S",
       plannedMatches: 6,
       teamCount: 16,

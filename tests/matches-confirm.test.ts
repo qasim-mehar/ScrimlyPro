@@ -18,6 +18,7 @@ type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 async function seedSixteen(db: PgDb): Promise<{ teamIds: string[] }> {
   await db.insert(sessions).values({
     id: "s1",
+    userId: "99999999-9999-9999-9999-999999999991",
     name: "Confirm Session",
     plannedMatches: 6,
     teamCount: 16,

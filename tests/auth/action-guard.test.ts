@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as schema from "@/lib/db/schema";
 
@@ -22,6 +22,9 @@ const state = vi.hoisted(() => ({
   db: undefined as unknown as
     | Awaited<ReturnType<typeof testDb>>["db"]
     | undefined,
+  cleanup: (undefined as unknown as
+    | Awaited<ReturnType<typeof testDb>>["cleanup"]
+    | undefined),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -67,13 +70,17 @@ async function seedSession(owner: string) {
 }
 
 beforeEach(async () => {
-  const { db } = await testDb();
+  const { db, cleanup: c } = await testDb();
+  state.cleanup = c;
   state.db = db;
   mockedGetAuthedUser.mockReset();
 });
 
+afterAll(() => state.cleanup?.());
+
 afterEach(() => {
   state.db = undefined;
+  state.cleanup = undefined;
 });
 
 describe("assertSessionOwner", () => {

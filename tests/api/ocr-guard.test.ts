@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as schema from "@/lib/db/schema";
 import { POST } from "@/app/api/ocr/route";
@@ -21,6 +21,9 @@ const state = vi.hoisted(() => ({
   db: undefined as unknown as
     | Awaited<ReturnType<typeof testDb>>["db"]
     | undefined,
+  cleanup: (undefined as unknown as
+    | Awaited<ReturnType<typeof testDb>>["cleanup"]
+    | undefined),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -103,14 +106,18 @@ async function expectNoStore(res: Response) {
 }
 
 beforeEach(async () => {
-  const { db } = await testDb();
+  const { db, cleanup: c } = await testDb();
+  state.cleanup = c;
   state.db = db;
   mockedGetAuthedUser.mockReset();
 });
 
+afterAll(() => state.cleanup?.());
+
 afterEach(async () => {
   vi.unstubAllEnvs();
   state.db = undefined;
+  state.cleanup = undefined;
 });
 
 describe("POST /api/ocr guard stack", () => {

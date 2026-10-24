@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { testDb } from "@/tests/helpers/pg";
 import * as schema from "@/lib/db/schema";
 import type { Db } from "@/lib/db/client";
@@ -36,6 +36,8 @@ beforeEach(async () => {
     createdAt: new Date().toISOString(),
   });
 });
+
+afterAll(() => cleanup?.());
 
 async function ocrRequest(init: RequestInit): Promise<Response> {
   const { POST } = await import("@/app/api/ocr/route");

@@ -31,10 +31,20 @@ export async function POST(req: Request) {
 
   try {
     const supabase = await createServerSupabaseClient();
-    // redirectTo routes the recovery link through the PKCE callback.
+    // redirectTo routes the recovery link through the PKCE callback. Behind a
+    // reverse proxy, req.url can carry an internal origin — derive the public
+    // origin from forwarded headers when present, then req.url.
+    const forwardedHost = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+    const forwardedProto = req.headers.get("x-forwarded-proto") ?? "https";
+    const siteOrigin =
+      process.env.NODE_ENV !== "production" && forwardedHost?.startsWith("localhost")
+        ? `http://${forwardedHost}`
+        : forwardedHost
+          ? `${forwardedProto}://${forwardedHost}`
+          : new URL(req.url).origin;
     const { error } = await supabase.auth.resetPasswordForEmail(
       body.email as string,
-      { redirectTo: new URL("/auth/callback", req.url).toString() },
+      { redirectTo: new URL("/auth/callback", siteOrigin).toString() },
     );
     if (error) {
       // Log without PII; respond identically regardless of account existence.
