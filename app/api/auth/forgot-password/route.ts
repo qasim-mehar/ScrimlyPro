@@ -7,7 +7,10 @@ import {
   rateLimited,
   validationError,
 } from "@/lib/auth/route-helpers";
-import { checkRateLimit } from "@/lib/auth/rate-limit";
+import {
+  checkEmailRateLimit,
+  checkRateLimit,
+} from "@/lib/auth/rate-limit";
 import { FORGOT_OK } from "@/lib/auth/responses";
 import { parseJsonObject, validateEmail } from "@/lib/auth/validate";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -28,6 +31,10 @@ export async function POST(req: Request) {
 
   const email = validateEmail(body.email);
   if (email) return validationError({ email });
+  // Per-email secondary bucket (attribution-independent; B2) — also the
+  // email-bombing defense when IP buckets are spoofable.
+  const emailRl = checkEmailRateLimit("forgotEmail", body.email as string);
+  if (!emailRl.ok) return rateLimited(emailRl.retryAfterSeconds);
 
   try {
     const supabase = await createServerSupabaseClient();
@@ -38,6 +45,12 @@ export async function POST(req: Request) {
     //   2. forwarded headers, but ONLY in dev (x-forwarded-host is
     //      client-spoofable when the app is directly reachable);
     //   3. req.url origin as last resort.
+    // Fail-closed (M1 review B3): production without APP_ORIGIN refuses the
+    // recovery flow rather than trusting spoofable forwarded headers.
+    if (process.env.NODE_ENV === "production" && !process.env.APP_ORIGIN) {
+      console.error("forgot-password: APP_ORIGIN is required in production");
+      return authUnavailable();
+    }
     const siteOrigin =
       process.env.APP_ORIGIN ??
       (process.env.NODE_ENV !== "production" &&

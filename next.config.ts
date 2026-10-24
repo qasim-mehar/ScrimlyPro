@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          {
+            // Minimal safe-subset CSP (M1 review C2): clickjacking/object/base
+            // protections that cannot break Next's own scripts. Full
+            // nonce-based CSP is deferred to M4.
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+          },
         ],
       },
     ];

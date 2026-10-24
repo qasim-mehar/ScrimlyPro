@@ -2,7 +2,8 @@ import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 
 import type { Db } from "@/lib/db/client";
-import { withUserDb } from "@/lib/db/user";
+import { getDb } from "@/lib/db/client";
+import { withUserDbForTest } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
 import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
 
@@ -27,12 +28,30 @@ export async function requireUser(): Promise<AuthedUser> {
 
 export type SessionOwnerContext = { user: AuthedUser; sessionId: string };
 
+/**
+ * Production path: verified user + proof they own the session (404 for
+ * missing AND foreign, identically). Tests use assertSessionOwnerForTest.
+ */
 export async function assertSessionOwner(
   sessionId: string,
-  client?: Db,
+): Promise<SessionOwnerContext> {
+  return assertSessionOwnerOn(getDb(), sessionId);
+}
+
+/** Test-only variant operating on an injected client. */
+export async function assertSessionOwnerForTest(
+  client: Db,
+  sessionId: string,
+): Promise<SessionOwnerContext> {
+  return assertSessionOwnerOn(client, sessionId);
+}
+
+async function assertSessionOwnerOn(
+  base: Db,
+  sessionId: string,
 ): Promise<SessionOwnerContext> {
   const user = await requireUser();
-  const found = await withUserDb({ sub: user.id }, async (userDb) => {
+  const found = await withUserDbForTest({ sub: user.id }, async (userDb) => {
     return (
       (
         await userDb
@@ -44,7 +63,7 @@ export async function assertSessionOwner(
           .limit(1)
       )[0] ?? null
     );
-  }, client);
+  }, base);
   if (!found) notFound();
   return { user, sessionId };
 }

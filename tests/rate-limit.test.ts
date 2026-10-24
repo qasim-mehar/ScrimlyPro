@@ -72,11 +72,27 @@ describe("SlidingWindowRateLimiter", () => {
 });
 
 describe("clientIpKey", () => {
-  it("prefers the first x-forwarded-for hop", () => {
+  it("prefers the first x-forwarded-for hop when TRUST_PROXY=true", () => {
+    process.env.TRUST_PROXY = "true";
+    try {
+      const req = new Request("https://x.test", {
+        headers: { "x-forwarded-for": "203.0.113.7, 10.0.0.1" },
+      });
+      expect(clientIpKey(req)).toBe("203.0.113.7");
+    } finally {
+      delete process.env.TRUST_PROXY;
+    }
+  });
+
+  it("ignores spoofable x-forwarded-for without TRUST_PROXY (B2)", () => {
+    delete process.env.TRUST_PROXY;
     const req = new Request("https://x.test", {
-      headers: { "x-forwarded-for": "203.0.113.7, 10.0.0.1" },
+      headers: {
+        "x-forwarded-for": "203.0.113.7, 10.0.0.1",
+        "x-real-ip": "198.51.100.2",
+      },
     });
-    expect(clientIpKey(req)).toBe("203.0.113.7");
+    expect(clientIpKey(req)).toBe("198.51.100.2");
   });
 
   it("falls back to x-real-ip then unknown", () => {
@@ -84,5 +100,34 @@ describe("clientIpKey", () => {
       clientIpKey(new Request("https://x.test", { headers: { "x-real-ip": "198.51.100.2" } })),
     ).toBe("198.51.100.2");
     expect(clientIpKey(new Request("https://x.test"))).toBe("unknown");
+  });
+
+  it("per-email buckets are attribution-independent", async () => {
+    const { checkEmailRateLimit, isLoginEmailBlocked, recordLoginEmailFailure, RATE_LIMITS, SlidingWindowRateLimiter, setEmailLimiterForTests } =
+      await import("@/lib/auth/rate-limit");
+    let t = 5_000_000;
+    const clock = { now: () => t };
+    for (const kind of ["signupEmail", "loginEmail", "forgotEmail"] as const) {
+      setEmailLimiterForTests(kind, new SlidingWindowRateLimiter(RATE_LIMITS[kind], clock.now));
+    }
+    const { advance } = { advance: (ms: number) => (t += ms) };
+    void advance;
+
+    // signup: 5 attempts/email/h
+    for (let i = 0; i < 5; i++) {
+      expect(checkEmailRateLimit("signupEmail", "Victim@Example.COM ").ok).toBe(true);
+    }
+    expect(checkEmailRateLimit("signupEmail", "victim@example.com").ok).toBe(false);
+
+    // login: 10 FAILURES/email/15min — recorded only on failure
+    for (let i = 0; i < 10; i++) recordLoginEmailFailure("pilot@scrimlypro.dev");
+    expect(isLoginEmailBlocked("pilot@scrimlypro.dev")).toBe(true);
+    expect(isLoginEmailBlocked("other@scrimlypro.dev")).toBe(false);
+
+    // forgot: 5 attempts/email/h
+    for (let i = 0; i < 5; i++) {
+      expect(checkEmailRateLimit("forgotEmail", "Bomb@Example.com").ok).toBe(true);
+    }
+    expect(checkEmailRateLimit("forgotEmail", "bomb@example.com").ok).toBe(false);
   });
 });

@@ -5,6 +5,10 @@
 // NOTE: drizzle's migrator and the seed run on SEPARATE postgres.js clients —
 // sharing one client makes the migrator's unsafe() type options break
 // postgres.js's json parameter serialization afterwards.
+if (process.env.NODE_ENV === "production") {
+  console.error("REFUSING: this script wipes/reseeds data and must never run against a hosted/production database (M1 review B6).");
+  process.exit(1);
+}
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";

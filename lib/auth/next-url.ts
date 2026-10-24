@@ -50,7 +50,8 @@ export function sanitizeNext(raw: string | null | undefined): string | null {
     if (decoded.includes("://")) return null;
   }
   const path = decoded === raw ? raw : decoded;
-  const segment = path.slice(1).split("/")[0].split("?")[0].toLowerCase();
+  // Case-sensitive: /SESSIONS must not impersonate the allowlisted /sessions.
+  const segment = path.slice(1).split("/")[0].split("?")[0];
   if (!FIRST_SEGMENTS.has(segment)) return null;
   return path;
 }

@@ -2,6 +2,10 @@
 // Plain postgres.js (no TS runner) against SUPABASE_DB_URL. Fixed literal ids
 // make re-runs safe: the seed session is deleted (cascade) then re-inserted,
 // all inside one transaction.
+if (process.env.NODE_ENV === "production") {
+  console.error("REFUSING: this script wipes/reseeds data and must never run against a hosted/production database (M1 review B6).");
+  process.exit(1);
+}
 import { readFileSync } from "node:fs";
 import postgres from "postgres";
 

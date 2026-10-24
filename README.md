@@ -27,6 +27,19 @@ Since M1 the data layer runs on Postgres (postgres.js + Drizzle pg-core), not SQ
 - `npm run db:reset` — drop/recreate `public`, re-apply migrations, reseed. Idempotent.
 - `npm run db:seed` — (re-)insert the deterministic demo session. Idempotent.
 
+### Local Postgres cluster lifecycle (this dev box)
+
+The M1 dev/test cluster is a user-space PostgreSQL 17 at
+`C:\Users\mianq\Projects\pg-embedded` (port **54329**, db `scrimlypro_m1`).
+After a reboot it does NOT auto-start — every DB test fails until you run:
+
+```bash
+"C:/Users/mianq/Projects/pg-embedded/pgsql/bin/pg_ctl.exe" -D "C:/Users/mianq/Projects/pg-embedded/data" -l "C:/Users/mianq/Projects/pg-embedded/pg.log" start
+```
+
+(Stop: same command with `stop`. A pre-existing system PostgreSQL 18 service
+listens on 5432 with unknown credentials — leave it alone.)
+
 ### Dev setup (no Docker needed)
 
 1. Any Postgres 14+ reachable via `SUPABASE_DB_URL` works locally; the auth

@@ -99,10 +99,14 @@ On confirm of match N: upsert every mapped squad's player names (normalized per 
 - Re-confirm of a draft replaces its results idempotently.
 - `rosters` is invisible plumbing — never shown in any UI.
 
-## 6. Port to Supabase (future phase — deltas only, do not build now)
+## 6. Port to Supabase (AS BUILT in M1 — this section is authoritative for the Postgres schema)
 
-- `sessions.user_id` uuid + `auth.users` FK; RLS "own rows" policies on all tables (owner-check via session join).
-- `TEXT` → native `uuid` / `jsonb` / `timestamptz`.
-- Team logos → Storage bucket paths (replace data URLs).
-- New tables then: `ocr_usage(user_id, day, count)` rate limiting; `shared_links(session_id, graphic_type, storage_path)` for publish/OG.
-- MVP aggregation and standings SQL move server-side unchanged.
+M1 (`m1-multitenancy-foundation`, see docs/reports/M1-implementation-report.md) implemented the port:
+
+- **Types:** TEXT uuid PKs stay TEXT (app-generated `crypto.randomUUID`); TEXT ISO timestamps → `timestamptz not null default now()` (drizzle `mode:"string"`); JSON text columns → `jsonb`; `mvp_lists.locked` → `boolean`. Table/column/index names byte-identical to the SQLite original.
+- **Tenancy:** `sessions.user_id uuid NOT NULL` (migration 0003; FK to `auth.users` on delete cascade) + new `profiles` table (`id` = `auth.users.id`, `role` default `'user'` for M3, insert trigger on `auth.users`, escalation guard). All other tables stay scoped via the `session_id` FK chain — user_id lives ONLY on sessions.
+- **RLS:** enable + FORCE RLS on all 7 tables; 27 policies, all `to authenticated`, insert/update/delete pairing USING + WITH CHECK, child tables via EXISTS walks to `sessions.user_id`; no global reference tables exist; profiles has no delete policy (default deny).
+- **Auth:** Supabase Auth (GoTrue) email+password, server-mediated through `/api/auth/*`; identity only via `getUser()`. Next 16 convention: `proxy.ts` (middleware renamed) refreshes tokens + redirects; every route/page re-checks independently.
+- **DB access law:** tenant request paths run through `withUserDb` (lib/db/user.ts: transaction-scoped `set_config('role','authenticated')` + verified JWT claims → RLS is the backstop); `getDb()` (owner role) and `lib/db/admin.ts` are eslint-banned from the request path.
+- **Deferred deltas (not built):** team logos → Storage bucket paths (data URLs still in `teams.logo_url`); `ocr_usage`/`shared_links` tables (M2/M4); MVP aggregation/standings remain TS pure functions (not moved to SQL).
+- **Local dev:** Postgres 14+ works without Docker — migration `0002` conditionally creates the `auth` schema stand-in (`auth.users`, `uid()`, `jwt()`) + `authenticated` role; all blocks no-op on a hosted project.`

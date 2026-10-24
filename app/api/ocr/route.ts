@@ -5,7 +5,12 @@ import { withUserDb } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
 import { noStore } from "@/lib/http";
 import { parseOcrFormData } from "@/lib/ocr/form";
-import { ingestMatchOcr, type IngestErrorCode } from "@/lib/ocr/ingest";
+import {
+  persistDraftMatch,
+  resolveIngestTarget,
+  runSquadsExtraction,
+  type IngestErrorCode,
+} from "@/lib/ocr/ingest";
 
 const STATUS_BY_CODE: Record<IngestErrorCode | "BAD_REQUEST", number> = {
   BAD_REQUEST: 400,
@@ -24,15 +29,22 @@ const STATUS_BY_CODE: Record<IngestErrorCode | "BAD_REQUEST", number> = {
  * POST /api/ocr — the match pipeline's front door (C5.2).
  * Guarded by withTenantRoute: same-origin (403) → verified user (401) →
  * per-user rate limit (429). FormData (images, sessionId, matchNo) →
- * ownership check + ONE Gemini call with all images → validated squads →
+ * ownership check → ONE Gemini call with all images → validated squads →
  * draft match row upsert → typed JSON.
  *
- * The whole tenant path (session lookup + Gemini call + draft upsert) runs
- * INSIDE the withUserDb transaction, so RLS scopes every read and write.
- * A foreign or missing sessionId is indistinguishable: 404 {"error":"not
- * found"} with zero existence leakage.
+ * Transaction shape (M1 review C1 — the Gemini round trip takes ~15s and must
+ * never pin a pooled connection inside a transaction):
+ *   tx 1 (short): ownership pre-select (belt) + ingest state guards, all
+ *                 inside the RLS-scoped withUserDb transaction.
+ *   no-tx:        the model call / sample fixtures (no DB access at all).
+ *   tx 2 (short): draft row upsert, RLS-scoped. The guard→write race (another
+ *                 tab confirming the match between tx1 and tx2) degrades to a
+ *                 benign extra draft upsert, same as the single-user tool
+ *                 always allowed; the confirm endpoint re-checks state.
  *
- * Raw images are never persisted and never logged.
+ * A foreign or missing sessionId is indistinguishable: 404 {"error":"not
+ * found"} with zero existence leakage. Raw images are never persisted and
+ * never logged.
  */
 export const POST = withTenantRoute(async (request, { user }) => {
   let parsed: Awaited<ReturnType<typeof parseOcrFormData>>;
@@ -50,11 +62,9 @@ export const POST = withTenantRoute(async (request, { user }) => {
   }
 
   try {
-    const result = await withUserDb({ sub: user.id }, async (userDb) => {
-      // Ownership gate (belt): select the session inside the RLS transaction.
-      // RLS (suspenders) already filters foreign rows to the same effect —
-      // missing and foreign both land here as null.
-      const session =
+    // tx 1 — short: ownership (belt) + guards (RLS is the suspenders).
+    const target = await withUserDb({ sub: user.id }, async (userDb) => {
+      const owned =
         (
           await userDb
             .select({ id: sessions.id })
@@ -64,35 +74,43 @@ export const POST = withTenantRoute(async (request, { user }) => {
             )
             .limit(1)
         )[0] ?? null;
-      if (!session) return { notFound: true as const };
-
-      // Gemini call + draft upsert run inside the same RLS-scoped
-      // transaction: the ingest insert carries the authenticated role +
-      // verified claims (WITH CHECK passes only for owned sessions).
-      const ingest = await ingestMatchOcr(userDb, {
-        sessionId: parsed.sessionId,
-        matchNo: parsed.matchNo,
-        images: parsed.images,
-      });
-      return { notFound: false as const, ingest };
+      if (!owned) return { notFound: true as const };
+      const resolved = await resolveIngestTarget(userDb, parsed.sessionId, parsed.matchNo);
+      return { notFound: false as const, resolved };
     });
 
-    if (result.notFound) {
-      return noStore({ error: "not found" }, { status: 404 });
+    const resolved = target.notFound ? null : target.resolved;
+    if (resolved === null || !resolved.ok) {
+      if (resolved === null) {
+        return noStore({ error: "not found" }, { status: 404 });
+      }
+      return noStore(
+        { ok: false, error: resolved.error },
+        { status: STATUS_BY_CODE[resolved.error.code] },
+      );
+    }
+    const targetOk = resolved;
+
+    // NO transaction here: the model call touches no DB and takes ~15s.
+    const extraction = await runSquadsExtraction(
+      targetOk.session,
+      parsed.matchNo,
+      parsed.images,
+    );
+    if (!extraction.ok) {
+      return noStore(
+        { ok: false, error: extraction.error },
+        { status: STATUS_BY_CODE[extraction.error.code] },
+      );
     }
 
-    const ingest = result.ingest;
-    if (ingest.ok) {
-      return noStore(ingest, { status: 200 });
-    }
-    const { error } = ingest;
-    const body: Record<string, unknown> = {
-      code: error.code,
-      message: error.message,
-    };
-    if (error.matchId !== undefined) body.matchId = error.matchId;
-    if (error.failure !== undefined) body.failure = error.failure;
-    return noStore({ ok: false, error: body }, { status: STATUS_BY_CODE[error.code] });
+    // tx 2 — short: draft upsert, RLS-scoped (WITH CHECK passes only for
+    // owned sessions even if the guard state drifted since tx 1).
+    const ingest = await withUserDb({ sub: user.id }, async (userDb) => {
+      return persistDraftMatch(userDb, targetOk, extraction);
+    });
+
+    return noStore(ingest, { status: 200 });
   } catch (err) {
     // Catch-all: detail goes to the server log only, never the client.
     console.error("POST /api/ocr: unexpected failure", err);

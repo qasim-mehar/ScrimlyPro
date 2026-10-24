@@ -7,7 +7,11 @@ import {
   rateLimited,
   validationError,
 } from "@/lib/auth/route-helpers";
-import { checkRateLimit } from "@/lib/auth/rate-limit";
+import {
+  checkRateLimit,
+  isLoginEmailBlocked,
+  recordLoginEmailFailure,
+} from "@/lib/auth/rate-limit";
 import { INVALID_CREDENTIALS_COPY } from "@/lib/auth/responses";
 import { parseJsonObject, validateEmail } from "@/lib/auth/validate";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -32,6 +36,14 @@ export async function POST(req: Request) {
   if (typeof body.password !== "string" || body.password.length === 0)
     fields.password = "password is required";
   if (Object.keys(fields).length > 0) return validationError(fields);
+  // Per-email FAILURE bucket (B2): checked before the provider call, recorded
+  // only on failure — the identical 401 body is unchanged.
+  if (isLoginEmailBlocked(body.email as string)) {
+    return noStore(
+      { error: "invalid_credentials", message: INVALID_CREDENTIALS_COPY },
+      { status: 401 },
+    );
+  }
 
   try {
     const supabase = await createServerSupabaseClient();
@@ -40,6 +52,7 @@ export async function POST(req: Request) {
       password: body.password as string,
     });
     if (error) {
+      recordLoginEmailFailure(body.email as string);
       // Same body for unknown email and wrong password (enumeration safety).
       return noStore(
         { error: "invalid_credentials", message: INVALID_CREDENTIALS_COPY },

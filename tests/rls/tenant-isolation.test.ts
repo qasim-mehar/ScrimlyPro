@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import * as schema from "@/lib/db/schema";
 import { testDb } from "@/tests/helpers/pg";
-import { withUserDb } from "@/lib/db/user";
+import { withUserDbForTest } from "@/lib/db/user";
 import type { Db } from "@/lib/db/client";
 
 /**
@@ -71,7 +71,7 @@ function rowsOf<T>(res: unknown): T[] {
 }
 
 function asUser<T>(user: string, fn: (userDb: Db) => Promise<T>): Promise<T> {
-  return withUserDb({ sub: user }, fn, db);
+  return withUserDbForTest({ sub: user }, fn, db);
 }
 
 async function countAs(user: string, table: string): Promise<number> {

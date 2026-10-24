@@ -53,7 +53,10 @@ export type SessionPageData = {
 export async function getSessionPageData(
   db: Db,
   sessionId: string,
-  userId?: string,
+  // REQUIRED: the verified owner id (getAuthedUser). Making the tenant
+  // predicate mandatory removes the "caller forgot the userId" bug class —
+  // this is a deliberate API break of the earlier optional-param shape.
+  userId: string,
 ): Promise<SessionPageData | null> {
   const sessionRow =
     (
@@ -69,11 +72,7 @@ export async function getSessionPageData(
           createdAt: sessions.createdAt,
         })
         .from(sessions)
-        .where(
-          userId
-            ? and(eq(sessions.id, sessionId), eq(sessions.userId, userId))
-            : eq(sessions.id, sessionId),
-        )
+        .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)))
         .limit(1)
     )[0] ?? null;
   if (!sessionRow) return null;

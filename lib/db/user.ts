@@ -19,12 +19,28 @@ export type AuthClaims = { sub: string };
 export async function withUserDb<T>(
   claims: AuthClaims,
   fn: (db: Db) => Promise<T>,
-  client?: Db,
 ): Promise<T> {
-  // `client` is dependency-injection for tests (the throwaway per-test DB);
-  // production request paths always call without it and use the pooled
-  // SUPABASE_DB_URL connection.
-  const base = client ?? getDb();
+  return withUserDbOn(getDb(), claims, fn);
+}
+
+/**
+ * Test-only variant operating on an injected client (the throwaway per-test
+ * database). NOT exported from the production surface conventions — call it
+ * as withUserDbForTest so production code paths can never grow a hidden knob.
+ */
+export async function withUserDbForTest<T>(
+  claims: AuthClaims,
+  fn: (db: Db) => Promise<T>,
+  client: Db,
+): Promise<T> {
+  return withUserDbOn(client, claims, fn);
+}
+
+async function withUserDbOn<T>(
+  base: Db,
+  claims: AuthClaims,
+  fn: (db: Db) => Promise<T>,
+): Promise<T> {
   return base.transaction(async (tx) => {
     await tx.execute(sql`select set_config('role', 'authenticated', true)`);
     const jwt = JSON.stringify({ sub: claims.sub, role: "authenticated" });

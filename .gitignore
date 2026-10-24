@@ -55,6 +55,9 @@ next-env.d.ts
 studio.log
 dev.log
 
-# local tooling artifacts
+# local tooling artifacts / sibling-lane scratch
 .tmp/
 dev-server.log
+/shots/
+/sweep-out.txt
+/smoke.mjs

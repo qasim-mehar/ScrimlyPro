@@ -44,7 +44,10 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-import { assertSessionOwner, requireUser } from "@/lib/auth/action-guard";
+import {
+  assertSessionOwnerForTest,
+  requireUser,
+} from "@/lib/auth/action-guard";
 import { getAuthedUser } from "@/lib/supabase/server";
 
 const mockedGetAuthedUser = vi.mocked(getAuthedUser);
@@ -88,7 +91,7 @@ describe("assertSessionOwner", () => {
     mockedGetAuthedUser.mockResolvedValue({ id: OWNER, email: null });
     await seedSession(OWNER);
 
-    const ctx = await assertSessionOwner(SESSION_ID, state.db);
+    const ctx = await assertSessionOwnerForTest(state.db!, SESSION_ID);
     expect(ctx.sessionId).toBe(SESSION_ID);
     expect(ctx.user.id).toBe(OWNER);
   });
@@ -97,7 +100,7 @@ describe("assertSessionOwner", () => {
     mockedGetAuthedUser.mockResolvedValue({ id: ATTACKER, email: null });
     await seedSession(OWNER);
 
-    await expect(assertSessionOwner(SESSION_ID, state.db)).rejects.toThrow(
+    await expect(assertSessionOwnerForTest(state.db!, SESSION_ID)).rejects.toThrow(
       "NEXT_HTTP_ERROR_FALLBACK;404",
     );
   });
@@ -105,7 +108,7 @@ describe("assertSessionOwner", () => {
   it("calls notFound() for a MISSING session — identical to foreign", async () => {
     mockedGetAuthedUser.mockResolvedValue({ id: OWNER, email: null });
 
-    await expect(assertSessionOwner("nope", state.db)).rejects.toThrow(
+    await expect(assertSessionOwnerForTest(state.db!, "nope")).rejects.toThrow(
       "NEXT_HTTP_ERROR_FALLBACK;404",
     );
   });
@@ -113,7 +116,7 @@ describe("assertSessionOwner", () => {
   it("unauthenticated caller is redirected to /login before any DB access", async () => {
     mockedGetAuthedUser.mockResolvedValue(null);
 
-    await expect(assertSessionOwner(SESSION_ID, state.db)).rejects.toThrow(
+    await expect(assertSessionOwnerForTest(state.db!, SESSION_ID)).rejects.toThrow(
       "NEXT_REDIRECT:/login",
     );
     // No DB touch even happened for the lookup.

@@ -202,7 +202,7 @@ describe("session page", () => {
     ]);
 
     // Standings via computeStandings reflect m1 only.
-    const page = (await getSessionPageData(db, "s1"))!;
+    const page = (await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!;
     expect(page.confirmedCount).toBe(1);
     const standings = computeStandings(
       page.results,
@@ -345,7 +345,7 @@ describe("session page", () => {
 
   it("getSessionPageData projects winners and never leaks rawSquadData", async () => {
     await seedTwoConfirmed(db);
-    const page = (await getSessionPageData(db, "s1"))!;
+    const page = (await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!;
     expect(page.session.name).toBe("Session Page Fixture");
     expect(page.confirmedCount).toBe(2);
     expect(page.matches.map((m) => m.matchNo)).toEqual([1, 2, 3]);
@@ -367,12 +367,12 @@ describe("session page", () => {
     for (const m of page.matches) {
       expect(m).not.toHaveProperty("rawSquadData");
     }
-    expect(await getSessionPageData(db, "nope")).toBeNull();
+    expect(await getSessionPageData(db, "nope", "99999999-9999-9999-9999-999999999994")).toBeNull();
   });
 
   it("standings from page results order by total then tie-breaks", async () => {
     await seedTwoConfirmed(db);
-    const page = (await getSessionPageData(db, "s1"))!;
+    const page = (await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!;
     const standings = computeStandings(
       page.results,
       page.teams,
@@ -438,7 +438,7 @@ describe("session page", () => {
   it("getSessionPageData reads mvp_lists: null → unlocked row → locked round-trip", async () => {
     await seedTwoConfirmed(db);
     // No row yet.
-    expect((await getSessionPageData(db, "s1"))!.mvp).toEqual({
+    expect((await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!.mvp).toEqual({
       locked: false,
       entries: null,
     });
@@ -454,7 +454,7 @@ describe("session page", () => {
       .insert(mvpLists)
       .values({ sessionId: "s1", entries, locked: false });
     // Saved-but-unlocked: entries round-trip, locked false.
-    expect((await getSessionPageData(db, "s1"))!.mvp).toEqual({
+    expect((await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!.mvp).toEqual({
       locked: false,
       entries,
     });
@@ -463,7 +463,7 @@ describe("session page", () => {
       .update(mvpLists)
       .set({ locked: true, lockedAt: "2025-01-02T00:00:00.000Z" })
       .where(eq(mvpLists.sessionId, "s1"));
-    const page = (await getSessionPageData(db, "s1"))!;
+    const page = (await getSessionPageData(db, "s1", "99999999-9999-9999-9999-999999999994"))!;
     expect(page.mvp.locked).toBe(true);
     expect(page.mvp.entries).toEqual(entries);
   });

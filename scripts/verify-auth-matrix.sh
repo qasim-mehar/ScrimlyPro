@@ -21,9 +21,15 @@ row() { # name expected actual
   fi
 }
 
+ORIGIN="${ORIGIN:-$BASE_URL}"  # in prod mode the origin guard requires a correct Origin on POSTs
+
 code() { # method path [extra curl args...]
   local method="$1" path="$2"; shift 2
-  curl -s -o /dev/null -w '%{http_code}' -X "$method" "$BASE_URL$path" "$@"
+  if [ "$method" = "POST" ]; then
+    curl -s -o /dev/null -w '%{http_code}' -X "$method" "$BASE_URL$path" -H "Origin: $ORIGIN" "$@"
+  else
+    curl -s -o /dev/null -w '%{http_code}' -X "$method" "$BASE_URL$path" "$@"
+  fi
 }
 
 printf 'API auth matrix — %s\n' "$BASE_URL"
@@ -31,9 +37,9 @@ printf 'API auth matrix — %s\n' "$BASE_URL"
 # --- Unauthenticated (fail-closed) columns --------------------------------
 row "POST /api/ocr, no cookies"                 401 "$(code POST /api/ocr -H 'x-scrimly-no-origin-test: 1')"
 row "POST /api/ocr, garbage cookie"             401 "$(code POST /api/ocr -H 'x-scrimly-no-origin-test: 1' -H 'Cookie: sb-auth-token=garbage')"
-row "POST /api/ocr, foreign Origin"             403 "$(code POST /api/ocr -H 'Origin: https://evil.example')"
+row "POST /api/ocr, foreign Origin"             403 "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE_URL/api/ocr" -H 'Origin: https://evil.example')"
 row "POST /api/auth/login, garbage JSON"        400 "$(code POST /api/auth/login -H 'x-scrimly-no-origin-test: 1' -H 'Content-Type: application/json' --data 'not-json{')"
-row "POST /api/auth/login, no Origin"           403 "$(code POST /api/auth/login --data '{}')"
+row "POST /api/auth/login, no Origin"           403 "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE_URL/api/auth/login" --data '{}')"
 
 # --- Proxy / public surface (G5 probes) -----------------------------------
 row "GET / (unauthenticated) redirects"         307 "$(code GET /)"
