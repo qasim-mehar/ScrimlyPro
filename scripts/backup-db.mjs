@@ -90,6 +90,11 @@ const stamp = new Date()
   .replace("T", "-")
   .slice(0, 15); // yyyymmdd-hhmmss
 const outDir = path.join("backups", stamp);
+if (existsSync(outDir)) {
+  // Same-second re-run would silently overwrite a good dump — abort instead.
+  console.error(`ABORT: ${outDir} already exists — not overwriting an existing backup`);
+  process.exit(1);
+}
 const dumpFile = path.join(outDir, "db.dump");
 mkdirSync(outDir, { recursive: true });
 

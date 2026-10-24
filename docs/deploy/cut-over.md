@@ -7,7 +7,9 @@ steps. Steps marked **[AUTO]** are one command; **[MANUAL]** need a human and
 a browser/phone.
 
 Prerequisites on the operator machine:
-- Node 25 (repo-documented), repository checked out at the merged `main` tip
+- Node 22 LTS (dev/CI has also run on Node 25 with the documented
+  better-sqlite3 `--ignore-scripts` workaround), repository checked out at
+  the merged `main` tip
   (this runbook assumes Lane E's tooling is merged: `npm run db:backup`,
   `npm run db:restore-test`, `scripts/verify-production.sh`).
 - PostgreSQL client binaries (`pg_dump`, `pg_restore`) available; default

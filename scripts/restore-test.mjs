@@ -123,72 +123,79 @@ const admin = postgres({
 });
 
 let exitCode = 0;
+// Outer catch so an abort INSIDE the try still falls through to the finally
+// block below: process.exit() would skip it and leak the throwaway database.
 try {
-  console.log(`Restore test — newest backup: ${newest} (pg_dump: ${manifest.pgDumpVersion})`);
-  console.log(`Throwaway database: ${restoreDb} (dropped at the end, win or lose)`);
-  await admin.unsafe(`CREATE DATABASE "${restoreDb}"`);
-
-  const restore = run(pgRestore, [
-    "--no-owner",
-    "--dbname", `host=${dsn.host} port=${dsn.port} user=${dsn.user} dbname=${restoreDb}`,
-    dumpFile,
-  ], { PGPASSWORD: dsn.password });
-  if (restore.status !== 0) {
-    console.error(`ABORT: pg_restore failed (exit ${restore.status}):\n${restore.stderr}`);
-    process.exit(1);
-  }
-  if (restore.stderr.trim()) {
-    console.log(`pg_restore notes (stderr):\n${restore.stderr.trim()}`);
-  }
-
-  // --- reconcile row counts vs manifest ----------------------------------------
-  const target = postgres({
-    host: dsn.host, port: Number(dsn.port), username: dsn.user,
-    password: dsn.password, database: restoreDb, prepare: false, max: 1,
-  });
-  const restoredTables = new Set(
-    (await target`
-      select table_name from information_schema.tables
-      where table_schema = 'public' and table_type = 'BASE TABLE'
-    `).map((r) => r.table_name),
-  );
-
-  console.log("\n  table                                  manifest   restored   verdict");
-  console.log("  " + "-".repeat(68));
-  const manifestTables = Object.entries(manifest.tables).sort(([a], [b]) => a.localeCompare(b));
-  let fails = 0;
-  for (const [t, expected] of manifestTables) {
-    if (!restoredTables.has(t)) {
-      console.log(`  ${t.padEnd(38)} ${String(expected).padStart(9)}   MISSING    FAIL`);
-      fails++;
-      continue;
-    }
-    const got = (await target.unsafe(`select count(*)::int as n from "${t}"`))[0].n;
-    if (got === expected) {
-      console.log(`  ${t.padEnd(38)} ${String(expected).padStart(9)} ${String(got).padStart(9)}   PASS`);
-    } else {
-      console.log(`  ${t.padEnd(38)} ${String(expected).padStart(9)} ${String(got).padStart(9)}   FAIL`);
-      fails++;
-    }
-  }
-  await target.end();
-
-  console.log("\n" + `-`.repeat(72));
-  if (fails === 0) {
-    console.log(`RESTORE TEST PASS — ${manifestTables.length}/${manifestTables.length} tables match the manifest`);
-  } else {
-    console.log(`RESTORE TEST FAIL — ${fails}/${manifestTables.length} tables differ from the manifest`);
-    exitCode = 1;
-  }
-} finally {
   try {
-    await admin.unsafe(`DROP DATABASE IF EXISTS "${restoreDb}" WITH (FORCE)`);
-    console.log(`✔ throwaway database ${restoreDb} dropped`);
-  } catch (e) {
-    console.error(`WARN: could not drop ${restoreDb}: ${e.message}`);
-    exitCode = 1;
+    console.log(`Restore test — newest backup: ${newest} (pg_dump: ${manifest.pgDumpVersion})`);
+    console.log(`Throwaway database: ${restoreDb} (dropped at the end, win or lose)`);
+    await admin.unsafe(`CREATE DATABASE "${restoreDb}"`);
+
+    const restore = run(pgRestore, [
+      "--no-owner",
+      "--dbname", `host=${dsn.host} port=${dsn.port} user=${dsn.user} dbname=${restoreDb}`,
+      dumpFile,
+    ], { PGPASSWORD: dsn.password });
+    if (restore.status !== 0) {
+      throw new Error(`pg_restore failed (exit ${restore.status}):\n${restore.stderr}`);
+    }
+    if (restore.stderr.trim()) {
+      console.log(`pg_restore notes (stderr):\n${restore.stderr.trim()}`);
+    }
+
+    // --- reconcile row counts vs manifest ----------------------------------------
+    const target = postgres({
+      host: dsn.host, port: Number(dsn.port), username: dsn.user,
+      password: dsn.password, database: restoreDb, prepare: false, max: 1,
+    });
+    const restoredTables = new Set(
+      (await target`
+        select table_name from information_schema.tables
+        where table_schema = 'public' and table_type = 'BASE TABLE'
+      `).map((r) => r.table_name),
+    );
+
+    console.log("\n  table                                  manifest   restored   verdict");
+    console.log("  " + "-".repeat(68));
+    const manifestTables = Object.entries(manifest.tables).sort(([a], [b]) => a.localeCompare(b));
+    let fails = 0;
+    for (const [t, expected] of manifestTables) {
+      if (!restoredTables.has(t)) {
+        console.log(`  ${t.padEnd(38)} ${String(expected).padStart(9)}   MISSING    FAIL`);
+        fails++;
+        continue;
+      }
+      const got = (await target.unsafe(`select count(*)::int as n from "${t}"`))[0].n;
+      if (got === expected) {
+        console.log(`  ${t.padEnd(38)} ${String(expected).padStart(9)} ${String(got).padStart(9)}   PASS`);
+      } else {
+        console.log(`  ${t.padEnd(38)} ${String(expected).padStart(9)} ${String(got).padStart(9)}   FAIL`);
+        fails++;
+      }
+    }
+    await target.end();
+
+    console.log("\n" + `-`.repeat(72));
+    if (fails === 0) {
+      console.log(`RESTORE TEST PASS — ${manifestTables.length}/${manifestTables.length} tables match the manifest`);
+    } else {
+      console.log(`RESTORE TEST FAIL — ${fails}/${manifestTables.length} tables differ from the manifest`);
+      exitCode = 1;
+    }
+  } finally {
+    try {
+      await admin.unsafe(`DROP DATABASE IF EXISTS "${restoreDb}" WITH (FORCE)`);
+      console.log(`✔ throwaway database ${restoreDb} dropped`);
+    } catch (e) {
+      console.error(`WARN: could not drop ${restoreDb}: ${e.message}`);
+      exitCode = 1;
+    }
+    await admin.end();
   }
-  await admin.end();
+} catch (e) {
+  console.error(`ABORT: ${e.message.split("\n")[0]}`);
+  console.error(e.message.split("\n").slice(1).join("\n"));
+  exitCode = 1;
 }
 
 process.exit(exitCode);
