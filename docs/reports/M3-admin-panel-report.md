@@ -237,3 +237,56 @@ Findings (all addressed or accepted):
   collision-free by construction; the only gray-zone files I touched are
   `lib/db/schema.ts` (additive tables) and `eslint.config.mjs` (additive
   blocks).
+
+## 11. Post-review response (Lane AB critical review, flag-and-fix)
+
+Verdict was **approved with conditions**; the conditions are integration-shaped.
+Per-item disposition — what was fixed in THIS branch vs encoded as enforced
+merge gates:
+
+- **C-1 (P0, B×C seam)** — not executable in-lane (no `lib/orgs` in this tree;
+  merging B here would violate lane protocol). **Shipped the merge gate
+  instead**: `tests/api/org-guard-fold.test.ts` — in this tree it skips
+  cleanly (guard file absent, 3/3 pass); the moment Lane B's
+  `lib/orgs/route-guard.ts` lands it enforces (a) structurally that the copy
+  carries no identity logic of its own (no `getAuthedUser` /
+  `createServerSupabaseClient` imports; must delegate to
+  `lib/auth/route-guard`), and (b) semantically through whatever
+  `with*Route` wrapper B exports: disabled user → `403
+  {"error":"account_disabled"}` and impersonating admin → handler receives
+  the TARGET identity. It FAILS on B's unfolded copy and passes after the
+  runbook's step-7 fold-in — exactly the review's red→green gate. The
+  procedure is also written into `LANES-README.md` (new "Integration gates"
+  section; see merge-point note below).
+- **C-2 (P1, forked snapshot graph)** — reconciliation itself requires B+C
+  merged (B is not in this tree). The 5-line procedure is now in
+  `LANES-README.md` ("Integration gates" section) so Lanes D/E inherit it.
+- **C-3 (wiring debt)** — banner-on-org-layout and OCR-meter→`usage_events`
+  require B's tree; recorded as checklist items in `LANES-README.md`. The
+  **org-level kill switch decision is now written down**: reserved-until-M4 —
+  `subject_type='org'` is schema-accepted but probed by nothing; documented in
+  the flags editor UI (`app/admin/flags/flag-form.tsx`) and here. (ERD/PLAN are
+  Lane A files — the decision is recorded in C's surfaces instead; transpose
+  to ERD/PLAN during the merge if desired.)
+- **C-4 (cluster-saturation flake)** — integration-branch item (I-2); the
+  in-lane mitigations already shipped are per-suite timeout bumps and the
+  deterministic focused suites. Noted in `LANES-README.md`.
+- **C-5 confirms**:
+  - *Flags editor vs reserved flag*: **decided — the editor now REFUSES**
+    `flag='disabled'` (`app/admin/flags/actions.ts`) so the Tenants console
+    disable/enable API is the single audited path; test added
+    (`admin-audit-events` suite, 10/10); UI text updated.
+  - *Browser round-trip*: kept as a manual cut-over checklist item (§10);
+    also listed in `LANES-README.md` integration gates.
+  - *Auth-route merge point*: Lane A's per-email rate-limit edits and C's
+    `auditAuthEvent` insertions are both additive in the same four files —
+    resolvers must keep BOTH sides (already §10; restated here per review).
+  - *m3(0) duplicate fix*: resolution recorded — C's fix wins by default if
+    Lane A's tip still ships the violation.
+  - *Meta-test naming*: union target is A's `tests/architecture/guards.test.ts`
+    (C-extended with the `requireAdmin` marker) plus B's stand-in folded in —
+    one walk, not three files. Recorded for the merge.
+- **New merge point**: `LANES-README.md` is untracked in the main repo (the
+  orchestrator's file); this branch now carries a tracked copy with the
+  "Integration gates" section appended. At integration, union — the original
+  content is unchanged, the section is append-only.

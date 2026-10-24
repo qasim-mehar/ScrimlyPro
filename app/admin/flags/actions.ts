@@ -38,6 +38,16 @@ export async function setFlagAction(
 
   if (!SUBJECT_TYPES.has(subjectType)) return { ok: false, error: "subject_type must be user|org|global" };
   if (!FLAG_RE.test(flag)) return { ok: false, error: "flag must match [a-z0-9_.-]{1,100}" };
+  // Review decision (Lane AB C-5.2): exactly ONE disable path. The reserved
+  // kill-switch marker is written only by the audited tenants-console
+  // disable/enable API; the generic editor refuses it so the two flows can
+  // never diverge in audit shape.
+  if (flag === "disabled") {
+    return {
+      ok: false,
+      error: "'disabled' is reserved — use the Tenants console disable/enable (single audited path)",
+    };
+  }
   let subjectId: string | null = null;
   if (subjectType === "global") {
     if (subjectIdRaw) return { ok: false, error: "global flags have no subject_id" };

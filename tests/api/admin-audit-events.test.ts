@@ -197,6 +197,22 @@ describe("flags editor server actions", () => {
     ).toEqual({ ok: false, error: "value must be a JSON object" });
   });
 
+  it("the editor REFUSES the reserved 'disabled' flag (single disable path, review C-5.2)", async () => {
+    authedUser = { id: ADMIN, email: "admin@test.dev" };
+    const { setFlagAction } = await import("@/app/admin/flags/actions");
+    const result = await setFlagAction(
+      null,
+      formData({ subjectType: "user", subjectId: USER, flag: "disabled", value: "{}" }),
+    );
+    expect(result).toMatchObject({ ok: false });
+    expect((result as { error: string }).error).toMatch(/reserved/i);
+    // Nothing was written.
+    const rows = rowsOf<unknown>(
+      await db.execute(sql`select 1 from feature_flags where flag = 'disabled'`),
+    );
+    expect(rows).toHaveLength(0);
+  });
+
   it("admin deletes a flag → row gone + audited admin.flag.delete", async () => {
     authedUser = { id: ADMIN, email: "admin@test.dev" };
     const { setFlagAction, deleteFlagAction } = await import("@/app/admin/flags/actions");

@@ -49,7 +49,11 @@ export function FlagForm() {
       <p className="text-xs text-muted">
         Reserved: the <code className="text-gold">disabled</code> flag on a user is the
         kill switch (presence = locked out of every authed surface; the value is
-        metadata only). Prefer the Tenants console toggle for it.
+        metadata only). This editor REFUSES it — the Tenants console toggle is the
+        single audited disable path. Org-subject flags
+        (<code className="text-gold">subject_type=&quot;org&quot;</code>) are
+        schema-reserved until M4 — no runtime probe reads them yet (Lane AB review
+        C-3 decision).
       </p>
       <div className="flex items-center gap-3">
         <button
