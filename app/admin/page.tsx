@@ -1,5 +1,6 @@
 import { FeaturedOrgCard } from "@/components/admin/dashboard/FeaturedOrgCard";
 import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
+import { NeedsAttentionTable } from "@/components/admin/dashboard/NeedsAttentionTable";
 import {
   getAdminDashboardData,
   parseRange,
@@ -35,8 +36,7 @@ export default async function AdminDashboard({
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="min-w-0 space-y-6">
           <FeaturedOrgCard featured={data.featured} range={range} />
-          {/* Needs-attention table — WP6 */}
-          <section className="hq-card hq-skeleton h-[280px]" aria-hidden />
+          <NeedsAttentionTable rows={data.attention} />
         </div>
         <div className="min-w-0 space-y-6">
           {/* Time filter — WP7 */}
