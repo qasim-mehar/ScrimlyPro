@@ -66,7 +66,6 @@ function navGroups(counts: ShellCounts): Array<{ title: string; items: NavItem[]
           label: "Organizations",
           icon: IconBuilding,
           badge: counts.orgs,
-          soon: true, // flips when WP13 ships the route
         },
         { href: "/admin/tenants", label: "Users", icon: IconUsers, badge: counts.users },
       ],
