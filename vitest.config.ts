@@ -4,6 +4,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
+    // Wave-1 (WP10, I-2): worker-owned teardown sweeps leftover m*test_*
+    // throwaway DBs (crashed workers / aborted runs) with retry. The
+    // per-test cleanup in tests/helpers/pg.ts stays the primary owner.
+    globalSetup: ["./tests/global-setup.ts"],
     include: ["tests/**/*.test.ts"],
     // Windows: DROP DATABASE ... WITH (FORCE) in tests/helpers/pg cleanup can
     // exceed the 10s default hook timeout under parallel load (WP6 observed).
