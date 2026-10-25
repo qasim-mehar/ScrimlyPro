@@ -19,17 +19,18 @@ const serif = Source_Serif_4({
   display: "swap",
 });
 
-type Perk = {
+type Role = {
   name: string;
   sub: string;
   initials: string;
   tone: "light" | "fyt";
 };
 
-const PERKS: readonly Perk[] = [
-  { name: "exhale", sub: "Spa & Recovery", initials: "ex", tone: "light" },
-  { name: "obé Fitness", sub: "Member Exclusive", initials: "ob", tone: "light" },
-  { name: "Fyt Personal Training", sub: "$200 credit", initials: "fy", tone: "fyt" },
+const ROLES: readonly Role[] = [
+  { name: "Scrim organizer", sub: "Creates sessions, uploads the screenshots", initials: "so", tone: "light" },
+  { name: "Coach / analyst", sub: "Clean match data minutes after each game", initials: "ca", tone: "fyt" },
+  { name: "Team owner", sub: "Private workspace, roles, single-use invites", initials: "to", tone: "light" },
+  { name: "Fans & sister teams", sub: "Public standings links, no login", initials: "fa", tone: "fyt" },
 ];
 
 type Stat = {
@@ -41,9 +42,9 @@ type Stat = {
 };
 
 const STATS: readonly Stat[] = [
-  { prefix: "", value: 6, suffix: "x", label: "Health & Wellness Spend", superscript: true },
-  { prefix: "", value: 2, suffix: "x", label: "Everything Else", superscript: false },
-  { prefix: "$", value: 399, suffix: "", label: "Annual Fee", superscript: true },
+  { prefix: "", value: 1, suffix: " min", label: "From upload to standings", superscript: true },
+  { prefix: "", value: 600, suffix: "", label: "Automated checks gate every change", superscript: false },
+  { prefix: "", value: 0, suffix: "", label: "Scores typed by hand", superscript: false },
 ];
 
 const DRAG_THRESHOLD_PX = 6;
@@ -194,33 +195,35 @@ export default function BenefitsSection() {
   return (
     <section
       ref={rootRef}
+      id="features"
       className={`${styles.root} ${serif.variable}`}
       data-inview={inView ? "true" : "false"}
     >
       <div className={styles.inner}>
         <h2 className={styles.headline} data-reveal="0">
-          The Card That
+          One upload,
           <br />
-          Keeps You Healthy
+          zero typos
         </h2>
 
         <p className={styles.sub} data-reveal="1">
-          The first premium card that rewards all your healthy actions and
-          includes amazing benefits from your favorite brands, too
-          <sup>1</sup>
+          After each match, the organizer uploads one screenshot. Our AI
+          reader pulls the team names, placements, and kills out of it, and
+          the session standings update themselves.
         </p>
 
         <div className={styles.btnGroup} data-reveal="2">
           <div className={styles.btnRow}>
-            <a className={`${styles.btn} ${styles.btnReserve}`} href="#reserve">
-              Reserve
+            <a className={`${styles.btn} ${styles.btnReserve}`} href="#pilot">
+              Join the Pilot
             </a>
-            <a className={`${styles.btn} ${styles.btnExplore}`} href="#explore">
-              Explore
+            <a className={`${styles.btn} ${styles.btnExplore}`} href="/signup">
+              Create an Account
             </a>
           </div>
           <p className={styles.footnote}>
-            Fit: The card&rsquo;s app is iPhone-only, for now
+            ¹ Typical loop: about a minute per match, upload to updated
+            standings
           </p>
         </div>
 
@@ -246,13 +249,13 @@ export default function BenefitsSection() {
         </div>
       </div>
 
-      <div className={styles.stripWrap} data-reveal="4">
+      <div className={styles.stripWrap} id="who" data-reveal="4">
         <div className={styles.bleed}>
           <div
             ref={scrollerRef}
             className={styles.scroller}
             role="region"
-            aria-label="Partner perks"
+            aria-label="Who ScrimlyPro is for"
             tabIndex={0}
             data-dragging="false"
             onPointerDown={onPointerDown}
@@ -262,21 +265,21 @@ export default function BenefitsSection() {
             onClickCapture={onClickCapture}
             onDragStart={(event) => event.preventDefault()}
           >
-            {PERKS.map((perk) => (
-              <article className={styles.card} key={perk.name}>
+            {ROLES.map((role) => (
+              <article className={styles.card} key={role.name}>
                 <div className={styles.cardFill} aria-hidden="true" />
                 <div className={styles.cardOverlay}>
                   <div
                     className={`${styles.avatar} ${
-                      perk.tone === "fyt" ? styles.avatarFyt : styles.avatarLight
+                      role.tone === "fyt" ? styles.avatarFyt : styles.avatarLight
                     }`}
                     aria-hidden="true"
                   >
-                    {perk.initials}
+                    {role.initials}
                   </div>
                   <div>
-                    <div className={styles.brandName}>{perk.name}</div>
-                    <div className={styles.brandSub}>{perk.sub}</div>
+                    <div className={styles.brandName}>{role.name}</div>
+                    <div className={styles.brandSub}>{role.sub}</div>
                   </div>
                 </div>
               </article>

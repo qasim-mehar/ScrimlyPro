@@ -12,7 +12,7 @@ import { getAuthedUser } from "@/lib/supabase/server";
 /**
  * Public marketing landing (landing-page branch). "/" is on PUBLIC_PAGES, so
  * the proxy lets anonymous visitors through here instead of bouncing them to
- * /login; the copy is the contributor's, still unwritten for ScrimlyPro.
+ * /login; the copy follows ScrimlyPro-SaaS-explainer.md.
  */
 function LandingPage() {
   return (
@@ -45,9 +45,10 @@ export default async function Home() {
         <h1 className="font-display text-4xl font-bold tracking-widest text-gold">
           SCRIMLY PRO
         </h1>
-        <p className="text-center text-sm text-muted">
-          Scrim results, standings & MVP graphics — in minutes.
-        </p>
+          <p className="text-center text-sm text-muted">
+            Scrim results &amp; auto-computed standings, minutes after each
+            match.
+          </p>
         <Link
           href="/sessions/new"
           className="flex min-h-11 w-full items-center justify-center rounded-lg bg-gold font-display text-lg font-semibold text-bg"

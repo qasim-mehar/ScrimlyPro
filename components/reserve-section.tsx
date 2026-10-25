@@ -50,26 +50,26 @@ export default function ReserveSection() {
     .join(" ");
 
   return (
-    <section ref={rootRef} className={rootClass}>
+    <section ref={rootRef} id="pilot" className={rootClass}>
       <div className={styles.zoneA}>
         <h2 className={styles.headline}>
-          Reserve
+          Join
           <br />
-          Your Card
+          the Pilot
         </h2>
         <p className={styles.subcopy}>
-          We&rsquo;re still in beta.
+          We&rsquo;re onboarding 5&ndash;15 organizer teams.
           <br />
-          Reserve your spot to join the next available batch.{" "}
+          Pilot feedback shapes the first public release.{" "}
           <span className={styles.sparkle} aria-hidden="true">
             ✨
           </span>
         </p>
-        <button type="button" className={styles.cta}>
-          Reserve
-        </button>
+        <a href="/signup" className={styles.cta}>
+          Request Access
+        </a>
         <p className={styles.footnote}>
-          PS: The card&rsquo;s app is iPhone only, for now
+          PS: Invites are copy-paste links for now; email delivery is coming
         </p>
       </div>
 
@@ -81,12 +81,12 @@ export default function ReserveSection() {
         <div className={styles.stage}>
           <div className={styles.cardLeft}>
             <span className={styles.stripe} />
-            <span className={styles.cardLogo}>Ness</span>
-            <span className={styles.cardName}>Katherine McGonegall</span>
-            <span className={styles.cardNumber}>5482 3452 3452 3456</span>
+            <span className={styles.cardLogo}>ScrimlyPro</span>
+            <span className={styles.cardName}>Weekly Scrim &middot; Lobby A</span>
+            <span className={styles.cardNumber}>PLACEMENTS &middot; KILLS &middot; TOTAL</span>
             <span className={styles.cardExpiry}>
-              <span>09/27</span>
-              <span>01/27</span>
+              <span>READ BY GEMINI</span>
+              <span>SCORED IN SECONDS</span>
             </span>
           </div>
 
@@ -94,7 +94,7 @@ export default function ReserveSection() {
             <span className={`${styles.waveRing} ${styles.ringOne}`} />
             <span className={`${styles.waveRing} ${styles.ringTwo}`} />
             <span className={styles.chip} />
-            <span className={styles.plaid}>plaid</span>
+            <span className={styles.plaid}>STANDINGS</span>
             <span className={styles.mcMark}>
               <span className={styles.mcOrange} />
               <span className={styles.mcRed} />

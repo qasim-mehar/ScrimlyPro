@@ -35,7 +35,8 @@ const lexend = Lexend({
 
 export const metadata: Metadata = {
   title: "ScrimlyPro",
-  description: "Scrim results, standings & MVP graphics for organizers.",
+  description:
+    "Upload PUBG Mobile scrim screenshots; AI reads them and the standings update themselves.",
 };
 
 export default function RootLayout({

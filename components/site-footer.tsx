@@ -5,11 +5,11 @@ import { inter, sourceSerif4, yellowtail } from "./fonts";
 import styles from "./site-footer.module.css";
 
 const FOOTER_LINKS = [
-  "The Nessie",
-  "Terms of Service",
-  "Partner Program",
-  "Careers",
-  "Privacy Policy",
+  { label: "Features", href: "#features" },
+  { label: "Who it's for", href: "#who" },
+  { label: "The Pilot", href: "#pilot" },
+  { label: "Log in", href: "/login" },
+  { label: "Create account", href: "/signup" },
 ] as const;
 
 type SpinDirection = "ccw" | "cw" | null;
@@ -61,16 +61,16 @@ export default function SiteFooter() {
               className={`${styles.wordmark} ${logoSpinning ? styles.logoSpin : ""}`}
               onAnimationEnd={() => setLogoSpinning(false)}
             >
-              Ness
+              ScrimlyPro
             </span>
             <p className={styles.copyright}>
-              © 2023 Ness Inc. All rights reserved
+              &copy; 2026 ScrimlyPro. Built for teams that grind.
             </p>
           </div>
           <nav className={styles.links} aria-label="Footer">
-            {FOOTER_LINKS.map((label) => (
-              <a key={label} className={styles.link} href="#">
-                {label}
+            {FOOTER_LINKS.map((link) => (
+              <a key={link.label} className={styles.link} href={link.href}>
+                {link.label}
               </a>
             ))}
           </nav>
@@ -79,39 +79,32 @@ export default function SiteFooter() {
         <div className={`${styles.row} ${styles.row2}`}>
           <div className={styles.legal}>
             <p>
-              The Ness Credit Card is issued by The Bank of Missouri, member
-              FDIC, pursuant to a license from Mastercard, and may be used
-              everywhere Mastercard is accepted. 4400864
+              ScrimlyPro turns PUBG Mobile scrim screenshots into
+              auto-computed standings. Match images are read by Google Gemini;
+              results live in your organization&rsquo;s private workspace.
             </p>
             <p>
-              All non-Ness logos shown are for illustrative purposes and remain
-              the property of their respective owners.
+              PUBG Mobile is a trademark of its respective owners. ScrimlyPro
+              is an independent tool and is not affiliated with the
+              game&rsquo;s publisher.
             </p>
           </div>
           <ol className={styles.disclaimers}>
             <li>
-              The Ness Card is a charge card. This means there is no APR, so
-              your balance is due in full each month. For more about the Ness
-              Card&rsquo;s terms &amp; fees visit{" "}
-              <a className={styles.inlineLink} href="#">
-                here
-              </a>
-              .
+              During the pilot, every user gets monthly quotas for scrim
+              sessions and AI reads. Hitting a limit blocks new work; it never
+              locks you out of your existing data.
             </li>
             <li>
-              See{" "}
-              <a className={styles.inlineLink} href="#">
-                Ness&rsquo;s terms
-              </a>{" "}
-              for details. Rewards terms and partners are subject to change.
+              Limits are per user. Creating extra organizations does not add
+              quota. Need more? Contact support and we&rsquo;ll raise your
+              limit.
             </li>
             <li>
-              Access to the Ness account is subject to approval. To apply,
-              you&rsquo;ll agree to a secure credit check and consent to Ness
-              obtaining your credit report. At this time, only applicants with a
-              U.S. Social Security Number can apply. Submitting an application
-              will result in a hard credit inquiry, which may impact your
-              credit score.
+              People join your organization through single-use invite links,
+              and only a secure hash of each link is stored. Public share
+              links show results and nothing else, and revoking one kills it
+              immediately.
             </li>
           </ol>
         </div>

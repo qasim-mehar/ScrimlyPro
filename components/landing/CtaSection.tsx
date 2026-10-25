@@ -62,19 +62,19 @@ export default function CtaSection() {
       />
       <div className={styles.inner}>
         <h2 className={styles.headline} id="cta-heading" data-reveal="0">
-          Doing <em className={styles.script}>Well</em>
+          Built for teams
           <br />
-          &amp; Doing Good
+          that <em className={styles.script}>grind</em>
         </h2>
 
         <p className={styles.sub} data-reveal="1">
-          We&rsquo;re a pending B Corp and a seasoned team of dreamers and
-          doers dedicated to building a world where everyone does well.
+          We&rsquo;re onboarding the first 5&ndash;15 organizer teams now.
+          Pilot feedback directly shapes the first public release.
         </p>
 
         <div className={styles.ctaRow} data-reveal="2">
-          <a className={styles.btn} href="#join">
-            Join Our Team
+          <a className={styles.btn} href="#pilot">
+            Join the Pilot
           </a>
         </div>
       </div>
