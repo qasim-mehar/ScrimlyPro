@@ -1,6 +1,8 @@
 import { FeaturedOrgCard } from "@/components/admin/dashboard/FeaturedOrgCard";
 import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
 import { NeedsAttentionTable } from "@/components/admin/dashboard/NeedsAttentionTable";
+import { StatCards } from "@/components/admin/dashboard/StatCards";
+import { TimeFilter } from "@/components/admin/dashboard/TimeFilter";
 import {
   getAdminDashboardData,
   parseRange,
@@ -39,17 +41,10 @@ export default async function AdminDashboard({
           <NeedsAttentionTable rows={data.attention} />
         </div>
         <div className="min-w-0 space-y-6">
-          {/* Time filter — WP7 */}
-          <div
-            className="hq-skeleton h-11 w-64 rounded-full bg-[var(--hq-surface)]"
-            aria-hidden
-          />
-          {/* Stat cards — WP7 */}
-          <div className="grid grid-cols-2 gap-4 min-[1920px]:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="hq-card hq-skeleton h-[132px]" aria-hidden />
-            ))}
+          <div className="flex">
+            <TimeFilter range={range} />
           </div>
+          <StatCards stats={data.stats} ai={data.ai} range={range} />
           {/* Lifecycle pipeline + attention list — WP8 */}
           <div className="hq-card hq-skeleton h-[180px]" aria-hidden />
           <div className="hq-card hq-skeleton h-[220px]" aria-hidden />
