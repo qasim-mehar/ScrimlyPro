@@ -4,14 +4,26 @@ import { AttentionTable } from "@/components/dashboard/attention-table";
 import { FeaturedCard } from "@/components/dashboard/featured-card";
 import { GreetingRow } from "@/components/dashboard/greeting-row";
 import { ReadinessGauge } from "@/components/dashboard/readiness-gauge";
+import { RangeFilter, StatCards } from "@/components/dashboard/stat-cards";
 import { Sidebar, type NavCounts } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/top-bar";
+import type { DashboardStats } from "@/lib/dashboard/queries";
 import { requireUser } from "@/lib/auth/action-guard";
 import { withUserDb } from "@/lib/db/user";
 import { resolveActiveOrg } from "@/lib/dashboard/org";
 import { getDashboardData, parseRange } from "@/lib/dashboard/queries";
 
 export const dynamic = "force-dynamic";
+
+const EMPTY_STATS: DashboardStats = {
+  activeSessions: 0,
+  matchesInPlay: 0,
+  matchesProcessed: 0,
+  matchesDelta: 0,
+  draftsAwaiting: 0,
+  oldestDraftHours: null,
+  needsAttention: 0,
+};
 
 /**
  * Member dashboard (M5). Guarded by the one true requireUser path; all data
@@ -82,12 +94,8 @@ export default async function DashboardPage({
                 />
               </div>
               <div className="flex flex-col gap-6">
-                <section className="rounded-dash bg-dash-surface p-6">
-                  <h2 className="text-lg font-bold">Stats + filter</h2>
-                  <p className="mt-2 text-sm text-dash-ink3">
-                    Wired in WP7 — Today / 7 days / 30 days + stat cards.
-                  </p>
-                </section>
+                <RangeFilter active={range} orgParam={orgParam} />
+                <StatCards stats={data?.stats ?? EMPTY_STATS} />
                 <section className="rounded-dash bg-dash-surface p-6">
                   <h2 className="text-lg font-bold">Scrim pipeline</h2>
                   <p className="mt-2 text-sm text-dash-ink3">
