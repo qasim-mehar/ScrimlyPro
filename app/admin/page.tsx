@@ -2,6 +2,7 @@ import { FeaturedOrgCard } from "@/components/admin/dashboard/FeaturedOrgCard";
 import { AiCard } from "@/components/admin/dashboard/AiCard";
 import { AttentionList } from "@/components/admin/dashboard/AttentionList";
 import { GaugeCard } from "@/components/admin/dashboard/GaugeCard";
+import { ImpersonationStrip } from "@/components/admin/dashboard/ImpersonationStrip";
 import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
 import { LifecyclePipeline } from "@/components/admin/dashboard/LifecyclePipeline";
 import { NeedsAttentionTable } from "@/components/admin/dashboard/NeedsAttentionTable";
@@ -43,6 +44,7 @@ export default async function AdminDashboard({
         <div className="min-w-0 space-y-6">
           <FeaturedOrgCard featured={data.featured} range={range} />
           <NeedsAttentionTable rows={data.attention} />
+          <ImpersonationStrip rows={data.activeImpersonations} />
         </div>
         <div className="min-w-0 space-y-6">
           <div className="flex">

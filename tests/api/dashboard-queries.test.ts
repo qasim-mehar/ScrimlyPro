@@ -88,10 +88,11 @@ async function seedFixture(d: Db): Promise<void> {
       (${O_NEW}, ${U_OK}, 'owner', now() - interval '2 days')
   `);
 
-  // usage: HEAVY 270 (30m ago), WARM 250 (26h ago), OK 2+8
+  // usage: HEAVY 270 (today, day-anchored - 'now - 30m' breaks at midnight),
+  // WARM 250 (26h ago, always outside 'today'), OK 2 today + 8 at 3d
   await d.execute(sql`
     insert into usage_events (id, org_id, user_id, kind, created_at)
-    select gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_HEAVY}::uuid, 'ocr', now() - interval '30 minutes'
+    select gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_HEAVY}::uuid, 'ocr', date_trunc('day', now()) + interval '30 minutes'
     from generate_series(1, 270)
   `);
   await d.execute(sql`
@@ -101,8 +102,8 @@ async function seedFixture(d: Db): Promise<void> {
   `);
   await d.execute(sql`
     insert into usage_events (id, org_id, user_id, kind, created_at) values
-      (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', now() - interval '10 minutes'),
-      (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', now() - interval '11 minutes'),
+      (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', date_trunc('day', now()) + interval '10 minutes'),
+      (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', date_trunc('day', now()) + interval '11 minutes'),
       (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', now() - interval '3 days'),
       (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', now() - interval '3 days' - interval '1 hour'),
       (gen_random_uuid(), ${O_ACTIVE}::uuid, ${U_OK}::uuid, 'ocr', now() - interval '3 days' - interval '2 hours'),

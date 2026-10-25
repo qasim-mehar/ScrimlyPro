@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ComponentType, type ReactNode } from "react";
 
+import { ImpersonateDialog } from "./ImpersonateDialog";
 import { NotificationsBell, type BellEvent } from "./NotificationsBell";
 import { SearchField } from "./SearchField";
 import {
@@ -13,7 +14,6 @@ import {
   IconEye,
   IconFlag,
   IconMenu,
-  IconPlus,
   IconScroll,
   IconSliders,
   IconSparkles,
@@ -234,16 +234,7 @@ export function AdminShell({
 
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell events={events} />
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                title="Impersonation dialog lands with the support-tools update"
-                className="flex h-10 items-center gap-1.5 rounded-full bg-[var(--hq-ink)] px-5 text-sm font-semibold text-white"
-              >
-                <IconPlus size={16} />
-                Impersonate
-              </button>
+              <ImpersonateDialog />
             </div>
           </header>
 
