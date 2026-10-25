@@ -116,10 +116,15 @@ export function Sidebar({
   orgs,
   activeOrg,
   counts,
+  readsLeft,
 }: {
   orgs: ActiveOrg[];
   activeOrg: ActiveOrg | null;
   counts: NavCounts;
+  /** Real OCR reads left this month (org limit − user meter); null hides
+   *  the count (quota unknown is not representable today — the org quota
+   *  row always exists — but the prop keeps the honest fallback open). */
+  readsLeft: number | null;
 }) {
   return (
     <aside className="sticky top-6 flex h-[calc(100dvh-48px)] w-[264px] shrink-0 flex-col rounded-dash-lg bg-dash-surface p-5">
@@ -224,8 +229,10 @@ export function Sidebar({
         <SoonItem icon={<SettingsIcon />} label="Settings" />
       </nav>
 
-      {/* Scrimly AI card (WP9 wires the real quota subtitle; never a fake
-          settings toggle — no AI page exists, so the control announces Soon). */}
+      {/* Scrimly AI card — quota subtitle from the real per-user month
+          meter vs this org's limit (lib/dashboard/queries.ts). Not a
+          settings toggle: no AI-reader page exists, so the switch visual
+          announces "Soon" and the pill links nothing. */}
       <div className="mt-4 rounded-dash bg-dash-lime p-4">
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2 text-sm font-bold text-dash-ink">
@@ -236,14 +243,14 @@ export function Sidebar({
           </span>
           <span
             aria-hidden="true"
-            title="Soon"
+            title="AI reader — Soon"
             className="flex h-6 w-10 items-center rounded-full bg-dash-ink px-0.5"
           >
             <span className="ml-auto size-5 rounded-full bg-white" />
           </span>
         </div>
         <p className="mt-1.5 text-[13px] font-medium text-dash-lime-ink">
-          On
+          On{readsLeft !== null ? ` · ${readsLeft} reads left` : ""}
         </p>
       </div>
     </aside>

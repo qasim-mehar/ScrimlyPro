@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { AiCard } from "@/components/dashboard/ai-card";
 import { AttentionTable } from "@/components/dashboard/attention-table";
 import { FeaturedCard } from "@/components/dashboard/featured-card";
 import { Pipeline, AttentionList } from "@/components/dashboard/pipeline";
@@ -61,7 +62,12 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto flex gap-6 p-6">
-      <Sidebar orgs={orgs} activeOrg={active} counts={counts} />
+      <Sidebar
+        orgs={orgs}
+        activeOrg={active}
+        counts={counts}
+        readsLeft={data?.quota.readsLeft ?? null}
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <TopBar />
 
@@ -103,12 +109,7 @@ export default async function DashboardPage({
                   featuredSessionId={data?.featured?.id}
                 />
                 <AttentionList items={data?.attentionList ?? []} />
-                <section className="rounded-dash bg-dash-surface p-6">
-                  <h2 className="text-lg font-bold">Scrimly AI</h2>
-                  <p className="mt-2 text-sm text-dash-ink3">
-                    Wired in WP9 — OCR queue facts card.
-                  </p>
-                </section>
+                {data && <AiCard data={data} />}
               </div>
             </main>
           </>
