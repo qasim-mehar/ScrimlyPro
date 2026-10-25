@@ -64,3 +64,14 @@ Gray zones (expected, mechanical): `lib/db/schema.ts` (B and C add different tab
   flags editor UI).
 - **C-4**: land the Lane AB review's I-2 (worker-owned teardown with retry +
   `db:sweep-test` + maxWorkers cap) before the integration full-suite run.
+
+## Drizzle snapshot reconciliation procedure (wave1(8) — inherit this)
+
+The snapshot graph forked (B's snapshots lack admin tables; C's lack org
+tables). Fixed at wave1(8); any future lane that adds migrations to a
+forked graph must: (1) move db/migrations aside, (2) `npx drizzle-kit
+generate` against an EMPTY migrations dir to mint a snapshot describing
+the full integrated schema, (3) splice that snapshot in as the latest
+`NNNN_snapshot.json` (set prevId to the previous snapshot's id; keep the
+real journal + SQL files), (4) re-run `npx drizzle-kit generate` — the
+diff must be EMPTY before committing.
