@@ -206,6 +206,8 @@ export type AdminDashboardData = {
     orgs7d: number;
     draftMatches7d: number;
     lastReadAt: string | null;
+    /** Relative label computed at query time (components stay pure). */
+    lastReadAgo: string;
     nearQuotaCount: number;
   };
   gauge: {
@@ -241,6 +243,17 @@ export function firstNameFromEmail(email: string | null): string {
   const first = local.split(/[._\-+0-9]+/).filter(Boolean)[0] ?? "";
   if (!first) return "Admin";
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+/** Relative-time label for the AI card ("12 min ago" / "No reads yet"). */
+function agoLabel(iso: string | null): string {
+  if (!iso) return "No reads yet";
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
 }
 
 /** Month-end date (quota rules are monthly): the honest "due" for quota rows. */
@@ -597,6 +610,7 @@ export async function getAdminDashboardData(
       orgs7d: num(statRow?.orgs_7d),
       draftMatches7d: num(statRow?.draft_matches_7d),
       lastReadAt: iso(statRow?.last_read_at),
+      lastReadAgo: agoLabel(iso(statRow?.last_read_at)),
       nearQuotaCount: quotaUsers.length,
     },
     gauge: {

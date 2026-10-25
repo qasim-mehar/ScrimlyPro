@@ -1,5 +1,7 @@
 import { FeaturedOrgCard } from "@/components/admin/dashboard/FeaturedOrgCard";
+import { AiCard } from "@/components/admin/dashboard/AiCard";
 import { AttentionList } from "@/components/admin/dashboard/AttentionList";
+import { GaugeCard } from "@/components/admin/dashboard/GaugeCard";
 import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
 import { LifecyclePipeline } from "@/components/admin/dashboard/LifecyclePipeline";
 import { NeedsAttentionTable } from "@/components/admin/dashboard/NeedsAttentionTable";
@@ -49,9 +51,8 @@ export default async function AdminDashboard({
           <StatCards stats={data.stats} ai={data.ai} range={range} />
           <LifecyclePipeline lifecycle={data.lifecycle} range={range} />
           <AttentionList rows={data.attention} />
-          {/* Scrimly AI card + readiness gauge — WP9 */}
-          <div className="hq-card hq-skeleton h-[220px] bg-[var(--hq-ink)]" aria-hidden />
-          <div className="hq-card hq-skeleton h-[260px]" aria-hidden />
+          <AiCard ai={data.ai} />
+          <GaugeCard gauge={data.gauge} range={range} />
         </div>
       </div>
     </div>
