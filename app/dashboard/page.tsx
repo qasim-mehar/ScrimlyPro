@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AttentionTable } from "@/components/dashboard/attention-table";
 import { FeaturedCard } from "@/components/dashboard/featured-card";
+import { Pipeline, AttentionList } from "@/components/dashboard/pipeline";
 import { GreetingRow } from "@/components/dashboard/greeting-row";
 import { ReadinessGauge } from "@/components/dashboard/readiness-gauge";
 import { RangeFilter, StatCards } from "@/components/dashboard/stat-cards";
@@ -96,12 +97,12 @@ export default async function DashboardPage({
               <div className="flex flex-col gap-6">
                 <RangeFilter active={range} orgParam={orgParam} />
                 <StatCards stats={data?.stats ?? EMPTY_STATS} />
-                <section className="rounded-dash bg-dash-surface p-6">
-                  <h2 className="text-lg font-bold">Scrim pipeline</h2>
-                  <p className="mt-2 text-sm text-dash-ink3">
-                    Wired in WP8 — stage bar + ranked attention list.
-                  </p>
-                </section>
+                <Pipeline
+                  counts={data?.pipeline ?? { upcoming: 0, drafts: 0, scored: 0 }}
+                  avgProcessingSeconds={data?.avgProcessingSeconds ?? null}
+                  featuredSessionId={data?.featured?.id}
+                />
+                <AttentionList items={data?.attentionList ?? []} />
                 <section className="rounded-dash bg-dash-surface p-6">
                   <h2 className="text-lg font-bold">Scrimly AI</h2>
                   <p className="mt-2 text-sm text-dash-ink3">
