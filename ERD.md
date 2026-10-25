@@ -110,3 +110,29 @@ M1 (`m1-multitenancy-foundation`, see docs/reports/M1-implementation-report.md) 
 - **DB access law:** tenant request paths run through `withUserDb` (lib/db/user.ts: transaction-scoped `set_config('role','authenticated')` + verified JWT claims → RLS is the backstop); `getDb()` (owner role) and `lib/db/admin.ts` are eslint-banned from the request path.
 - **Deferred deltas (not built):** team logos → Storage bucket paths (data URLs still in `teams.logo_url`); `ocr_usage`/`shared_links` tables (M2/M4); MVP aggregation/standings remain TS pure functions (not moved to SQL).
 - **Local dev:** Postgres 14+ works without Docker — migration `0002` conditionally creates the `auth` schema stand-in (`auth.users`, `uid()`, `jwt()`) + `authenticated` role; all blocks no-op on a hosted project.`
+
+## 7. Wave 1 integrated state (M2 orgs + M3 admin)
+
+- **Org tables** (migrations 0010–0014): `organizations`, `org_members` (PK
+  org+user, role owner|admin|member — role transitions are RLS-enforced:
+  owner-grant and owner-row mutation require actor-owner), `org_invites`
+  (role DB-bounded to member|admin; SHA-256 hash-at-rest tokens),
+  `org_quotas` (platform-owned: SELECT-only for members, minted only by the
+  bootstrap trigger — raising a limit is a platform-side SQL operation),
+  `share_links` (hash-at-rest tokens), `usage_events` (append-only OCR
+  meter, per-USER enforcement: the limit is the org's
+  `monthly_ocr_calls`, the count is the user's month-total across ALL orgs).
+- **Admin tables** (migration 0020): `audit_log` (append-only, no
+  update/delete policy for anyone), `feature_flags`, `impersonation_sessions`.
+- **Two-layer law (as extended in wave 1):** `withUserDb` role-switch + RLS
+  is the suspenders; the belt predicates are org-membership
+  (`orgMemberPredicate`) on every tenant root select. The M3 guards run on
+  EFFECTIVE identity (`getEffectiveUser` — impersonation target when a
+  valid ledger-backed cookie exists) and probe the kill switch
+  (`is_user_disabled()`) — every authed route, action, and page, org
+  surfaces included (wave1(6) fold).
+- **Org-level kill switch: RESERVED-until-M4.** `feature_flags` accepts
+  `subject_type='org'` (schema + M3-INT markers), but no request path
+  probes it. The one audited disable path is the user kill switch via the
+  Tenants console; `/admin/flags` REFUSES `('user','disabled')` (tested) —
+  an org-subject `disabled` flag would be inert until M4 wires the probe.

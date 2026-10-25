@@ -18,8 +18,9 @@ export default async function AdminDashboard() {
     { label: "Matches", value: m.matches },
     {
       label: "OCR calls (7d)",
-      // M3-INT: null until a persisted OCR usage table exists (M-next).
-      value: m.ocrCalls7d === null ? "not metered" : m.ocrCalls7d,
+      // M3-INT (wave1(9)): wired to usage_events (per-user enforcement,
+      // platform-wide rollup shown here).
+      value: m.ocrCalls7d,
     },
   ];
 

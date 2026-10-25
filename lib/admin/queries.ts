@@ -20,7 +20,7 @@ export type DashboardMetrics = {
   users: number;
   sessions: number;
   matches: number;
-  ocrCalls7d: number | null; // null = not metered (no persisted OCR usage table)
+  ocrCalls7d: number; // platform-wide OCR invocations, trailing 7 days (usage_events, wave1(9))
   activeImpersonations: ActiveImpersonation[];
 };
 
@@ -47,16 +47,17 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     return rows[0]?.n ?? 0;
   };
 
-  const [users, sessions, matches] = await Promise.all([
+  // M3-INT (wave1(9)): wired to B's usage_events table. The OCR meter is
+  // per-USER at enforcement time (0014/wave1(4a)); this rollup is the
+  // platform-wide 7-day invocation count the operator dashboard shows.
+  const [users, sessions, matches, ocrCalls7d] = await Promise.all([
     countOf(sql`select count(*)::int as n from auth.users`),
     countOf(sql`select count(*)::int as n from sessions`),
     countOf(sql`select count(*)::int as n from matches`),
+    countOf(
+      sql`select count(*)::int as n from usage_events where kind = 'ocr' and created_at >= now() - interval '7 days'`,
+    ),
   ]);
-
-  // M3-INT: OCR call metering needs a persisted usage table (M-next);
-  // OCR requests are not stored today, so the metric reports null and the
-  // dashboard renders "not metered" instead of a misleading 0.
-  const ocrCalls7d: number | null = null;
 
   const impRes = (await db.execute(sql`
     select id, admin_user_id, target_user_id, target_email, reason,
