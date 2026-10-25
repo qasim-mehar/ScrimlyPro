@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  /* App theme — drives the authenticated surface (P6/P7 typography + palette).
+     These tokens must survive the landing merge: pages under app/sessions,
+    app/orgs and app/admin all build utilities from them. */
   --font-display: "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif;
   --color-gold: #f5c542;
   --color-bg: #0b0d12;
@@ -8,10 +11,86 @@
   --color-surface-2: #1a1e28;
   --color-line: #272d3b;
   --color-muted: #8b93a7;
+
+  /* Landing page (landing-page branch). */
+  --color-snes-green: #22c55e;
+  --color-snes-blue: #3b82f6;
+  --color-snes-yellow: #facc15;
+  --color-snes-red: #ef4444;
+  --color-cta: #ffd23f;
+  --color-ink: #050505;
 }
 
 body {
   background-color: var(--color-bg);
   color: #e8eaf0;
   font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-cta);
+  color: var(--color-ink);
+}
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--color-cta);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+/* Hero FX layer children (components/landing/Hero.tsx) — created from JS
+   with plain class names, so they can't be CSS-Module hashed. */
+.pop {
+  position: absolute;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--c);
+  transform: translate(-50%, -50%);
+  animation: pop-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  text-shadow: 0 1px 0 #fff;
+}
+
+@keyframes pop-rise {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  25% {
+    transform: translate(-50%, -70%) scale(1.12);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -190%) scale(1);
+  }
+}
+
+.star-fly {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  color: var(--c);
+  animation: star-fly 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes star-fly {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
+      scale(1.15) rotate(260deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop,
+  .star-fly {
+    animation-duration: 0.01s;
+  }
 }

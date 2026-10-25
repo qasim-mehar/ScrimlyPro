@@ -2,7 +2,28 @@
 import Link from "next/link";
 
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
+import BenefitsSection from "@/components/landing/BenefitsSection";
+import Hero from "@/components/landing/Hero";
+import ReserveSection from "@/components/reserve-section";
+import SiteFooter from "@/components/site-footer";
 import { requireUser } from "@/lib/auth/action-guard";
+import { getAuthedUser } from "@/lib/supabase/server";
+
+/**
+ * Public marketing landing (landing-page branch). "/" is on PUBLIC_PAGES, so
+ * the proxy lets anonymous visitors through here instead of bouncing them to
+ * /login; the copy is the contributor's, still unwritten for ScrimlyPro.
+ */
+function LandingPage() {
+  return (
+    <>
+      <Hero />
+      <BenefitsSection />
+      <ReserveSection />
+      <SiteFooter />
+    </>
+  );
+}
 
 /**
  * WP6: authenticated users only (the proxy gates too — this is defense in
@@ -11,6 +32,10 @@ import { requireUser } from "@/lib/auth/action-guard";
  * eq(sessions.userId, user.id) predicate when it arrives.
  */
 export default async function Home() {
+  // Signed-out visitors see the landing page, tenants see their home.
+  const user = await getAuthedUser();
+  if (!user) return <LandingPage />;
+
   await requireUser();
 
   return (
@@ -21,7 +46,7 @@ export default async function Home() {
           SCRIMLY PRO
         </h1>
         <p className="text-center text-sm text-muted">
-          Scrim results, standings &amp; MVP graphics — in minutes.
+          Scrim results, standings & MVP graphics — in minutes.
         </p>
         <Link
           href="/sessions/new"
