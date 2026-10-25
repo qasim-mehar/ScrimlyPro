@@ -237,12 +237,20 @@ const iso = (v: unknown): string | null => {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 };
 
-/** Greeting name from the admin's real email local-part (profiles has no display name). */
+/**
+ * Greeting name from the admin's real email local-part (profiles has no
+ * display name). Picks the LONGEST alphabetic chunk so tagged addresses
+ * like "m6.dev.admin@" humanize to "Admin", not "M".
+ */
 export function firstNameFromEmail(email: string | null): string {
   const local = (email ?? "").split("@")[0] ?? "";
-  const first = local.split(/[._\-+0-9]+/).filter(Boolean)[0] ?? "";
-  if (!first) return "Admin";
-  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  const chunks = local.split(/[._\-+0-9]+/).filter(Boolean);
+  const pick =
+    chunks.length === 0
+      ? ""
+      : chunks.reduce((best, cur) => (cur.length > best.length ? cur : best));
+  if (!pick) return "Admin";
+  return pick.charAt(0).toUpperCase() + pick.slice(1).toLowerCase();
 }
 
 /** Relative-time label for the AI card ("12 min ago" / "No reads yet"). */

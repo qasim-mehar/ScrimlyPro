@@ -159,3 +159,20 @@ runbook v2 + rehearsal (wave1(13a/13b)). Full record:
 cut-over: B1 GoTrue live flows, E-1 backup-boundary decision (HUMAN),
 org kill switch RESERVED-until-M4, auth-users provisioning question
 (service-role insert vs GoTrue invite), LTS Node pin for deploy.
+
+## 8. M6 — Super-admin dashboard (COMPLETE; branch `qasim/m6-admin-dashboard`)
+
+Rebuilt the super-admin experience as the light lime-and-black dashboard
+(reference halves under `docs/reference/dashboard/`): role-based landing on
+`/` (real-identity admins → `/admin`, effective identity wins while
+impersonating), the app shell (floating sidebar + Platform HQ badge + lime
+system card, top bar with ⌘K search / notifications bell / impersonation
+dialog), and every dashboard widget wired to real platform data through the
+new read-only, audit-silent `lib/admin/dashboard-queries.ts`. New surfaces:
+`GET /api/admin/search` (admin 404 law, no-store) and the read-only
+`/admin/orgs` page; tenants/flags/audit consoles restyled into the shell
+(visual-only). Failed AI reads are not metered anywhere, so failure-derived
+widgets use honest fallbacks instead of invented numbers (deviation table
+in the report). One new lib file (`lib/auth/platform-role.ts`) single-
+sources the role predicate shared by the admin guard and the `/` landing.
+Full record: `docs/reports/M6-admin-dashboard-report.md`.
