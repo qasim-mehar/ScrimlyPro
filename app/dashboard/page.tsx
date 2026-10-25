@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AiCard } from "@/components/dashboard/ai-card";
 import { AttentionTable } from "@/components/dashboard/attention-table";
 import { FeaturedCard } from "@/components/dashboard/featured-card";
+import { CreateOrgCard, NoSessionsCard } from "@/components/dashboard/onboarding";
 import { Pipeline, AttentionList } from "@/components/dashboard/pipeline";
 import { GreetingRow } from "@/components/dashboard/greeting-row";
 import { ReadinessGauge } from "@/components/dashboard/readiness-gauge";
@@ -87,12 +88,7 @@ export default async function DashboardPage({
                 {data?.featured ? (
                   <FeaturedCard session={data.featured} />
                 ) : (
-                  <section className="rounded-dash bg-dash-surface p-6">
-                    <h2 className="text-lg font-bold">No active session</h2>
-                    <p className="mt-2 text-sm text-dash-ink3">
-                      Create a session to see its live standings here.
-                    </p>
-                  </section>
+                  <NoSessionsCard />
                 )}
                 {/* WP6 needs-attention table. */}
                 <AttentionTable
@@ -115,12 +111,8 @@ export default async function DashboardPage({
             </main>
           </>
         ) : (
-          <main className="rounded-dash bg-dash-surface p-6">
-            <h1 className="text-xl font-bold">Create your organization</h1>
-            <p className="mt-2 text-sm text-dash-ink3">
-              ScrimlyPro organizes scrims per organization. Create one to get
-              started.
-            </p>
+          <main className="flex min-h-[60vh] items-center justify-center">
+            <CreateOrgCard />
           </main>
         )}
       </div>
