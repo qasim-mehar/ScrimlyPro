@@ -2,6 +2,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { PUBLIC_PAGES, isPublicPath } from "@/lib/auth/public-paths";
+
 /**
  * Architectural guard-enforcement meta-test (M1 review A2).
  *
@@ -115,5 +117,150 @@ describe("architecture: every request path is auth-guarded (A2)", () => {
       return !GUARD_MARKERS.some((m) => src.includes(m));
     });
     expect(unguarded).toEqual([]);
+  });
+});
+
+/**
+ * Wave-1 (WP6): Lane B's stand-in meta-test (tests/security/
+ * m2-guard-coverage.test.ts) folded in — ONE meta-test file for the whole
+ * request surface. Entries ONLY ADDED (never removed). The M2 route test
+ * now asserts withTenantRoute: the WP6 fold retired B's withOrgRoute copy
+ * so the org surface shares ONE guard stack (kill switch + effective
+ * identity, when Lane C lands, arrive for free).
+ */
+function read(path: string): string {
+  return readFileSync(join(process.cwd(), path), "utf8");
+}
+
+const M2_ROUTES = [
+  "app/api/orgs/[id]/invites/route.ts",
+  "app/api/sessions/[id]/share/route.ts",
+];
+
+const M2_ACTION_OR_PAGE = [
+  "app/orgs/page.tsx",
+  "app/orgs/[id]/actions.ts",
+  "app/orgs/[id]/page.tsx",
+  "app/orgs/new/actions.ts",
+  "app/orgs/new/page.tsx",
+  "app/sessions/[id]/actions.ts",
+  "app/sessions/[id]/page.tsx",
+  "app/sessions/[id]/mvp/actions.ts",
+  "app/sessions/[id]/matches/[matchNo]/actions.ts",
+  "app/invite/[token]/actions.ts",
+  "app/invite/[token]/page.tsx",
+];
+
+describe("M2 guard coverage (B stand-in, folded at WP6)", () => {
+  it("every M2 dynamic API route is wrapped in withTenantRoute (WP6 fold)", () => {
+    for (const route of M2_ROUTES) {
+      const src = read(route);
+      expect(src, `${route}: withTenantRoute`).toContain("withTenantRoute");
+      expect(src, `${route}: no bare export async function`).not.toMatch(
+        /export\s+(async\s+function|const)\s+(POST|DELETE)(?!\s*=)/,
+      );
+    }
+  });
+
+  it("the org wrapper copy is gone from the tree and every request path", () => {
+    // lib/orgs/route-guard.ts (withOrgRoute) was a pre-Lane-C copy of the
+    // guard stack — a kill-switch bypass waiting to happen. The fold is
+    // permanent: the file must stay deleted and no request path may name it.
+    let exists = true;
+    try {
+      readFileSync(join(process.cwd(), "lib/orgs/route-guard.ts"), "utf8");
+    } catch {
+      exists = false;
+    }
+    expect(exists, "lib/orgs/route-guard.ts must not exist").toBe(false);
+    for (const route of M2_ROUTES) {
+      expect(read(route), `${route}: withOrgRoute retired`).not.toContain("withOrgRoute");
+    }
+  });
+
+  it("every M2 action/page re-derives role server-side (requireOrgRole/requireSessionAccess)", () => {
+    for (const file of M2_ACTION_OR_PAGE) {
+      const src = read(file);
+      const guarded =
+        src.includes("requireOrgRole") ||
+        src.includes("requireSessionAccess") ||
+        // the invite page/action verifies identity directly (membership is
+        // derived from the single-use token by the definer function, not
+        // from a client-supplied org id)
+        src.includes("getAuthedUser") ||
+        src.includes("requireUser");
+      expect(guarded, `${file}: membership guard`).toBe(true);
+    }
+  });
+
+  it("no M2 file reintroduces the M1 ownership predicate or assertSessionOwner", () => {
+    const files = [
+      ...M2_ROUTES,
+      ...M2_ACTION_OR_PAGE,
+      "app/sessions/[id]/page.tsx",
+      "app/sessions/new/actions.ts",
+      "app/api/ocr/route.ts",
+      "lib/sessions/queries.ts",
+    ];
+    for (const file of files) {
+      const src = read(file);
+      expect(src, `${file}: assertSessionOwner is retired`).not.toContain(
+        "assertSessionOwner",
+      );
+      expect(
+        src,
+        `${file}: no eq(sessions.userId, …) belt predicate`,
+      ).not.toMatch(/eq\(sessions\.userId/);
+    }
+  });
+
+  it("public surface additions are enumerated; everything else stays gated", () => {
+    expect(isPublicPath("/share/abc")).toBe(true);
+    expect(isPublicPath("/invite/abc")).toBe(true);
+    expect(isPublicPath("/orgs/abc")).toBe(false);
+    expect(isPublicPath("/api/orgs/x/invites")).toBe(false);
+    for (const required of ["/invite", "/share"]) {
+      expect(PUBLIC_PAGES).toContain(required);
+    }
+  });
+
+  it("the public share page: rate-limited, noindex, projection-only reader", () => {
+    const page = read("app/share/[token]/page.tsx");
+    expect(page).toContain("checkShareRateLimit");
+    expect(page).toContain("noindex");
+    expect(page).toContain("getSharedStandings");
+    // The page must not import the admin client or DB layer directly.
+    expect(page).not.toContain("lib/db/admin");
+    expect(page).not.toContain("lib/db/client");
+
+    const reader = read("lib/share/public-reader.ts");
+    expect(reader).toContain("getAdminSql");
+    // The projection contract lives in one narrow function.
+    expect(reader).toContain("export async function getSharedStandings");
+  });
+
+  it("token plumbing: hashes only — no raw token is ever written in lib", () => {
+    for (const file of [
+      "lib/orgs/tokens.ts",
+      "lib/orgs/invites.ts",
+      "lib/share/links.ts",
+    ]) {
+      const src = read(file);
+      expect(src).toContain("hashToken");
+    }
+    // The creation paths return the raw token exactly once; they must not
+    // also persist it.
+    const invites = read("lib/orgs/invites.ts");
+    expect(invites).toMatch(/tokenHash: hashToken\(token\)/);
+    const links = read("lib/share/links.ts");
+    expect(links).toMatch(/tokenHash: hashToken\(token\)/);
+  });
+
+  it("OCR route: quota gate runs inside the request tx with the membership predicate", () => {
+    const ocr = read("app/api/ocr/route.ts");
+    expect(ocr).toContain("assertOcrQuota");
+    expect(ocr).toContain("recordUsage");
+    expect(ocr).toContain("orgMemberPredicate");
+    expect(ocr).toContain("withUserDb");
   });
 });

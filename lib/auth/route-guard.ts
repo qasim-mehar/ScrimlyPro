@@ -18,7 +18,18 @@ import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
  * payloads/headers are never consulted for identity.
  */
 
-export type TenantRouteContext = { user: AuthedUser };
+export type TenantRouteContext<P = undefined> = {
+  user: AuthedUser;
+  /**
+   * Wave-1 (WP6 fold): dynamic-segment params, awaited from the route
+   * context. Static routes never receive a params promise and get undefined.
+   * This is why Lane B's withOrgRoute wrapper existed — withTenantRoute
+   * dropped params, so org routes had to use a COPY of the guard stack that
+   * would silently miss every future insertion (kill switch, effective
+   * identity). One wrapper, one stack.
+   */
+  params: P;
+};
 
 export type RequireUserResult =
   | { ok: true; user: AuthedUser }
@@ -47,19 +58,28 @@ export async function requireUser(req: Request): Promise<RequireUserResult> {
 // user id — module-level so the window survives across requests.
 const apiLimiter = new SlidingWindowRateLimiter(RATE_LIMITS.api);
 
-export type TenantRouteHandler = (
-  request: Request,
-  ctx: TenantRouteContext,
-) => Promise<NextResponse>;
-
 /**
  * Wrap an authenticated route handler with the full guard stack. The
- * wrapped handler receives `{ user }` (server-verified) and must return a
- * no-store response; tenant reads/writes inside the handler run through
+ * wrapped handler receives `{ user, params }` (server-verified identity;
+ * awaited dynamic params or undefined) and must return a no-store
+ * response; tenant reads/writes inside the handler run through
  * withUserDb({ sub: user.id }, ...).
+ *
+ * Generic P: pass it for dynamic routes —
+ *   withTenantRoute<{ id: string }>(async (req, { user, params }) => ...)
+ * — or omit it on static routes (params is then undefined).
  */
-export function withTenantRoute(handler: TenantRouteHandler) {
-  return async (request: Request): Promise<NextResponse> => {
+export function withTenantRoute<P = undefined>(
+  handler: (request: Request, ctx: TenantRouteContext<P>) => Promise<NextResponse>,
+) {
+  return async (
+    request: Request,
+    // Next 16 hands EVERY route handler `{ params: Promise<{}> }` (empty for
+    // static routes). Accept its widest shape here — narrowing to the
+    // handler's P happens inside — so both static and dynamic routes
+    // typecheck against Next's route validator.
+    routeCtx?: { params: Promise<object> },
+  ): Promise<NextResponse> => {
     // 1. Same-origin for state-changing methods (CSRF / cross-site posts).
     if (!assertSameOrigin(request)) {
       return noStore({ error: "forbidden" }, { status: 403 });
@@ -80,7 +100,10 @@ export function withTenantRoute(handler: TenantRouteHandler) {
     }
 
     try {
-      return await handler(request, { user });
+      const params = routeCtx
+        ? ((await routeCtx.params) as unknown as P)
+        : (undefined as P);
+      return await handler(request, { user, params });
     } catch (err) {
       // Unconfigured deployment (no Supabase env): 503, fail-closed, no detail.
       if (

@@ -3,19 +3,19 @@ import { noStore } from "@/lib/http";
 import { createInvite } from "@/lib/orgs/invites";
 import { appOriginFromRequest } from "@/lib/orgs/origin";
 import { fetchOrgRole, roleAtLeast } from "@/lib/orgs/orgs";
-import { withOrgRoute } from "@/lib/orgs/route-guard";
+import { withTenantRoute } from "@/lib/auth/route-guard";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * POST /api/orgs/[id]/invites — mint a single-use invite link (admin+).
- * Guarded: withOrgRoute (origin/identity/rate-limit) + requireOrgRole(admin).
+ * Guarded: withTenantRoute (origin/identity/rate-limit; WP6 fold — the wrapper copy is gone) + requireOrgRole(admin).
  * Response carries the RAW link exactly once (`<origin>/invite/<token>`);
  * only its SHA-256 hash is stored. Pilot: no emails are sent — the admin
  * copies the link. Body: { role: "admin" | "member", email?: string }.
  */
-export const POST = withOrgRoute<{ id: string }>(async (request, { user, params }) => {
+export const POST = withTenantRoute<{ id: string }>(async (request, { user, params }) => {
   const orgId = params.id;
   if (!UUID_RE.test(orgId)) {
     return noStore({ error: "not found" }, { status: 404 });

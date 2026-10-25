@@ -4,7 +4,7 @@ import { withUserDb } from "@/lib/db/user";
 import { noStore } from "@/lib/http";
 import { fetchOrgRole } from "@/lib/orgs/orgs";
 import { appOriginFromRequest } from "@/lib/orgs/origin";
-import { withOrgRoute } from "@/lib/orgs/route-guard";
+import { withTenantRoute } from "@/lib/auth/route-guard";
 import { createShareLink, revokeShareLink } from "@/lib/share/links";
 import { sessions } from "@/lib/db/schema";
 
@@ -34,7 +34,7 @@ async function requireOrgMemberRole(
  * (org member+). 201 with the RAW link (<origin>/share/<token>) exactly
  * once; only the SHA-256 hash is stored. Foreign/missing session → 404.
  */
-export const POST = withOrgRoute<{ id: string }>(async (request, { user, params }) => {
+export const POST = withTenantRoute<{ id: string }>(async (request, { user, params }) => {
   const sessionId = params.id;
   if (!UUID_RE.test(sessionId)) {
     return noStore({ error: "not found" }, { status: 404 });
@@ -57,7 +57,7 @@ export const POST = withOrgRoute<{ id: string }>(async (request, { user, params 
  * DELETE /api/sessions/[id]/share — revoke (member+). Body: { linkId }.
  * A foreign linkId (another session's) affects zero rows → same 404 shape.
  */
-export const DELETE = withOrgRoute<{ id: string }>(async (request, { user, params }) => {
+export const DELETE = withTenantRoute<{ id: string }>(async (request, { user, params }) => {
   const sessionId = params.id;
   if (!UUID_RE.test(sessionId)) {
     return noStore({ error: "not found" }, { status: 404 });
