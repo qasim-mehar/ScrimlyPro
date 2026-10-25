@@ -1,3 +1,4 @@
+import { FeaturedOrgCard } from "@/components/admin/dashboard/FeaturedOrgCard";
 import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
 import {
   getAdminDashboardData,
@@ -33,8 +34,7 @@ export default async function AdminDashboard({
       {/* Two-column composition (§4.5): ~60/40 at ≥1280, stacked below. */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="min-w-0 space-y-6">
-          {/* Featured org card — WP5 */}
-          <section className="hq-card hq-skeleton h-[400px]" aria-hidden />
+          <FeaturedOrgCard featured={data.featured} range={range} />
           {/* Needs-attention table — WP6 */}
           <section className="hq-card hq-skeleton h-[280px]" aria-hidden />
         </div>
