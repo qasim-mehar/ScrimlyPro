@@ -14,8 +14,10 @@ describe("segmentWidths", () => {
   });
 
   it("keeps nonzero segments visible at a 4% minimum", () => {
+    // No renormalization: widths may sum past 100 under the clamp; the flex
+    // bar shrinks proportionally, and the printed counts stay true.
     expect(segmentWidths({ upcoming: 99, drafts: 1, scored: 0 })).toEqual([
-      96, 4, 0,
+      99, 4, 0,
     ]);
   });
 
