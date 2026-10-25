@@ -1,3 +1,8 @@
+import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
+import {
+  getAdminDashboardData,
+  parseRange,
+} from "@/lib/admin/dashboard-queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
 export const dynamic = "force-dynamic";
@@ -8,15 +13,21 @@ export const dynamic = "force-dynamic";
  * needs-attention table, stat cards + time filter, lifecycle pipeline +
  * attention list, AI card + gauge).
  */
-export default async function AdminDashboard() {
-  await requireAdmin();
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const admin = await requireAdmin();
+  const { range: rangeParam } = await searchParams;
+  const range = parseRange(rangeParam);
+  const data = await getAdminDashboardData(range, admin.email);
 
   return (
     <div className="space-y-6">
-      {/* Greeting row — WP4 */}
-      <div
-        className="hq-skeleton h-11 w-72 rounded-full bg-[var(--hq-surface)]"
-        aria-hidden
+      <GreetingRow
+        firstName={data.adminFirstName}
+        attentionCount={data.stats.attentionCount}
       />
 
       {/* Two-column composition (§4.5): ~60/40 at ≥1280, stacked below. */}
