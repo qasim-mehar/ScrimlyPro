@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 
+import { FeaturedCard } from "@/components/dashboard/featured-card";
 import { GreetingRow } from "@/components/dashboard/greeting-row";
+import { ReadinessGauge } from "@/components/dashboard/readiness-gauge";
 import { Sidebar, type NavCounts } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/top-bar";
 import { requireUser } from "@/lib/auth/action-guard";
@@ -59,13 +61,19 @@ export default async function DashboardPage({
 
             <main className="grid grid-cols-[3fr_2fr] gap-6">
               <div className="flex flex-col gap-6">
-                {/* WP5 featured session card. */}
-                <section className="rounded-dash bg-dash-surface p-6">
-                  <h2 className="text-lg font-bold">Featured session</h2>
-                  <p className="mt-2 text-sm text-dash-ink3">
-                    Wired in WP5 — newest active session card + readiness gauge.
-                  </p>
-                </section>
+                {data?.featured ? (
+                  <>
+                    <FeaturedCard session={data.featured} />
+                    <ReadinessGauge session={data.featured} />
+                  </>
+                ) : (
+                  <section className="rounded-dash bg-dash-surface p-6">
+                    <h2 className="text-lg font-bold">No active session</h2>
+                    <p className="mt-2 text-sm text-dash-ink3">
+                      Create a session to see its live standings here.
+                    </p>
+                  </section>
+                )}
                 {/* WP6 needs-attention table. */}
                 <section
                   id="attention"
