@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { AttentionTable } from "@/components/dashboard/attention-table";
 import { FeaturedCard } from "@/components/dashboard/featured-card";
 import { GreetingRow } from "@/components/dashboard/greeting-row";
 import { ReadinessGauge } from "@/components/dashboard/readiness-gauge";
@@ -75,15 +76,10 @@ export default async function DashboardPage({
                   </section>
                 )}
                 {/* WP6 needs-attention table. */}
-                <section
-                  id="attention"
-                  className="rounded-dash bg-dash-surface p-6"
-                >
-                  <h2 className="text-lg font-bold">Needs attention</h2>
-                  <p className="mt-2 text-sm text-dash-ink3">
-                    Wired in WP6 — flagged sessions table.
-                  </p>
-                </section>
+                <AttentionTable
+                  rows={data?.attentionSessions ?? []}
+                  renderedAt={new Date()}
+                />
               </div>
               <div className="flex flex-col gap-6">
                 <section className="rounded-dash bg-dash-surface p-6">
