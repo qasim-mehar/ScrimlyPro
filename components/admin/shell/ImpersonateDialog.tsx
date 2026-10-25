@@ -173,7 +173,7 @@ export function ImpersonateDialog() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Search by email"
-                  className="mt-1.5 h-10 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-[14px] text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]"
+                  className="mt-1.5 h-10 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-[14px] text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
                 />
                 <ul className="mt-2 divide-y divide-[var(--hq-bg)]" aria-label="User results">
                   {candidates.map((c) => (
@@ -188,7 +188,7 @@ export function ImpersonateDialog() {
                     </li>
                   ))}
                   {q.trim().length > 0 && candidates.length === 0 && (
-                    <li className="px-2 py-3 text-[13px] text-[var(--hq-ink-4)]">
+                    <li className="px-2 py-3 text-[13px] text-[var(--hq-ink-3)]">
                       No users match.
                     </li>
                   )}
@@ -216,9 +216,9 @@ export function ImpersonateDialog() {
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
                   placeholder="Support ticket #, what you're investigating…"
-                  className="mt-1.5 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] p-3 text-[14px] text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]"
+                  className="mt-1.5 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] p-3 text-[14px] text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
                 />
-                <p className="mt-2 text-[12px] text-[var(--hq-ink-4)]">
+                <p className="mt-2 text-[12px] text-[var(--hq-ink-3)]">
                   Session expires in 30 minutes · every action is attributed to
                   you · the member surface opens when you start.
                 </p>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 
 import { ImpersonateDialog } from "./ImpersonateDialog";
 import { NotificationsBell, type BellEvent } from "./NotificationsBell";
@@ -115,7 +115,7 @@ function SidebarContent({
           <span className="block truncate text-[18px] font-bold leading-tight">
             ScrimlyPro
           </span>
-          <span className="block truncate text-[12px] text-[var(--hq-ink-4)]">
+          <span className="block truncate text-[12px] text-[var(--hq-ink-3)]">
             Platform HQ · {envLabel}
           </span>
         </span>
@@ -207,8 +207,23 @@ export function AdminShell({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setDrawerOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
   return (
     <div className="admin-scope min-h-dvh">
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-[var(--hq-ink)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
       <div className="mx-auto flex min-h-dvh w-full max-w-[1680px] gap-6 p-4 lg:p-6">
         {/* Desktop sidebar — floating white panel (24px radius, 24px rhythm). */}
         <aside className="sticky top-6 hidden max-h-[calc(100dvh-48px)] w-[264px] flex-none flex-col gap-6 overflow-y-auto rounded-[24px] bg-[var(--hq-surface)] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] lg:flex">
@@ -237,7 +252,7 @@ export function AdminShell({
             </div>
           </header>
 
-          <main className="mt-6 min-w-0 flex-1 pb-4">{children}</main>
+          <main id="admin-main" className="mt-6 min-w-0 flex-1 pb-4">{children}</main>
         </div>
       </div>
 

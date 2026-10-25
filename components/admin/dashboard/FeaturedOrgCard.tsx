@@ -20,7 +20,7 @@ function statusTag(status: FeaturedOrg["status"]) {
   }
   if (status === "quota") {
     return (
-      <span className="hq-chip bg-[var(--hq-amber)] text-white">
+      <span className="hq-chip bg-[var(--hq-amber-ink)] text-white">
         Quota warnings
       </span>
     );
@@ -156,7 +156,7 @@ export function FeaturedOrgCard({
               style={{ width: `${Math.min(100, activityPct)}%` }}
             />
           </div>
-          <p className="mt-1.5 text-[12px] text-[var(--hq-ink-4)]">
+          <p className="mt-1.5 text-[12px] text-[var(--hq-ink-3)]">
             {featured.membersActive} of {featured.membersTotal} members used AI
             reads in {RANGE_LABELS[range].toLowerCase()}
             {featured.quotaPct >= 80
@@ -179,7 +179,7 @@ export function FeaturedOrgCard({
                   : "border-l border-[var(--hq-line)] px-2"
               }
             >
-              <dt className="order-2 text-[12px] text-[var(--hq-ink-4)]">
+              <dt className="order-2 text-[12px] text-[var(--hq-ink-3)]">
                 {s.label}
               </dt>
               <dd className="order-1 text-[16px] font-bold text-[var(--hq-ink)]">

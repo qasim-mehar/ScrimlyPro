@@ -36,7 +36,7 @@ export function LifecyclePipeline({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-[16px] font-bold text-[var(--hq-ink)]">User lifecycle</h2>
         <div className="flex items-baseline gap-4">
-          <span className="text-[13px] text-[var(--hq-ink-4)]">
+          <span className="text-[13px] text-[var(--hq-ink-3)]">
             Average activation{" "}
             {lifecycle.averageActivationDays == null
               ? "—"
@@ -54,7 +54,7 @@ export function LifecyclePipeline({
       {total === 0 ? (
         <div className="mt-4">
           <div className="h-2 rounded-[12px] bg-[var(--hq-line)]" aria-hidden />
-          <p className="mt-3 text-[13px] text-[var(--hq-ink-4)]">
+          <p className="mt-3 text-[13px] text-[var(--hq-ink-3)]">
             No users in range.
           </p>
         </div>
@@ -78,7 +78,7 @@ export function LifecyclePipeline({
                 <p className="text-[14px] font-bold text-[var(--hq-ink)]">
                   {s.count.toLocaleString("en-US")}
                 </p>
-                <p className="truncate text-[13px] text-[var(--hq-ink-4)]">
+                <p className="truncate text-[13px] text-[var(--hq-ink-3)]">
                   {s.label}
                 </p>
               </div>

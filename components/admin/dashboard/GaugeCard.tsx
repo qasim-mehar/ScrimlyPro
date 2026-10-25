@@ -63,7 +63,7 @@ export function GaugeCard({
           <span className="text-[14px] font-semibold text-[var(--hq-ink)]">
             {gauge.readsInRange.toLocaleString("en-US")} reads metered
           </span>
-          <span className="text-[13px] text-[var(--hq-ink-4)]">
+          <span className="text-[13px] text-[var(--hq-ink-3)]">
             {RANGE_LABELS[range]} · failures not tracked
           </span>
         </div>

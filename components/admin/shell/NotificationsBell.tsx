@@ -106,7 +106,7 @@ export function NotificationsBell({ events }: { events: BellEvent[] }) {
             Platform activity
           </p>
           {events.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-5 py-8 text-[var(--hq-ink-4)]">
+            <div className="flex flex-col items-center gap-2 px-5 py-8 text-[var(--hq-ink-3)]">
               <IconInbox size={20} />
               <p className="text-[13px]">No platform events yet.</p>
             </div>
@@ -120,7 +120,7 @@ export function NotificationsBell({ events }: { events: BellEvent[] }) {
                   <p className="text-[13px] leading-snug text-[var(--hq-ink-2)]">
                     {ev.text}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-[var(--hq-ink-4)]">
+                  <p className="mt-0.5 text-[12px] text-[var(--hq-ink-3)]">
                     {relTime(ev.createdAt, now)}
                   </p>
                 </li>

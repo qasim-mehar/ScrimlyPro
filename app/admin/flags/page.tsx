@@ -20,7 +20,7 @@ export default async function AdminFlags() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">AI &amp; Flags</h1>
-        <p className="mt-1 text-[13px] text-[var(--hq-ink-4)]">
+        <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
           Platform flags · every change is audited (admin.flag.set / delete)
         </p>
       </div>
@@ -61,7 +61,7 @@ export default async function AdminFlags() {
                       {f.subjectType}
                     </span>
                     {f.subjectId && (
-                      <span className="ml-2 font-mono text-[12px] text-[var(--hq-ink-4)]">
+                      <span className="ml-2 font-mono text-[12px] text-[var(--hq-ink-3)]">
                         {f.subjectId.slice(0, 8)}…
                       </span>
                     )}

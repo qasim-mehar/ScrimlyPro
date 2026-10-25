@@ -23,7 +23,7 @@ export default async function AdminTenants({
     <div className="space-y-6">
       <div>
         <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">Users</h1>
-        <p className="mt-1 text-[13px] text-[var(--hq-ink-4)]">
+        <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
           Read-only list · disable/impersonate actions are audited
         </p>
       </div>
@@ -34,7 +34,7 @@ export default async function AdminTenants({
           name="q"
           defaultValue={query}
           placeholder="Search by email or user id…"
-          className="h-10 min-w-0 flex-1 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]"
+          className="h-10 min-w-0 flex-1 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <button
           type="submit"
@@ -80,7 +80,7 @@ export default async function AdminTenants({
                     <span className="block truncate text-[14px] font-semibold text-[var(--hq-ink)]">
                       {t.email ?? "(no email)"}
                     </span>
-                    <span className="mt-0.5 block font-mono text-[12px] text-[var(--hq-ink-4)]">
+                    <span className="mt-0.5 block font-mono text-[12px] text-[var(--hq-ink-3)]">
                       {t.id.slice(0, 8)}…
                     </span>
                   </td>

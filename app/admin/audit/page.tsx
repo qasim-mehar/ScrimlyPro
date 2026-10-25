@@ -22,7 +22,7 @@ export default async function AdminAudit({
     <div className="space-y-6">
       <div>
         <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">Audit log</h1>
-        <p className="mt-1 text-[13px] text-[var(--hq-ink-4)]">
+        <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
           Append-only security events · ip_hash deliberately not rendered
         </p>
       </div>
@@ -33,14 +33,14 @@ export default async function AdminAudit({
           name="action"
           defaultValue={action ?? ""}
           placeholder="Action prefix (e.g. admin.impersonation)"
-          className="h-10 w-72 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]"
+          className="h-10 w-72 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <input
           type="search"
           name="actor"
           defaultValue={actor ?? ""}
           placeholder="Actor user id (uuid)"
-          className="h-10 w-72 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]"
+          className="h-10 w-72 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <button
           type="submit"
@@ -78,10 +78,10 @@ export default async function AdminAudit({
                       {r.action}
                     </span>
                   </td>
-                  <td className="py-4 pr-4 font-mono text-[12px] text-[var(--hq-ink-4)]">
+                  <td className="py-4 pr-4 font-mono text-[12px] text-[var(--hq-ink-3)]">
                     {r.actorUserId ? `${r.actorUserId.slice(0, 8)}…` : "—"}
                   </td>
-                  <td className="py-4 pr-4 font-mono text-[12px] text-[var(--hq-ink-4)]">
+                  <td className="py-4 pr-4 font-mono text-[12px] text-[var(--hq-ink-3)]">
                     {r.effectiveUserId ? `${r.effectiveUserId.slice(0, 8)}…` : "—"}
                   </td>
                   <td className="py-4 pr-4 text-[13px] text-[var(--hq-ink-3)]">
@@ -93,7 +93,7 @@ export default async function AdminAudit({
                     )}
                   </td>
                   <td className="max-w-[260px] py-4 pr-6">
-                    <span className="block truncate font-mono text-[12px] text-[var(--hq-ink-4)]">
+                    <span className="block truncate font-mono text-[12px] text-[var(--hq-ink-3)]">
                       {JSON.stringify(r.metadata).slice(0, 120)}
                     </span>
                   </td>

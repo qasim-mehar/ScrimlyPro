@@ -23,7 +23,7 @@ export function ImpersonationStrip({
         <h2 className="text-[16px] font-bold text-[var(--hq-ink)]">
           Active impersonations
         </h2>
-        <p className="text-[13px] text-[var(--hq-ink-4)]">
+        <p className="text-[13px] text-[var(--hq-ink-3)]">
           {rows.length} live · 30-minute expiry
         </p>
       </div>
@@ -39,7 +39,7 @@ export function ImpersonationStrip({
             <span className="min-w-[160px] flex-1 truncate text-[13px] text-[var(--hq-ink-3)]">
               {row.reason}
             </span>
-            <span className="text-[13px] text-[var(--hq-ink-4)]">
+            <span className="text-[13px] text-[var(--hq-ink-3)]">
               expires{" "}
               {new Date(row.expiresAt).toLocaleTimeString("en-US", {
                 hour: "numeric",

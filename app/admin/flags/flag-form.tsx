@@ -21,7 +21,7 @@ export function FlagForm() {
   );
 
   const input =
-    "min-h-10 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]";
+    "min-h-10 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]";
 
   return (
     <form action={submit} className="hq-card space-y-4 p-5">
@@ -47,7 +47,7 @@ export function FlagForm() {
           <input name="value" className={`mt-1.5 ${input}`} defaultValue="{}" />
         </label>
       </div>
-      <p className="text-[12px] leading-relaxed text-[var(--hq-ink-4)]">
+      <p className="text-[12px] leading-relaxed text-[var(--hq-ink-3)]">
         Reserved: the <code className="rounded bg-[var(--hq-bg)] px-1 font-semibold text-[var(--hq-ink-2)]">disabled</code> flag
         on a user is the kill switch (presence = locked out of every authed
         surface; the value is metadata only). This editor REFUSES it — the

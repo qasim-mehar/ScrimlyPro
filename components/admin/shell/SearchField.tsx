@@ -123,7 +123,7 @@ export function SearchField() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search users and organizations"
-        className="flex h-10 w-full max-w-[320px] items-center gap-2 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-left text-sm text-[var(--hq-ink-4)] hover:border-[var(--hq-ink-4)]"
+        className="flex h-10 w-full max-w-[320px] items-center gap-2 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-left text-sm text-[var(--hq-ink-3)] hover:border-[var(--hq-ink-4)]"
       >
         <IconSearch size={16} />
         <span className="truncate">Search users, organizations</span>
@@ -147,7 +147,7 @@ export function SearchField() {
           />
           <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-[20px] bg-[var(--hq-surface)] shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-2 border-b border-[var(--hq-line)] px-4">
-              <span className="text-[var(--hq-ink-4)]">
+              <span className="text-[var(--hq-ink-3)]">
                 <IconSearch size={16} />
               </span>
               <input
@@ -157,7 +157,7 @@ export function SearchField() {
                 onKeyDown={onKeyDown}
                 placeholder="Search users, organizations"
                 aria-label="Search query"
-                className="h-12 w-full bg-transparent text-[14px] text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)]"
+                className="h-12 w-full bg-transparent text-[14px] text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)]"
               />
               <kbd className="rounded-[6px] bg-[var(--hq-bg)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--hq-ink-3)]">
                 esc
@@ -169,7 +169,7 @@ export function SearchField() {
               aria-label="Search results"
             >
               {items.length === 0 ? (
-                <li className="px-4 py-6 text-center text-[13px] text-[var(--hq-ink-4)]">
+                <li className="px-4 py-6 text-center text-[13px] text-[var(--hq-ink-3)]">
                   {loading
                     ? "Searching…"
                     : q.trim().length === 0

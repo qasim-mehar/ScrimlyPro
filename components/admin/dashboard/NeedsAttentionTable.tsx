@@ -47,7 +47,7 @@ export function NeedsAttentionTable({
         <h2 className="text-[20px] font-bold text-[var(--hq-ink)]">
           Needs attention
         </h2>
-        <p className="text-[13px] text-[var(--hq-ink-4)]">
+        <p className="text-[13px] text-[var(--hq-ink-3)]">
           {rows.length === 0
             ? "Nothing flagged"
             : `${rows.length} entit${rows.length === 1 ? "y" : "ies"} flagged`}{" "}
@@ -85,7 +85,7 @@ export function NeedsAttentionTable({
                   >
                     {row.entityName}
                   </Link>
-                  <span className="mt-0.5 block truncate text-[13px] text-[var(--hq-ink-4)]">
+                  <span className="mt-0.5 block truncate text-[13px] text-[var(--hq-ink-3)]">
                     {row.entitySub}
                   </span>
                 </td>
@@ -93,7 +93,7 @@ export function NeedsAttentionTable({
                   <span className="block truncate text-[14px] font-semibold text-[var(--hq-ink-2)]">
                     {row.detail}
                   </span>
-                  <span className="mt-0.5 block truncate text-[13px] text-[var(--hq-ink-4)]">
+                  <span className="mt-0.5 block truncate text-[13px] text-[var(--hq-ink-3)]">
                     {row.detailSub}
                   </span>
                 </td>

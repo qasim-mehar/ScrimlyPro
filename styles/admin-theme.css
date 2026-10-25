@@ -25,11 +25,11 @@
   --hq-ink-4: #9ca3af;
   --hq-lime: #d9f99d;
   --hq-lime-ink: #15803d;
-  --hq-success: #16a34a;
+  --hq-success: #15803d; /* AA on white: green-700 (spec said #16A34A - G6 gate precedence) */
   --hq-amber: #f59e0b;
-  --hq-amber-ink: #d97706;
+  --hq-amber-ink: #b45309; /* AA on amber-bg: amber-700 (spec said #D97706) */
   --hq-amber-bg: #fef3c7;
-  --hq-danger-ink: #dc2626;
+  --hq-danger-ink: #b91c1c; /* AA on danger-bg: red-700 (spec said #DC2626) */
   --hq-danger-bg: #fee2e2;
   --hq-danger-dot: #ef4444;
   --hq-orange: #f97316;

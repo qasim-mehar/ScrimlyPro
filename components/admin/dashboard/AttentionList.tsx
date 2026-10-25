@@ -39,7 +39,7 @@ export function AttentionList({ rows }: { rows: AttentionEntity[] }) {
           <IconSparkles size={12} />
           Ranked by Scrimly AI
         </span>
-        <span className="ml-auto text-[13px] text-[var(--hq-ink-4)]">
+        <span className="ml-auto text-[13px] text-[var(--hq-ink-3)]">
           {rows.length} open
         </span>
       </div>

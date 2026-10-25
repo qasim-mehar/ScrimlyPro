@@ -23,7 +23,7 @@ function statusChip(status: "active" | "quota" | "disabled") {
   }
   if (status === "quota") {
     return (
-      <span className="hq-chip bg-[var(--hq-amber)] text-white">Quota warnings</span>
+      <span className="hq-chip bg-[var(--hq-amber-ink)] text-white">Quota warnings</span>
     );
   }
   return (
@@ -58,7 +58,7 @@ export default async function AdminOrgs({
           <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">
             Organizations
           </h1>
-          <p className="mt-1 text-[13px] text-[var(--hq-ink-4)]">
+          <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
             Read-only · sorted by activity · {RANGE_LABELS[range]} window
           </p>
         </div>
@@ -71,7 +71,7 @@ export default async function AdminOrgs({
           name="q"
           defaultValue={q ?? ""}
           placeholder="Filter by org or owner email…"
-          className="h-10 min-w-0 flex-1 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-4)] focus:border-[var(--hq-ink-4)]"
+          className="h-10 min-w-0 flex-1 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <input type="hidden" name="range" value={range} />
         <button
@@ -120,7 +120,7 @@ export default async function AdminOrgs({
                     <span className="block truncate text-[14px] font-semibold text-[var(--hq-ink)]">
                       {r.name}
                     </span>
-                    <span className="mt-0.5 block text-[13px] text-[var(--hq-ink-4)]">
+                    <span className="mt-0.5 block text-[13px] text-[var(--hq-ink-3)]">
                       Created{" "}
                       {new Date(r.createdAt).toLocaleDateString("en-US", {
                         month: "short",
@@ -138,7 +138,7 @@ export default async function AdminOrgs({
                         {r.ownerEmail}
                       </Link>
                     ) : (
-                      <span className="text-[13px] text-[var(--hq-ink-4)]">—</span>
+                      <span className="text-[13px] text-[var(--hq-ink-3)]">—</span>
                     )}
                   </td>
                   <td className="py-4 pr-4 text-[14px] font-semibold text-[var(--hq-ink)]">
