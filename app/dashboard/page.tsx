@@ -69,7 +69,10 @@ export default async function DashboardPage({
         readsLeft={data?.quota.readsLeft ?? null}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <TopBar />
+        <TopBar
+          orgParam={orgParam}
+          notifications={data?.notifications ?? []}
+        />
 
         {active ? (
           <>
@@ -82,10 +85,7 @@ export default async function DashboardPage({
             <main className="grid grid-cols-[3fr_2fr] gap-6">
               <div className="flex flex-col gap-6">
                 {data?.featured ? (
-                  <>
-                    <FeaturedCard session={data.featured} />
-                    <ReadinessGauge session={data.featured} />
-                  </>
+                  <FeaturedCard session={data.featured} />
                 ) : (
                   <section className="rounded-dash bg-dash-surface p-6">
                     <h2 className="text-lg font-bold">No active session</h2>
@@ -110,6 +110,7 @@ export default async function DashboardPage({
                 />
                 <AttentionList items={data?.attentionList ?? []} />
                 {data && <AiCard data={data} />}
+                {data?.featured && <ReadinessGauge session={data.featured} />}
               </div>
             </main>
           </>
