@@ -1,92 +1,52 @@
-import { GlobalStopButton } from "@/components/admin/GlobalStopButton";
-import { getDashboardMetrics } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Admin dashboard: platform usage counters + live impersonation sessions.
- * Plain tables, zero chart deps (operator console brief §5).
+ * M6 super-admin dashboard home. WP1 ships the shell with skeleton
+ * sections; the reference widgets land in WP4–WP9 (greeting, featured org,
+ * needs-attention table, stat cards + time filter, lifecycle pipeline +
+ * attention list, AI card + gauge).
  */
 export default async function AdminDashboard() {
   await requireAdmin();
-  const m = await getDashboardMetrics();
-
-  const stats = [
-    { label: "Users", value: m.users },
-    { label: "Sessions", value: m.sessions },
-    { label: "Matches", value: m.matches },
-    {
-      label: "OCR calls (7d)",
-      // M3-INT (wave1(9)): wired to usage_events (per-user enforcement,
-      // platform-wide rollup shown here).
-      value: m.ocrCalls7d,
-    },
-  ];
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-2xl font-bold tracking-wide text-white">
-        Platform dashboard
-      </h1>
+    <div className="space-y-6">
+      {/* Greeting row — WP4 */}
+      <div
+        className="hq-skeleton h-11 w-72 rounded-full bg-[var(--hq-surface)]"
+        aria-hidden
+      />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((s) => (
+      {/* Two-column composition (§4.5): ~60/40 at ≥1280, stacked below. */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0 space-y-6">
+          {/* Featured org card — WP5 */}
+          <section className="hq-card hq-skeleton h-[400px]" aria-hidden />
+          {/* Needs-attention table — WP6 */}
+          <section className="hq-card hq-skeleton h-[280px]" aria-hidden />
+        </div>
+        <div className="min-w-0 space-y-6">
+          {/* Time filter — WP7 */}
           <div
-            key={s.label}
-            className="rounded-lg border border-line bg-surface p-4"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {s.label}
-            </p>
-            <p className="mt-2 font-display text-3xl font-bold text-white">
-              {s.value}
-            </p>
+            className="hq-skeleton h-11 w-64 rounded-full bg-[var(--hq-surface)]"
+            aria-hidden
+          />
+          {/* Stat cards — WP7 */}
+          <div className="grid grid-cols-2 gap-4 min-[1920px]:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="hq-card hq-skeleton h-[132px]" aria-hidden />
+            ))}
           </div>
-        ))}
+          {/* Lifecycle pipeline + attention list — WP8 */}
+          <div className="hq-card hq-skeleton h-[180px]" aria-hidden />
+          <div className="hq-card hq-skeleton h-[220px]" aria-hidden />
+          {/* Scrimly AI card + readiness gauge — WP9 */}
+          <div className="hq-card hq-skeleton h-[220px] bg-[var(--hq-ink)]" aria-hidden />
+          <div className="hq-card hq-skeleton h-[260px]" aria-hidden />
+        </div>
       </div>
-
-      <section>
-        <h2 className="font-display text-lg font-semibold text-white">
-          Active impersonations
-        </h2>
-        {m.activeImpersonations.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">None active.</p>
-        ) : (
-          <table className="mt-3 w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
-                <th className="py-2 pr-4">Admin</th>
-                <th className="py-2 pr-4">Viewing as</th>
-                <th className="py-2 pr-4">Reason</th>
-                <th className="py-2 pr-4">Started</th>
-                <th className="py-2 pr-4">Expires</th>
-                <th className="py-2">Stop</th>
-              </tr>
-            </thead>
-            <tbody>
-              {m.activeImpersonations.map((imp) => (
-                <tr key={imp.id} className="border-b border-line/50">
-                  <td className="py-2 pr-4 font-mono text-xs text-muted">
-                    {imp.adminUserId.slice(0, 8)}…
-                  </td>
-                  <td className="py-2 pr-4 text-white">{imp.targetEmail}</td>
-                  <td className="py-2 pr-4 text-muted">{imp.reason}</td>
-                  <td className="py-2 pr-4 text-muted">
-                    {new Date(imp.createdAt).toLocaleString()}
-                  </td>
-                  <td className="py-2 pr-4 text-muted">
-                    {new Date(imp.expiresAt).toLocaleString()}
-                  </td>
-                  <td className="py-2">
-                    <GlobalStopButton impersonationId={imp.id} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
     </div>
   );
 }
