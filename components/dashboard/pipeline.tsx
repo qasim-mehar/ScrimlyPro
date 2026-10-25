@@ -55,7 +55,7 @@ export function Pipeline({
     <section className="rounded-dash bg-dash-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-dash-ink">Scrim pipeline</h2>
-        <p className="flex items-center gap-3 text-[13px] text-dash-ink4">
+        <p className="flex items-center gap-3 text-[13px] text-dash-ink3">
           <span>
             Average processing {formatProcessing(avgProcessingSeconds)}
           </span>
@@ -96,12 +96,12 @@ export function Pipeline({
             <span className="text-sm font-bold text-dash-ink">
               {counts[seg.key]}
             </span>
-            <span className="text-[13px] text-dash-ink4">{seg.label}</span>
+            <span className="text-[13px] text-dash-ink3">{seg.label}</span>
           </div>
         ))}
       </div>
       {total === 0 && (
-        <p className="mt-2 text-[13px] text-dash-ink4">No matches in range</p>
+        <p className="mt-2 text-[13px] text-dash-ink3">No matches in range</p>
       )}
     </section>
   );
@@ -145,7 +145,7 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
           <SparklesIcon width="14" height="14" />
           Ranked by Scrimly AI
         </span>
-        <span className="ml-auto text-xs text-dash-ink4">
+        <span className="ml-auto text-xs text-dash-ink3">
           {items.length} item{items.length === 1 ? "" : "s"}
         </span>
       </div>
@@ -187,7 +187,7 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
                     </span>
                   )}
                   {item.sessionName && (
-                    <span className="block truncate text-xs text-dash-ink4">
+                    <span className="block truncate text-xs text-dash-ink3">
                       {item.sessionName}
                     </span>
                   )}

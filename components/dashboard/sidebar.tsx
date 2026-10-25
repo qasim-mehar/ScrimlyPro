@@ -94,7 +94,7 @@ function SoonItem({
     <span
       aria-disabled="true"
       title="Soon"
-      className="flex min-h-[40px] cursor-default items-center gap-3 rounded-dash-sm px-3 py-2 text-sm font-medium text-dash-ink4"
+      className="flex min-h-[40px] cursor-default items-center gap-3 rounded-dash-sm px-3 py-2 text-sm font-medium text-dash-ink3"
     >
       {icon}
       <span className="flex-1 truncate">{label}</span>
@@ -106,7 +106,7 @@ function SoonItem({
 
 function GroupHeader({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-dash-ink4">
+    <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-dash-ink3">
       {children}
     </p>
   );
@@ -117,6 +117,7 @@ export function Sidebar({
   activeOrg,
   counts,
   readsLeft,
+  className,
 }: {
   orgs: ActiveOrg[];
   activeOrg: ActiveOrg | null;
@@ -125,9 +126,14 @@ export function Sidebar({
    *  the count (quota unknown is not representable today — the org quota
    *  row always exists — but the prop keeps the honest fallback open). */
   readsLeft: number | null;
+  /** Layout hook: "hidden lg:flex" on the page keeps it off small screens
+   *  (the SidebarDrawer mounts its own copy). */
+  className?: string;
 }) {
   return (
-    <aside className="sticky top-6 flex h-[calc(100dvh-48px)] w-[264px] shrink-0 flex-col rounded-dash-lg bg-dash-surface p-5">
+    <aside
+      className={`sticky top-6 flex h-[calc(100dvh-48px)] w-[264px] shrink-0 flex-col rounded-dash-lg bg-dash-surface p-5 ${className ?? ""}`}
+    >
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-dash-sm bg-dash-ink text-white">
@@ -135,7 +141,7 @@ export function Sidebar({
           </span>
           <span className="text-lg font-bold">ScrimlyPro</span>
         </span>
-        <span aria-hidden="true" className="text-dash-ink4">
+        <span aria-hidden="true" className="text-dash-ink3">
           <PanelIcon />
         </span>
       </div>
@@ -158,11 +164,11 @@ export function Sidebar({
             <span className="block truncate text-sm font-semibold text-dash-ink">
               {activeOrg ? activeOrg.name : "No organization"}
             </span>
-            <span className="block truncate text-[13px] capitalize text-dash-ink4">
+            <span className="block truncate text-[13px] capitalize text-dash-ink3">
               {activeOrg ? activeOrg.role : "not a member yet"}
             </span>
           </span>
-          <span className="text-dash-ink4 transition-transform group-open:rotate-180">
+          <span className="text-dash-ink3 transition-transform group-open:rotate-180">
             <ChevronDownIcon width="16" height="16" />
           </span>
         </summary>
@@ -178,7 +184,7 @@ export function Sidebar({
               }`}
             >
               <span className="truncate">{org.name}</span>
-              <span className="text-[11px] capitalize text-dash-ink4">
+              <span className="text-[11px] capitalize text-dash-ink3">
                 {org.role}
               </span>
             </Link>

@@ -118,7 +118,7 @@ export function CommandPalette({ orgParam }: { orgParam?: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search sessions, matches, team (Command K)"
-        className="flex h-11 w-full max-w-[340px] items-center gap-3 rounded-dash-sm border border-dash-line bg-dash-surface px-4 text-sm text-dash-ink4 hover:bg-dash-subtle"
+        className="flex h-11 w-full max-w-[340px] items-center gap-3 rounded-dash-sm border border-dash-line bg-dash-surface px-4 text-sm text-dash-ink3 hover:bg-dash-subtle"
       >
         <SearchIcon width="18" height="18" />
         <span className="flex-1 text-left">Search sessions, matches, team</span>
@@ -148,21 +148,21 @@ export function CommandPalette({ orgParam }: { orgParam?: string }) {
                 onKeyDown={onKeyDown}
                 placeholder="Search sessions, matches…"
                 aria-label="Search sessions, matches"
-                className="h-12 flex-1 bg-transparent text-sm text-dash-ink outline-none placeholder:text-dash-ink4"
+                className="h-12 flex-1 bg-transparent text-sm text-dash-ink outline-none placeholder:text-dash-ink3"
               />
-              <kbd className="rounded-md border border-dash-line px-1.5 py-0.5 text-xs text-dash-ink4">
+              <kbd className="rounded-md border border-dash-line px-1.5 py-0.5 text-xs text-dash-ink3">
                 esc
               </kbd>
             </div>
 
             <ul role="listbox" aria-label="Results" className="max-h-80 overflow-y-auto p-2">
               {q.trim().length === 0 && (
-                <li className="px-3 py-6 text-center text-sm text-dash-ink4">
+                <li className="px-3 py-6 text-center text-sm text-dash-ink3">
                   Type to search
                 </li>
               )}
               {q.trim().length > 0 && !loading && flat.length === 0 && (
-                <li className="px-3 py-6 text-center text-sm text-dash-ink4">
+                <li className="px-3 py-6 text-center text-sm text-dash-ink3">
                   No results
                 </li>
               )}
@@ -182,7 +182,7 @@ export function CommandPalette({ orgParam }: { orgParam?: string }) {
                     <span className="truncate">{item.label}</span>
                     <span
                       className={`shrink-0 text-xs ${
-                        i === active ? "text-white/60" : "text-dash-ink4"
+                        i === active ? "text-white/60" : "text-dash-ink3"
                       }`}
                     >
                       {item.meta}

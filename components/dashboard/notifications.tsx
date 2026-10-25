@@ -99,7 +99,7 @@ export function Notifications({
             Notifications
           </p>
           {notifications.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-dash-ink4">
+            <p className="px-4 py-6 text-sm text-dash-ink3">
               No recent activity
             </p>
           ) : (
@@ -115,7 +115,7 @@ export function Notifications({
                       <span className="min-w-0 flex-1 truncate text-sm text-dash-ink2">
                         {n.label}
                       </span>
-                      <span className="shrink-0 text-xs text-dash-ink4">
+                      <span className="shrink-0 text-xs text-dash-ink3">
                         {relative(n.at)}
                       </span>
                     </Link>
@@ -124,7 +124,7 @@ export function Notifications({
                       <span className="min-w-0 flex-1 truncate text-sm text-dash-ink2">
                         {n.label}
                       </span>
-                      <span className="shrink-0 text-xs text-dash-ink4">
+                      <span className="shrink-0 text-xs text-dash-ink3">
                         {relative(n.at)}
                       </span>
                     </span>

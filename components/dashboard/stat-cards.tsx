@@ -55,7 +55,7 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
   return (
     <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
       <div className="rounded-dash bg-dash-ink p-5">
-        <p className="text-[13px] font-medium text-dash-ink4">Active sessions</p>
+        <p className="text-[13px] font-medium text-dash-ink3">Active sessions</p>
         <p className="mt-2 text-4xl font-bold text-white">
           {stats.activeSessions}
         </p>

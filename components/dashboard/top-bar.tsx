@@ -15,13 +15,19 @@ import type { DashboardNotification } from "@/lib/dashboard/queries";
 export function TopBar({
   orgParam,
   notifications,
+  drawer,
 }: {
   orgParam?: string;
   notifications: DashboardNotification[];
+  /** Mobile navigation (the drawer-wrapped sidebar); rendered <lg only. */
+  drawer?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <CommandPalette orgParam={orgParam} />
+      <div className="flex min-w-0 items-center gap-3">
+        {drawer}
+        <CommandPalette orgParam={orgParam} />
+      </div>
 
       <div className="flex items-center gap-3">
         <Notifications notifications={notifications} />

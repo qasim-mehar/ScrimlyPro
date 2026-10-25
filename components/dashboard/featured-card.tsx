@@ -135,7 +135,7 @@ export function FeaturedCard({ session }: { session: FeaturedSession }) {
 
         <dl className="mt-5 grid grid-cols-3 overflow-hidden rounded-dash-sm bg-dash-subtle">
           <div className="flex flex-col gap-1 p-4">
-            <dt className="text-xs font-medium uppercase tracking-wide text-dash-ink4">
+            <dt className="text-xs font-medium uppercase tracking-wide text-dash-ink3">
               Teams
             </dt>
             <dd className="text-sm font-bold text-dash-ink">
@@ -143,7 +143,7 @@ export function FeaturedCard({ session }: { session: FeaturedSession }) {
             </dd>
           </div>
           <div className="flex flex-col gap-1 border-x border-dash-line p-4">
-            <dt className="text-xs font-medium uppercase tracking-wide text-dash-ink4">
+            <dt className="text-xs font-medium uppercase tracking-wide text-dash-ink3">
               Stage
             </dt>
             <dd className="text-sm font-bold text-dash-ink">
@@ -153,7 +153,7 @@ export function FeaturedCard({ session }: { session: FeaturedSession }) {
             </dd>
           </div>
           <div className="flex flex-col gap-1 p-4">
-            <dt className="text-xs font-medium uppercase tracking-wide text-dash-ink4">
+            <dt className="text-xs font-medium uppercase tracking-wide text-dash-ink3">
               Created
             </dt>
             <dd className="text-sm font-bold text-dash-ink">

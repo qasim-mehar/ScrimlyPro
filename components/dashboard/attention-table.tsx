@@ -40,7 +40,7 @@ export function AttentionTable({
     <section id="attention" className="rounded-dash bg-dash-surface">
       <div className="px-6 pb-1 pt-5">
         <h2 className="text-xl font-bold text-dash-ink">Needs attention</h2>
-        <p className="mt-1 text-[13px] text-dash-ink4">
+        <p className="mt-1 text-[13px] text-dash-ink3">
           {rows.length} session{rows.length === 1 ? "" : "s"} flagged ·
           updated {formatTime(renderedAt)}
         </p>
@@ -73,7 +73,7 @@ export function AttentionTable({
                     <span className="block text-sm font-bold text-dash-ink">
                       {row.code}
                     </span>
-                    <span className="block truncate text-[13px] text-dash-ink4">
+                    <span className="block truncate text-[13px] text-dash-ink3">
                       {row.name}
                     </span>
                   </Link>
@@ -82,7 +82,7 @@ export function AttentionTable({
                   <span className="block truncate text-sm font-semibold text-dash-ink">
                     {row.primary}
                   </span>
-                  <span className="block truncate text-[13px] text-dash-ink4">
+                  <span className="block truncate text-[13px] text-dash-ink3">
                     {row.secondary}
                   </span>
                 </td>

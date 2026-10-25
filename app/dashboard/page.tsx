@@ -8,6 +8,7 @@ import { Pipeline, AttentionList } from "@/components/dashboard/pipeline";
 import { GreetingRow } from "@/components/dashboard/greeting-row";
 import { ReadinessGauge } from "@/components/dashboard/readiness-gauge";
 import { RangeFilter, StatCards } from "@/components/dashboard/stat-cards";
+import { SidebarDrawer } from "@/components/dashboard/sidebar-drawer";
 import { Sidebar, type NavCounts } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/top-bar";
 import type { DashboardStats } from "@/lib/dashboard/queries";
@@ -62,17 +63,28 @@ export default async function DashboardPage({
   };
 
   return (
-    <div className="mx-auto flex gap-6 p-6">
+    <div className="mx-auto flex gap-6 p-4 lg:p-6">
       <Sidebar
         orgs={orgs}
         activeOrg={active}
         counts={counts}
         readsLeft={data?.quota.readsLeft ?? null}
+        className="hidden lg:flex"
       />
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <TopBar
           orgParam={orgParam}
           notifications={data?.notifications ?? []}
+          drawer={
+            <SidebarDrawer>
+              <Sidebar
+                orgs={orgs}
+                activeOrg={active}
+                counts={counts}
+                readsLeft={data?.quota.readsLeft ?? null}
+              />
+            </SidebarDrawer>
+          }
         />
 
         {active ? (
@@ -83,7 +95,7 @@ export default async function DashboardPage({
               nowHour={new Date().getHours()}
             />
 
-            <main className="grid grid-cols-[3fr_2fr] gap-6">
+            <main className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
               <div className="flex flex-col gap-6">
                 {data?.featured ? (
                   <FeaturedCard session={data.featured} />
