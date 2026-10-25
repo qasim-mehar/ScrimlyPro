@@ -9,7 +9,13 @@ import { RANGE_LABELS, type RangeKey } from "@/lib/admin/dashboard-queries";
  */
 const ORDER: RangeKey[] = ["today", "7d", "30d"];
 
-export function TimeFilter({ range }: { range: RangeKey }) {
+export function TimeFilter({
+  range,
+  basePath = "/admin",
+}: {
+  range: RangeKey;
+  basePath?: string;
+}) {
   return (
     <nav
       aria-label="Time range"
@@ -20,7 +26,7 @@ export function TimeFilter({ range }: { range: RangeKey }) {
         return (
           <Link
             key={key}
-            href={`/admin?range=${key}`}
+            href={`${basePath}?range=${key}`}
             aria-current={active ? "true" : undefined}
             className={
               active

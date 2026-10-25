@@ -1,5 +1,5 @@
 import { AdminShell } from "@/components/admin/shell/AdminShell";
-import { getAdminNavData } from "@/lib/admin/dashboard-queries";
+import { getAdminNavData, getRecentAuditEvents } from "@/lib/admin/dashboard-queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
 import "@/styles/admin-theme.css";
@@ -16,7 +16,10 @@ export default async function AdminLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   await requireAdmin();
 
-  const nav = await getAdminNavData();
+  const [nav, events] = await Promise.all([
+    getAdminNavData(),
+    getRecentAuditEvents(10),
+  ]);
   const envLabel =
     process.env.NODE_ENV === "production"
       ? "production"
@@ -34,6 +37,7 @@ export default async function AdminLayout({
         activeImpersonations: nav.activeImpersonations,
       }}
       system={{ aiOn: nav.aiOn, reads7d: nav.reads7d, usersFlagged: nav.usersFlagged }}
+      events={events}
     >
       {children}
     </AdminShell>

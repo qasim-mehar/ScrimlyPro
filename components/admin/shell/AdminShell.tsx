@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ComponentType, type ReactNode } from "react";
 
+import { NotificationsBell, type BellEvent } from "./NotificationsBell";
+import { SearchField } from "./SearchField";
 import {
-  IconBell,
   IconBuilding,
   IconChart,
   IconDashboard,
@@ -14,7 +15,6 @@ import {
   IconMenu,
   IconPlus,
   IconScroll,
-  IconSearch,
   IconSliders,
   IconSparkles,
   IconUsers,
@@ -37,6 +37,8 @@ export type ShellCounts = {
   flags: number;
   activeImpersonations: number;
 };
+
+export type ShellEvents = BellEvent[];
 
 export type ShellSystemCard = {
   aiOn: boolean;
@@ -195,11 +197,13 @@ export function AdminShell({
   envLabel,
   counts,
   system,
+  events,
   children,
 }: {
   envLabel: string;
   counts: ShellCounts;
   system: ShellSystemCard;
+  events: ShellEvents;
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -226,30 +230,10 @@ export function AdminShell({
               <IconMenu />
             </button>
 
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              title="Search lands with the ⌘K palette update"
-              className="flex h-10 w-full max-w-[320px] items-center gap-2 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-left text-sm text-[var(--hq-ink-4)]"
-            >
-              <IconSearch size={16} />
-              <span className="truncate">Search users, organizations</span>
-              <span className="ml-auto rounded-[6px] bg-[var(--hq-lime)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--hq-ink)]">
-                ⌘K
-              </span>
-            </button>
+            <SearchField />
 
             <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                title="Notifications land with the bell update"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full text-[var(--hq-ink-2)] hover:bg-[var(--hq-surface)]"
-              >
-                <IconBell />
-              </button>
+              <NotificationsBell events={events} />
               <button
                 type="button"
                 disabled

@@ -550,21 +550,7 @@ export async function getAdminDashboardData(
 
   /* ---- notifications (latest audit events, humanized) ---- */
 
-  const eventRows = await query(sql`
-    select a.id, a.action, a.created_at, a.metadata,
-           au.email as actor_email, tu.email as target_email
-    from audit_log a
-    left join auth.users au on au.id = a.actor_user_id
-    left join auth.users tu on tu.id = a.target_id
-    order by a.created_at desc
-    limit 10
-  `);
-
-  const events: HumanizedEvent[] = eventRows.map((r) => ({
-    id: String(r.id),
-    createdAt: iso(r.created_at) ?? new Date().toISOString(),
-    text: humanizeEvent(r),
-  }));
+  const events = await getRecentAuditEvents(10);
 
   const impersonationRows = await query(sql`
     select id, target_email, reason, created_at, expires_at
@@ -626,6 +612,27 @@ export async function getAdminDashboardData(
       expiresAt: iso(r.expires_at) ?? new Date().toISOString(),
     })),
   };
+}
+
+/**
+ * Latest audit events, humanized (the notification bell). Shared by the
+ * admin layout (bell) and the dashboard data pass. Read-only — silent.
+ */
+export async function getRecentAuditEvents(limit = 10): Promise<HumanizedEvent[]> {
+  const rows = await query(sql`
+    select a.id, a.action, a.created_at, a.metadata,
+           au.email as actor_email, tu.email as target_email
+    from audit_log a
+    left join auth.users au on au.id = a.actor_user_id
+    left join auth.users tu on tu.id = a.target_id
+    order by a.created_at desc
+    limit ${limit}
+  `);
+  return rows.map((r) => ({
+    id: String(r.id),
+    createdAt: iso(r.created_at) ?? new Date().toISOString(),
+    text: humanizeEvent(r),
+  }));
 }
 
 /**
