@@ -48,7 +48,9 @@ export const POST = withTenantRoute<{ id: string }>(async (request, { user, para
   );
   const origin = appOriginFromRequest(request);
   return noStore(
-    { url: `${origin}/share/${link.token}` },
+    // `id` lets the caller revoke without a second round-trip (the
+    // wave1(13a) verifier's share-link row revokes by id).
+    { url: `${origin}/share/${link.token}`, id: link.id },
     { status: 201 },
   );
 });

@@ -183,6 +183,42 @@ else
     if [ -n "$SID" ]; then
       row_code "owner GET /sessions/<owned> 200" 200 "$(get_code "/sessions/$SID" -b "$TMP/owner.jar")"
 
+      # E-4 (wave1(13a)): share-link row — owner creates a share link, the
+      # PUBLIC URL renders 200 + no-store + noindex + zero-PII markers, then
+      # revoke -> 404. Runs only in the credentialed block.
+      SHARE_RES=$(curl -s -w '\n%{http_code}' -X POST "$BASE_URL/api/sessions/$SID/share" \
+        -b "$TMP/owner.jar" -H "Origin: $APP_ORIGIN")
+      SHARE_CODE=$(printf '%s' "$SHARE_RES" | tail -1)
+      SHARE_BODY=$(printf '%s' "$SHARE_RES" | head -n -1)
+      SHARE_TOKEN=$(printf '%s' "$SHARE_BODY" | grep -oE '"url":"[^"]*"' | sed 's#.*"/share/##; s/"$//')
+      SHARE_ID=$(printf '%s' "$SHARE_BODY" | grep -oE '"id":"[0-9a-f-]{36}"' | sed 's/"id":"//; s/"//')
+      if [ "$SHARE_CODE" = "201" ] && [ -n "$SHARE_TOKEN" ] && [ -n "$SHARE_ID" ]; then
+        SHARE_PAGE_CODE=$(get_code "/share/$SHARE_TOKEN")
+        curl -s -D "$TMP/share.hdr" "$BASE_URL/share/$SHARE_TOKEN" -o "$TMP/share.html"
+        NO_STORE=$(grep -ci 'cache-control: *no-store' "$TMP/share.hdr" || true)
+        NOINDEX=$(grep -c 'noindex' "$TMP/share.html" || true)
+        PII=0
+        grep -q '@' "$TMP/share.html" && PII=1
+        # a bare uuid in the body would leak internal ids to anonymous readers
+        tr -d '\n' < "$TMP/share.html" | grep -qE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' && PII=1
+        if [ "$SHARE_PAGE_CODE" = "200" ] && [ "$NO_STORE" -ge 1 ] && [ "$NOINDEX" -ge 1 ] && [ "$PII" = "0" ]; then
+          row_pass "share page public render (200 + no-store + noindex + zero-PII)" "token not printed"
+        else
+          row_fail "share page public render (200 + no-store + noindex + zero-PII)" "code=$SHARE_PAGE_CODE no-store=$NO_STORE noindex=$NOINDEX pii=$PII"
+        fi
+        REVOKE=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE "$BASE_URL/api/sessions/$SID/share" \
+          -b "$TMP/owner.jar" -H "Origin: $APP_ORIGIN" -H "Content-Type: application/json" \
+          --data "{\"linkId\":\"$SHARE_ID\"}")
+        AFTER=$(get_code "/share/$SHARE_TOKEN")
+        if [ "$REVOKE" = "200" ] && [ "$AFTER" = "404" ]; then
+          row_pass "share revoke -> public URL 404" "revoked ok"
+        else
+          row_fail "share revoke -> public URL 404" "revoke=$REVOKE after=$AFTER"
+        fi
+      else
+        row_skip "share-link round-trip" "POST /share returned $SHARE_CODE (no session usable for sharing?)"
+      fi
+
       ATTACKER_CODE=$(login "$ATTACKER_EMAIL" "$TMP/attacker.jar" "$ATTACKER_PASSWORD")
       row_code "attacker sign-in 200" 200 "$ATTACKER_CODE"
       ATK="$(get_code "/sessions/$SID" -b "$TMP/attacker.jar")"

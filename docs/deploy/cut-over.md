@@ -72,8 +72,9 @@ Observable: `grep -r "SUPABASE_SERVICE_ROLE_KEY\|SUPABASE_DB_URL" app components
     `db/migrations/*.sql` in numeric order in the SQL editor).
     The GoTrue-dependent conditional blocks in `0002` no-op on hosted
     (`auth` schema and `authenticated` role already exist there). On the
-    integrated tree this includes Lane B's 0010–0019 (orgs, invites, share
-    links) and Lane C's 0020–0029 (admin, audit log, feature flags).
+    integrated tree the exact chain is **0000–0003 (M1), 0010–0014 (Lane B
+    orgs + the 0014 quota/role hardening), 0020 (Lane C admin tables)** —
+    ten files; `db/migrations/meta/_journal.json` is the source of truth.
 3.2 **[AUTO]** Assert the trigger exists:
 
     psql "<direct-dsn>" -tAc "select tgname from pg_trigger where tgname='on_auth_user_created';"
@@ -83,9 +84,11 @@ Observable: `grep -r "SUPABASE_SERVICE_ROLE_KEY\|SUPABASE_DB_URL" app components
 
     psql "<direct-dsn>" -tAc "select count(*) from pg_policies;"
 
-    Expected: **≥ 58** on the integrated tree (M1's 27 + Lane B's org/share
-    policies + Lane C's admin policies — pin the exact floor at the local
-    rehearsal; M1-only trees have ≥ 27).
+    Expected: **≥ 55** on the integrated tree — the exact count measured at
+    the wave-1 local rehearsal (M1's 27 + Lane B's org/share/usage policies
+    + Lane C's admin policies; the 0014 hardening REPLACES several 0010
+    policies rather than adding). M1-only trees have ≥ 27. A count below
+    the floor means part of the chain did not apply — STOP.
 3.4 **[AUTO]** Assert the integrated tables exist:
 
     psql "<direct-dsn>" -tAc "select table_name from information_schema.tables where table_schema='public' order by 1;"
@@ -217,6 +220,22 @@ mismatch = STOP before deploy.
     for unknown-user and wrong-password) but *response timing* still differs
     slightly — a residual known limitation, deferred. Record the
     acknowledgment (who/when) in the cut-over log. Nothing to run.
+
+9.4 **[MANUAL] Browser impersonation round-trip (M3).** In the admin
+    console, start impersonating a TEST tenant user (reason recorded — it
+    lands in `audit_log`); confirm in a real browser that every page shows
+    the impersonation banner with the target identity, that the target's
+    data renders (effective identity, not the admin's), and that Stop
+    impersonation restores the admin session. Then verify the audit log
+    page lists start AND stop events. The org surface (`/orgs`,
+    `/orgs/[id]`) must show the banner too (wave1(9) mounts).
+9.5 **[MANUAL] Residual-audit acknowledgment.** Confirm the team has read
+    the wave-1 security posture: 4 moderate npm-audit findings remain
+    (development-chain only, justified in the M4D report), `drizzle-kit`
+    is a dev-only dependency, and the residual limitations recorded in the
+    M2/M3 reports (in-memory share limiter, timing-enumeration caveat
+    9.3). Record the acknowledgment (who/when) in the cut-over log.
+    Nothing to run.
 
 ## 10. First backup + restore test
 
