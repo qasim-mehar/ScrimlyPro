@@ -142,11 +142,39 @@ if (!APPLY) {
 // --- apply: ONE transaction, idempotent (on conflict do nothing) -----------
 try {
   await sql.begin(async (tx) => {
+    // Wave-1 (13b) ORG-AWARE: sessions.org_id is NOT NULL with an FK (0012)
+    // and RLS scopes everything through org membership. Before any session
+    // insert, give the pilot owner a Personal org + owner membership with
+    // the 0011 backfill's exact statements (idempotent: reuse the owner's
+    // first org when one exists). The default quota row is minted by the
+    // 0014 org_quotas_bootstrap trigger on the organizations INSERT.
+    let orgId;
+    const existingOrg = await tx`
+      select m.org_id as id from org_members m
+      where m.user_id = ${pilotId} and m.role = 'owner'
+      order by m.joined_at asc limit 1`;
+    orgId = existingOrg[0]?.id;
+    if (!orgId) {
+      orgId = (
+        await tx`
+        insert into organizations (id, name, slug, created_by)
+        values (gen_random_uuid(), 'Personal',
+                'u-' || substr(md5(${pilotId}::text || random()::text || clock_timestamp()::text), 1, 8),
+                ${pilotId})
+        returning id`
+      )[0].id;
+      await tx`
+        insert into org_members (org_id, user_id, role)
+        values (${orgId}, ${pilotId}, 'owner')
+        on conflict (org_id, user_id) do nothing`;
+    }
+    console.log(`pilot org: ${orgId}`);
+
     for (const s of tables.sessions) {
       await tx`
-        insert into sessions (id, user_id, name, planned_matches, team_count,
+        insert into sessions (id, user_id, org_id, name, planned_matches, team_count,
                               template_id, scoring_rules, status, created_at)
-        values (${s.id}, ${pilotId}, ${s.name}, ${s.planned_matches},
+        values (${s.id}, ${pilotId}, ${orgId}, ${s.name}, ${s.planned_matches},
                 ${s.team_count}, ${s.template_id ?? "dev-dark-gold"},
                 ${j(s.scoring_rules)}, ${s.status}, ${s.created_at})
         on conflict (id) do nothing`;
