@@ -37,6 +37,10 @@ yarn-error.log*
 # local sqlite data
 data/
 
+# supabase local stack temp files
+supabase/.temp
+supabase/.branches
+
 # vercel
 .vercel
 
@@ -50,3 +54,13 @@ next-env.d.ts
 # local logs
 studio.log
 dev.log
+
+# local tooling artifacts / sibling-lane scratch
+.tmp/
+dev-server.log
+/shots/
+/sweep-out.txt
+/smoke.mjs
+
+# lane E: database backups (never commit dumps/manifests)
+/backups/

@@ -1,10 +1,3 @@
-import path from "node:path";
-import Database from "better-sqlite3";
-import {
-  type BetterSQLite3Database,
-  drizzle,
-} from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -15,52 +8,39 @@ import type { SquadRowDraft } from "@/lib/matches/mapping";
 import { normalizeName } from "@/lib/matching";
 import { pointsForMatch, SUPER_RULES } from "@/lib/scoring";
 
+import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
+
 const { matchResults, matches, rosters, sessions, teams } = schema;
 
-// In-memory DB pattern copied from tests/db.test.ts.
-function testDb(): {
-  sqlite: Database.Database;
-  db: BetterSQLite3Database<typeof schema>;
-} {
-  const sqlite = new Database(":memory:");
-  sqlite.pragma("foreign_keys = ON");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, {
-    migrationsFolder: path.join(process.cwd(), "db", "migrations"),
-  });
-  return { sqlite, db };
-}
+type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 
 /** 16 teams t1..t16 (+ names), one active session, one draft match m1. */
-function seedSixteen(
-  db: BetterSQLite3Database<typeof schema>,
-): { teamIds: string[] } {
-  db.insert(sessions)
-    .values({
-      id: "s1",
-      name: "Confirm Session",
-      plannedMatches: 6,
-      teamCount: 16,
-      scoringRules: SUPER_RULES,
-      createdAt: "2025-01-01T00:00:00.000Z",
-    })
-    .run();
+async function seedSixteen(db: PgDb): Promise<{ teamIds: string[] }> {
+  await db.insert(sessions).values({
+    id: "s1",
+    userId: "99999999-9999-9999-9999-999999999991",
+    orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999991"),
+    name: "Confirm Session",
+    plannedMatches: 6,
+    teamCount: 16,
+    scoringRules: SUPER_RULES,
+    createdAt: "2025-01-01T00:00:00.000Z",
+  });
   const teamIds: string[] = [];
   for (let i = 1; i <= 16; i++) {
     const id = `t${i}`;
     teamIds.push(id);
-    db.insert(teams).values({ id, sessionId: "s1", name: `Team ${i}` }).run();
+    await db.insert(teams).values({ id, sessionId: "s1", name: `Team ${i}` });
   }
-  db.insert(matches)
-    .values({
-      id: "m1",
-      sessionId: "s1",
-      matchNo: 1,
-      status: "draft",
-      rawSquadData: SAMPLE_MATCHES[0],
-      createdAt: "2025-01-01T00:00:00.000Z",
-    })
-    .run();
+  await db.insert(matches).values({
+    id: "m1",
+    sessionId: "s1",
+    matchNo: 1,
+    status: "draft",
+    rawSquadData: SAMPLE_MATCHES[0],
+    createdAt: "2025-01-01T00:00:00.000Z",
+  });
   return { teamIds };
 }
 
@@ -75,17 +55,17 @@ function mappedRows(teamIds: string[]): SquadRowDraft[] {
 }
 
 describe("confirmMatch", () => {
-  let sqlite: Database.Database;
-  let db: BetterSQLite3Database<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let db: PgDb;
 
-  beforeEach(() => {
-    ({ sqlite, db } = testDb());
+  beforeEach(async () => {
+    ({ db, cleanup } = await testDb());
   });
 
-  afterEach(() => sqlite.close());
+  afterEach(async () => cleanup());
 
-  it("happy path → 16 result rows, kills = player sums, PP via pointsForMatch, confirmed + confirmedAt", () => {
-    const { teamIds } = seedSixteen(db);
+  it("happy path → 16 result rows, kills = player sums, PP via pointsForMatch, confirmed + confirmedAt", async () => {
+    const { teamIds } = await seedSixteen(db);
     // Squad 1 gets a 23-kill total: SUPER placement 1 → pp 10.
     const rows = mappedRows(teamIds);
     rows[0]!.players = [
@@ -94,15 +74,14 @@ describe("confirmMatch", () => {
       { name: "C", kills: 5 },
     ];
 
-    const result = confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
+    const result = await confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
 
     expect(result).toEqual({ ok: true });
 
-    const results = db
+    const results = await db
       .select()
       .from(matchResults)
-      .where(eq(matchResults.matchId, "m1"))
-      .all();
+      .where(eq(matchResults.matchId, "m1"));
     expect(results).toHaveLength(16);
 
     const winner = results.find((r) => r.placement === 1);
@@ -126,27 +105,19 @@ describe("confirmMatch", () => {
       );
     }
 
-    const match = db
-      .select()
-      .from(matches)
-      .where(eq(matches.id, "m1"))
-      .get();
-    expect(match?.status).toBe("confirmed");
-    expect(typeof match?.confirmedAt).toBe("string");
+    const match = await db.select().from(matches).where(eq(matches.id, "m1"));
+    expect(match[0]?.status).toBe("confirmed");
+    expect(typeof match[0]?.confirmedAt).toBe("string");
   });
 
-  it("rosters learned: team's names present, normalized", () => {
-    const { teamIds } = seedSixteen(db);
+  it("rosters learned: team's names present, normalized", async () => {
+    const { teamIds } = await seedSixteen(db);
 
     expect(
-      confirmMatch(db, { sessionId: "s1", matchId: "m1", rows: mappedRows(teamIds) }),
+      await confirmMatch(db, { sessionId: "s1", matchId: "m1", rows: mappedRows(teamIds) }),
     ).toEqual({ ok: true });
 
-    const learned = db
-      .select()
-      .from(rosters)
-      .where(eq(rosters.teamId, "t1"))
-      .all();
+    const learned = await db.select().from(rosters).where(eq(rosters.teamId, "t1"));
     // TRB Gaming's 4 fixture names (incl. the drifted TF×MAₛOOR spelling).
     expect(learned).toHaveLength(4);
     for (const name of ["TRB HANAN", "TRB ARYAN", "TRB ZORAWAR", "TF×MAₛOOR"]) {
@@ -159,47 +130,42 @@ describe("confirmMatch", () => {
     }
   });
 
-  it("re-confirm replaces: stale draft rows → single set, updated values (idempotent)", () => {
-    const { teamIds } = seedSixteen(db);
+  it("re-confirm replaces: stale draft rows → single set, updated values (idempotent)", async () => {
+    const { teamIds } = await seedSixteen(db);
     const rows = mappedRows(teamIds);
 
-    expect(confirmMatch(db, { sessionId: "s1", matchId: "m1", rows })).toEqual({
+    expect(await confirmMatch(db, { sessionId: "s1", matchId: "m1", rows })).toEqual({
       ok: true,
     });
     // A draft carrying stale rows (e.g. retried submit) is replaced, not doubled.
-    db.update(matches).set({ status: "draft", confirmedAt: null }).where(eq(matches.id, "m1")).run();
+    await db.update(matches).set({ status: "draft", confirmedAt: null }).where(eq(matches.id, "m1"));
     rows[0]!.players[0]!.kills = 9;
-    expect(confirmMatch(db, { sessionId: "s1", matchId: "m1", rows })).toEqual({
+    expect(await confirmMatch(db, { sessionId: "s1", matchId: "m1", rows })).toEqual({
       ok: true,
     });
 
-    const results = db
+    const results = await db
       .select()
       .from(matchResults)
-      .where(eq(matchResults.matchId, "m1"))
-      .all();
+      .where(eq(matchResults.matchId, "m1"));
     expect(results).toHaveLength(16);
     const first = results.find((r) => r.placement === 1);
     const sum = rows[0]!.players.reduce((s, p) => s + p.kills, 0);
     expect(first?.kills).toBe(sum);
     expect(first?.players[0]?.kills).toBe(9);
 
-    const match = db
-      .select()
-      .from(matches)
-      .where(eq(matches.id, "m1"))
-      .get();
-    expect(match?.status).toBe("confirmed");
+    const match = await db.select().from(matches).where(eq(matches.id, "m1"));
+    expect(match[0]?.status).toBe("confirmed");
   });
 
-  it("confirmed match → {ok:false}, DB untouched", () => {
-    const { teamIds } = seedSixteen(db);
-    db.update(matches)
+  it("confirmed match → {ok:false}, DB untouched", async () => {
+    const { teamIds } = await seedSixteen(db);
+    await db
+      .update(matches)
       .set({ status: "confirmed", confirmedAt: "2025-01-01T00:05:00.000Z" })
-      .where(eq(matches.id, "m1"))
-      .run();
+      .where(eq(matches.id, "m1"));
 
-    const result = confirmMatch(db, {
+    const result = await confirmMatch(db, {
       sessionId: "s1",
       matchId: "m1",
       rows: mappedRows(teamIds),
@@ -209,46 +175,46 @@ describe("confirmMatch", () => {
     if (result.ok) return;
     expect(result.message).toMatch(/Unlock the match first/);
     expect(
-      db.select().from(matchResults).where(eq(matchResults.matchId, "m1")).all(),
+      await db.select().from(matchResults).where(eq(matchResults.matchId, "m1")),
     ).toHaveLength(0);
   });
 
-  it("unmapped rows → {ok:false}, no write", () => {
-    const { teamIds } = seedSixteen(db);
+  it("unmapped rows → {ok:false}, no write", async () => {
+    const { teamIds } = await seedSixteen(db);
     const rows = mappedRows(teamIds);
     rows[4]!.teamId = null;
 
-    const result = confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
+    const result = await confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
 
     expect(result.ok).toBe(false);
     expect(
-      db.select().from(matchResults).where(eq(matchResults.matchId, "m1")).all(),
+      await db.select().from(matchResults).where(eq(matchResults.matchId, "m1")),
     ).toHaveLength(0);
-    expect(db.select().from(rosters).all()).toHaveLength(0);
+    expect(await db.select().from(rosters)).toHaveLength(0);
     expect(
-      db.select().from(matches).where(eq(matches.id, "m1")).get()?.status,
+      (await db.select().from(matches).where(eq(matches.id, "m1")))[0]?.status,
     ).toBe("draft");
   });
 
-  it("duplicate teams → {ok:false}, no write", () => {
-    const { teamIds } = seedSixteen(db);
+  it("duplicate teams → {ok:false}, no write", async () => {
+    const { teamIds } = await seedSixteen(db);
     const rows = mappedRows(teamIds);
     rows[1]!.teamId = teamIds[0]!;
 
-    const result = confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
+    const result = await confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.message).toContain("Team 1");
     expect(
-      db.select().from(matchResults).where(eq(matchResults.matchId, "m1")).all(),
+      await db.select().from(matchResults).where(eq(matchResults.matchId, "m1")),
     ).toHaveLength(0);
   });
 
-  it("wrong session → {ok:false}", () => {
-    const { teamIds } = seedSixteen(db);
+  it("wrong session → {ok:false}", async () => {
+    const { teamIds } = await seedSixteen(db);
 
-    const result = confirmMatch(db, {
+    const result = await confirmMatch(db, {
       sessionId: "other",
       matchId: "m1",
       rows: mappedRows(teamIds),
@@ -257,22 +223,29 @@ describe("confirmMatch", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("15-mapped confirm (one team has no row) → rejected, no write (C7.1)", () => {
-    const { teamIds } = seedSixteen(db);
+  it("15-mapped confirm (one team has no row) → rejected, no write (C7.1)", async () => {
+    const { teamIds } = await seedSixteen(db);
     // 15 squads, each mapped to a distinct team — still not confirmable.
     const rows = mappedRows(teamIds).slice(0, 15);
 
-    const result = confirmMatch(db, { sessionId: "s1", matchId: "m1", rows });
+    const result = await confirmMatch(db, {
+      sessionId: "s1",
+      matchId: "m1",
+      rows,
+    });
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.message).toMatch(/15 of 16/);
     expect(
-      db.select().from(matchResults).where(eq(matchResults.matchId, "m1")).all(),
+      await db
+        .select()
+        .from(matchResults)
+        .where(eq(matchResults.matchId, "m1")),
     ).toHaveLength(0);
-    expect(db.select().from(rosters).all()).toHaveLength(0);
+    expect(await db.select().from(rosters)).toHaveLength(0);
     expect(
-      db.select().from(matches).where(eq(matches.id, "m1")).get()?.status,
+      (await db.select().from(matches).where(eq(matches.id, "m1")))[0]?.status,
     ).toBe("draft");
   });
 });

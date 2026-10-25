@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getDb } from "@/lib/db/client";
+import { withUserDb } from "@/lib/db/user";
+import { requireSessionAccess } from "@/lib/orgs/roles";
 import {
   markComplete,
   reopenSession,
@@ -10,12 +11,20 @@ import {
   type LifecycleResult,
 } from "@/lib/sessions/lifecycle";
 
-/** Thin wrappers: getDb → lib fn → revalidate. Zero logic of their own. */
+/**
+ * Guarded wrappers: requireSessionAccess (verified user + org membership,
+ * 404 on missing/foreign — existence never revealed) → withUserDb
+ * (RLS-scoped lib call) → revalidate. Zero logic of their own —
+ * lib/sessions/lifecycle owns it.
+ */
 export async function unlockMatchAction(
   sessionId: string,
   matchId: string,
 ): Promise<LifecycleResult> {
-  const result = unlockMatch(getDb(), sessionId, matchId);
+  const { user } = await requireSessionAccess(sessionId);
+  const result = await withUserDb({ sub: user.id }, (userDb) =>
+    unlockMatch(userDb, sessionId, matchId),
+  );
   if (result.ok) revalidatePath("/sessions/" + sessionId);
   return result;
 }
@@ -23,7 +32,10 @@ export async function unlockMatchAction(
 export async function markCompleteAction(
   sessionId: string,
 ): Promise<LifecycleResult> {
-  const result = markComplete(getDb(), sessionId);
+  const { user } = await requireSessionAccess(sessionId);
+  const result = await withUserDb({ sub: user.id }, (userDb) =>
+    markComplete(userDb, sessionId),
+  );
   if (result.ok) revalidatePath("/sessions/" + sessionId);
   return result;
 }
@@ -31,7 +43,10 @@ export async function markCompleteAction(
 export async function reopenSessionAction(
   sessionId: string,
 ): Promise<LifecycleResult> {
-  const result = reopenSession(getDb(), sessionId);
+  const { user } = await requireSessionAccess(sessionId);
+  const result = await withUserDb({ sub: user.id }, (userDb) =>
+    reopenSession(userDb, sessionId),
+  );
   if (result.ok) revalidatePath("/sessions/" + sessionId);
   return result;
 }

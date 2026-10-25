@@ -41,3 +41,45 @@ Gray zones (expected, mechanical): `lib/db/schema.ts` (B and C add different tab
 - Tests create throwaway `m1test_*` databases on the shared cluster — automatic cleanup; do NOT drop other lanes' databases.
 - Node v25 non-LTS: keep using the documented `npm install --ignore-scripts` workaround.
 - Main still has UNCOMMITTED sibling-lane work — leave it alone; only the user commits it (during step 2).
+
+## Integration gates from the Lane C critical review (execute on the integration branch)
+
+- **C-1 (P0, security-critical)**: after merging `qasim/m2-orgs`, fold
+  `withOrgRoute` (`lib/orgs/route-guard.ts`) into the shared guard so org routes
+  inherit the kill-switch probe + effective-identity swap; delete/delegate the
+  copy. Gate: `tests/api/org-guard-fold.test.ts` (ships with `qasim/m3-admin`)
+  — it must FAIL on B's unfolded copy and PASS after the fold-in.
+- **C-2 (P1)**: after B+C merge the drizzle snapshot graph is forked (B's
+  0010-0013 vs C's 0020 describe divergent worlds). Once, on the integration
+  branch: 1) build a DB from the full migration chain; 2) run a throwaway
+  `npx drizzle-kit generate`; 3) if the emitted SQL contains phantom org/admin
+  tables, regenerate the latest snapshot from the live integrated schema and
+  commit it; 4) delete the throwaway SQL; 5) re-run `npm run db:migrate` on a
+  fresh DB to confirm a no-op.
+- **C-3 wiring**: mount `ImpersonationBanner` in `app/orgs/layout.tsx` (and any
+  Lane B surface outside `app/sessions/**`); wire the dashboard OCR metric to
+  B's `usage_events`; the org-level kill switch
+  (`feature_flags.subject_type='org'`) is RESERVED-UNTIL-M4 — schema-accepted,
+  probed by nothing (decision recorded in Lane C's report SS5/SS11 and in the
+  flags editor UI).
+- **C-4**: land the Lane AB review's I-2 (worker-owned teardown with retry +
+  `db:sweep-test` + maxWorkers cap) before the integration full-suite run.
+
+## Drizzle snapshot reconciliation procedure (wave1(8) — inherit this)
+
+The snapshot graph forked (B's snapshots lack admin tables; C's lack org
+tables). Fixed at wave1(8); any future lane that adds migrations to a
+forked graph must: (1) move db/migrations aside, (2) `npx drizzle-kit
+generate` against an EMPTY migrations dir to mint a snapshot describing
+the full integrated schema, (3) splice that snapshot in as the latest
+`NNNN_snapshot.json` (set prevId to the previous snapshot's id; keep the
+real journal + SQL files), (4) re-run `npx drizzle-kit generate` — the
+diff must be EMPTY before committing.
+
+## Wave 1 outcome (integrated)
+
+All five lanes merged to `integration-wave-1` (then main) in the order
+M1(+A) -> B -> C -> D -> E, history preserved, review gates applied as
+atomic wave1(n) commits. Migration blocks consumed: 0010-0013 + 0014
+(Lane B; 0014 is B's own review hardening) and 0020 (Lane C) — the
+journal is the source of truth (see the snapshot procedure above).

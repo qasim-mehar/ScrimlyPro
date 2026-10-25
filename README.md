@@ -6,7 +6,7 @@ Truth: PRD.md (what) · ERD.md (data) · PLAN.md (build order).
 
 ## Prerequisites
 
-Node 20 or 22 LTS.
+Node 22 LTS (dev/CI has also run on Node 25 with the documented better-sqlite3 `--ignore-scripts` workaround).
 
 ## Run
 
@@ -16,15 +16,74 @@ npm run dev     # http://localhost:3000
 npm run build / npm test / npm run lint
 ```
 
-Env: copy `.env.example` → `.env.local`. All optional in C1.1.
+Env: copy `.env.example` → `.env.local`. `SUPABASE_DB_URL` (+ the Supabase URL/anon key) is required for anything beyond static pages; `GEMINI_API_KEY` only for OCR.
 
-## Database
+## Database (M1: Postgres via Supabase-compatible schema)
 
-- `npm run db:generate` — regenerate SQL migrations from the Drizzle schema (`lib/db/schema.ts`) into `db/migrations/` (committed, versioned).
-- `npm run db:migrate` — apply committed migrations to `data/scrimly.db` (created automatically).
-- `npm run db:seed` — (re-)insert the deterministic demo session (16 teams, matches 1–2 confirmed). Idempotent: safe to run repeatedly.
+Since M1 the data layer runs on Postgres (postgres.js + Drizzle pg-core), not SQLite.
 
-`data/` is local and gitignored. `db/migrations/` is committed.
+- `npm run db:generate` — regenerate SQL migrations from `lib/db/schema.ts` into `db/migrations/` (committed, versioned).
+- `npm run db:migrate` — apply committed migrations to the Postgres at `SUPABASE_DB_URL` (from `.env.local`).
+- `npm run db:reset` — drop/recreate `public`, re-apply migrations, reseed. Idempotent.
+- `npm run db:seed` — (re-)insert the deterministic demo session. Idempotent.
+
+### Local Postgres cluster lifecycle (this dev box)
+
+The M1 dev/test cluster is a user-space PostgreSQL 17 at
+`C:\Users\mianq\Projects\pg-embedded` (port **54329**, db `scrimlypro_m1`).
+After a reboot it does NOT auto-start — every DB test fails until you run:
+
+```bash
+"C:/Users/mianq/Projects/pg-embedded/pgsql/bin/pg_ctl.exe" -D "C:/Users/mianq/Projects/pg-embedded/data" -l "C:/Users/mianq/Projects/pg-embedded/pg.log" start
+```
+
+(Stop: same command with `stop`. A pre-existing system PostgreSQL 18 service
+listens on 5432 with unknown credentials — leave it alone.)
+
+### Dev setup (no Docker needed)
+
+1. Any Postgres 14+ reachable via `SUPABASE_DB_URL` works locally; the auth
+   schema stand-in (in migration `0002`) provides `auth.users`/`auth.uid()` for
+   RLS when GoTrue is absent. With Docker, `supabase start` is the canonical path.
+2. `.env.local` needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_DB_URL` (+ `SUPABASE_SERVICE_ROLE_KEY` only for scripts).
+   See `.env.example`.
+
+### Auth architecture (M1)
+
+- Email/password auth via Supabase Auth (GoTrue); all credential operations are
+  server-mediated through `/api/auth/*` (rate-limited, enumeration-safe copy).
+- Identity = `supabase.auth.getUser()` only (`lib/supabase/server.ts#getAuthedUser`);
+  browser session state is a UI hint, never an authorization basis.
+- Tenant queries run inside `withUserDb` (`lib/db/user.ts`): a transaction that
+  switches to the `authenticated` role with the verified JWT claims — Postgres
+  FORCE RLS (all 7 tables, USING+WITH CHECK) is the backstop; explicit
+  ownership predicates + `assertSessionOwner` (404 for foreign resources) are
+  the first line.
+- Public surface: `/login`, `/signup`, `/forgot-password`, `/reset-password`,
+  `/auth/callback`, `/auth/error` + static assets (see `lib/auth/public-paths.ts`).
+- Security gates: `npm run verify:secrets` (after build),
+  `npx vitest run tests/rls`, `BASE_URL=http://127.0.0.1:3042 bash scripts/verify-auth-matrix.sh`.
+- Migration from the legacy SQLite DB: `node scripts/migrate-local-to-supabase.mjs` (dry-run / `--apply`) + `node scripts/golden-check.ts`.
+- Cloud cut-over: see `docs/reports/M1-implementation-report.md` §9.
+
+### TRUST_PROXY deployment matrix (rate-limit attribution)
+
+`TRUST_PROXY` is **distrust by default** (`lib/auth/rate-limit.ts`): `x-forwarded-for`
+is read only when `TRUST_PROXY=true` is set explicitly, and startup warns in
+production when it is not. Consequences per deployment:
+
+| Deployment | TRUST_PROXY | Effect |
+| --- | --- | --- |
+| Direct/local (`:3000`, no proxy) | unset (default) | Correct: client IP is the socket peer; XFF would be spoofable and is ignored. |
+| Behind a proxy that OVERWRITES XFF (Vercel, NGINX with `proxy_set_header X-Real-IP`) | `true` | Correct: per-IP buckets key on the real client. |
+| Behind a proxy that APPENDS to XFF | `true` | First XFF hop is client-controlled — buckets can be spoofed/evaded; per-EMAIL buckets (signup/forgot/login-failure) are attribution-independent and unaffected. |
+| Behind a proxy, TRUST_PROXY unset | unset | XFF ignored (spoofable); falls back to `x-real-ip`: if the platform sets it (Vercel etc.) attribution is correct; if not, every IP-keyed limiter collapses into ONE shared bucket — safe but over-limiting. Per-email buckets are attribution-independent and unaffected in all cases. |
+
+At pilot scale only `/share` (60/min) is a public IP-keyed limiter, so the
+collapse case is an availability nuisance, not a security hole. Revisit with a
+shared-store limiter (Redis) when the app runs multi-replica.
+
 
 ## Assumptions
 

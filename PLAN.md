@@ -131,6 +131,31 @@ const SCHEMA = { type: "ARRAY", items: { type: "OBJECT", properties: {
 **C7.1 Audit + docs.** 375px pass on every route; error boundaries; empty states; loading skeletons everywhere; README (setup, env, manual test script = PRD §9 acceptance as numbered steps, troubleshooting, Assumptions); final commit.
 **ACCEPT:** PRD §9 checklist fully passable by a human following only the README.
 
-## 5. Future phases (separate plans — do not start)
+## 5. M1 — Multi-tenancy phase 1 (COMPLETE; branch `m1-multitenancy-foundation`)
+
+M1 was executed from the standalone master prompt (not a numbered chunk). See `docs/reports/M1-implementation-report.md` for the full record: commits `17dff70`→`49fd6da`+, Postgres port (§6 as-built now in ERD.md), Supabase auth (email+password, server-mediated), RLS on all 7 tables, route/action guard sweep, adversarial suites, legacy-DB migration with golden check. Conventions added: `withUserDb` for all tenant queries (eslint-enforced), `proxy.ts` (Next 16 middleware rename), architecture meta-test enforcing guards on future routes (`tests/architecture/guards.test.ts`), `verify:secrets` + `verify-auth-matrix.sh` gates. Cut-over to a hosted Supabase project: report §9.
+
+## 6. Future phases (separate plans — do not start)
 
 P1 Supabase + auth port (ERD §6) · P2 share links/OG · P3 entitlements + manual PK payments · P4 real template PNGs + geometry recalibration · P5 landing page (owner-coded) · P6 per-match graphic (data already supports it).
+## 7. Wave 1 — parallel lanes + integration (COMPLETE)
+
+Five lanes ran in parallel on separate branches/worktrees (see
+LANES-README.md): A (M1 hardening, merged inside the M1 branch), B
+(`qasim/m2-orgs`: organizations, invites, quotas, share links), C
+(`qasim/m3-admin`: super admin, kill switch, impersonation, audit log),
+D (`qasim/m4-deps`: next 16.4.3 + audit fixes), E (`qasim/m4-ops`:
+verify-production, db:backup/restore-test, cut-over runbook).
+
+Integration executed on `integration-wave-1` in the documented order
+(M1 → B → C → D → E) with the Lane-B review fixes as atomic commits
+(wave1(4a–4d)), the C-1 wrapper fold (wave1(6)), drizzle snapshot
+reconciliation (wave1(8)), test-infra hygiene (wave1(10)), the cut-over
+runbook v2 + rehearsal (wave1(13a/13b)). Full record:
+`docs/reports/wave1-integration-report.md`.
+
+**Wave 1 is COMPLETE. Next: hosted cut-over per
+`docs/deploy/cut-over.md` (v2, rehearsal-proven).** Open items for
+cut-over: B1 GoTrue live flows, E-1 backup-boundary decision (HUMAN),
+org kill switch RESERVED-until-M4, auth-users provisioning question
+(service-role insert vs GoTrue invite), LTS Node pin for deploy.

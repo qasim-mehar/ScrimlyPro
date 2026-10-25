@@ -99,10 +99,40 @@ On confirm of match N: upsert every mapped squad's player names (normalized per 
 - Re-confirm of a draft replaces its results idempotently.
 - `rosters` is invisible plumbing — never shown in any UI.
 
-## 6. Port to Supabase (future phase — deltas only, do not build now)
+## 6. Port to Supabase (AS BUILT in M1 — this section is authoritative for the Postgres schema)
 
-- `sessions.user_id` uuid + `auth.users` FK; RLS "own rows" policies on all tables (owner-check via session join).
-- `TEXT` → native `uuid` / `jsonb` / `timestamptz`.
-- Team logos → Storage bucket paths (replace data URLs).
-- New tables then: `ocr_usage(user_id, day, count)` rate limiting; `shared_links(session_id, graphic_type, storage_path)` for publish/OG.
-- MVP aggregation and standings SQL move server-side unchanged.
+M1 (`m1-multitenancy-foundation`, see docs/reports/M1-implementation-report.md) implemented the port:
+
+- **Types:** TEXT uuid PKs stay TEXT (app-generated `crypto.randomUUID`); TEXT ISO timestamps → `timestamptz not null default now()` (drizzle `mode:"string"`); JSON text columns → `jsonb`; `mvp_lists.locked` → `boolean`. Table/column/index names byte-identical to the SQLite original.
+- **Tenancy:** `sessions.user_id uuid NOT NULL` (migration 0003; FK to `auth.users` on delete cascade) + new `profiles` table (`id` = `auth.users.id`, `role` default `'user'` for M3, insert trigger on `auth.users`, escalation guard). All other tables stay scoped via the `session_id` FK chain — user_id lives ONLY on sessions.
+- **RLS:** enable + FORCE RLS on all 7 tables; 27 policies, all `to authenticated`, insert/update/delete pairing USING + WITH CHECK, child tables via EXISTS walks to `sessions.user_id`; no global reference tables exist; profiles has no delete policy (default deny).
+- **Auth:** Supabase Auth (GoTrue) email+password, server-mediated through `/api/auth/*`; identity only via `getUser()`. Next 16 convention: `proxy.ts` (middleware renamed) refreshes tokens + redirects; every route/page re-checks independently.
+- **DB access law:** tenant request paths run through `withUserDb` (lib/db/user.ts: transaction-scoped `set_config('role','authenticated')` + verified JWT claims → RLS is the backstop); `getDb()` (owner role) and `lib/db/admin.ts` are eslint-banned from the request path.
+- **Deferred deltas (not built):** team logos → Storage bucket paths (data URLs still in `teams.logo_url`); `ocr_usage`/`shared_links` tables (M2/M4); MVP aggregation/standings remain TS pure functions (not moved to SQL).
+- **Local dev:** Postgres 14+ works without Docker — migration `0002` conditionally creates the `auth` schema stand-in (`auth.users`, `uid()`, `jwt()`) + `authenticated` role; all blocks no-op on a hosted project.`
+
+## 7. Wave 1 integrated state (M2 orgs + M3 admin)
+
+- **Org tables** (migrations 0010–0014): `organizations`, `org_members` (PK
+  org+user, role owner|admin|member — role transitions are RLS-enforced:
+  owner-grant and owner-row mutation require actor-owner), `org_invites`
+  (role DB-bounded to member|admin; SHA-256 hash-at-rest tokens),
+  `org_quotas` (platform-owned: SELECT-only for members, minted only by the
+  bootstrap trigger — raising a limit is a platform-side SQL operation),
+  `share_links` (hash-at-rest tokens), `usage_events` (append-only OCR
+  meter, per-USER enforcement: the limit is the org's
+  `monthly_ocr_calls`, the count is the user's month-total across ALL orgs).
+- **Admin tables** (migration 0020): `audit_log` (append-only, no
+  update/delete policy for anyone), `feature_flags`, `impersonation_sessions`.
+- **Two-layer law (as extended in wave 1):** `withUserDb` role-switch + RLS
+  is the suspenders; the belt predicates are org-membership
+  (`orgMemberPredicate`) on every tenant root select. The M3 guards run on
+  EFFECTIVE identity (`getEffectiveUser` — impersonation target when a
+  valid ledger-backed cookie exists) and probe the kill switch
+  (`is_user_disabled()`) — every authed route, action, and page, org
+  surfaces included (wave1(6) fold).
+- **Org-level kill switch: RESERVED-until-M4.** `feature_flags` accepts
+  `subject_type='org'` (schema + M3-INT markers), but no request path
+  probes it. The one audited disable path is the user kill switch via the
+  Tenants console; `/admin/flags` REFUSES `('user','disabled')` (tested) —
+  an org-subject `disabled` flag would be inert until M4 wires the probe.

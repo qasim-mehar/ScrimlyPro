@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/lib/auth/action-guard";
 import { MvpPreview } from "@/components/graphics/MvpPreview";
 import {
   MvpEditor,
@@ -8,7 +9,7 @@ import {
   type MvpPlayerOption,
 } from "@/components/mvp/MvpEditor";
 import { UnlockButton } from "@/components/mvp/UnlockButton";
-import { getDb } from "@/lib/db/client";
+import { withUserDb } from "@/lib/db/user";
 import {
   matchResults,
   matches,
@@ -16,6 +17,7 @@ import {
   sessions,
   teams,
 } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import { MVP_SUBTITLE, toMvpDisplay } from "@/lib/graphics/mvp";
 import { aggregatePlayers, draftMvpTop5 } from "@/lib/mvp";
 
@@ -26,27 +28,83 @@ export const dynamic = "force-dynamic";
  * CONFIRMED matches only (C2.3); the client editor edits a COPY — editor
  * edits never rewrite match_results (PRD). The MVP graphic renders ONLY
  * from the locked mvp_lists row (ERD §5 iron rule 2).
+ *
+ * WP6/M2: verified user or /login; every tenant read runs inside withUserDb
+ * (RLS + explicit org-membership predicate on the session select). A missing
+ * or foreign session is indistinguishable — both render the 404 page.
  */
 export default async function MvpPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const user = await requireUser();
   const { id: sessionId } = await params;
-  const db = getDb();
 
-  const session = db.select().from(sessions).where(eq(sessions.id, sessionId)).get();
-  if (!session) notFound();
+  const data = await withUserDb({ sub: user.id }, async (userDb) => {
+    const session =
+      (
+        await userDb
+          .select()
+          .from(sessions)
+          .where(and(eq(sessions.id, sessionId), orgMemberPredicate(user.id)))
+          .limit(1)
+      )[0] ?? null;
+    if (!session) return null;
 
-  const teamRows = db.select().from(teams).where(eq(teams.sessionId, sessionId)).all();
+    const teamRows = await userDb
+      .select()
+      .from(teams)
+      .where(eq(teams.sessionId, sessionId));
 
-  const confirmedCount = db
-    .select({ id: matches.id })
-    .from(matches)
-    .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
-    .all().length;
+    const confirmedCount = (
+      await userDb
+        .select({ id: matches.id })
+        .from(matches)
+        .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
+    ).length;
 
-  if (confirmedCount === 0) {
+    if (confirmedCount === 0) {
+      return { kind: "no-results" as const, session, teamRows, confirmedCount };
+    }
+
+    const sourceRows = await userDb
+      .select({
+        teamId: matchResults.teamId,
+        matchNo: matches.matchNo,
+        players: matchResults.players,
+      })
+      .from(matchResults)
+      .innerJoin(matches, eq(matchResults.matchId, matches.id))
+      .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
+      .orderBy(asc(matches.matchNo));
+
+    const players = aggregatePlayers(sourceRows);
+    const draft = draftMvpTop5(players);
+    const saved =
+      (
+        await userDb
+          .select()
+          .from(mvpLists)
+          .where(eq(mvpLists.sessionId, sessionId))
+          .limit(1)
+      )[0] ?? null;
+
+    return {
+      kind: "ready" as const,
+      session,
+      teamRows,
+      confirmedCount,
+      players,
+      draft,
+      saved,
+    };
+  });
+
+  if (!data) notFound();
+  const { session, teamRows, confirmedCount } = data;
+
+  if (data.kind === "no-results") {
     return (
       <main className="mx-auto w-full max-w-2xl p-4">
         <p className="text-xs font-semibold tracking-widest text-muted">
@@ -63,22 +121,7 @@ export default async function MvpPage({
     );
   }
 
-  const sourceRows = db
-    .select({
-      teamId: matchResults.teamId,
-      matchNo: matches.matchNo,
-      players: matchResults.players,
-    })
-    .from(matchResults)
-    .innerJoin(matches, eq(matchResults.matchId, matches.id))
-    .where(and(eq(matches.sessionId, sessionId), eq(matches.status, "confirmed")))
-    .orderBy(asc(matches.matchNo))
-    .all();
-
-  const players = aggregatePlayers(sourceRows);
-  const draft = draftMvpTop5(players);
-  const saved = db.select().from(mvpLists).where(eq(mvpLists.sessionId, sessionId)).get();
-
+  const { players, draft, saved } = data;
   if (saved && saved.locked) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">

@@ -1,12 +1,75 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1788562211050,
-      "tag": "0000_big_magik",
+      "version": "7",
+      "when": 1792832787377,
+      "tag": "0000_absurd_krista_starr",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792836120865,
+      "tag": "0001_sessions-user-id",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792836126432,
+      "tag": "0002_m1-rls-auth-shim",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792841000000,
+      "tag": "0003_sessions-user-id-not-null",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792849571366,
+      "tag": "0010_orgs-schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792849597460,
+      "tag": "0011_orgs-backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792849598460,
+      "tag": "0012_sessions-org-id-not-null",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792849599460,
+      "tag": "0013_org-invite-preview",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792936000000,
+      "tag": "0014_quota-role-hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792850652964,
+      "tag": "0020_m3_admin_tables",
       "breakpoints": true
     }
   ]

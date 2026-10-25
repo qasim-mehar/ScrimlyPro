@@ -12,6 +12,7 @@ import type {
   SessionPageSession,
 } from "@/lib/sessions/queries";
 
+import { SharePanel, type ShareLink } from "./SharePanel";
 import { CompleteButton } from "./CompleteButton";
 import { GraphicsTab } from "./GraphicsTab";
 import { MatchesTab } from "./MatchesTab";
@@ -27,6 +28,7 @@ type SessionViewProps = {
   nextMatch: number | null;
   mvp: SessionPageData["mvp"];
   nudge: SessionNudge;
+  shareLinks: ShareLink[];
 };
 
 type TabId = "matches" | "standings" | "graphics";
@@ -85,6 +87,7 @@ export default function SessionView({
   nextMatch,
   mvp,
   nudge,
+  shareLinks,
 }: SessionViewProps) {
   const [tab, setTab] = useState<TabId>("matches");
   const isCompleted = session.status === "completed";
@@ -116,6 +119,8 @@ export default function SessionView({
           />
         )}
       </header>
+
+      <SharePanel sessionId={session.id} links={shareLinks} />
 
       <nav aria-label="Session sections">
         <div role="tablist" className="grid grid-cols-3 gap-2">

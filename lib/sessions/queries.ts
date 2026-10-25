@@ -10,6 +10,7 @@ import {
   type MvpEntry,
   type ScoringRules,
 } from "@/lib/db/schema";
+import { orgMemberPredicate } from "@/lib/orgs/orgs";
 import type { ResultRow, TeamRow } from "@/lib/scoring";
 
 export type SessionPageSession = {
@@ -45,39 +46,53 @@ export type SessionPageData = {
  * Read helper for GET /sessions/[id] (C4.2). Confirmed-only results feed
  * computeStandings; matches carry the placement-1 winner name (null for
  * drafts). raw_squad_data is never selected — it must not leak to the client.
+ *
+ * `userId` (REQUIRED — the server-verified caller, getAuthedUser; never
+ * request input) adds an explicit ORG-MEMBERSHIP predicate on the root
+ * session select (M2: tenancy is the org; any member may read) — belt AND
+ * suspenders with the RLS backstop. Making the predicate mandatory removes
+ * the "caller forgot the userId" bug class — deliberate API break of the
+ * earlier optional-param shape. Callers without a verified user (tests,
+ * admin tooling) are not served by this helper.
  */
-export function getSessionPageData(
+export async function getSessionPageData(
   db: Db,
   sessionId: string,
-): SessionPageData | null {
-  const sessionRow = db
-    .select({
-      id: sessions.id,
-      name: sessions.name,
-      plannedMatches: sessions.plannedMatches,
-      teamCount: sessions.teamCount,
-      templateId: sessions.templateId,
-      scoringRules: sessions.scoringRules,
-      status: sessions.status,
-      createdAt: sessions.createdAt,
-    })
-    .from(sessions)
-    .where(eq(sessions.id, sessionId))
-    .get();
+  // REQUIRED: the verified owner id (getAuthedUser). Making the tenant
+  // predicate mandatory removes the "caller forgot the userId" bug class —
+  // this is a deliberate API break of the earlier optional-param shape.
+  userId: string,
+): Promise<SessionPageData | null> {
+  const sessionRow =
+    (
+      await db
+        .select({
+          id: sessions.id,
+          name: sessions.name,
+          plannedMatches: sessions.plannedMatches,
+          teamCount: sessions.teamCount,
+          templateId: sessions.templateId,
+          scoringRules: sessions.scoringRules,
+          status: sessions.status,
+          createdAt: sessions.createdAt,
+        })
+        .from(sessions)
+        .where(and(eq(sessions.id, sessionId), orgMemberPredicate(userId)))
+        .limit(1)
+    )[0] ?? null;
   if (!sessionRow) return null;
 
-  const teamRows: TeamRow[] = db
+  const teamRows: TeamRow[] = await db
     .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
     .from(teams)
     .where(eq(teams.sessionId, sessionId))
-    .orderBy(asc(teams.name))
-    .all();
+    .orderBy(asc(teams.name));
 
   const teamNameById = new Map<string, string>();
   for (const team of teamRows) teamNameById.set(team.id, team.name);
 
   // Deliberately no rawSquadData projection — drafts stay opaque here.
-  const matchRows = db
+  const matchRows = await db
     .select({
       id: matches.id,
       matchNo: matches.matchNo,
@@ -85,8 +100,7 @@ export function getSessionPageData(
     })
     .from(matches)
     .where(eq(matches.sessionId, sessionId))
-    .orderBy(asc(matches.matchNo))
-    .all();
+    .orderBy(asc(matches.matchNo));
 
   const confirmedIds = matchRows
     .filter((m) => m.status === "confirmed")
@@ -94,7 +108,7 @@ export function getSessionPageData(
 
   const resultRows: ResultRow[] =
     confirmedIds.length > 0
-      ? db
+      ? await db
           .select({
             teamId: matchResults.teamId,
             placement: matchResults.placement,
@@ -103,12 +117,11 @@ export function getSessionPageData(
           })
           .from(matchResults)
           .where(inArray(matchResults.matchId, confirmedIds))
-          .all()
       : [];
 
   const winnerByMatchId = new Map<string, string | null>();
   if (confirmedIds.length > 0) {
-    const winners = db
+    const winners = await db
       .select({ matchId: matchResults.matchId, teamId: matchResults.teamId })
       .from(matchResults)
       .where(
@@ -116,8 +129,7 @@ export function getSessionPageData(
           inArray(matchResults.matchId, confirmedIds),
           eq(matchResults.placement, 1),
         ),
-      )
-      .all();
+      );
     for (const w of winners) {
       winnerByMatchId.set(w.matchId, teamNameById.get(w.teamId) ?? null);
     }
@@ -131,11 +143,14 @@ export function getSessionPageData(
       m.status === "confirmed" ? (winnerByMatchId.get(m.id) ?? null) : null,
   }));
 
-  const mvpRow = db
-    .select({ locked: mvpLists.locked, entries: mvpLists.entries })
-    .from(mvpLists)
-    .where(eq(mvpLists.sessionId, sessionId))
-    .get();
+  const mvpRow =
+    (
+      await db
+        .select({ locked: mvpLists.locked, entries: mvpLists.entries })
+        .from(mvpLists)
+        .where(eq(mvpLists.sessionId, sessionId))
+        .limit(1)
+    )[0] ?? null;
 
   return {
     session: sessionRow,
@@ -197,9 +212,20 @@ export type RecentSession = {
 /**
  * Landing-page list (C7.1 Pass 4): the newest sessions with confirmed-match
  * progress. Query-only — raw squad data, rosters, results never selected.
+ *
+ * `userId` (REQUIRED — the server-verified caller, getAuthedUser; never
+ * request input) adds an explicit ORG-MEMBERSHIP predicate on the root
+ * session select (M2: tenancy is the org; any member may read) — belt AND
+ * suspenders with the RLS backstop. Making the predicate mandatory removes
+ * the "caller forgot the userId" bug class — deliberate API break of the
+ * earlier optional-param shape. Run the call inside withUserDb.
  */
-export function listRecentSessions(db: Db, limit = 8): RecentSession[] {
-  const sessionRows = db
+export async function listRecentSessions(
+  db: Db,
+  userId: string,
+  limit = 8,
+): Promise<RecentSession[]> {
+  const sessionRows = await db
     .select({
       id: sessions.id,
       name: sessions.name,
@@ -208,18 +234,17 @@ export function listRecentSessions(db: Db, limit = 8): RecentSession[] {
       createdAt: sessions.createdAt,
     })
     .from(sessions)
+    .where(orgMemberPredicate(userId))
     .orderBy(desc(sessions.createdAt))
-    .limit(limit)
-    .all();
+    .limit(limit);
 
   if (sessionRows.length === 0) return [];
   const ids = sessionRows.map((s) => s.id);
 
-  const confirmedRows = db
+  const confirmedRows = await db
     .select({ sessionId: matches.sessionId })
     .from(matches)
-    .where(and(eq(matches.status, "confirmed"), inArray(matches.sessionId, ids)))
-    .all();
+    .where(and(eq(matches.status, "confirmed"), inArray(matches.sessionId, ids)));
   const confirmedBySession = new Map<string, number>();
   for (const row of confirmedRows) {
     confirmedBySession.set(
