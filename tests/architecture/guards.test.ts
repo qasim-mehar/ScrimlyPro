@@ -275,14 +275,15 @@ describe("M2 guard coverage (B stand-in, folded at WP6)", () => {
 /**
  * Wave-1 (WP9, C-3): the impersonation banner must mount on EVERY tenant
  * surface — the banner is the only visible cue that an operator is acting
- * as someone else. Surfaces: the landing page, the sessions tree, and (new)
- * the org surface outside app/sessions/**.
+ * as someone else. Surfaces: the landing page, the sessions tree, the org
+ * surface outside app/sessions/**, and (M5) the member dashboard.
  */
 describe("impersonation banner mounts on every tenant surface (C-3)", () => {
   const SURFACES = [
     "app/page.tsx",
     "app/sessions/layout.tsx",
     "app/orgs/layout.tsx",
+    "app/dashboard/layout.tsx",
   ];
 
   it("every tenant surface mounts <ImpersonationBanner />", () => {
