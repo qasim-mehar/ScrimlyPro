@@ -75,3 +75,11 @@ the full integrated schema, (3) splice that snapshot in as the latest
 `NNNN_snapshot.json` (set prevId to the previous snapshot's id; keep the
 real journal + SQL files), (4) re-run `npx drizzle-kit generate` — the
 diff must be EMPTY before committing.
+
+## Wave 1 outcome (integrated)
+
+All five lanes merged to `integration-wave-1` (then main) in the order
+M1(+A) -> B -> C -> D -> E, history preserved, review gates applied as
+atomic wave1(n) commits. Migration blocks consumed: 0010-0013 + 0014
+(Lane B; 0014 is B's own review hardening) and 0020 (Lane C) — the
+journal is the source of truth (see the snapshot procedure above).

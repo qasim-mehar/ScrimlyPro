@@ -138,3 +138,24 @@ M1 was executed from the standalone master prompt (not a numbered chunk). See `d
 ## 6. Future phases (separate plans — do not start)
 
 P1 Supabase + auth port (ERD §6) · P2 share links/OG · P3 entitlements + manual PK payments · P4 real template PNGs + geometry recalibration · P5 landing page (owner-coded) · P6 per-match graphic (data already supports it).
+## 7. Wave 1 — parallel lanes + integration (COMPLETE)
+
+Five lanes ran in parallel on separate branches/worktrees (see
+LANES-README.md): A (M1 hardening, merged inside the M1 branch), B
+(`qasim/m2-orgs`: organizations, invites, quotas, share links), C
+(`qasim/m3-admin`: super admin, kill switch, impersonation, audit log),
+D (`qasim/m4-deps`: next 16.4.3 + audit fixes), E (`qasim/m4-ops`:
+verify-production, db:backup/restore-test, cut-over runbook).
+
+Integration executed on `integration-wave-1` in the documented order
+(M1 → B → C → D → E) with the Lane-B review fixes as atomic commits
+(wave1(4a–4d)), the C-1 wrapper fold (wave1(6)), drizzle snapshot
+reconciliation (wave1(8)), test-infra hygiene (wave1(10)), the cut-over
+runbook v2 + rehearsal (wave1(13a/13b)). Full record:
+`docs/reports/wave1-integration-report.md`.
+
+**Wave 1 is COMPLETE. Next: hosted cut-over per
+`docs/deploy/cut-over.md` (v2, rehearsal-proven).** Open items for
+cut-over: B1 GoTrue live flows, E-1 backup-boundary decision (HUMAN),
+org kill switch RESERVED-until-M4, auth-users provisioning question
+(service-role insert vs GoTrue invite), LTS Node pin for deploy.
