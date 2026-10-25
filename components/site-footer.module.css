@@ -21,7 +21,7 @@
   --pill-ink: #ffffff;
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --gap: clamp(300px, 45vh, 560px);
+  --gap: clamp(120px, 18vh, 240px);
 
   /* THE HUGE GAP. margin-top per spec; the ::before paints that margin
      pure white so the gap stays white even where the page body isn't. */
