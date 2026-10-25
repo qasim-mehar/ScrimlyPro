@@ -108,11 +108,14 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // app/admin/** server files are the ONLY request-path consumers of
-  // lib/admin (including admin-db). The raw db/admin module and the
-  // schema-owner client stay forbidden even here.
+  // app/admin/** + app/api/admin/** server files are the ONLY request-path
+  // consumers of lib/admin (including admin-db) — wave1(7): the admin API
+  // routes (app/api/admin/**: impersonate, tenants enable/disable) are the
+  // same admin-panel trust domain as the pages and are requiredAdmin-gated;
+  // C's in-lane exception list predated the routes' final location. The raw
+  // db/admin module and the schema-owner client stay forbidden even here.
   {
-    files: ["app/admin/**/*.{ts,tsx}"],
+    files: ["app/admin/**/*.{ts,tsx}", "app/api/admin/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
