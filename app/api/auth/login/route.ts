@@ -15,6 +15,7 @@ import {
 import { INVALID_CREDENTIALS_COPY } from "@/lib/auth/responses";
 import { parseJsonObject, validateEmail } from "@/lib/auth/validate";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { auditAuthEvent } from "@/lib/audit/auth-events";
 
 function isEnvConfigError(e: unknown): boolean {
   return (
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
 
   try {
     const supabase = await createServerSupabaseClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: body.email as string,
       password: body.password as string,
     });
@@ -59,6 +60,8 @@ export async function POST(req: Request) {
         { status: 401 },
       );
     }
+    // M3 (Lane C): audited auth event (minimal insertion — merge point).
+    await auditAuthEvent("auth.login", req, { userId: data.user?.id ?? null });
     return noStore({ ok: true });
   } catch (e) {
     if (isEnvConfigError(e)) return authUnavailable();

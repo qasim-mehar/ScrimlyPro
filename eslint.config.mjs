@@ -5,10 +5,14 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Security perimeter (M1 review A3/C4):
+  // Security perimeter (M1 review A3/C4 + M3 Lane C rule 5):
   // - lib/db/admin.ts uses the service role and BYPASSES RLS entirely.
   // - lib/db/client.ts (getDb) runs as the schema owner — same bypass. Tenant
   //   request paths must use withUserDb (lib/db/user.ts) instead.
+  // - lib/admin/admin-db.ts re-exports that service-role client to the admin
+  //   panel; lib/admin/** as a whole is admin-panel-only. Imports from the
+  //   request path or client code are errors (see the sanctioned-consumer
+  //   overrides below — app/admin/** and the two lib/auth guard choke points).
   // - getSession() is a UI hint only; authorization is getUser()-based
   //   (lib/supabase/server.ts#getAuthedUser).
   // Request path = app/** + proxy.ts + all client components (components/**).
@@ -30,6 +34,16 @@ const eslintConfig = defineConfig([
                 "getDb() runs as the schema owner and bypasses RLS. Tenant request paths must use withUserDb from lib/db/user.ts (tests and app/dev fixture pages excepted — see overrides below).",
               allowTypeImports: true,
             },
+            {
+              group: ["**/lib/admin/admin-db", "**/lib/admin/admin-db.ts"],
+              message:
+                "lib/admin/admin-db.ts wraps the service-role client and is importable ONLY from app/admin/** server files and lib/admin internals (M3 Lane C rule 5).",
+            },
+            {
+              group: ["**/lib/admin", "**/lib/admin/**"],
+              message:
+                "lib/admin/** is the super-admin panel's server layer (requireAdmin, admin-db, impersonation, kill switch). Nothing outside app/admin/** and the two sanctioned lib/auth guard files may import it.",
+            },
           ],
         },
       ],
@@ -40,6 +54,144 @@ const eslintConfig = defineConfig([
           property: "getSession",
           message:
             "getSession() is a non-authoritative UI hint. Authorization must use getAuthedUser() (getUser) — see lib/supabase/server.ts.",
+        },
+      ],
+    },
+  },
+  // Sanctioned lib/admin internals: relative imports inside the layer work;
+  // only admin-db.ts itself may pull in the raw service-role client, and it
+  // must never touch the schema-owner client.
+  {
+    files: ["lib/admin/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. lib/admin uses the admin-db service client only.",
+              allowTypeImports: true,
+            },
+            {
+              group: ["**/db/admin", "**/db/admin.ts", "**/db/admin/*"],
+              message:
+                "Only lib/admin/admin-db.ts may import the raw service-role client (single guarded module, M3 Lane C rule 5).",
+            },
+            {
+              group: ["**/lib/admin", "**/lib/admin/**"],
+              message:
+                "Inside lib/admin use RELATIVE imports ('./x'); the alias pattern is reserved for app/admin consumers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // The single sanctioned importer of lib/db/admin in the entire repo.
+    files: ["lib/admin/admin-db.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. lib/admin uses the admin-db service client only.",
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // app/admin/** server files are the ONLY request-path consumers of
+  // lib/admin (including admin-db). The raw db/admin module and the
+  // schema-owner client stay forbidden even here.
+  {
+    files: ["app/admin/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/admin", "**/db/admin.ts", "**/db/admin/*"],
+              message:
+                "lib/db/admin.ts bypasses RLS with the service-role key. app/admin must go through lib/admin/admin-db.",
+            },
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. app/admin uses lib/admin/admin-db.",
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The two M3 guard choke points (kill-switch + effective identity hooks)
+  // are the only lib/auth files allowed to import lib/admin modules. They
+  // still may not touch either RLS-bypassing DB client.
+  {
+    files: ["lib/auth/route-guard.ts", "lib/auth/action-guard.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/admin", "**/db/admin.ts", "**/db/admin/*"],
+              message:
+                "lib/db/admin.ts bypasses RLS with the service-role key and is forbidden in the request path or client code.",
+            },
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. Tenant request paths must use withUserDb from lib/db/user.ts.",
+              allowTypeImports: true,
+            },
+            {
+              group: ["**/lib/admin/admin-db", "**/lib/admin/admin-db.ts"],
+              message:
+                "lib/admin/admin-db.ts wraps the service-role client and is importable ONLY from app/admin/** server files and lib/admin internals.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Server components under components/admin/** (e.g. the impersonation
+  // banner) may import the identity/validation hooks from lib/admin — but
+  // never the service-role client.
+  {
+    files: ["components/admin/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/db/admin", "**/db/admin.ts", "**/db/admin/*"],
+              message:
+                "lib/db/admin.ts bypasses RLS with the service-role key and is forbidden in the request path or client code.",
+            },
+            {
+              group: ["**/db/client", "**/db/client.ts"],
+              message:
+                "getDb() runs as the schema owner and bypasses RLS. Tenant request paths must use withUserDb from lib/db/user.ts.",
+              allowTypeImports: true,
+            },
+            {
+              group: ["**/lib/admin/admin-db", "**/lib/admin/admin-db.ts"],
+              message:
+                "lib/admin/admin-db.ts wraps the service-role client and is importable ONLY from app/admin/** server files and lib/admin internals.",
+            },
+          ],
         },
       ],
     },

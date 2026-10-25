@@ -1,16 +1,22 @@
 import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 
+import { isUserDisabled } from "@/lib/admin/kill-switch";
+import { getEffectiveUser } from "@/lib/admin/impersonation";
 import type { Db } from "@/lib/db/client";
-import { getDb } from "@/lib/db/client";
-import { withUserDbForTest } from "@/lib/db/user";
+import { withUserDb, withUserDbForTest } from "@/lib/db/user";
 import { sessions } from "@/lib/db/schema";
-import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
+import type { AuthedUser } from "@/lib/supabase/server";
 
 /**
  * Guard stack for server actions and server components (WP6).
  *
- * - `requireUser()`: the verified user, or redirect("/login").
+ * - `requireUser()`: the verified user (M3: EFFECTIVE identity — the
+ *   impersonation target when a valid impersonation cookie is present,
+ *   otherwise the real user), or redirect("/login"). A tenant carrying the
+ *   reserved `disabled` marker is locked out of every authed page/action —
+ *   bounced to /login?disabled=1 (plain "Account disabled" copy, no detail).
+ *   Admin routes use requireAdmin (REAL identity) and never this seam.
  * - `assertSessionOwner(sessionId)`: verified user + proof they own the
  *   session. Missing and foreign sessions are INDISTINGUISHABLE — both
  *   render the 404 page via notFound() (never reveal existence).
@@ -21,8 +27,9 @@ import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
  */
 
 export async function requireUser(): Promise<AuthedUser> {
-  const user = await getAuthedUser();
+  const user = await getEffectiveUser();
   if (!user) redirect("/login");
+  if (await isUserDisabled(user.id)) redirect("/login?disabled=1");
   return user;
 }
 
@@ -35,7 +42,12 @@ export type SessionOwnerContext = { user: AuthedUser; sessionId: string };
 export async function assertSessionOwner(
   sessionId: string,
 ): Promise<SessionOwnerContext> {
-  return assertSessionOwnerOn(getDb(), sessionId);
+  const user = await requireUser();
+  const found = await withUserDb({ sub: user.id }, (userDb) =>
+    findOwnedSession(userDb, user.id, sessionId),
+  );
+  if (!found) notFound();
+  return { user, sessionId };
 }
 
 /** Test-only variant operating on an injected client. */
@@ -43,27 +55,30 @@ export async function assertSessionOwnerForTest(
   client: Db,
   sessionId: string,
 ): Promise<SessionOwnerContext> {
-  return assertSessionOwnerOn(client, sessionId);
-}
-
-async function assertSessionOwnerOn(
-  base: Db,
-  sessionId: string,
-): Promise<SessionOwnerContext> {
   const user = await requireUser();
-  const found = await withUserDbForTest({ sub: user.id }, async (userDb) => {
-    return (
-      (
-        await userDb
-          .select({ id: sessions.id })
-          .from(sessions)
-          // Belt AND suspenders: RLS filters foreign rows backstop-style;
-          // the explicit predicate does the same even without RLS.
-          .where(and(eq(sessions.id, sessionId), eq(sessions.userId, user.id)))
-          .limit(1)
-      )[0] ?? null
-    );
-  }, base);
+  const found = await withUserDbForTest(
+    { sub: user.id },
+    (userDb) => findOwnedSession(userDb, user.id, sessionId),
+    client,
+  );
   if (!found) notFound();
   return { user, sessionId };
+}
+
+async function findOwnedSession(
+  userDb: Db,
+  userId: string,
+  sessionId: string,
+): Promise<{ id: string } | null> {
+  return (
+    (
+      await userDb
+        .select({ id: sessions.id })
+        .from(sessions)
+        // Belt AND suspenders: RLS filters foreign rows backstop-style;
+        // the explicit predicate does the same even without RLS.
+        .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)))
+        .limit(1)
+    )[0] ?? null
+  );
 }

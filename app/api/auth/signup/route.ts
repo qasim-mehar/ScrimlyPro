@@ -15,6 +15,7 @@ import {
 import { SIGNUP_OK } from "@/lib/auth/responses";
 import { parseJsonObject, validateEmail, validatePassword } from "@/lib/auth/validate";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { auditAuthEvent } from "@/lib/audit/auth-events";
 
 function isEnvConfigError(e: unknown): boolean {
   return (
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
 
   try {
     const supabase = await createServerSupabaseClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: body.email as string,
       password: body.password as string,
     });
@@ -56,6 +57,8 @@ export async function POST(req: Request) {
       console.warn("signup: rejected", { status: error.status });
       return badRequest();
     }
+    // M3 (Lane C): audited auth event (minimal insertion — merge point).
+    await auditAuthEvent("auth.signup", req, { userId: data.user?.id ?? null });
     return noStore(SIGNUP_OK);
   } catch (e) {
     if (isEnvConfigError(e)) return authUnavailable();

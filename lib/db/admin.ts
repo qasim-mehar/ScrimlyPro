@@ -7,7 +7,8 @@ import postgres from "postgres";
  * `no-restricted-imports` rule in eslint.config.mjs makes such imports an
  * error. Request paths must use lib/db/user.ts (withUserDb) instead.
  *
- * Auth note: the service-role JWT (SUPABASE_SERVICE_ROLE_KEY) is for the
+ * Auth note: the service-role JWT env (see .env.example — the literal name
+ * is kept out of comments so source maps never carry it) is for the
  * Supabase REST/auth APIs; the SQL path is the postgres connection
  * (SUPABASE_DB_URL). Locally that role is a superuser; on hosted Supabase it
  * owns the schema and therefore bypasses RLS — same trust level, same rule:

@@ -53,6 +53,8 @@ const PUBLIC_PAGE_PREFIXES = [
 // B's route wrapper over the same identity checks (folded into
 // withTenantRoute at WP6); requireOrgRole/requireSessionAccess verify user +
 // org membership before any tenant access (successor of assertSessionOwner).
+// M3 (Lane C): requireAdmin is the REAL-identity admin surface marker (the
+// kill switch / impersonation must never apply to admin routes).
 const GUARD_MARKERS = [
   "withTenantRoute",
   "requireUser",
@@ -61,6 +63,8 @@ const GUARD_MARKERS = [
   "withOrgRoute",
   "requireOrgRole",
   "requireSessionAccess",
+  // M3 Lane C: the admin panel's own gate (real identity + DB role → 404).
+  "requireAdmin",
 ];
 
 function* walk(dir: string): Generator<string> {

@@ -24,6 +24,9 @@ export async function testDb(): Promise<{
   /** Raw postgres.js client behind `db` (admin-seam mocks, raw SQL asserts). */
   sql: postgres.Sql;
   cleanup: () => Promise<void>;
+  /** Postgres URL of the throwaway database (for tests that need the
+   * production service client to point at the same DB). */
+  url: string;
 }> {
   const base = baseUrl();
   const name = `m1test_${process.pid}_${Date.now().toString(36)}_${Math.random()
@@ -50,6 +53,7 @@ export async function testDb(): Promise<{
   return {
     db,
     sql,
+    url: url.toString(),
     cleanup: async () => {
       await sql.end();
       const dropper = postgres(base, { prepare: false, max: 1 });

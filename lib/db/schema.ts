@@ -178,6 +178,76 @@ export const organizations = pgTable("organizations", {
     .defaultNow(),
 });
 
+/* ============================================================
+   M3 admin panel (Lane C, migrations 0020 block).
+
+   - audit_log: append-only security event log. RLS grants NO
+     update/delete policy to anyone — rows are immutable at the
+     policy level; only the service-role client (migrations,
+     admin routes) may ever rewrite them, and nothing does.
+   - feature_flags: kill switch + feature toggles per subject.
+     The `disabled` flag on a user is RESERVED (kill switch):
+     presence of the row = account locked out, value carries
+     metadata only. RLS: admin-only read/write.
+   - impersonation_sessions: support impersonation ledger. The
+     signed cookie references a row here; expiry/revocation is
+     enforced server-side from this row, never from the cookie.
+   ============================================================ */
+
+export const auditLog = pgTable("audit_log", {
+  id: uuid("id").primaryKey(),
+  actorUserId: uuid("actor_user_id"),
+  effectiveUserId: uuid("effective_user_id"),
+  action: text("action").notNull(),
+  targetType: text("target_type"),
+  targetId: uuid("target_id"),
+  metadata: jsonb("metadata")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
+  ipHash: text("ip_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
+});
+
+export const featureFlags = pgTable(
+  "feature_flags",
+  {
+    id: uuid("id").primaryKey(),
+    // 'user' | 'org' | 'global' (org arrives with M2 — M3-INT hook).
+    subjectType: text("subject_type").notNull(),
+    subjectId: uuid("subject_id"),
+    flag: text("flag").notNull(),
+    value: jsonb("value")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    updatedBy: uuid("updated_by"),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("feature_flags_subject_flag_uq").on(t.subjectType, t.subjectId, t.flag)],
+);
+
+export const impersonationSessions = pgTable("impersonation_sessions", {
+  id: uuid("id").primaryKey(),
+  adminUserId: uuid("admin_user_id").notNull(),
+  targetUserId: uuid("target_user_id").notNull(),
+  // Email snapshot taken at start — the banner must render the target
+  // identity without a cross-tenant profiles read (profiles RLS is
+  // self-rows-only) and must not change if the target later renames.
+  targetEmail: text("target_email").notNull(),
+  reason: text("reason").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "string" })
+    .notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true, mode: "string" }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
+});
+
 export const orgMembers = pgTable(
   "org_members",
   {

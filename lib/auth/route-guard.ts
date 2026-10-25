@@ -5,17 +5,22 @@ import {
   RATE_LIMITS,
   SlidingWindowRateLimiter,
 } from "@/lib/auth/rate-limit";
+import { isUserDisabled } from "@/lib/admin/kill-switch";
+import { getEffectiveUser } from "@/lib/admin/impersonation";
 import { noStore } from "@/lib/http";
-import { getAuthedUser, type AuthedUser } from "@/lib/supabase/server";
+import type { AuthedUser } from "@/lib/supabase/server";
 
 /**
  * Guard stack for authenticated API route handlers (WP6):
  *   1. same-origin (403) → 2. verified identity (401) →
- *   3. per-user api rate limit (429 + Retry-After) → handler.
+ *   3. kill switch (403, M3) → 4. per-user api rate limit (429) → handler.
  *
  * Every response — from the guards AND the wrapped handler — is no-store.
- * Identity comes ONLY from getAuthedUser (supabase.auth.getUser); request
- * payloads/headers are never consulted for identity.
+ * Identity comes ONLY from the server-verified seam: getEffectiveUser
+ * (M3: the impersonation target when a valid impersonation cookie is
+ * present, otherwise the real getUser-verified user). Request
+ * payloads/headers are never consulted for identity. Admin routes use
+ * requireAdmin (REAL identity) and never this seam.
  */
 
 export type TenantRouteContext<P = undefined> = {
@@ -36,19 +41,31 @@ export type RequireUserResult =
   | { ok: false; response: NextResponse };
 
 /**
- * Verify the caller's identity. Returns either the server-verified user or
- * a ready-to-send 401 response (no detail about WHY auth failed).
+ * Verify the caller's identity (effective — see above). Returns either the
+ * user or a ready-to-send 401 response (no detail about WHY auth failed).
+ *
+ * M3 (Lane C, single choke point): a tenant carrying the reserved
+ * `disabled` marker — including an impersonation target — is locked out of
+ * every authed API surface here — 403 with a plain body, no detail. The
+ * probes (lib/admin/kill-switch.ts, lib/admin/impersonation.ts) are the
+ * only lib/admin imports in this file (sanctioned by the eslint perimeter).
  *
  * `req` is part of the guard contract (callers pass the request through);
- * identity itself always comes from cookies via getAuthedUser.
+ * identity itself always comes from cookies.
  */
 export async function requireUser(req: Request): Promise<RequireUserResult> {
   void req;
-  const user = await getAuthedUser();
+  const user = await getEffectiveUser();
   if (!user) {
     return {
       ok: false,
       response: noStore({ error: "unauthorized" }, { status: 401 }),
+    };
+  }
+  if (await isUserDisabled(user.id)) {
+    return {
+      ok: false,
+      response: noStore({ error: "account_disabled" }, { status: 403 }),
     };
   }
   return { ok: true, user };

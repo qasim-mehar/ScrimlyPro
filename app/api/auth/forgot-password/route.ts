@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/rate-limit";
 import { FORGOT_OK } from "@/lib/auth/responses";
 import { parseJsonObject, validateEmail } from "@/lib/auth/validate";
+import { auditAuthEvent } from "@/lib/audit/auth-events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 function isEnvConfigError(e: unknown): boolean {
@@ -57,6 +58,9 @@ export async function POST(req: Request) {
       (req.headers.get("x-forwarded-host") ?? req.headers.get("host"))?.startsWith("localhost")
         ? `http://${req.headers.get("x-forwarded-host") ?? req.headers.get("host")}`
         : new URL(req.url).origin);
+    // M3 (Lane C): audited auth event; no user context exists pre-auth, so
+    // the actor is stored as NULL (definer derives from claims only).
+    await auditAuthEvent("auth.forgot", req);
     const { error } = await supabase.auth.resetPasswordForEmail(
       body.email as string,
       { redirectTo: new URL("/auth/callback", siteOrigin).toString() },

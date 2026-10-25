@@ -11,6 +11,7 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { RESET_OK } from "@/lib/auth/responses";
 import { parseJsonObject, validatePassword } from "@/lib/auth/validate";
 import { createServerSupabaseClient, getAuthedUser } from "@/lib/supabase/server";
+import { auditAuthEvent } from "@/lib/audit/auth-events";
 
 function isEnvConfigError(e: unknown): boolean {
   return (
@@ -48,6 +49,8 @@ export async function POST(req: Request) {
       console.warn("reset-password: provider error", { status: error.status });
       return badRequest();
     }
+    // M3 (Lane C): audited auth event (minimal insertion — merge point).
+    await auditAuthEvent("auth.reset", req, { userId: user.id });
     return noStore(RESET_OK);
   } catch (e) {
     if (isEnvConfigError(e)) return authUnavailable();
