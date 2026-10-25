@@ -1,10 +1,3 @@
-import path from "node:path";
-import Database from "better-sqlite3";
-import {
-  type BetterSQLite3Database,
-  drizzle,
-} from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,21 +6,12 @@ import type { RawSquad } from "@/lib/db/schema";
 import { SAMPLE_MATCHES } from "@/lib/fixtures/sampleMatches";
 import { ingestMatchOcr } from "@/lib/ocr/ingest";
 
+import { testDb } from "./helpers/pg";
+import { ensureOrg } from "./helpers/orgs";
+
 const { matches, sessions } = schema;
 
-// In-memory DB pattern copied from tests/db.test.ts.
-function testDb(): {
-  sqlite: Database.Database;
-  db: BetterSQLite3Database<typeof schema>;
-} {
-  const sqlite = new Database(":memory:");
-  sqlite.pragma("foreign_keys = ON");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, {
-    migrationsFolder: path.join(process.cwd(), "db", "migrations"),
-  });
-  return { sqlite, db };
-}
+type PgDb = Awaited<ReturnType<typeof testDb>>["db"];
 
 const RULES = {
   kill_points: 1,
@@ -88,26 +72,26 @@ function stubRealMode() {
 }
 
 describe("ingestMatchOcr", () => {
-  let sqlite: Database.Database;
-  let db: BetterSQLite3Database<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let db: PgDb;
 
-  beforeEach(() => {
-    ({ sqlite, db } = testDb());
-    db.insert(sessions)
-      .values({
-        id: "s1",
-        name: "Sample Session",
-        plannedMatches: 6,
-        teamCount: 16,
-        scoringRules: RULES,
-        createdAt: "2025-01-01T00:00:00.000Z",
-      })
-      .run();
+  beforeEach(async () => {
+    ({ db, cleanup } = await testDb());
+    await db.insert(sessions).values({
+      id: "s1",
+      userId: "99999999-9999-9999-9999-999999999993",
+      orgId: await ensureOrg(db, "99999999-9999-9999-9999-999999999993"),
+      name: "Sample Session",
+      plannedMatches: 6,
+      teamCount: 16,
+      scoringRules: RULES,
+      createdAt: "2025-01-01T00:00:00.000Z",
+    });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.unstubAllEnvs();
-    sqlite.close();
+    await cleanup();
   });
 
   describe("sample mode (no key, SAMPLE_OCR=1)", () => {
@@ -128,7 +112,7 @@ describe("ingestMatchOcr", () => {
       expect(result.retried).toBe(false);
       expect(result.warnings).toEqual([]);
 
-      const rows = db.select().from(matches).all();
+      const rows = await db.select().from(matches);
       expect(rows).toHaveLength(1);
       expect(rows[0]?.id).toBe(result.matchId);
       expect(rows[0]?.status).toBe("draft");
@@ -146,7 +130,7 @@ describe("ingestMatchOcr", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.error.code).toBe("SAMPLE_UNAVAILABLE");
-      expect(db.select().from(matches).all()).toHaveLength(0);
+      expect(await db.select().from(matches)).toHaveLength(0);
     });
 
     it("existing draft → rawSquadData replaced, same row", async () => {
@@ -159,10 +143,10 @@ describe("ingestMatchOcr", () => {
       if (!first.ok) return;
 
       // Corrupt the stored snapshot, then re-ingest: the draft is replaced.
-      db.update(matches)
+      await db
+        .update(matches)
         .set({ rawSquadData: [makeSquad(1, [0])] })
-        .where(eq(matches.id, first.matchId))
-        .run();
+        .where(eq(matches.id, first.matchId));
 
       const second = await ingestMatchOcr(
         db,
@@ -172,12 +156,10 @@ describe("ingestMatchOcr", () => {
       expect(second.ok).toBe(true);
       if (!second.ok) return;
       expect(second.matchId).toBe(first.matchId);
-      expect(db.select().from(matches).all()).toHaveLength(1);
-      const row = db
-        .select()
-        .from(matches)
-        .where(eq(matches.id, first.matchId))
-        .all()[0];
+      expect(await db.select().from(matches)).toHaveLength(1);
+      const row = (
+        await db.select().from(matches).where(eq(matches.id, first.matchId))
+      )[0];
       expect(row?.rawSquadData).toEqual(SAMPLE_MATCHES[0]);
     });
   });
@@ -212,10 +194,7 @@ describe("ingestMatchOcr", () => {
 
     it("completed session → SESSION_COMPLETED", async () => {
       stubSampleMode();
-      db.update(sessions)
-        .set({ status: "completed" })
-        .where(eq(sessions.id, "s1"))
-        .run();
+      await db.update(sessions).set({ status: "completed" }).where(eq(sessions.id, "s1"));
 
       const result = await ingestMatchOcr(
         db,
@@ -243,17 +222,15 @@ describe("ingestMatchOcr", () => {
 
     it("confirmed match → MATCH_CONFIRMED with matchId", async () => {
       stubSampleMode();
-      db.insert(matches)
-        .values({
-          id: "m-locked",
-          sessionId: "s1",
-          matchNo: 1,
-          status: "confirmed",
-          rawSquadData: SAMPLE_MATCHES[0],
-          createdAt: "2025-01-01T00:00:00.000Z",
-          confirmedAt: "2025-01-01T00:05:00.000Z",
-        })
-        .run();
+      await db.insert(matches).values({
+        id: "m-locked",
+        sessionId: "s1",
+        matchNo: 1,
+        status: "confirmed",
+        rawSquadData: SAMPLE_MATCHES[0],
+        createdAt: "2025-01-01T00:00:00.000Z",
+        confirmedAt: "2025-01-01T00:05:00.000Z",
+      });
 
       const result = await ingestMatchOcr(
         db,
@@ -284,11 +261,9 @@ describe("ingestMatchOcr", () => {
       if (!result.ok) return;
       expect(result.squads).toEqual(squads);
       expect(callModel).toHaveBeenCalledTimes(1);
-      const row = db
-        .select()
-        .from(matches)
-        .where(eq(matches.id, result.matchId))
-        .all()[0];
+      const row = (
+        await db.select().from(matches).where(eq(matches.id, result.matchId))
+      )[0];
       expect(row?.status).toBe("draft");
       expect(row?.matchNo).toBe(2);
       expect(row?.rawSquadData).toEqual(squads);
@@ -314,7 +289,7 @@ describe("ingestMatchOcr", () => {
         expected: 16,
       });
       expect(callModel).toHaveBeenCalledTimes(2);
-      expect(db.select().from(matches).all()).toHaveLength(0);
+      expect(await db.select().from(matches)).toHaveLength(0);
     });
 
     it(">99-kill payload → warnings passthrough, retried false, EXACTLY one call (C2.4b no-retry guard)", async () => {

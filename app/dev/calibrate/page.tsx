@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 
+import { requireUser } from "@/lib/auth/action-guard";
+
 import type { StandingRow } from "@/lib/scoring";
 import { CalibrateClient } from "./CalibrateClient";
 
@@ -61,8 +63,10 @@ function dataset(n: number): StandingRow[] {
   });
 }
 
-export default function CalibratePage() {
+export default async function CalibratePage() {
   if (process.env.NODE_ENV === "production") notFound();
+  // WP6: authenticated users only (dev pages render fixtures; no tenant reads).
+  await requireUser();
   return (
     <main className="mx-auto max-w-6xl p-4">
       <h1 className="text-xl font-bold tracking-widest text-gold">PMPL-LIGHT CALIBRATION</h1>

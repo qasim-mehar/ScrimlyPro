@@ -1,21 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
-  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  /* App theme — drives the authenticated surface (P6/P7 typography + palette).
+     These tokens must survive the landing merge: pages under app/sessions,
+    app/orgs and app/admin all build utilities from them. */
+  --font-display: "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif;
+  --color-gold: #f5c542;
+  --color-bg: #0b0d12;
+  --color-surface: #12151c;
+  --color-surface-2: #1a1e28;
+  --color-line: #272d3b;
+  --color-muted: #8b93a7;
 
+  /* Landing page (landing-page branch). */
   --color-snes-green: #22c55e;
   --color-snes-blue: #3b82f6;
   --color-snes-yellow: #facc15;
-  --color-cta: #ffd23f;
   --color-snes-red: #ef4444;
+  --color-cta: #ffd23f;
   --color-ink: #050505;
 }
 
 body {
-  background-color: var(--color-ink);
-  color: #ffffff;
-  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: #e8eaf0;
+  font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
 }
 

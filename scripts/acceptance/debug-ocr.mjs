@@ -1,0 +1,14 @@
+import { readFileSync } from "node:fs";
+const bytes = readFileSync("shots/golden/a.png");
+const form = new FormData();
+form.set("sessionId", "seed-00000000-0000-4000-8000-000000000001");
+form.set("matchNo", "4");
+form.append("images", new File([bytes], "a.png", { type: "image/png" }));
+const t0 = Date.now();
+const res = await fetch("http://localhost:3000/api/ocr", { method: "POST", body: form });
+const j = await res.json();
+console.log("matchNo 4 →", res.status, j.error?.code, `${Date.now() - t0}ms`);
+form.set("matchNo", "1");
+const res2 = await fetch("http://localhost:3000/api/ocr", { method: "POST", body: form });
+const j2 = await res2.json();
+console.log("matchNo 1 →", res2.status, "model:", j2.model, "squads:", j2.squads?.length, `${Date.now() - t0}ms`);

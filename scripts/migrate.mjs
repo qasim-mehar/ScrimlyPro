@@ -1,17 +1,20 @@
-// Applies committed migrations to data/scrimly.db. Run: npm run db:migrate
-import { mkdirSync } from "node:fs";
-import path from "node:path";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+// Applies committed migrations to the Postgres database at SUPABASE_DB_URL.
+// Run: npm run db:migrate
+import { readFileSync } from "node:fs";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
 
-const dir = path.join(process.cwd(), "data");
-mkdirSync(dir, { recursive: true });
-const sqlite = new Database(path.join(dir, "scrimly.db"));
-sqlite.pragma("foreign_keys = ON");
-const db = drizzle(sqlite);
-migrate(db, {
-  migrationsFolder: path.join(process.cwd(), "db", "migrations"),
-});
-sqlite.close();
-console.log("✔ migrations applied to data/scrimly.db");
+function dbUrl() {
+  if (process.env.SUPABASE_DB_URL) return process.env.SUPABASE_DB_URL;
+  const txt = readFileSync(".env.local", "utf8");
+  const m = txt.match(/^SUPABASE_DB_URL=(.*)$/m);
+  if (m) return m[1].trim();
+  throw new Error("SUPABASE_DB_URL is not set (env or .env.local)");
+}
+
+const sql = postgres(dbUrl(), { prepare: false, max: 1 });
+const db = drizzle(sql);
+await migrate(db, { migrationsFolder: "./db/migrations" });
+await sql.end();
+console.log("✔ migrations applied to Postgres (SUPABASE_DB_URL)");

@@ -145,8 +145,7 @@ export default function Hero() {
       pad!.classList.remove("hop");
     }
 
-    function onCtaClick(e: Event) {
-      e.preventDefault();
+    function onCtaClick() {
       if (reducedMotion.matches) return;
       hop();
       if (sparkleRef.current) {
@@ -263,23 +262,23 @@ export default function Hero() {
     <div className={styles.page}>
       <header className={styles.nav}>
         <a className={styles.brand} href="#">
-          bear.io
+          ScrimlyPro
         </a>
 
         <nav className={styles.navPill} aria-label="Primary">
-          <a href="#" aria-current="page">
+          <a href="#top" aria-current="page">
             Home <span className={styles.arr}>→</span>
           </a>
-          <a href="#">
-            Socials <span className={styles.arr}>↗</span>
+          <a href="#features">
+            Features <span className={styles.arr}>↗</span>
           </a>
-          <a href="#">
-            Comparison <span className={styles.arr}>↗</span>
+          <a href="#pilot">
+            The Pilot <span className={styles.arr}>↗</span>
           </a>
         </nav>
 
-        <a className={styles.navCta} href="#" data-hop-cta>
-          Book a Call <span className={styles.arr}>↗</span>
+        <a className={styles.navCta} href="/signup" data-hop-cta>
+          Get Started <span className={styles.arr}>↗</span>
         </a>
       </header>
 
@@ -296,16 +295,18 @@ export default function Hero() {
             strokeLinejoin="round"
             aria-hidden="true"
           >
-            <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
           </svg>
-          Design Wizard
+          For PUBG Mobile teams
         </p>
 
         <h1 className={styles.headline}>
-          <span className={styles.line}>I craft Ideas</span>
+          <span className={styles.line}>Stop typing</span>
           <br />
           <span className={styles.line}>
-            through Design
+            scrim scores
             <svg
               className={styles.sparkle}
               ref={sparkleRef}
@@ -318,8 +319,8 @@ export default function Hero() {
           </span>
         </h1>
 
-        <a className={styles.heroCta} href="#" data-hop-cta>
-          View My Work <span className={styles.arr}>→</span>
+        <a className={styles.heroCta} href="/signup" data-hop-cta>
+          Join the Pilot <span className={styles.arr}>→</span>
         </a>
 
         <div className={styles.stage}>
@@ -352,27 +353,27 @@ export default function Hero() {
 
                         <div className={styles.mid}>
                           <div className={styles.mark} aria-hidden="true">
-                            <span className={styles.m1}>SUPER BEAR</span>
-                            <span className={styles.m2}>ENTERTAINMENT SYSTEM</span>
+                            <span className={styles.m1}>SUPER SCRIM</span>
+                            <span className={styles.m2}>STANDINGS SYSTEM</span>
                           </div>
                           <div className={styles.pills}>
                             <span className={styles.pillWrap}>
                               <button
                                 className={styles.pillBtn}
-                                data-pill="pricing"
-                                aria-label="Pricing (select button)"
-                                title="Pricing"
+                                data-pill="upload"
+                                aria-label="Upload (select button)"
+                                title="Upload"
                               />
-                              <span className={styles.pillLabel}>Pricing</span>
+                              <span className={styles.pillLabel}>Upload</span>
                             </span>
                             <span className={styles.pillWrap}>
                               <button
                                 className={styles.pillBtn}
-                                data-pill="about"
-                                aria-label="About (start button)"
-                                title="About"
+                                data-pill="share"
+                                aria-label="Share (start button)"
+                                title="Share"
                               />
-                              <span className={styles.pillLabel}>About</span>
+                              <span className={styles.pillLabel}>Share</span>
                             </span>
                           </div>
                         </div>
@@ -424,8 +425,8 @@ export default function Hero() {
               </div>
             </div>
 
-            <div className={`${styles.badge} ${styles.amirali}`} aria-label="Amirali is viewing">
-              Amirali
+            <div className={`${styles.badge} ${styles.amirali}`} aria-label="The organizer is viewing">
+              Organizer
               <svg width="17" height="21" viewBox="0 0 17 21" aria-hidden="true">
                 <path
                   d="M1 1.5v16.2l4.4-4 3.3 6.2 2.9-1.5-3.3-6.2h6Z"
@@ -436,7 +437,7 @@ export default function Hero() {
                 />
               </svg>
             </div>
-            <div className={`${styles.badge} ${styles.sina}`} aria-label="Sina is viewing">
+            <div className={`${styles.badge} ${styles.sina}`} aria-label="The coach is viewing">
               <svg
                 width="17"
                 height="21"
@@ -452,27 +453,27 @@ export default function Hero() {
                   strokeLinejoin="round"
                 />
               </svg>
-              Sina
+              Coach
             </div>
           </div>
         </div>
 
         <nav className={styles.links} aria-label="Sections">
-          <a className={styles.lPortfolio} href="#">
+          <a className={styles.lPortfolio} href="#features">
             <span className={styles.bullet} aria-hidden="true" />
-            Portfolio
+            Features
           </a>
-          <a className={styles.lAchievements} href="#">
+          <a className={styles.lAchievements} href="#who">
             <span className={styles.bullet} aria-hidden="true" />
-            Achievements
+            Who it&rsquo;s for
           </a>
-          <a className={styles.lFeedback} href="#">
+          <a className={styles.lFeedback} href="#pilot">
             <span className={styles.bullet} aria-hidden="true" />
-            Client&rsquo;s Feedback
+            The Pilot
           </a>
-          <a className={styles.lFaq} href="#">
+          <a className={styles.lFaq} href="/login">
             <span className={styles.bullet} aria-hidden="true" />
-            FAQ
+            Log in
           </a>
         </nav>
       </main>
