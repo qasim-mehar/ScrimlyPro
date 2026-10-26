@@ -7,6 +7,7 @@ import { useState } from "react";
  * Per-tenant actions for the console. Each button posts to an audited admin
  * API route (requireAdminApi + audit row). 404 from any route means the
  * caller is not an admin — surfaced as a plain error, no detail.
+ * M6: restyled into the light shell — logic unchanged.
  */
 export function TenantActions({
   userId,
@@ -57,10 +58,10 @@ export function TenantActions({
   }
 
   const btn =
-    "min-h-8 rounded-md border border-line px-2.5 text-xs font-semibold text-muted hover:text-white disabled:opacity-50";
+    "min-h-8 rounded-full border border-[var(--hq-line)] px-3 text-xs font-semibold text-[var(--hq-ink-2)] hover:bg-[var(--hq-surface-subtle)] hover:text-[var(--hq-ink)] disabled:opacity-50";
 
   return (
-    <span className="flex items-center gap-2">
+    <span className="flex items-center justify-end gap-2">
       {disabled ? (
         <button type="button" onClick={enable} disabled={busy} className={btn}>
           Enable
@@ -79,7 +80,7 @@ export function TenantActions({
       >
         Impersonate
       </button>
-      {error && <span className="text-xs text-red-400">{error}</span>}
+      {error && <span className="text-xs text-[var(--hq-danger-ink)]">{error}</span>}
     </span>
   );
 }

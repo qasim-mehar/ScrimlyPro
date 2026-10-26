@@ -12,6 +12,7 @@ import {
  * Feature-flag editor (client form → audited server actions). The reserved
  * `disabled` semantics are surfaced here on purpose: presence of the row is
  * the kill switch, value is metadata only.
+ * M6: restyled into the light shell — actions and semantics unchanged.
  */
 export function FlagForm() {
   const [state, submit, pending] = useActionState<FlagActionResult | null, FormData>(
@@ -20,51 +21,56 @@ export function FlagForm() {
   );
 
   const input =
-    "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-white placeholder:text-muted";
+    "min-h-10 w-full rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]";
 
   return (
-    <form action={submit} className="space-y-3 rounded-lg border border-line bg-surface p-4">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+    <form action={submit} className="hq-card space-y-4 p-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <label className="text-[12px] font-semibold uppercase tracking-wide text-[var(--hq-ink-3)]">
           Subject type
-          <select name="subjectType" className={`mt-1 ${input}`} defaultValue="user">
+          <select name="subjectType" className={`mt-1.5 ${input}`} defaultValue="user">
             <option value="user">user</option>
             <option value="org">org</option>
             <option value="global">global</option>
           </select>
         </label>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <label className="text-[12px] font-semibold uppercase tracking-wide text-[var(--hq-ink-3)]">
           Subject id (uuid; empty for global)
-          <input name="subjectId" className={`mt-1 ${input}`} placeholder="—" />
+          <input name="subjectId" className={`mt-1.5 ${input}`} placeholder="—" />
         </label>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <label className="text-[12px] font-semibold uppercase tracking-wide text-[var(--hq-ink-3)]">
           Flag
-          <input name="flag" className={`mt-1 ${input}`} placeholder="e.g. beta_graphic" />
+          <input name="flag" className={`mt-1.5 ${input}`} placeholder="e.g. beta_graphic" />
         </label>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <label className="text-[12px] font-semibold uppercase tracking-wide text-[var(--hq-ink-3)]">
           Value (JSON object)
-          <input name="value" className={`mt-1 ${input}`} defaultValue="{}" />
+          <input name="value" className={`mt-1.5 ${input}`} defaultValue="{}" />
         </label>
       </div>
-      <p className="text-xs text-muted">
-        Reserved: the <code className="text-gold">disabled</code> flag on a user is the
-        kill switch (presence = locked out of every authed surface; the value is
-        metadata only). This editor REFUSES it — the Tenants console toggle is the
-        single audited disable path. Org-subject flags
-        (<code className="text-gold">subject_type=&quot;org&quot;</code>) are
-        schema-reserved until M4 — no runtime probe reads them yet (Lane AB review
-        C-3 decision).
+      <p className="text-[12px] leading-relaxed text-[var(--hq-ink-3)]">
+        Reserved: the <code className="rounded bg-[var(--hq-bg)] px-1 font-semibold text-[var(--hq-ink-2)]">disabled</code> flag
+        on a user is the kill switch (presence = locked out of every authed
+        surface; the value is metadata only). This editor REFUSES it — the
+        Tenants console toggle is the single audited disable path.
+        Org-subject flags (
+        <code className="rounded bg-[var(--hq-bg)] px-1 text-[var(--hq-ink-2)]">subject_type=&quot;org&quot;</code>
+        ) exist for org-level markers (e.g. the dashboard status tag); the
+        dashboard reads only the reserved <code className="rounded bg-[var(--hq-bg)] px-1 text-[var(--hq-ink-2)]">disabled</code> name.
       </p>
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={pending}
-          className="min-h-10 rounded-lg bg-gold px-4 font-display text-sm font-semibold text-bg disabled:opacity-50"
+          className="h-10 rounded-full bg-[var(--hq-ink)] px-5 text-sm font-semibold text-white disabled:opacity-50"
         >
           Save flag
         </button>
-        {state && !state.ok && <span className="text-xs text-red-400">{state.error}</span>}
-        {state && state.ok && <span className="text-xs text-green-400">Saved.</span>}
+        {state && !state.ok && (
+          <span className="text-[13px] text-[var(--hq-danger-ink)]">{state.error}</span>
+        )}
+        {state && state.ok && (
+          <span className="text-[13px] font-medium text-[var(--hq-success)]">Saved.</span>
+        )}
       </div>
     </form>
   );
@@ -81,12 +87,12 @@ export function DeleteFlagButton({ id }: { id: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-8 rounded-md border border-red-700 px-2.5 text-xs font-semibold text-red-300 hover:text-red-200 disabled:opacity-50"
+        className="min-h-8 rounded-full border border-[var(--hq-line)] px-3 text-xs font-semibold text-[var(--hq-danger-ink)] hover:bg-[var(--hq-danger-bg)] disabled:opacity-50"
       >
         Delete
       </button>
       {state && !state.ok && (
-        <span className="ml-2 text-xs text-red-400">{state.error}</span>
+        <span className="ml-2 text-xs text-[var(--hq-danger-ink)]">{state.error}</span>
       )}
     </form>
   );

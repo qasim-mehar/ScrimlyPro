@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 /**
  * Tenant console: searchable user list with usage counts and the disable /
  * impersonate controls (wired to the audited admin API routes).
+ * M6: restyled into the light shell — queries, guards and actions unchanged.
  */
 export default async function AdminTenants({
   searchParams,
@@ -20,71 +21,98 @@ export default async function AdminTenants({
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold tracking-wide text-white">
-        Tenants
-      </h1>
+      <div>
+        <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">Users</h1>
+        <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
+          Read-only list · disable/impersonate actions are audited
+        </p>
+      </div>
 
-      <form method="get" action="/admin/tenants" className="flex gap-2">
+      <form method="get" action="/admin/tenants" className="flex max-w-md gap-2">
         <input
           type="search"
           name="q"
           defaultValue={query}
           placeholder="Search by email or user id…"
-          className="min-h-10 w-full max-w-md rounded-lg border border-line bg-surface px-3 text-sm text-white placeholder:text-muted"
+          className="h-10 min-w-0 flex-1 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <button
           type="submit"
-          className="min-h-10 rounded-lg bg-gold px-4 font-display text-sm font-semibold text-bg"
+          className="h-10 rounded-full bg-[var(--hq-ink)] px-5 text-sm font-semibold text-white"
         >
           Search
         </button>
       </form>
 
-      {tenants.length === 0 ? (
-        <p className="text-sm text-muted">No users match.</p>
-      ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
-              <th className="py-2 pr-4">Email</th>
-              <th className="py-2 pr-4">Created</th>
-              <th className="py-2 pr-4">Sessions</th>
-              <th className="py-2 pr-4">Matches</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tenants.map((t) => (
-              <tr key={t.id} className="border-b border-line/50">
-                <td className="py-2 pr-4">
-                  <span className="text-white">{t.email ?? "(no email)"}</span>
-                  <span className="ml-2 font-mono text-xs text-muted">
-                    {t.id.slice(0, 8)}…
-                  </span>
-                </td>
-                <td className="py-2 pr-4 text-muted">
-                  {new Date(t.createdAt).toLocaleDateString()}
-                </td>
-                <td className="py-2 pr-4 text-white">{t.sessionCount}</td>
-                <td className="py-2 pr-4 text-white">{t.matchCount}</td>
-                <td className="py-2 pr-4">
-                  {t.disabled ? (
-                    <span className="rounded bg-red-950 px-2 py-0.5 text-xs font-semibold text-red-400">
-                      disabled
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted">active</span>
-                  )}
-                </td>
-                <td className="py-2">
-                  <TenantActions userId={t.id} disabled={t.disabled} />
-                </td>
+      <section className="hq-card overflow-hidden" aria-label="Tenants">
+        {tenants.length === 0 ? (
+          <div className="px-6 py-10 text-sm text-[var(--hq-ink-3)]">
+            No users match.
+          </div>
+        ) : (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="hq-table-head">
+                <th scope="col" className="px-6 py-2.5 font-medium">
+                  Email
+                </th>
+                <th scope="col" className="py-2.5 font-medium">
+                  Created
+                </th>
+                <th scope="col" className="py-2.5 font-medium">
+                  Sessions
+                </th>
+                <th scope="col" className="py-2.5 font-medium">
+                  Matches
+                </th>
+                <th scope="col" className="py-2.5 font-medium">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-2.5 text-right font-medium">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {tenants.map((t) => (
+                <tr key={t.id} className="hq-table-row">
+                  <td className="max-w-[240px] px-6 py-4">
+                    <span className="block truncate text-[14px] font-semibold text-[var(--hq-ink)]">
+                      {t.email ?? "(no email)"}
+                    </span>
+                    <span className="mt-0.5 block font-mono text-[12px] text-[var(--hq-ink-3)]">
+                      {t.id.slice(0, 8)}…
+                    </span>
+                  </td>
+                  <td className="py-4 pr-4 text-[13px] text-[var(--hq-ink-3)]">
+                    {new Date(t.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="py-4 pr-4 text-[14px] font-semibold text-[var(--hq-ink)]">
+                    {t.sessionCount}
+                  </td>
+                  <td className="py-4 pr-4 text-[14px] text-[var(--hq-ink-2)]">
+                    {t.matchCount}
+                  </td>
+                  <td className="py-4 pr-4">
+                    {t.disabled ? (
+                      <span className="hq-chip bg-[var(--hq-danger-bg)] text-[var(--hq-danger-ink)]">
+                        Disabled
+                      </span>
+                    ) : (
+                      <span className="hq-chip bg-[var(--hq-bg)] text-[var(--hq-ink-3)]">
+                        Active
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <TenantActions userId={t.id} disabled={t.disabled} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </div>
   );
 }

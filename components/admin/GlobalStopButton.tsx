@@ -6,6 +6,7 @@ import { useState } from "react";
 /**
  * Global stop for any active impersonation row (dashboard). Posts stop
  * with the row id — requireAdminApi enforces the real-admin path.
+ * M6: restyled into the light shell — behavior unchanged.
  */
 export function GlobalStopButton({ impersonationId }: { impersonationId: string }) {
   const router = useRouter();
@@ -30,7 +31,7 @@ export function GlobalStopButton({ impersonationId }: { impersonationId: string 
       type="button"
       onClick={stop}
       disabled={busy}
-      className="min-h-8 rounded-md border border-red-700 px-2.5 text-xs font-semibold text-red-300 hover:text-red-200 disabled:opacity-50"
+      className="min-h-8 rounded-full bg-[var(--hq-danger-bg)] px-3 text-xs font-semibold text-[var(--hq-danger-ink)] hover:brightness-95 disabled:opacity-50"
     >
       Stop
     </button>

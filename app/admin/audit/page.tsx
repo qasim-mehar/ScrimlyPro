@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
  * Audit log viewer (admin console, read-only). Filterable by action prefix
  * and actor id. ip_hash is stored for correlation but deliberately NOT
  * rendered (PII discipline — rule 9).
+ * M6: restyled into the light shell — queries and filters unchanged.
  */
 export default async function AdminAudit({
   searchParams,
@@ -19,9 +20,12 @@ export default async function AdminAudit({
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold tracking-wide text-white">
-        Audit log
-      </h1>
+      <div>
+        <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">Audit log</h1>
+        <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
+          Append-only security events · ip_hash deliberately not rendered
+        </p>
+      </div>
 
       <form method="get" action="/admin/audit" className="flex flex-wrap gap-2">
         <input
@@ -29,64 +33,76 @@ export default async function AdminAudit({
           name="action"
           defaultValue={action ?? ""}
           placeholder="Action prefix (e.g. admin.impersonation)"
-          className="min-h-10 w-72 rounded-lg border border-line bg-surface px-3 text-sm text-white placeholder:text-muted"
+          className="h-10 w-72 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <input
           type="search"
           name="actor"
           defaultValue={actor ?? ""}
           placeholder="Actor user id (uuid)"
-          className="min-h-10 w-72 rounded-lg border border-line bg-surface px-3 text-sm text-white placeholder:text-muted"
+          className="h-10 w-72 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-sm text-[var(--hq-ink)] outline-none placeholder:text-[var(--hq-ink-3)] focus:border-[var(--hq-ink-4)]"
         />
         <button
           type="submit"
-          className="min-h-10 rounded-lg bg-gold px-4 font-display text-sm font-semibold text-bg"
+          className="h-10 rounded-full bg-[var(--hq-ink)] px-5 text-sm font-semibold text-white"
         >
           Filter
         </button>
       </form>
 
-      {rows.length === 0 ? (
-        <p className="text-sm text-muted">No audit rows match.</p>
-      ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
-              <th className="py-2 pr-4">Time</th>
-              <th className="py-2 pr-4">Action</th>
-              <th className="py-2 pr-4">Actor</th>
-              <th className="py-2 pr-4">Effective</th>
-              <th className="py-2 pr-4">Target</th>
-              <th className="py-2">Metadata</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-b border-line/50 align-top">
-                <td className="py-2 pr-4 text-muted">
-                  {new Date(r.createdAt).toLocaleString()}
-                </td>
-                <td className="py-2 pr-4 text-white">{r.action}</td>
-                <td className="py-2 pr-4 font-mono text-xs text-muted">
-                  {r.actorUserId ? `${r.actorUserId.slice(0, 8)}…` : "—"}
-                </td>
-                <td className="py-2 pr-4 font-mono text-xs text-muted">
-                  {r.effectiveUserId ? `${r.effectiveUserId.slice(0, 8)}…` : "—"}
-                </td>
-                <td className="py-2 pr-4 text-muted">
-                  {r.targetType ?? "—"}
-                  {r.targetId && (
-                    <span className="ml-1 font-mono text-xs">{r.targetId.slice(0, 8)}…</span>
-                  )}
-                </td>
-                <td className="py-2 font-mono text-xs text-muted">
-                  {JSON.stringify(r.metadata).slice(0, 120)}
-                </td>
+      <section className="hq-card overflow-hidden" aria-label="Audit log">
+        {rows.length === 0 ? (
+          <div className="px-6 py-10 text-sm text-[var(--hq-ink-3)]">
+            No audit rows match.
+          </div>
+        ) : (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="hq-table-head">
+                <th scope="col" className="px-6 py-2.5 font-medium">Time</th>
+                <th scope="col" className="py-2.5 font-medium">Action</th>
+                <th scope="col" className="py-2.5 font-medium">Actor</th>
+                <th scope="col" className="py-2.5 font-medium">Effective</th>
+                <th scope="col" className="py-2.5 font-medium">Target</th>
+                <th scope="col" className="px-6 py-2.5 font-medium">Metadata</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="hq-table-row align-top">
+                  <td className="whitespace-nowrap px-6 py-4 text-[13px] text-[var(--hq-ink-3)]">
+                    {new Date(r.createdAt).toLocaleString()}
+                  </td>
+                  <td className="py-4 pr-4">
+                    <span className="hq-chip bg-[var(--hq-bg)] font-mono text-[11px] text-[var(--hq-ink-2)]">
+                      {r.action}
+                    </span>
+                  </td>
+                  <td className="py-4 pr-4 font-mono text-[12px] text-[var(--hq-ink-3)]">
+                    {r.actorUserId ? `${r.actorUserId.slice(0, 8)}…` : "—"}
+                  </td>
+                  <td className="py-4 pr-4 font-mono text-[12px] text-[var(--hq-ink-3)]">
+                    {r.effectiveUserId ? `${r.effectiveUserId.slice(0, 8)}…` : "—"}
+                  </td>
+                  <td className="py-4 pr-4 text-[13px] text-[var(--hq-ink-3)]">
+                    {r.targetType ?? "—"}
+                    {r.targetId && (
+                      <span className="ml-1 font-mono text-[12px]">
+                        {r.targetId.slice(0, 8)}…
+                      </span>
+                    )}
+                  </td>
+                  <td className="max-w-[260px] py-4 pr-6">
+                    <span className="block truncate font-mono text-[12px] text-[var(--hq-ink-3)]">
+                      {JSON.stringify(r.metadata).slice(0, 120)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </div>
   );
 }

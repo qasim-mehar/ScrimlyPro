@@ -1,92 +1,62 @@
-import { GlobalStopButton } from "@/components/admin/GlobalStopButton";
-import { getDashboardMetrics } from "@/lib/admin/queries";
+import { FeaturedOrgCard } from "@/components/admin/dashboard/FeaturedOrgCard";
+import { AiCard } from "@/components/admin/dashboard/AiCard";
+import { AttentionList } from "@/components/admin/dashboard/AttentionList";
+import { GaugeCard } from "@/components/admin/dashboard/GaugeCard";
+import { ImpersonationStrip } from "@/components/admin/dashboard/ImpersonationStrip";
+import { GreetingRow } from "@/components/admin/dashboard/GreetingRow";
+import { LifecyclePipeline } from "@/components/admin/dashboard/LifecyclePipeline";
+import { NeedsAttentionTable } from "@/components/admin/dashboard/NeedsAttentionTable";
+import { StatCards } from "@/components/admin/dashboard/StatCards";
+import { TimeFilter } from "@/components/admin/dashboard/TimeFilter";
+import {
+  getAdminDashboardData,
+  parseRange,
+} from "@/lib/admin/dashboard-queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Admin dashboard: platform usage counters + live impersonation sessions.
- * Plain tables, zero chart deps (operator console brief §5).
+ * M6 super-admin dashboard home. WP1 ships the shell with skeleton
+ * sections; the reference widgets land in WP4–WP9 (greeting, featured org,
+ * needs-attention table, stat cards + time filter, lifecycle pipeline +
+ * attention list, AI card + gauge).
  */
-export default async function AdminDashboard() {
-  await requireAdmin();
-  const m = await getDashboardMetrics();
-
-  const stats = [
-    { label: "Users", value: m.users },
-    { label: "Sessions", value: m.sessions },
-    { label: "Matches", value: m.matches },
-    {
-      label: "OCR calls (7d)",
-      // M3-INT (wave1(9)): wired to usage_events (per-user enforcement,
-      // platform-wide rollup shown here).
-      value: m.ocrCalls7d,
-    },
-  ];
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const admin = await requireAdmin();
+  const { range: rangeParam } = await searchParams;
+  const range = parseRange(rangeParam);
+  const data = await getAdminDashboardData(range, admin.email);
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-2xl font-bold tracking-wide text-white">
-        Platform dashboard
-      </h1>
+    <div className="space-y-6">
+      <GreetingRow
+        firstName={data.adminFirstName}
+        attentionCount={data.stats.attentionCount}
+      />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-lg border border-line bg-surface p-4"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {s.label}
-            </p>
-            <p className="mt-2 font-display text-3xl font-bold text-white">
-              {s.value}
-            </p>
+      {/* Two-column composition (§4.5): ~60/40 at ≥1280, stacked below. */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0 space-y-6">
+          <FeaturedOrgCard featured={data.featured} range={range} />
+          <NeedsAttentionTable rows={data.attention} />
+          <ImpersonationStrip rows={data.activeImpersonations} />
+        </div>
+        <div className="min-w-0 space-y-6">
+          <div className="flex">
+            <TimeFilter range={range} />
           </div>
-        ))}
+          <StatCards stats={data.stats} ai={data.ai} range={range} />
+          <LifecyclePipeline lifecycle={data.lifecycle} range={range} />
+          <AttentionList rows={data.attention} />
+          <AiCard ai={data.ai} />
+          <GaugeCard gauge={data.gauge} range={range} />
+        </div>
       </div>
-
-      <section>
-        <h2 className="font-display text-lg font-semibold text-white">
-          Active impersonations
-        </h2>
-        {m.activeImpersonations.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">None active.</p>
-        ) : (
-          <table className="mt-3 w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
-                <th className="py-2 pr-4">Admin</th>
-                <th className="py-2 pr-4">Viewing as</th>
-                <th className="py-2 pr-4">Reason</th>
-                <th className="py-2 pr-4">Started</th>
-                <th className="py-2 pr-4">Expires</th>
-                <th className="py-2">Stop</th>
-              </tr>
-            </thead>
-            <tbody>
-              {m.activeImpersonations.map((imp) => (
-                <tr key={imp.id} className="border-b border-line/50">
-                  <td className="py-2 pr-4 font-mono text-xs text-muted">
-                    {imp.adminUserId.slice(0, 8)}…
-                  </td>
-                  <td className="py-2 pr-4 text-white">{imp.targetEmail}</td>
-                  <td className="py-2 pr-4 text-muted">{imp.reason}</td>
-                  <td className="py-2 pr-4 text-muted">
-                    {new Date(imp.createdAt).toLocaleString()}
-                  </td>
-                  <td className="py-2 pr-4 text-muted">
-                    {new Date(imp.expiresAt).toLocaleString()}
-                  </td>
-                  <td className="py-2">
-                    <GlobalStopButton impersonationId={imp.id} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
     </div>
   );
 }
