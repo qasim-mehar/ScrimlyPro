@@ -2,6 +2,9 @@
 
 import { useRef, useState } from "react";
 
+import { CopyIcon } from "@/components/app/icons";
+import { fieldStyles } from "@/components/app/ui";
+
 /**
  * Copyable link field (mobile-safe): navigator.clipboard when available,
  * select+execCommand fallback for older WebViews. The value is shown once
@@ -30,9 +33,9 @@ export function CopyField({ value, label }: { value: string; label?: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {label ? (
-        <span className="text-sm text-muted">{label}</span>
+        <span className="text-[13px] leading-5 text-dash-ink3">{label}</span>
       ) : null}
       <div className="flex gap-2">
         <input
@@ -41,16 +44,17 @@ export function CopyField({ value, label }: { value: string; label?: string }) {
           value={value}
           onFocus={(e) => e.currentTarget.select()}
           aria-label="Copyable link"
-          className="min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm"
+          className={`${fieldStyles.input} min-w-0 text-[13px]`}
         />
         <button
           type="button"
           onClick={() => {
             void copy();
           }}
-          className="min-h-11 min-w-16 shrink-0 rounded-lg border border-line px-3 text-sm font-semibold text-gold"
+          className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-dash-ink px-4 text-sm font-semibold text-white transition-colors hover:bg-black"
         >
-          {copied ? "Copied!" : "Copy"}
+          <CopyIcon width="15" height="15" />
+          {copied ? "Copied" : "Copy"}
         </button>
       </div>
     </div>

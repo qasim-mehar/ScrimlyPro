@@ -24,6 +24,15 @@
 **/.impeccable/live/*.png
 # impeccable-ignore-end
 
+# Impeccable skill: keep the skill source, exclude the vendored engine
+# binary (launcher downloads the pinned engine on first run) and
+# machine-local settings.
+.claude/skills/impeccable/scripts/bin/
+.claude/settings.local.json
+
+# ZCode workspace-local state (skill junction, session plans)
+.zcode/
+
 # dependencies
 /node_modules
 /.pnp

@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
+import { PageHeader, StatusChip } from "@/components/app/ui";
 import { requireUser } from "@/lib/auth/action-guard";
 import { withUserDb } from "@/lib/db/user";
 import { matches, rosters, sessions, teams, type RawSquad } from "@/lib/db/schema";
@@ -106,30 +106,42 @@ export default async function MatchPage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">
-      <nav>
-        <Link
-          href={`/sessions/${sessionId}`}
-          className="inline-flex min-h-[44px] items-center text-sm font-semibold text-muted"
-        >
-          ← {data.session.name}
-        </Link>
-      </nav>
-      <h1 className="font-display text-2xl font-semibold">
-        Match {data.matchNo}
-      </h1>
-      {data.kind === "review" ? (
-        <MatchReview
-          sessionId={sessionId}
-          matchNo={matchNo}
-          teamCount={data.session.teamCount}
-          squads={data.squads}
-          teams={data.teamRows}
-          rosters={data.rosterRows}
-        />
-      ) : (
-        <UploadPanel sessionId={sessionId} matchNo={matchNo} />
-      )}
+    <main className="mx-auto w-full max-w-[920px] px-4 py-6 sm:px-6 lg:py-8">
+      <PageHeader
+        backHref={`/sessions/${sessionId}`}
+        backLabel={data.session.name}
+        title={`Match ${data.matchNo}`}
+        description={
+          data.kind === "review"
+            ? "Check what the AI read, match each squad to a team, then confirm."
+            : "Upload the result screenshots. ScrimlyPro reads placements, eliminations and player names."
+        }
+        badges={
+          <>
+            <StatusChip tone={data.kind === "review" ? "draft" : "neutral"}>
+              {data.kind === "review" ? "Review draft" : "Not uploaded"}
+            </StatusChip>
+            <StatusChip>
+              {data.session.teamCount} teams · {data.session.plannedMatches}{" "}
+              matches
+            </StatusChip>
+          </>
+        }
+      />
+      <div className="mt-6">
+        {data.kind === "review" ? (
+          <MatchReview
+            sessionId={sessionId}
+            matchNo={matchNo}
+            teamCount={data.session.teamCount}
+            squads={data.squads}
+            teams={data.teamRows}
+            rosters={data.rosterRows}
+          />
+        ) : (
+          <UploadPanel sessionId={sessionId} matchNo={matchNo} />
+        )}
+      </div>
     </main>
   );
 }
@@ -155,7 +167,10 @@ function MatchReview({
     ordered,
     teamRows,
     rosterRows,
-  ).map((suggestion) => ({ teamId: suggestion.teamId, tier: suggestion.tier }));
+  ).map((suggestion) => ({
+    teamId: suggestion.teamId,
+    tier: suggestion.tier,
+  }));
 
   return (
     <ReviewForm

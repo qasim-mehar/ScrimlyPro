@@ -32,7 +32,7 @@ export function ImpersonationExitButton() {
       type="button"
       onClick={stop}
       disabled={busy}
-      className="min-h-8 shrink-0 rounded-md border border-red-700 bg-red-950/60 px-3 text-xs font-semibold text-red-300 hover:text-red-200 disabled:opacity-50"
+      className="min-h-9 shrink-0 rounded-full bg-dash-ink px-4 text-xs font-semibold text-white transition-colors hover:bg-black disabled:opacity-50"
     >
       Exit impersonation
     </button>

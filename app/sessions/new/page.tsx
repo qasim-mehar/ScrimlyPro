@@ -1,4 +1,5 @@
 import CreateSessionWizard from "@/components/forms/CreateSessionWizard";
+import { PageHeader } from "@/components/app/ui";
 import { requireUser } from "@/lib/auth/action-guard";
 import { withUserDb } from "@/lib/db/user";
 import { ensurePersonalOrg, getActiveOrgs } from "@/lib/orgs/orgs";
@@ -20,10 +21,13 @@ export default async function NewSessionPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-md p-4">
-      <h1 className="font-display text-3xl font-bold tracking-widest text-gold">
-        New Scrim
-      </h1>
+    <main className="mx-auto w-full max-w-[1120px] px-4 py-6 sm:px-6 lg:py-8">
+      <PageHeader
+        backHref="/dashboard"
+        backLabel="Dashboard"
+        title="New scrim"
+        description="Set the format, add the teams, and ScrimlyPro will turn each screenshot into confirmed standings."
+      />
       <CreateSessionWizard orgs={orgs} />
     </main>
   );

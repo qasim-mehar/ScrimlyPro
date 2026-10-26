@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { AccountMenu } from "@/components/app/AccountMenu";
 import { CommandPalette } from "@/components/dashboard/command-palette";
 import { Notifications } from "@/components/dashboard/notifications";
 import { PlusIcon } from "@/components/dashboard/icons";
@@ -10,15 +11,19 @@ import type { DashboardNotification } from "@/lib/dashboard/queries";
 /**
  * Dashboard top bar (M5 §4.4): ⌘K search palette (server-backed, org
  * scoped), notifications dropdown (derived events; dot = localStorage
- * last-seen), and the New session button → the existing /sessions/new flow.
+ * last-seen), the New session button → the existing /sessions/new flow, and
+ * the account menu (sign-out — the dashboard shell has no other exit).
  */
 export function TopBar({
   orgParam,
   notifications,
+  email,
   drawer,
 }: {
   orgParam?: string;
   notifications: DashboardNotification[];
+  /** Display-only account email; drives the avatar + sign-out menu. */
+  email?: string | null;
   /** Mobile navigation (the drawer-wrapped sidebar); rendered <lg only. */
   drawer?: React.ReactNode;
 }) {
@@ -38,6 +43,7 @@ export function TopBar({
           <PlusIcon width="18" height="18" />
           New session
         </Link>
+        <AccountMenu email={email ?? null} />
       </div>
     </div>
   );

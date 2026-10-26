@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 
 import { createOrgAction } from "@/app/orgs/new/actions";
+import { buttonStyles, fieldStyles } from "@/components/app/ui";
+import { AlertIcon } from "@/components/dashboard/icons";
 
 export function CreateOrgForm() {
   const [state, formAction, pending] = useActionState(
@@ -12,9 +14,9 @@ export function CreateOrgForm() {
   );
 
   return (
-    <form action={formAction} className="mt-4 flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="org-name" className="text-sm text-muted">
+    <form action={formAction} className="flex flex-col gap-4">
+      <div>
+        <label htmlFor="org-name" className={fieldStyles.label}>
           Organization name
         </label>
         <input
@@ -24,19 +26,23 @@ export function CreateOrgForm() {
           required
           maxLength={80}
           placeholder="e.g. Wassup Community Scrims"
-          className="min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-gold focus:outline-none"
+          className={fieldStyles.input}
+          autoComplete="organization"
         />
+        <p className={fieldStyles.help}>
+          This is what members see in the org switcher and on invites.
+        </p>
       </div>
       {state.message ? (
-        <p role="alert" className="text-sm text-red-400">
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-dash-sm bg-dash-danger-bg px-3 py-2.5 text-[13px] leading-5 text-dash-danger-ink"
+        >
+          <AlertIcon width="15" height="15" className="mt-0.5 shrink-0" />
           {state.message}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 w-full rounded-lg bg-gold font-display text-lg font-semibold text-bg disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className={buttonStyles.primary}>
         {pending ? "Creating…" : "Create organization"}
       </button>
     </form>

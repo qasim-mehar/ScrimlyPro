@@ -60,6 +60,43 @@
   outline-offset: 2px;
 }
 
+/* Member app surface (sessions, orgs, invites, auth-secondary, error states).
+   Extends the M5 light dashboard world to every non-dashboard task screen.
+   The login page and both dashboards keep their own shells. */
+.app-shell {
+  background-color: var(--color-dash-bg);
+  color: var(--color-dash-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--color-dash-ink);
+  scrollbar-color: var(--color-dash-ink4) var(--color-dash-bg);
+  scrollbar-width: thin;
+}
+
+.app-shell ::selection {
+  background-color: var(--color-dash-lime);
+  color: var(--color-dash-ink);
+}
+
+.app-shell :where(a, button, summary, [role="tab"]):focus-visible {
+  outline: 2px solid var(--color-dash-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.app-shell :where(input, select, textarea):focus-visible {
+  outline: none;
+}
+
+/* Dark hero panels borrowed from the member dashboard's featured card. */
+.app-grid {
+  background-image:
+    linear-gradient(rgba(217, 249, 157, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(217, 249, 157, 0.14) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
 body {
   background-color: var(--color-bg);
   color: #e8eaf0;

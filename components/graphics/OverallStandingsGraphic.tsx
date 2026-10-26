@@ -209,7 +209,7 @@ function StandingsColumn({
     top: st.headerLabelsY,
     font: st.labelFont,
     color: config.palette.textMuted,
-    letterSpacing: "0.08em",
+    letterSpacing: "0.05em",
   } as const;
   // Art-backed templates carry their own baked label row — code draws none.
   const showLabels = !config.labelsBakedIn;
@@ -218,7 +218,8 @@ function StandingsColumn({
     <>
       {showLabels ? (
         <>
-          <div style={{ position: "absolute", left: col.rankX, width: RANK_BOX_W, textAlign: "center", ...labelStyle }}>
+          {/* Nudge RANK left so it clears the TEAM header at col.teamX. */}
+          <div style={{ position: "absolute", left: col.rankX - 5, width: RANK_BOX_W, textAlign: "center", ...labelStyle }}>
             {STANDINGS_LABELS.rank}
           </div>
           <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>{STANDINGS_LABELS.team}</div>

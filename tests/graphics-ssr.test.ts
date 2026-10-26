@@ -190,7 +190,7 @@ describe("typography + rank-1 emphasis (both themes, SSR)", () => {
       for (const label of ["RANK", "TEAM", "WWCD", "PP", "KP", "TOTAL"]) {
         expect(html).toContain(`>${label}<`);
       }
-      expect(html).toMatch(/letter-spacing:0?\.08em/);
+      expect(html).toMatch(/letter-spacing:0?\.05em/);
     },
   );
 

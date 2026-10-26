@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { getTenantList } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { TenantActions } from "./tenant-actions";
@@ -22,13 +24,19 @@ export default async function AdminTenants({
   return (
     <div className="space-y-6">
       <div>
+        <Link
+          href="/admin"
+          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--hq-ink-3)] transition-colors hover:text-[var(--hq-ink)] lg:hidden"
+        >
+          ← Overview
+        </Link>
         <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">Users</h1>
         <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
           Read-only list · disable/impersonate actions are audited
         </p>
       </div>
 
-      <form method="get" action="/admin/tenants" className="flex max-w-md gap-2">
+      <form method="get" action="/admin/tenants" className="flex w-full max-w-md gap-2">
         <input
           type="search"
           name="q"
@@ -50,7 +58,8 @@ export default async function AdminTenants({
             No users match.
           </div>
         ) : (
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left">
             <thead>
               <tr className="hq-table-head">
                 <th scope="col" className="px-6 py-2.5 font-medium">
@@ -105,12 +114,13 @@ export default async function AdminTenants({
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <TenantActions userId={t.id} disabled={t.disabled} />
+                    <TenantActions userId={t.id} email={t.email} disabled={t.disabled} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>

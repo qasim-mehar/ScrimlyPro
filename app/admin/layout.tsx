@@ -14,7 +14,7 @@ import "@/styles/admin-theme.css";
 export default async function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  await requireAdmin();
+  const user = await requireAdmin();
 
   const [nav, events] = await Promise.all([
     getAdminNavData(),
@@ -38,6 +38,7 @@ export default async function AdminLayout({
       }}
       system={{ aiOn: nav.aiOn, reads7d: nav.reads7d, usersFlagged: nav.usersFlagged }}
       events={events}
+      email={user.email}
     >
       {children}
     </AdminShell>

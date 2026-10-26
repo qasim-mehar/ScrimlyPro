@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import clsx from "clsx";
 
+import { CircleCheckIcon } from "@/components/app/icons";
+import { compactButtonStyles } from "@/components/app/ui";
+import { ChevronRightIcon, TrophyIcon } from "@/components/dashboard/icons";
 import type {
   SessionNudge,
   SessionPageSession,
@@ -22,9 +26,10 @@ export function NudgeBanner({
   const mvpLink = (
     <Link
       href={`/sessions/${session.id}/mvp`}
-      className="flex min-h-[44px] items-center justify-center rounded-lg border border-gold/60 px-4 text-sm font-semibold text-gold"
+      className={compactButtonStyles.secondary}
     >
-      Lock Top 5 →
+      Lock top 5
+      <ChevronRightIcon width="14" height="14" />
     </Link>
   );
 
@@ -32,12 +37,22 @@ export function NudgeBanner({
     return (
       <div
         role="status"
-        className="flex flex-col gap-2 rounded-lg border border-gold/60 bg-surface p-3"
+        className="flex flex-col gap-3 rounded-dash bg-dash-lime p-4 sm:flex-row sm:items-center sm:justify-between"
       >
-        <p className="text-sm font-semibold text-gold">
-          All {session.plannedMatches} matches confirmed — finalize the scrim
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex items-start gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-dash-ink text-white">
+            <TrophyIcon width="17" height="17" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-dash-ink">
+              All {session.plannedMatches} matches are confirmed
+            </p>
+            <p className="mt-0.5 text-[13px] leading-5 text-dash-lime-ink">
+              Finalize the scrim, then lock the Top 5 before sharing.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
           <CompleteButton
             sessionId={session.id}
             confirmedCount={session.plannedMatches}
@@ -52,11 +67,24 @@ export function NudgeBanner({
   return (
     <div
       role="status"
-      className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-3"
+      className={clsx(
+        "flex flex-col gap-3 rounded-dash bg-dash-bg p-4",
+        "sm:flex-row sm:items-center sm:justify-between",
+      )}
     >
-      <p className="text-sm font-semibold text-muted">
-        Session completed — Top 5 not locked yet
-      </p>
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-dash-lime text-dash-lime-ink">
+          <CircleCheckIcon width="17" height="17" />
+        </span>
+        <div>
+          <p className="text-sm font-bold text-dash-ink">
+            Session completed — Top 5 not locked yet
+          </p>
+          <p className="mt-0.5 text-[13px] leading-5 text-dash-ink3">
+            The MVP graphic becomes shareable once five players are locked.
+          </p>
+        </div>
+      </div>
       {mvpLink}
     </div>
   );

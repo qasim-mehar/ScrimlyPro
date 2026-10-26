@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   deleteFlagAction,
@@ -77,22 +77,47 @@ export function FlagForm() {
 }
 
 export function DeleteFlagButton({ id }: { id: string }) {
+  const [confirming, setConfirming] = useState(false);
   const [state, submit, pending] = useActionState<FlagActionResult | null, FormData>(
     deleteFlagAction,
     null,
   );
-  return (
-    <form action={submit} className="inline">
-      <input type="hidden" name="id" value={id} />
+
+  if (!confirming) {
+    return (
       <button
-        type="submit"
-        disabled={pending}
-        className="min-h-8 rounded-full border border-[var(--hq-line)] px-3 text-xs font-semibold text-[var(--hq-danger-ink)] hover:bg-[var(--hq-danger-bg)] disabled:opacity-50"
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="min-h-8 rounded-full border border-[var(--hq-line)] px-3 text-xs font-semibold text-[var(--hq-danger-ink)] hover:bg-[var(--hq-danger-bg)]"
       >
         Delete
       </button>
+    );
+  }
+
+  return (
+    <form action={submit} className="inline-flex items-center gap-2">
+      <input type="hidden" name="id" value={id} />
+      <span className="text-xs font-medium text-[var(--hq-ink-2)]">
+        Delete this flag?
+      </span>
+      <button
+        type="submit"
+        disabled={pending}
+        className="min-h-8 rounded-full bg-[var(--hq-danger-bg)] px-3 text-xs font-semibold text-[var(--hq-danger-ink)] hover:bg-red-200 disabled:opacity-50"
+      >
+        {pending ? "Deleting…" : "Confirm"}
+      </button>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => setConfirming(false)}
+        className="min-h-8 rounded-full px-3 text-xs font-semibold text-[var(--hq-ink-2)] hover:bg-[var(--hq-surface-subtle)] disabled:opacity-50"
+      >
+        Cancel
+      </button>
       {state && !state.ok && (
-        <span className="ml-2 text-xs text-[var(--hq-danger-ink)]">{state.error}</span>
+        <span className="text-xs text-[var(--hq-danger-ink)]">{state.error}</span>
       )}
     </form>
   );

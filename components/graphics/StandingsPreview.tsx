@@ -1,9 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AESTHETICS, getTemplate, type AestheticId } from "@/lib/graphics";
+
+import { getTemplate, type AestheticId } from "@/lib/graphics";
 import { resolveStandingsFilename } from "@/lib/graphics/standings";
 import type { StandingRow } from "@/lib/scoring";
+
+import { AestheticChips } from "./AestheticChips";
 import { DownloadPngButton } from "./DownloadPngButton";
 import { GraphicCanvas } from "./GraphicCanvas";
 import { OverallStandingsGraphic } from "./OverallStandingsGraphic";
@@ -20,41 +23,50 @@ type StandingsPreviewProps = {
   isFinal?: boolean;
 };
 
-export function StandingsPreview({ title, subtitle, organizer, standings, matchCount, isFinal }: StandingsPreviewProps) {
+export function StandingsPreview({
+  title,
+  subtitle,
+  organizer,
+  standings,
+  matchCount,
+  isFinal,
+}: StandingsPreviewProps) {
   const [aestheticId, setAestheticId] = useState<AestheticId>("dark-gold");
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(
+    null,
+  );
   const filename = resolveStandingsFilename(subtitle, matchCount, isFinal);
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {(Object.keys(AESTHETICS) as AestheticId[]).map((id) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setAestheticId(id)}
-            aria-pressed={aestheticId === id}
-            className={`min-h-[44px] border border-line px-3 text-sm tracking-widest ${
-              aestheticId === id ? "bg-surface-2 text-gold" : "bg-surface text-muted hover:bg-surface-2"
-            }`}
-          >
-            {AESTHETICS[id].name}
-          </button>
-        ))}
+      <AestheticChips activeId={aestheticId} onSelect={setAestheticId} />
+      <div className="overflow-hidden rounded-dash bg-dash-bg p-2 sm:p-3">
+        <GraphicCanvas
+          config={getTemplate(aestheticId)}
+          variant="standings"
+          stageRef={stageRef}
+        >
+          <OverallStandingsGraphic
+            aestheticId={aestheticId}
+            title={title}
+            subtitle={subtitle}
+            organizer={organizer}
+            standings={standings}
+            matchCount={matchCount}
+          />
+        </GraphicCanvas>
       </div>
-      <GraphicCanvas config={getTemplate(aestheticId)} variant="standings" stageRef={stageRef}>
-        <OverallStandingsGraphic
-          aestheticId={aestheticId}
-          title={title}
-          subtitle={subtitle}
-          organizer={organizer}
-          standings={standings}
-          matchCount={matchCount}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <DownloadPngButton
+          stageRef={stageRef}
+          filename={filename}
+          onExported={setSize}
         />
-      </GraphicCanvas>
-      <DownloadPngButton stageRef={stageRef} filename={filename} onExported={setSize} />
-      <p className="text-xs text-muted">{size ? `PNG: ${size.width}×${size.height}` : "PNG: —"}</p>
+        <p className="text-[12px] text-dash-ink3">
+          {size ? `PNG · ${size.width} × ${size.height}` : "1080 × 1620 portrait"}
+        </p>
+      </div>
     </section>
   );
 }

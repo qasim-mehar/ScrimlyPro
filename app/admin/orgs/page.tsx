@@ -55,6 +55,12 @@ export default async function AdminOrgs({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
+          <Link
+            href="/admin"
+            className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--hq-ink-3)] transition-colors hover:text-[var(--hq-ink)] lg:hidden"
+          >
+            ← Overview
+          </Link>
           <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">
             Organizations
           </h1>
@@ -65,7 +71,7 @@ export default async function AdminOrgs({
         <TimeFilter range={range} basePath="/admin/orgs" />
       </div>
 
-      <form method="get" action="/admin/orgs" className="flex max-w-md gap-2">
+      <form method="get" action="/admin/orgs" className="flex w-full max-w-md gap-2">
         <input
           type="search"
           name="q"
@@ -90,7 +96,8 @@ export default async function AdminOrgs({
               : "No organizations match this filter."}
           </div>
         ) : (
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-left">
             <thead>
               <tr className="hq-table-head">
                 <th scope="col" className="px-6 py-2.5 font-medium">
@@ -155,6 +162,7 @@ export default async function AdminOrgs({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>

@@ -75,6 +75,7 @@ export default async function DashboardPage({
         <TopBar
           orgParam={orgParam}
           notifications={data?.notifications ?? []}
+          email={user.email}
           drawer={
             <SidebarDrawer>
               <Sidebar

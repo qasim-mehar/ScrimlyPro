@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   removeMemberAction,
@@ -12,8 +12,9 @@ export type MemberActionState = { message: string | null };
 const INITIAL: MemberActionState = { message: null };
 
 /**
- * Remove-member button (admin+). Server-side last-owner protection is the
- * authority; the returned error renders inline.
+ * Remove-member button (admin+). Two-step inline confirm — removal kicks
+ * the person out of the org immediately. Server-side last-owner protection
+ * is the authority; the returned error renders inline.
  */
 export function RemoveMemberButton({
   orgId,
@@ -24,24 +25,54 @@ export function RemoveMemberButton({
   userId: string;
   label: string;
 }) {
+  const [confirming, setConfirming] = useState(false);
   const [state, formAction, pending] = useActionState(
     async (prev: MemberActionState, formData: FormData) =>
       removeMemberAction(prev, formData),
     INITIAL,
   );
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full px-3 text-xs font-semibold text-dash-danger-ink transition-colors hover:bg-dash-danger-bg"
+      >
+        {label}
+      </button>
+    );
+  }
+
   return (
-    <form action={formAction} className="flex flex-col items-end gap-1">
+    <form action={formAction} className="flex shrink-0 flex-col items-end gap-1">
       <input type="hidden" name="orgId" value={orgId} />
       <input type="hidden" name="userId" value={userId} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 rounded-lg border border-line px-3 text-sm text-muted disabled:opacity-50"
-      >
-        {pending ? "Removing…" : label}
-      </button>
+      <span className="flex items-center gap-1.5">
+        <span className="text-[11px] font-medium text-dash-ink2">
+          Remove from org?
+        </span>
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex min-h-9 items-center justify-center rounded-full bg-dash-danger-bg px-3 text-xs font-semibold text-dash-danger-ink transition-colors hover:bg-red-200 disabled:opacity-40"
+        >
+          {pending ? "Removing…" : "Confirm"}
+        </button>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => setConfirming(false)}
+          className="inline-flex min-h-9 items-center justify-center rounded-full px-3 text-xs font-semibold text-dash-ink2 transition-colors hover:bg-dash-bg disabled:opacity-40"
+        >
+          Cancel
+        </button>
+      </span>
       {state.message ? (
-        <p role="alert" className="text-xs text-red-400">
+        <p
+          role="alert"
+          className="max-w-[180px] text-right text-[11px] leading-4 text-dash-danger-ink"
+        >
           {state.message}
         </p>
       ) : null}
@@ -63,18 +94,21 @@ export function RevokeInviteButton({
     INITIAL,
   );
   return (
-    <form action={formAction} className="flex flex-col items-end gap-1">
+    <form action={formAction} className="flex shrink-0 flex-col items-end gap-1">
       <input type="hidden" name="orgId" value={orgId} />
       <input type="hidden" name="inviteId" value={inviteId} />
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 rounded-lg border border-line px-3 text-sm text-muted disabled:opacity-50"
+        className="inline-flex min-h-9 items-center justify-center rounded-full px-3 text-xs font-semibold text-dash-ink3 transition-colors hover:bg-dash-bg hover:text-dash-danger-ink disabled:opacity-40"
       >
         {pending ? "Revoking…" : "Revoke"}
       </button>
       {state.message ? (
-        <p role="alert" className="text-xs text-red-400">
+        <p
+          role="alert"
+          className="max-w-[180px] text-right text-[11px] leading-4 text-dash-danger-ink"
+        >
           {state.message}
         </p>
       ) : null}

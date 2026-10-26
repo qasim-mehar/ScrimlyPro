@@ -55,7 +55,8 @@ const GEOMETRY: Omit<TemplateConfig, "id" | "name" | "backgrounds" | "palette"> 
     maxRowsLeft: 13,
     nameFont: `700 32px ${FONTS}`,
     statFont: `700 28px ${FONTS}`,
-    labelFont: `700 24px ${FONTS}`,
+    // 18px keeps four-letter labels (WWCD/TOTAL) inside the 58px stat boxes.
+    labelFont: `700 18px ${FONTS}`,
   },
   mvp: {
     rowY0: 470,
@@ -507,7 +508,9 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "challengers-red": CHALLENGERS_RED,
 };
 
-/** Look up a template config by aesthetic id. */
+/** Look up a template config by aesthetic id. Unknown/legacy ids (the seed's
+ * `dev-dark-gold`) fall back to the original dark-gold skin so graphics never
+ * crash on historical rows. */
 export function getTemplate(id: AestheticId): TemplateConfig {
-  return AESTHETICS[id];
+  return AESTHETICS[id] ?? AESTHETICS["dark-gold"];
 }

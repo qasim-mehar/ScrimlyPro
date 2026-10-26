@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 
 import { createInviteAction } from "@/app/orgs/[id]/actions";
+import { buttonStyles, fieldStyles } from "@/components/app/ui";
+import { AlertIcon } from "@/components/dashboard/icons";
 import { CopyField } from "./CopyField";
 
 export type InviteFormState =
@@ -25,50 +27,60 @@ export function InviteForm({ orgId }: { orgId: string }) {
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="orgId" value={orgId} />
-      <div className="flex flex-col gap-1">
-        <label htmlFor="invite-role" className="text-sm text-muted">
+      <div>
+        <label htmlFor="invite-role" className={fieldStyles.label}>
           Role
         </label>
         <select
           id="invite-role"
           name="role"
           defaultValue="member"
-          className="min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base"
+          className={fieldStyles.input}
         >
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </select>
       </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="invite-email" className="text-sm text-muted">
-          Email (optional label — no email is sent)
+      <div>
+        <label htmlFor="invite-email" className={fieldStyles.label}>
+          Email label{" "}
+          <span className="font-normal text-dash-ink3">(optional)</span>
         </label>
         <input
           id="invite-email"
           name="email"
           type="email"
           placeholder="who-is-this-for@example.com"
-          className="min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base"
+          className={fieldStyles.input}
+          autoComplete="email"
         />
+        <p className={fieldStyles.help}>
+          Only a label for your own reference — no email is sent.
+        </p>
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 rounded-lg bg-gold font-semibold text-bg disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className={buttonStyles.secondary}>
         {pending ? "Creating link…" : "Create invite link"}
       </button>
 
       {state.kind === "link" ? (
-        <CopyField
-          value={state.url}
-          label="Share this link — it works once and expires in 7 days:"
-        />
+        <div className="rounded-dash-sm bg-dash-lime/35 p-3">
+          <p className="mb-2 text-[13px] font-semibold text-dash-ink">
+            Link ready — copy it now
+          </p>
+          <CopyField
+            value={state.url}
+            label="Works once and expires in 7 days. It won’t be shown again."
+          />
+        </div>
       ) : null}
       {state.kind === "error" ? (
-        <p role="alert" className="text-sm text-red-400">
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-dash-sm bg-dash-danger-bg px-3 py-2.5 text-[13px] leading-5 text-dash-danger-ink"
+        >
+          <AlertIcon width="15" height="15" className="mt-0.5 shrink-0" />
           {state.message}
         </p>
       ) : null}

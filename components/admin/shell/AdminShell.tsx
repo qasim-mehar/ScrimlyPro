@@ -7,6 +7,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { ImpersonateDialog } from "./ImpersonateDialog";
 import { NotificationsBell, type BellEvent } from "./NotificationsBell";
 import { SearchField } from "./SearchField";
+import { AccountMenu } from "@/components/app/AccountMenu";
 import {
   IconBuilding,
   IconChart,
@@ -197,12 +198,15 @@ export function AdminShell({
   counts,
   system,
   events,
+  email,
   children,
 }: {
   envLabel: string;
   counts: ShellCounts;
   system: ShellSystemCard;
   events: ShellEvents;
+  /** Display-only admin email; drives the account (sign-out) menu. */
+  email?: string | null;
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -249,6 +253,7 @@ export function AdminShell({
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell events={events} />
               <ImpersonateDialog />
+              <AccountMenu email={email ?? null} />
             </div>
           </header>
 

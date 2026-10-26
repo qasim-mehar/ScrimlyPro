@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { buttonStyles, compactButtonStyles } from "@/components/app/ui";
 import { markCompleteAction } from "@/app/sessions/[id]/actions";
 
 export function CompleteButton({
@@ -40,42 +41,42 @@ export function CompleteButton({
           setError(null);
           setConfirming(true);
         }}
-        className="flex min-h-[44px] items-center justify-center rounded-lg bg-gold px-4 text-sm font-semibold text-bg"
+        className={buttonStyles.primary}
       >
-        Mark Complete
+        Mark complete
       </button>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gold/60 bg-surface p-3">
-      <p className="text-sm text-muted">
+    <div className="flex flex-col gap-2 rounded-[12px] border border-dash-line bg-dash-surface p-3">
+      <p className="text-[13px] leading-5 font-medium text-dash-ink2">
         {confirmedCount < plannedMatches
-          ? `Only ${confirmedCount} of ${plannedMatches} matches confirmed — complete anyway?`
-          : "Mark this session complete?"}
+          ? `Only ${confirmedCount} of ${plannedMatches} matches are confirmed. Complete anyway?`
+          : "Mark this scrim complete?"}
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           disabled={busy}
           onClick={() => {
             void handleComplete();
           }}
-          className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-gold px-3 text-sm font-semibold text-bg disabled:opacity-50"
+          className={compactButtonStyles.primary}
         >
-          {busy ? "Completing…" : "Confirm Complete"}
+          {busy ? "Completing…" : "Confirm complete"}
         </button>
         <button
           type="button"
           disabled={busy}
           onClick={() => setConfirming(false)}
-          className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-line px-3 text-sm text-muted"
+          className={compactButtonStyles.quiet}
         >
           Cancel
         </button>
       </div>
       {error ? (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-[13px] font-medium text-dash-danger-ink">
           {error}
         </p>
       ) : null}

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { getFlagRows } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
@@ -19,6 +21,12 @@ export default async function AdminFlags() {
   return (
     <div className="space-y-6">
       <div>
+        <Link
+          href="/admin"
+          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--hq-ink-3)] transition-colors hover:text-[var(--hq-ink)] lg:hidden"
+        >
+          ← Overview
+        </Link>
         <h1 className="text-[24px] font-bold text-[var(--hq-ink)]">AI &amp; Flags</h1>
         <p className="mt-1 text-[13px] text-[var(--hq-ink-3)]">
           Platform flags · every change is audited (admin.flag.set / delete)
@@ -33,7 +41,8 @@ export default async function AdminFlags() {
             No flags set.
           </div>
         ) : (
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left">
             <thead>
               <tr className="hq-table-head">
                 <th scope="col" className="px-6 py-2.5 font-medium">
@@ -90,6 +99,7 @@ export default async function AdminFlags() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>
