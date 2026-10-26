@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Great_Vibes, Source_Serif_4 } from "next/font/google";
 import styles from "./CtaSection.module.css";
+import { useReducedMotion } from "./useReducedMotion";
 
 const serif = Source_Serif_4({
   subsets: ["latin"],
@@ -20,28 +21,27 @@ const script = Great_Vibes({
 
 export default function CtaSection() {
   const rootRef = useRef<HTMLElement | null>(null);
-  const [inView, setInView] = useState(false);
+  const [intersected, setIntersected] = useState(false);
+  const reducedMotion = useReducedMotion();
+  // Reduced motion reveals immediately (derived, not set from an effect).
+  const inView = intersected || reducedMotion;
 
   // Reveal once at 0.25 visibility; skipped entirely when the user prefers
   // reduced motion (content shows immediately).
   useEffect(() => {
     const root = rootRef.current;
-    if (!root) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setInView(true);
-      return;
-    }
+    if (!root || reducedMotion) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         observer.disconnect();
-        setInView(true);
+        setIntersected(true);
       },
       { threshold: 0.25 }
     );
     observer.observe(root);
     return () => observer.disconnect();
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <section
@@ -62,19 +62,19 @@ export default function CtaSection() {
       />
       <div className={styles.inner}>
         <h2 className={styles.headline} id="cta-heading" data-reveal="0">
-          Doing <em className={styles.script}>Well</em>
+          Built for teams
           <br />
-          &amp; Doing Good
+          that <em className={styles.script}>grind</em>
         </h2>
 
         <p className={styles.sub} data-reveal="1">
-          We&rsquo;re a pending B Corp and a seasoned team of dreamers and
-          doers dedicated to building a world where everyone does well.
+          We&rsquo;re onboarding the first 5&ndash;15 organizer teams now.
+          Pilot feedback directly shapes the first public release.
         </p>
 
         <div className={styles.ctaRow} data-reveal="2">
-          <a className={styles.btn} href="#join">
-            Join Our Team
+          <a className={styles.btn} href="#pilot">
+            Join the Pilot
           </a>
         </div>
       </div>

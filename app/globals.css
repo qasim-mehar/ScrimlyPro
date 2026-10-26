@@ -1,21 +1,69 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
-  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  /* App theme — drives the authenticated surface (P6/P7 typography + palette).
+     These tokens must survive the landing merge: pages under app/sessions,
+    app/orgs and app/admin all build utilities from them. */
+  --font-display: "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif;
+  --color-gold: #f5c542;
+  --color-bg: #0b0d12;
+  --color-surface: #12151c;
+  --color-surface-2: #1a1e28;
+  --color-line: #272d3b;
+  --color-muted: #8b93a7;
 
+  /* Landing page (landing-page branch). */
   --color-snes-green: #22c55e;
   --color-snes-blue: #3b82f6;
   --color-snes-yellow: #facc15;
-  --color-cta: #ffd23f;
   --color-snes-red: #ef4444;
+  --color-cta: #ffd23f;
   --color-ink: #050505;
+
+  /* Member dashboard (M5) — light design system, dash-* namespaced so it
+     coexists with the dark app theme above (--color-bg/--color-ink are taken).
+     Reference: docs/reference/dashboard/{left.jpg,right.png}. */
+  --color-dash-bg: #f3f4f6;
+  --color-dash-surface: #ffffff;
+  --color-dash-subtle: #f9fafb;
+  --color-dash-line: #e5e7eb;
+  --color-dash-ink: #111827;
+  --color-dash-ink2: #4b5563;
+  --color-dash-ink3: #6b7280;
+  --color-dash-ink4: #9ca3af;
+  --color-dash-lime: #d9f99d;
+  --color-dash-lime-ink: #15803d;
+  --color-dash-success: #15803d;
+  --color-dash-amber: #f59e0b;
+  --color-dash-amber-ink: #b45309;
+  --color-dash-amber-bg: #fef3c7;
+  --color-dash-danger-ink: #b91c1c;
+  --color-dash-danger-bg: #fee2e2;
+  --color-dash-danger-dot: #ef4444;
+  --radius-dash-chip: 6px;
+  --radius-dash-sm: 12px;
+  --radius-dash: 20px;
+  --radius-dash-lg: 24px;
+}
+
+/* Dashboard subtree: Inter (root-layout --font-inter) over the light tokens;
+   everything else (dark app theme) is untouched. */
+.dash-shell {
+  background-color: var(--color-dash-bg);
+  color: var(--color-dash-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dash-shell :where(a, button, summary):focus-visible {
+  outline: 2px solid var(--color-dash-ink);
+  outline-offset: 2px;
 }
 
 body {
-  background-color: var(--color-ink);
-  color: #ffffff;
-  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: #e8eaf0;
+  font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
 }
 

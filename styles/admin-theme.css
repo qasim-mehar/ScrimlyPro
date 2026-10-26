@@ -1,0 +1,192 @@
+/*
+ * M6 super-admin theme — light, airy, lime-and-black (design spec §4).
+ *
+ * Scope: imported ONLY by the admin layout (app/admin/layout.tsx); every
+ * variable lives on .admin-scope in the hq- namespace so it can never
+ * collide with (or leak into) the dark app tokens in app/globals.css,
+ * which stays untouched. Values are the §4.1 palette exactly.
+ *
+ * Mechanism note: tokens are plain custom properties rather than Tailwind v4
+ * `@theme` — @theme only contributes inside a Tailwind *entry* stylesheet,
+ * and a second entry (re-importing tailwindcss here) would duplicate the
+ * entire Tailwind build on /admin. Components consume these tokens through
+ * arbitrary-value utilities (bg-[var(--hq-surface)]) plus the skin classes
+ * below; outcome identical to the spec's token table.
+ */
+
+.admin-scope {
+  --hq-bg: #f3f4f6;
+  --hq-surface: #ffffff;
+  --hq-surface-subtle: #f9fafb;
+  --hq-line: #e5e7eb;
+  --hq-ink: #111827;
+  --hq-ink-2: #4b5563;
+  --hq-ink-3: #6b7280;
+  --hq-ink-4: #9ca3af;
+  --hq-lime: #d9f99d;
+  --hq-lime-ink: #15803d;
+  --hq-success: #15803d; /* AA on white: green-700 (spec said #16A34A - G6 gate precedence) */
+  --hq-amber: #f59e0b;
+  --hq-amber-ink: #b45309; /* AA on amber-bg: amber-700 (spec said #D97706) */
+  --hq-amber-bg: #fef3c7;
+  --hq-danger-ink: #b91c1c; /* AA on danger-bg: red-700 (spec said #DC2626) */
+  --hq-danger-bg: #fee2e2;
+  --hq-danger-dot: #ef4444;
+  --hq-orange: #f97316;
+
+  background-color: var(--hq-bg);
+  color: var(--hq-ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The global sheet paints focus rings in the landing CTA color; on the light
+   admin surface the ring is ink. Ring shape/offset stay global. */
+.admin-scope :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--hq-ink);
+}
+
+/* ---- Repeated skins (§4.4 component anatomy) ------------------------- */
+
+/* White card: 20–24px radius, hairline shadow, no border (§4.3). */
+.hq-card {
+  background: var(--hq-surface);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+}
+
+/* Status chip: 6px radius, 12px/600 (§4.4 table + attention rows). */
+.hq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+/* Sidebar nav pill (active = ink pill, 12px radius). */
+.hq-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--hq-ink-2);
+}
+.hq-nav-item:hover {
+  background: var(--hq-surface-subtle);
+  color: var(--hq-ink);
+}
+.hq-nav-item[aria-current="page"] {
+  background: var(--hq-ink);
+  color: #fff;
+}
+.hq-nav-item[aria-disabled="true"] {
+  color: var(--hq-ink-4);
+  cursor: not-allowed;
+}
+.hq-nav-item[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--hq-ink-4);
+}
+
+/* Nav count badge (pill, page-bg, 12px/600). */
+.hq-nav-badge {
+  margin-left: auto;
+  background: var(--hq-bg);
+  color: var(--hq-ink-3);
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.hq-nav-item[aria-current="page"] .hq-nav-badge {
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
+}
+
+/* Sidebar group header: 11px/600, ink-4, uppercase, tracked. */
+.hq-nav-group {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hq-ink-4);
+}
+
+/* System-card switch visual — mirrors the global AI flag state; it is a
+   link affordance, not a toggle (click navigates to /admin/flags). */
+.hq-switch {
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--hq-ink);
+  position: relative;
+}
+.hq-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 16px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #fff;
+}
+.hq-switch[data-off="true"] {
+  background: #c7cdd6;
+}
+.hq-switch[data-off="true"]::after {
+  left: 2px;
+}
+
+/* Featured-org hero: dark panel with a faint lime grid texture (§4.4). */
+.hq-hero {
+  background:
+    linear-gradient(rgb(217 249 157 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(217 249 157 / 0.07) 1px, transparent 1px),
+    radial-gradient(120% 120% at 20% 0%, #1f2430 0%, #111827 60%, #0b0f18 100%);
+  background-size: 28px 28px, 28px 28px, 100% 100%;
+}
+
+/* Readiness gauge: dashed black ring on lime (SVG strokes dash it; this is
+   the panel + center type). */
+.hq-gauge-panel {
+  background: var(--hq-lime);
+  border-radius: 20px;
+}
+
+/* Table anatomy: ~64px rows, #F3F4F6 separators, subtle header strip. */
+.hq-table-row + .hq-table-row {
+  border-top: 1px solid var(--hq-bg);
+}
+.hq-table-head {
+  background: var(--hq-surface-subtle);
+  color: var(--hq-ink-3);
+  font-size: 13px;
+  font-weight: 500;
+}
+.hq-table-row:hover {
+  background: var(--hq-surface-subtle);
+}
+
+/* Skeleton sections while a dashboard block is unset (WP1 shell only). */
+@keyframes hq-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.hq-skeleton {
+  animation: hq-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hq-skeleton { animation: none; }
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "route": "/",
+    "verdict": "PASS",
+    "notes": "2 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/new",
+    "verdict": "PASS",
+    "notes": "7 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/seed-00000000-0000-4000-8000-000000000001",
+    "verdict": "PASS",
+    "notes": "8 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/seed-00000000-0000-4000-8000-000000000001/matches/3",
+    "verdict": "PASS",
+    "notes": "276 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/seed-00000000-0000-4000-8000-000000000001/mvp",
+    "verdict": "PASS",
+    "notes": "32 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/seed-00000000-0000-4000-8000-000000000001/matches/7",
+    "verdict": "PASS",
+    "notes": "1 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/nope",
+    "verdict": "PASS",
+    "notes": "1 targets, scrollW=375"
+  },
+  {
+    "route": "/dev/graphics",
+    "verdict": "PASS",
+    "notes": "3 targets, scrollW=375"
+  },
+  {
+    "route": "/dev/standings",
+    "verdict": "PASS",
+    "notes": "4 targets, scrollW=375"
+  },
+  {
+    "route": "/dev/announcement",
+    "verdict": "PASS",
+    "notes": "4 targets, scrollW=375"
+  },
+  {
+    "route": "/dev/mvp",
+    "verdict": "PASS",
+    "notes": "4 targets, scrollW=375"
+  },
+  {
+    "route": "/dev/glyphs",
+    "verdict": "PASS",
+    "notes": "6 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/seed-00000000-0000-4000-8000-000000000001",
+    "verdict": "PASS",
+    "notes": "4 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/seed-00000000-0000-4000-8000-000000000001",
+    "verdict": "PASS",
+    "notes": "13 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/new",
+    "verdict": "PASS",
+    "notes": "4 targets, scrollW=375"
+  },
+  {
+    "route": "/sessions/new",
+    "verdict": "PASS",
+    "notes": "2 targets, scrollW=375"
+  }
+]

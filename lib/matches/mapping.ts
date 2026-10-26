@@ -16,6 +16,7 @@ export type SquadRowDraft = {
 
 export type MappingIssueCode =
   | "UNMAPPED"
+  | "MISSING_ROWS"
   | "DUPLICATE_TEAM"
   | "BAD_PLACEMENTS"
   | "BAD_SQUAD_SIZE";
@@ -55,7 +56,10 @@ export function sanitizeSquads(squads: RawSquad[]): CleanSquad[] {
 /**
  * Issues: unmapped squads (with placements), duplicate teamIds (with the
  * team name + both placements), placement gaps/duplicates after manual
- * edits, squad >4 or <1 players after manual edits.
+ * edits, squad >4 or <1 players after manual edits, and a mapping that
+ * does not cover the full lobby (C7.1 confirm gating — 15 mapped rows on a
+ * 16-team session leaves one team with no result row; the MISSING_SQUADS
+ * add-row flow is the way back to a complete lobby).
  *
  * teamNames is optional (spec signature is rows + teamCount); duplicate
  * messages fall back to the raw teamId when a name is unavailable.
@@ -65,10 +69,6 @@ export function validateMapping(
   teamCount: number,
   teamNames?: ReadonlyMap<string, string>,
 ): MappingIssue[] {
-  // teamCount is signature (spec) but not a check: fewer rows than teams is
-  // the MISSING_SQUADS legacy path (banner + add-row in the form), and more
-  // rows than teams always surface as DUPLICATE_TEAM below.
-  void teamCount;
   const issues: MappingIssue[] = [];
 
   for (const row of rows) {
@@ -78,6 +78,15 @@ export function validateMapping(
         message: `Placement ${row.placement}: no team selected.`,
       });
     }
+  }
+
+  // Full-lobby gate (C7.1 Pass 3): fewer rows than teams can never confirm —
+  // more rows with all-distinct teams is impossible (only teamCount teams).
+  if (rows.length !== teamCount) {
+    issues.push({
+      code: "MISSING_ROWS",
+      message: `Match covers ${rows.length} of ${teamCount} teams — add the missing squads (add-row) before confirming.`,
+    });
   }
 
   const placementsByTeam = new Map<string, number[]>();

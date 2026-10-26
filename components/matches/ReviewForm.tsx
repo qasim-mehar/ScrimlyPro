@@ -326,7 +326,7 @@ export function ReviewForm({
                         placement: Number(e.target.value),
                       }))
                     }
-                    className="w-14 rounded border border-line bg-bg px-2 py-2 text-center text-sm"
+                    className="min-h-[44px] w-14 rounded border border-line bg-bg px-2 text-center text-sm"
                   />
                 </label>
                 {row.squadTag ? (
@@ -377,7 +377,7 @@ export function ReviewForm({
                   min={0}
                   value={rowKills(row)}
                   onChange={(e) => setKillsTotal(row.key, Number(e.target.value))}
-                  className="w-20 rounded border border-line bg-bg px-2 py-2 text-center text-sm"
+                  className="min-h-[44px] w-20 rounded border border-line bg-bg px-2 text-center text-sm"
                 />
               </label>
 
@@ -417,7 +417,7 @@ export function ReviewForm({
                             ),
                           }))
                         }
-                        className={`w-16 rounded border bg-bg px-2 py-2 text-center text-sm ${
+                        className={`min-h-[44px] w-16 rounded border bg-bg px-2 text-center text-sm ${
                           player.low ? "border-yellow-500/60" : "border-line"
                         }`}
                       />

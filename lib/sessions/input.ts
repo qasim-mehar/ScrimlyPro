@@ -17,6 +17,9 @@ export type SessionDraft = {
   teamCount: number;
   templateId: string; // validated against VALID_TEMPLATE_IDS
   teams: TeamDraft[];
+  // M2: org context is REQUIRED (never optional — M1 lesson). The wizard
+  // sends the selected org; the server verifies membership before use.
+  orgId: string;
 };
 
 export type ValidationIssue =
@@ -25,6 +28,7 @@ export type ValidationIssue =
   | { field: "teamCount"; message: string }
   | { field: "templateId"; message: string }
   | { field: "teams"; message: string }
+  | { field: "orgId"; message: string }
   | { field: "teamName"; message: string; index: number }
   | { field: "logoUrl"; message: string; index: number };
 
@@ -77,6 +81,12 @@ export function validateSessionDraft(draft: SessionDraft): ValidationIssue[] {
 
   if (!VALID_TEMPLATE_IDS.includes(draft.templateId as AestheticId)) {
     issues.push({ field: "templateId", message: "Pick one of the six aesthetics." });
+  }
+
+  // Org context: format-checked here; MEMBERSHIP is verified inside the
+  // request transaction (fetchOrgRole) — client input never grants tenancy.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draft.orgId ?? "")) {
+    issues.push({ field: "orgId", message: "Pick an organization for this scrim." });
   }
 
   if (draft.teams.length !== draft.teamCount) {

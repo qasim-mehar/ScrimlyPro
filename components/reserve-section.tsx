@@ -35,26 +35,26 @@ export default function ReserveSection() {
     .join(" ");
 
   return (
-    <section ref={rootRef} className={rootClass}>
+    <section ref={rootRef} id="pilot" className={rootClass}>
       <div className={styles.zoneA}>
         <h2 className={styles.headline}>
-          Reserve
+          Join
           <br />
-          Your Card
+          the Pilot
         </h2>
         <p className={styles.subcopy}>
-          We&rsquo;re still in beta.
+          We&rsquo;re onboarding 5&ndash;15 organizer teams.
           <br />
-          Reserve your spot to join the next available batch.{" "}
+          Pilot feedback shapes the first public release.{" "}
           <span className={styles.sparkle} aria-hidden="true">
             ✨
           </span>
         </p>
-        <button type="button" className={styles.cta}>
-          Reserve
-        </button>
+        <a href="/signup" className={styles.cta}>
+          Request Access
+        </a>
         <p className={styles.footnote}>
-          PS: The card&rsquo;s app is iPhone only, for now
+          PS: Invites are copy-paste links for now; email delivery is coming
         </p>
       </div>
     </section>
