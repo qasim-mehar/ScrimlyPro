@@ -159,3 +159,20 @@ runbook v2 + rehearsal (wave1(13a/13b)). Full record:
 cut-over: B1 GoTrue live flows, E-1 backup-boundary decision (HUMAN),
 org kill switch RESERVED-until-M4, auth-users provisioning question
 (service-role insert vs GoTrue invite), LTS Node pin for deploy.
+
+## 8. M5 — member dashboard (COMPLETE)
+
+Branch `qasim/m5-dashboard` (worktree `../scrimlypro-dash`, port 3062, DB
+`scrimlypro_dash`). The member-facing dashboard at `/dashboard` is the
+post-login landing: `/` now redirects authenticated users by role
+(effective identity: platform admin → `/admin`, member → `/dashboard`;
+anonymous visitors keep the marketing landing). Light `dash-*` design
+system in `app/globals.css` alongside the dark theme; admin console
+untouched. All data from `lib/dashboard/queries.ts` (read-only, org-scoped
+RLS, zero writes, zero new migrations/deps); org selection via
+membership-validated `?org=` param; ⌘K palette on
+`/api/dashboard/search` behind `withTenantRoute`. Deviations from the M5
+brief (24, all documented): `docs/reports/M5-dashboard-report.md` §3 —
+notably dropped rules/states that no table records (failed OCR reads,
+per-match schedule), member search limited by profiles RLS, AA palette
+darkening. Migration block 0030–0039 remains RESERVED and UNUSED.

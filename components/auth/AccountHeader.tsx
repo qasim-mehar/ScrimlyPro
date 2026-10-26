@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 /**
@@ -12,9 +12,14 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
  *
  * M2: the "Orgs" chip is a plain navigation link — /orgs re-checks auth and
  * scopes every query server-side.
+ *
+ * M5: hidden on /dashboard — that surface has its own shell chrome (the M5
+ * reference design is the authority there); the header remains on every
+ * other page.
  */
 export function AccountHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,7 +29,7 @@ export function AccountHeader() {
     });
   }, []);
 
-  if (!email) return null;
+  if (!email || pathname.startsWith("/dashboard")) return null;
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });

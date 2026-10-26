@@ -11,12 +11,19 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     // Windows: DROP DATABASE ... WITH (FORCE) in tests/helpers/pg cleanup can
     // exceed the 10s default hook timeout under parallel load (WP6 observed).
-    hookTimeout: 60_000,
+    // M5 (G9 finding): at the full 616-test suite the 60s budget still timed
+    // out 2–13 hooks per run on Windows — always in cleanup, never an
+    // assertion (the flaked files pass 30/30 in isolation). The settings
+    // below are the proven-green combination (full pass, exit 0); same lever
+    // as the maxWorkers cap — reliability, not correctness.
+    hookTimeout: 180_000,
     // M2 (Lane B): every DB-backed test file applies the full migration set
     // (0010's policy suite roughly doubles the per-file statement count), so
     // the default worker count saturated the portable cluster's I/O and made
     // cleanup hooks flaky. Capped for reliability, not correctness.
-    maxWorkers: 4,
+    // M5: 4 → 2 — parallel DROP contention was the timeout source at suite
+    // scale; 2 workers trades ~2x wall time for a deterministic full pass.
+    maxWorkers: 2,
   },
   resolve: {
     alias: {
