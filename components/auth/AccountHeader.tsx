@@ -39,6 +39,8 @@ export function AccountHeader() {
     });
   }, [isAppRoute]);
 
+  // App surfaces only — the landing page, both dashboards, the auth pages and
+  // the public share/invite pages keep their own chrome untouched.
   if (!isAppRoute) return null;
 
   async function signOut() {
