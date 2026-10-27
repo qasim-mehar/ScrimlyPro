@@ -29,7 +29,17 @@ export function AccountHeader() {
     });
   }, []);
 
-  if (!email || pathname.startsWith("/dashboard")) return null;
+  // Public auth pages render their own full-screen shells — the header hint
+  // never applies there (same pattern as the /dashboard gate).
+  if (
+    !email ||
+    pathname.startsWith("/dashboard") ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
+  )
+    return null;
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });
