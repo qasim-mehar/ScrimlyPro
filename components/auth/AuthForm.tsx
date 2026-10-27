@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sanitizeNextOr } from "@/lib/auth/next-url";
+import panel from "./login-panel.module.css";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
+
+/** Cascade stagger for the /login variant (see login-panel.module.css). */
+const d = (delay: string) => ({ "--d": delay }) as CSSProperties;
 
 const ENDPOINT: Record<Mode, string> = {
   login: "/api/auth/login",
@@ -20,7 +24,13 @@ const FAILURE_COPY: Record<Mode, string> = {
   reset: "Could not update the password. Try again shortly.",
 };
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({
+  mode,
+  variant = "default",
+}: {
+  mode: Mode;
+  variant?: "default" | "login";
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
@@ -76,6 +86,94 @@ export function AuthForm({ mode }: { mode: Mode }) {
     } finally {
       setPending(false);
     }
+  }
+
+  if (
+    variant === "login" &&
+    (mode === "login" || mode === "signup" || mode === "forgot")
+  ) {
+    const isLogin = mode === "login";
+    return (
+      <form onSubmit={onSubmit}>
+        {mode !== "forgot" && (
+          <p className={panel.emailLabel} style={d("0.2s")}>
+            Or continue with email address
+          </p>
+        )}
+        <div className={`${panel.field} ${panel.dEmailField}`} style={d("0.2s")}>
+          <span className={panel.icon} aria-hidden>
+            <span className={panel.iconMail} />
+          </span>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email address"
+            aria-label="Email address"
+            className={panel.input}
+          />
+        </div>
+        {fieldErrors.email && (
+          <p className={panel.fieldError}>{fieldErrors.email}</p>
+        )}
+        {mode !== "forgot" && (
+          <div className={`${panel.field} ${panel.dPasswordField}`} style={d("0.24s")}>
+            <span className={panel.icon} aria-hidden>
+              <span className={panel.iconKey}>
+                <span className={panel.tooth} />
+              </span>
+            </span>
+            <input
+              type="password"
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              aria-label="Password"
+              className={panel.input}
+            />
+          </div>
+        )}
+        {fieldErrors.password && mode !== "forgot" && (
+          <p className={panel.fieldError}>{fieldErrors.password}</p>
+        )}
+        {isLogin && (
+          <div className={panel.forgotRow} style={d("0.28s")}>
+            <a href="/forgot-password" className={panel.forgotLink}>
+              Forgot password?
+            </a>
+          </div>
+        )}
+        {notice && (
+          <p className={panel.successBanner} role="status">
+            {notice}
+          </p>
+        )}
+        {failure && (
+          <p className={panel.errorBanner} role="alert">
+            {failure}
+          </p>
+        )}
+        <button type="submit" disabled={pending} className={panel.submit} style={d("0.28s")}>
+          {pending ? (
+            <>
+              <span className={panel.spinner} aria-hidden />
+              {isLogin ? "Signing in…" : mode === "signup" ? "Creating account…" : "Working…"}
+            </>
+          ) : isLogin ? (
+            "Login"
+          ) : mode === "signup" ? (
+            "Create account"
+          ) : (
+            "Send reset link"
+          )}
+        </button>
+      </form>
+    );
   }
 
   return (
