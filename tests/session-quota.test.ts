@@ -56,10 +56,10 @@ function draft(orgId: string, name: string): SessionDraft {
     teamCount: 4,
     templateId: "dark-gold",
     teams: [
-      { name: "Alpha", logoUrl: null },
-      { name: "Bravo", logoUrl: null },
-      { name: "Charlie", logoUrl: null },
-      { name: "Delta", logoUrl: null },
+      { name: "Alpha", logoUrl: null, slotNumber: null },
+      { name: "Bravo", logoUrl: null, slotNumber: null },
+      { name: "Charlie", logoUrl: null, slotNumber: null },
+      { name: "Delta", logoUrl: null, slotNumber: null },
     ],
   };
 }

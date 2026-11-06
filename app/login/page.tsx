@@ -7,20 +7,11 @@ export const metadata = { title: "Sign in — ScrimlyPro" };
  * The notice renders only for that explicit param and leaks nothing — the
  * user already knows their own account state. Copy is deliberately plain
  * ("Account disabled", no reason/detail per the kill-switch semantics).
+ *
+ * The param is read inside LoginPanel (client, in Suspense) rather than via
+ * `await searchParams` here: the async page never finished its root Suspense
+ * boundary, so /login rendered as a permanent loading skeleton.
  */
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ disabled?: string }>;
-}) {
-  const { disabled } = await searchParams;
-  return (
-    <LoginPanel
-      disabledNotice={
-        disabled
-          ? "Account disabled. Contact support if you believe this is a mistake."
-          : null
-      }
-    />
-  );
+export default function LoginPage() {
+  return <LoginPanel />;
 }

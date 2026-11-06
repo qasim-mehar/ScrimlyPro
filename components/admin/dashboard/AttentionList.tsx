@@ -49,7 +49,8 @@ export function AttentionList({ rows }: { rows: AttentionEntity[] }) {
           Nothing at risk.
         </div>
       ) : (
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-left">
           <thead>
             <tr className="hq-table-head">
               <th scope="col" className="px-6 py-2 font-medium">
@@ -78,7 +79,8 @@ export function AttentionList({ rows }: { rows: AttentionEntity[] }) {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       )}
 
       {rows.length > 6 && (

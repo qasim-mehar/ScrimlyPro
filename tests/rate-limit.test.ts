@@ -124,6 +124,19 @@ describe("clientIpKey", () => {
     expect(isLoginEmailBlocked("pilot@scrimlypro.dev")).toBe(true);
     expect(isLoginEmailBlocked("other@scrimlypro.dev")).toBe(false);
 
+    // A lockout reports a concrete wait time (429), and a later success clears
+    // the bucket so past typos don't lock a valid password out.
+    const { clearLoginEmailFailures, loginEmailRetryAfter } = await import(
+      "@/lib/auth/rate-limit"
+    );
+    const retry = loginEmailRetryAfter("pilot@scrimlypro.dev");
+    expect(retry).not.toBeNull();
+    expect(retry ?? 0).toBeGreaterThan(0);
+    expect(retry ?? 0).toBeLessThanOrEqual(RATE_LIMITS.loginEmail.windowMs / 1000);
+    clearLoginEmailFailures("pilot@scrimlypro.dev");
+    expect(loginEmailRetryAfter("pilot@scrimlypro.dev")).toBeNull();
+    expect(isLoginEmailBlocked("pilot@scrimlypro.dev")).toBe(false);
+
     // forgot: 5 attempts/email/h
     for (let i = 0; i < 5; i++) {
       expect(checkEmailRateLimit("forgotEmail", "Bomb@Example.com").ok).toBe(true);

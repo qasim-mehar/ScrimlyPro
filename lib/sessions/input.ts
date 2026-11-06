@@ -9,7 +9,11 @@ export const VALID_TEMPLATE_IDS = [
   "challengers-red",
 ] as const;
 
-export type TeamDraft = { name: string; logoUrl: string | null };
+export type TeamDraft = {
+  name: string;
+  logoUrl: string | null;
+  slotNumber: number | null;
+};
 
 export type SessionDraft = {
   name: string;
@@ -30,7 +34,8 @@ export type ValidationIssue =
   | { field: "teams"; message: string }
   | { field: "orgId"; message: string }
   | { field: "teamName"; message: string; index: number }
-  | { field: "logoUrl"; message: string; index: number };
+  | { field: "logoUrl"; message: string; index: number }
+  | { field: "slotNumber"; message: string; index: number };
 
 /**
  * Split raw textarea input on newlines AND commas, trim, drop empties.
@@ -93,6 +98,38 @@ export function validateSessionDraft(draft: SessionDraft): ValidationIssue[] {
     issues.push({
       field: "teams",
       message: `Team list has ${draft.teams.length} teams but team count is ${draft.teamCount} — make them match.`,
+    });
+  }
+
+  // Slots are optional (null for legacy/unassigned teams) but an assigned
+  // slot must be a whole number 1–99 and unique within this session.
+  const seenSlots = new Set<number>();
+  const duplicateSlots = new Set<number>();
+  draft.teams.forEach((team, index) => {
+    const { slotNumber } = team;
+    // `undefined` is treated like null: older clients/cached drafts may omit
+    // the field entirely (backward compatibility during rollout).
+    if (slotNumber === null || slotNumber === undefined) return;
+    if (!Number.isInteger(slotNumber) || slotNumber < 1 || slotNumber > 99) {
+      issues.push({
+        field: "slotNumber",
+        message: `Team ${index + 1}: slot must be a whole number from 1 to 99.`,
+        index,
+      });
+      return;
+    }
+    if (seenSlots.has(slotNumber)) {
+      duplicateSlots.add(slotNumber);
+    } else {
+      seenSlots.add(slotNumber);
+    }
+  });
+  if (duplicateSlots.size > 0) {
+    issues.push({
+      field: "teams",
+      message: `Duplicate slot numbers: ${[...duplicateSlots]
+        .sort((a, b) => a - b)
+        .join(", ")}.`,
     });
   }
 

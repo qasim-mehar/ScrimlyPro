@@ -61,7 +61,8 @@ export function NeedsAttentionTable({
           Nothing needs attention.
         </div>
       ) : (
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left">
           <thead>
             <tr className="hq-table-head">
               <th scope="col" className="px-6 py-2.5 font-medium">
@@ -101,7 +102,8 @@ export function NeedsAttentionTable({
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       )}
     </section>
   );

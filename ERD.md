@@ -29,6 +29,7 @@ erDiagram
         text session_id FK
         text name
         text logo_url "data URL, nullable"
+        int slot_number "1..99, nullable, unique per session"
     }
     rosters {
         text team_id FK "PK(team_id, player_norm)"
@@ -65,9 +66,9 @@ erDiagram
 
 Implemented via Drizzle + better-sqlite3 at `./data/scrimly.db` (gitignored; folder auto-created). Type mapping: `uuid` → `TEXT`, `jsonb` → `TEXT` via Drizzle mode:"json" + $type<> (no separate helpers), `timestamptz` → `TEXT` ISO-8601 UTC, `boolean` → `INTEGER`. IDs are uuid v4 generated in app code.
 
-**Constraints** (enforced in app layer + checked in tests): `planned_matches` 1–6 · `team_count` 4–25 · `match_no` 1..planned · `placement` 1..team_count · squad 1–4 players · `UNIQUE(session_id, name)` on teams · `UNIQUE(session_id, match_no)` on matches.
+**Constraints** (enforced in app layer + checked in tests): `planned_matches` 1–6 · `team_count` 4–25 · `match_no` 1..planned · `placement` 1..team_count · squad 1–4 players · `UNIQUE(session_id, name)` on teams · `UNIQUE(session_id, slot_number) WHERE slot_number IS NOT NULL` on teams · `slot_number` 1–99 · `UNIQUE(session_id, match_no)` on matches.
 
-**Indexes:** `teams(session_id)`, `rosters(team_id)`, `matches(session_id)`, `match_results(match_id)`, `match_results(team_id)`.
+**Indexes:** `teams(session_id)`, `teams(session_id, slot_number)` unique partial, `rosters(team_id)`, `matches(session_id)`, `match_results(match_id)`, `match_results(team_id)`.
 
 ## 3. Standings derivation (THE cumulative computation)
 

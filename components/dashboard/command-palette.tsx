@@ -117,12 +117,15 @@ export function CommandPalette({ orgParam }: { orgParam?: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Search sessions, matches, team (Command K)"
-        className="flex h-11 w-full max-w-[340px] items-center gap-3 rounded-dash-sm border border-dash-line bg-dash-surface px-4 text-sm text-dash-ink3 hover:bg-dash-subtle"
+        aria-label="Search sessions, matches, teams (Command K)"
+        className="flex h-11 w-full min-w-0 max-w-[340px] items-center gap-2 rounded-dash-sm border border-dash-line bg-dash-surface px-3 text-sm text-dash-ink3 hover:bg-dash-subtle sm:gap-3 sm:px-4"
       >
         <SearchIcon width="18" height="18" />
-        <span className="flex-1 text-left">Search sessions, matches, team</span>
-        <kbd className="rounded-md bg-dash-lime px-1.5 py-0.5 font-sans text-xs font-semibold text-dash-ink">
+        <span className="min-w-0 flex-1 truncate text-left">
+          <span className="sm:hidden">Search</span>
+          <span className="hidden sm:inline">Search sessions, matches, teams</span>
+        </span>
+        <kbd className="hidden shrink-0 rounded-md bg-dash-lime px-1.5 py-0.5 font-sans text-xs font-semibold text-dash-ink sm:block">
           ⌘K
         </kbd>
       </button>

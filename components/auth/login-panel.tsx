@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { AuthForm } from "@/components/auth/AuthForm";
 import s from "./login-panel.module.css";
 
@@ -20,13 +21,23 @@ const d = (delay: string) => ({ "--d": delay }) as CSSProperties;
  * row. Pure UI — the credential form is the existing AuthForm
  * (variant="login"); no auth logic lives here.
  */
-export function LoginPanel({
-  mode = "login",
-  disabledNotice,
-}: {
-  mode?: "login" | "signup";
-  disabledNotice?: string | null;
-}) {
+/**
+ * `?disabled=1` kill-switch notice (requireUser bounces disabled tenants
+ * here). Read on the CLIENT inside its own Suspense boundary: awaiting
+ * `searchParams` in the page component left /login stuck on the root loading
+ * skeleton, so the form never became visible (and sign-in looked broken).
+ */
+function DisabledNotice() {
+  const params = useSearchParams();
+  if (!params.get("disabled")) return null;
+  return (
+    <p className={s.notice} role="status">
+      Account disabled. Contact support if you believe this is a mistake.
+    </p>
+  );
+}
+
+export function LoginPanel({ mode = "login" }: { mode?: "login" | "signup" }) {
   const [mounted, setMounted] = useState(false);
   const useIso = typeof window !== "undefined" ? useLayoutEffect : useEffect;
   useIso(() => setMounted(true), []);
@@ -60,10 +71,10 @@ export function LoginPanel({
       <div className={s.rightCell}>
         <div className={s.column}>
           <h1 className={s.h1}>{signup ? "Sign up" : "Sign in"}</h1>
-          {disabledNotice && (
-            <p className={s.notice} role="status">
-              {disabledNotice}
-            </p>
+          {!signup && (
+            <Suspense fallback={null}>
+              <DisabledNotice />
+            </Suspense>
           )}
 
           <p className={s.label} style={d("0.12s")}>

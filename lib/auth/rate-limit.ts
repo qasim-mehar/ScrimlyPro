@@ -63,6 +63,26 @@ export class SlidingWindowRateLimiter {
     return alive.length >= this.rule.max;
   }
 
+  /**
+   * Queries without recording: seconds until the key drops back under the
+   * limit, or null when it is still allowed. Mirrors check()'s Retry-After.
+   */
+  retryAfter(key: string): number | null {
+    const t = this.now();
+    const windowStart = t - this.rule.windowMs;
+    const alive = (this.buckets.get(key) ?? []).filter((ts) => ts > windowStart);
+    if (alive.length < this.rule.max) return null;
+    return Math.max(
+      1,
+      Math.ceil((alive[0] + this.rule.windowMs - t) / 1000),
+    );
+  }
+
+  /** Forgets a key (used when an attempt finally succeeds). */
+  clear(key: string): void {
+    this.buckets.delete(key);
+  }
+
   /** Records one hit without a limit decision (failure-counted buckets). */
   record(key: string): void {
     const t = this.now();
@@ -144,9 +164,19 @@ export function isLoginEmailBlocked(email: string): boolean {
   return emailLimiters.get("loginEmail")!.isBlocked(emailKey(email));
 }
 
+/** Seconds until the per-email login bucket unblocks, or null when allowed. */
+export function loginEmailRetryAfter(email: string): number | null {
+  return emailLimiters.get("loginEmail")!.retryAfter(emailKey(email));
+}
+
 /** Records one login FAILURE against the per-email bucket. */
 export function recordLoginEmailFailure(email: string): void {
   emailLimiters.get("loginEmail")!.record(emailKey(email));
+}
+
+/** A successful sign-in proves the password, so past failures stop counting. */
+export function clearLoginEmailFailures(email: string): void {
+  emailLimiters.get("loginEmail")!.clear(emailKey(email));
 }
 
 /** Test hook: replace an email limiter (injectable clock). */

@@ -29,6 +29,7 @@ import {
   type ValidationIssue,
 } from "@/lib/sessions/input";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
+import { announcementSlotLabels, orderTeamsBySlot } from "@/lib/sessions/slots";
 import type { ActiveOrg } from "@/lib/orgs/orgs";
 import { resizeLogoFile } from "./resize-logo";
 
@@ -46,7 +47,7 @@ function issueMessage(
 
 function indexedIssueMessage(
   issues: ValidationIssue[],
-  field: "teamName" | "logoUrl",
+  field: "teamName" | "logoUrl" | "slotNumber",
   index: number,
 ): string | undefined {
   return issues.find((issue) => issue.field === field && issue.index === index)
@@ -74,6 +75,11 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
   // uploads — editing a name after uploading loses that association
   // (documented, acceptable for v1: re-upload).
   const [logos, setLogos] = useState<Record<string, string>>({});
+  // Slots are also keyed by NAME (same trade-off as logos): assigning the
+  // in-game room seat and re-parsing the textarea keeps the value attached.
+  const [slotNumbers, setSlotNumbers] = useState<Record<string, number | null>>(
+    {},
+  );
   const [logoErrors, setLogoErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [resultIssues, setResultIssues] = useState<ValidationIssue[]>([]);
@@ -90,10 +96,37 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
       teams: parsed.map((teamName) => ({
         name: teamName,
         logoUrl: logos[teamName] ?? null,
+        slotNumber: slotNumbers[teamName] ?? null,
       })),
       orgId,
     }),
-    [name, plannedMatches, teamCount, templateId, parsed, logos, orgId],
+    [
+      name,
+      plannedMatches,
+      teamCount,
+      templateId,
+      parsed,
+      logos,
+      slotNumbers,
+      orgId,
+    ],
+  );
+
+  // Confirm-step preview uses the same slot ordering and labelling as the
+  // announcement graphic, so numbers do not change after Create.
+  const confirmTeams = useMemo(
+    () =>
+      orderTeamsBySlot(
+        parsed.map((teamName) => ({
+          name: teamName,
+          slotNumber: slotNumbers[teamName] ?? null,
+        })),
+      ),
+    [parsed, slotNumbers],
+  );
+  const confirmSlotLabels = useMemo(
+    () => announcementSlotLabels(confirmTeams),
+    [confirmTeams],
   );
 
   const allIssues = useMemo(() => validateSessionDraft(draft), [draft]);
@@ -110,7 +143,8 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
         (issue) =>
           issue.field === "teams" ||
           issue.field === "teamName" ||
-          issue.field === "logoUrl",
+          issue.field === "logoUrl" ||
+          issue.field === "slotNumber",
       ),
     [allIssues],
   );
@@ -468,7 +502,9 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                   className={fieldStyles.textarea}
                 />
                 <p className={fieldStyles.help}>
-                  Duplicate names are ignored. Order doesn&apos;t matter yet.
+                  Duplicate names are ignored. Assign each team its in-game
+                  room slot (1–99), or leave blank to auto-number it on the
+                  graphic.
                 </p>
               </div>
 
@@ -528,6 +564,11 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                       "teamName",
                       index,
                     );
+                    const slotIssue = indexedIssueMessage(
+                      allIssues,
+                      "slotNumber",
+                      index,
+                    );
                     return (
                       <li
                         key={`${index}-${teamName}`}
@@ -545,7 +586,31 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                               {issue}
                             </span>
                           ) : null}
+                          {slotIssue ? (
+                            <span className="block truncate text-[11px] font-medium text-dash-danger-ink">
+                              {slotIssue}
+                            </span>
+                          ) : null}
                         </span>
+                        <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-dash-ink3">
+                          Slot
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            max={99}
+                            value={slotNumbers[teamName] ?? ""}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              setSlotNumbers((prev) => ({
+                                ...prev,
+                                [teamName]: raw === "" ? null : Number(raw),
+                              }));
+                            }}
+                            aria-label={`Slot number for ${teamName}`}
+                            className="w-16 rounded-[10px] border border-dash-line bg-dash-surface px-2 py-1.5 text-center text-sm font-semibold tabular-nums text-dash-ink outline-none focus:ring-2 focus:ring-inset focus:ring-dash-lime [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          />
+                        </label>
                         {logo ? (
                           <>
                             {/* eslint-disable-next-line @next/next/no-img-element -- data URL preview */}
@@ -738,19 +803,19 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                   Team line-up
                 </h2>
                 <ul className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                  {parsed.map((teamName, index) => (
+                  {confirmTeams.map((team, index) => (
                     <li
-                      key={`${index}-${teamName}`}
+                      key={`${index}-${team.name}`}
                       className="flex min-h-12 items-center gap-2.5 rounded-[12px] bg-dash-bg px-3 py-1.5"
                     >
-                      <span className="w-4 shrink-0 text-right text-[11px] font-bold tabular-nums text-dash-ink3">
-                        {index + 1}
+                      <span className="w-5 shrink-0 text-right text-[11px] font-bold tabular-nums text-dash-ink3">
+                        {confirmSlotLabels[index]}
                       </span>
-                      {logos[teamName] ? (
+                      {logos[team.name] ? (
                         <>
                           {/* eslint-disable-next-line @next/next/no-img-element -- data URL thumbnail */}
                           <img
-                            src={logos[teamName]}
+                            src={logos[team.name]}
                             alt=""
                             className="size-8 shrink-0 rounded-[8px] object-contain"
                           />
@@ -759,7 +824,7 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                         <span className="size-8 shrink-0 rounded-[8px] bg-dash-line/70" />
                       )}
                       <span className="min-w-0 flex-1 truncate text-sm font-medium text-dash-ink">
-                        {teamName}
+                        {team.name}
                       </span>
                     </li>
                   ))}

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import {
@@ -83,10 +83,17 @@ export async function getSessionPageData(
   if (!sessionRow) return null;
 
   const teamRows: TeamRow[] = await db
-    .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
+    .select({
+      id: teams.id,
+      name: teams.name,
+      logoUrl: teams.logoUrl,
+      slotNumber: teams.slotNumber,
+    })
     .from(teams)
     .where(eq(teams.sessionId, sessionId))
-    .orderBy(asc(teams.name));
+    // Assigned slots come first (1..99); legacy/unassigned teams fall to the
+    // end by name. NULLS LAST is explicit rather than relying on PG defaults.
+    .orderBy(sql`${teams.slotNumber} asc nulls last`, asc(teams.name));
 
   const teamNameById = new Map<string, string>();
   for (const team of teamRows) teamNameById.set(team.id, team.name);

@@ -125,10 +125,18 @@ export function ImpersonateDialog() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 items-center gap-1.5 rounded-full bg-[var(--hq-ink)] px-5 text-sm font-semibold text-white hover:bg-black"
+        className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--hq-ink)] px-5 text-sm font-semibold text-white hover:bg-black sm:flex"
       >
         <IconPlus size={16} />
         Impersonate
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Impersonate a user"
+        className="flex size-10 items-center justify-center rounded-full bg-[var(--hq-ink)] text-white hover:bg-black sm:hidden"
+      >
+        <IconPlus size={16} />
       </button>
 
       {open && (

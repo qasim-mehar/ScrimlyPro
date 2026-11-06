@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -82,9 +83,17 @@ export const teams = pgTable(
       .references(() => sessions.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     logoUrl: text("logo_url"),
+    // In-game room seat assigned by the organizer (ERD §1–2). Nullable for
+    // pre-feature teams; the announcement graphic falls back to list order.
+    slotNumber: integer("slot_number"),
   },
   (t) => [
     uniqueIndex("teams_session_name_uq").on(t.sessionId, t.name),
+    // Partial unique: NULL slots are allowed (legacy/unassigned teams) but two
+    // teams in one session may not share an assigned slot.
+    uniqueIndex("teams_session_slot_uq")
+      .on(t.sessionId, t.slotNumber)
+      .where(sql`${t.slotNumber} IS NOT NULL`),
     index("teams_session_idx").on(t.sessionId),
   ],
 );

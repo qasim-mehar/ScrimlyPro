@@ -30,8 +30,13 @@ describe("enumeration-safe copy parity", () => {
     expect(JSON.stringify(FORGOT_OK)).not.toContain("exist");
   });
 
-  it("invalid-credentials copy names neither email nor account state", () => {
-    expect(INVALID_CREDENTIALS_COPY).toBe("Invalid email or password.");
+  it("invalid-credentials copy stays actionable without leaking account state", () => {
+    expect(INVALID_CREDENTIALS_COPY).toBe(
+      "Incorrect email or password. Check both and try again, or reset your password if you've forgotten it.",
+    );
+    expect(INVALID_CREDENTIALS_COPY.toLowerCase()).not.toMatch(
+      /exist|not found|no account|unregistered|unknown email/,
+    );
   });
 
   it("classifies GoTrue already-registered errors for swallowing", () => {

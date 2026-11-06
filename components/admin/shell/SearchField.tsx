@@ -123,11 +123,14 @@ export function SearchField() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search users and organizations"
-        className="flex h-10 w-full max-w-[320px] items-center gap-2 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-left text-sm text-[var(--hq-ink-3)] hover:border-[var(--hq-ink-4)]"
+        className="flex h-10 w-full min-w-0 max-w-[320px] items-center gap-2 rounded-[12px] border border-[var(--hq-line)] bg-[var(--hq-surface)] px-3 text-left text-sm text-[var(--hq-ink-3)] hover:border-[var(--hq-ink-4)]"
       >
         <IconSearch size={16} />
-        <span className="truncate">Search users, organizations</span>
-        <span className="ml-auto rounded-[6px] bg-[var(--hq-lime)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--hq-ink)]">
+        <span className="min-w-0 flex-1 truncate">
+          <span className="sm:hidden">Search</span>
+          <span className="hidden sm:inline">Search users, organizations</span>
+        </span>
+        <span className="ml-auto hidden shrink-0 rounded-[6px] bg-[var(--hq-lime)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--hq-ink)] sm:block">
           ⌘K
         </span>
       </button>

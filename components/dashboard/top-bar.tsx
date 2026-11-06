@@ -28,20 +28,29 @@ export function TopBar({
   drawer?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex items-center justify-between gap-2 sm:gap-4">
+      {/* Left grows and shrinks (search); right never shrinks, so the bell
+          can never slide under/over the search field on narrow screens. */}
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         {drawer}
         <CommandPalette orgParam={orgParam} />
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <Notifications notifications={notifications} />
         <Link
           href="/sessions/new"
-          className="flex h-11 items-center gap-2 rounded-full bg-dash-ink px-5 text-sm font-semibold text-white hover:opacity-90"
+          className="hidden h-11 items-center gap-2 rounded-full bg-dash-ink px-5 text-sm font-semibold text-white hover:opacity-90 sm:flex"
         >
           <PlusIcon width="18" height="18" />
           New session
+        </Link>
+        <Link
+          href="/sessions/new"
+          aria-label="New session"
+          className="flex size-11 items-center justify-center rounded-full bg-dash-ink text-white hover:opacity-90 sm:hidden"
+        >
+          <PlusIcon width="18" height="18" />
         </Link>
         <AccountMenu email={email ?? null} />
       </div>

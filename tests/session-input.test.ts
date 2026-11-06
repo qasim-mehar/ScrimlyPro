@@ -17,7 +17,11 @@ function validDraft(overrides: Partial<SessionDraft> = {}): SessionDraft {
     plannedMatches: 4,
     teamCount: 16,
     templateId: "dark-gold",
-    teams: SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({ name, logoUrl: null })),
+    teams: SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
+      name,
+      logoUrl: null,
+      slotNumber: null,
+    })),
     ...overrides,
   };
 }
@@ -82,6 +86,7 @@ describe("validateSessionDraft", () => {
         teams: SAMPLE_TEAM_NAMES.slice(0, 15).map((name) => ({
           name,
           logoUrl: null,
+          slotNumber: null,
         })),
       }),
     );
@@ -95,8 +100,9 @@ describe("validateSessionDraft", () => {
     const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
       name,
       logoUrl: null,
+      slotNumber: null,
     }));
-    teams[2] = { name: "x".repeat(61), logoUrl: null };
+    teams[2] = { name: "x".repeat(61), logoUrl: null, slotNumber: null };
     const issues = validateSessionDraft(validDraft({ teams }));
     expect(issues).toContainEqual({
       field: "teamName",
@@ -109,9 +115,10 @@ describe("validateSessionDraft", () => {
     const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
       name,
       logoUrl: null,
+      slotNumber: null,
     }));
-    teams[0] = { name: "TF Squad", logoUrl: null };
-    teams[1] = { name: "tf squad", logoUrl: null };
+    teams[0] = { name: "TF Squad", logoUrl: null, slotNumber: null };
+    teams[1] = { name: "tf squad", logoUrl: null, slotNumber: null };
     const issues = validateSessionDraft(validDraft({ teams }));
     expect(issues).toHaveLength(1);
     expect(issues[0]?.field).toBe("teams");
@@ -122,8 +129,13 @@ describe("validateSessionDraft", () => {
     const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
       name,
       logoUrl: null,
+      slotNumber: null,
     }));
-    teams[5] = { name: teams[5]!.name, logoUrl: "https://example.com/logo.png" };
+    teams[5] = {
+      name: teams[5]!.name,
+      logoUrl: "https://example.com/logo.png",
+      slotNumber: null,
+    };
     const issues = validateSessionDraft(validDraft({ teams }));
     expect(issues).toContainEqual({
       field: "logoUrl",
@@ -136,11 +148,13 @@ describe("validateSessionDraft", () => {
     const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
       name,
       logoUrl: null,
+      slotNumber: null,
     }));
     teams[1] = {
       name: teams[1]!.name,
       // "data:image/png;base64," is 22 chars → exactly 300,001 total.
       logoUrl: `data:image/png;base64,${"A".repeat(300_001 - 22)}`,
+      slotNumber: null,
     };
     const issues = validateSessionDraft(validDraft({ teams }));
     expect(issues).toHaveLength(1);
@@ -152,9 +166,88 @@ describe("validateSessionDraft", () => {
     const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
       name,
       logoUrl: null,
+      slotNumber: null,
     }));
-    teams[0] = { name: teams[0]!.name, logoUrl: "data:image/png;base64,iVBOR" };
+    teams[0] = {
+      name: teams[0]!.name,
+      logoUrl: "data:image/png;base64,iVBOR",
+      slotNumber: null,
+    };
     expect(validateSessionDraft(validDraft({ teams }))).toEqual([]);
+  });
+
+  it("accepts valid slot numbers (1, 5, 25, 99)", () => {
+    const teams = SAMPLE_TEAM_NAMES.map((name, index): TeamDraft => ({
+      name,
+      logoUrl: null,
+      slotNumber: [1, 5, 25, 99][index] ?? null,
+    }));
+    expect(validateSessionDraft(validDraft({ teams }))).toEqual([]);
+  });
+
+  it("accepts null slots (backward compatible)", () => {
+    const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
+      name,
+      logoUrl: null,
+      slotNumber: null,
+    }));
+    expect(validateSessionDraft(validDraft({ teams }))).toEqual([]);
+  });
+
+  it("treats a missing slotNumber from older clients as unassigned", () => {
+    const teams = SAMPLE_TEAM_NAMES.map(
+      (name) => ({ name, logoUrl: null }) as TeamDraft,
+    );
+    expect(validateSessionDraft(validDraft({ teams }))).toEqual([]);
+  });
+
+  it("rejects non-integer slot numbers with the team index", () => {
+    const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
+      name,
+      logoUrl: null,
+      slotNumber: null,
+    }));
+    teams[3] = { ...teams[3]!, slotNumber: 2.5 };
+    const issues = validateSessionDraft(validDraft({ teams }));
+    expect(issues).toContainEqual({
+      field: "slotNumber",
+      message: "Team 4: slot must be a whole number from 1 to 99.",
+      index: 3,
+    });
+  });
+
+  it("rejects slots outside 1–99 (0 and 100)", () => {
+    for (const slotNumber of [0, 100]) {
+      const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
+        name,
+        logoUrl: null,
+        slotNumber: null,
+      }));
+      teams[0] = { ...teams[0]!, slotNumber };
+      const issues = validateSessionDraft(validDraft({ teams }));
+      expect(issues).toContainEqual({
+        field: "slotNumber",
+        message: "Team 1: slot must be a whole number from 1 to 99.",
+        index: 0,
+      });
+    }
+  });
+
+  it("rejects duplicate slot numbers as ONE teams issue naming each slot", () => {
+    const teams = SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
+      name,
+      logoUrl: null,
+      slotNumber: null,
+    }));
+    teams[0] = { ...teams[0]!, slotNumber: 5 };
+    teams[1] = { ...teams[1]!, slotNumber: 7 };
+    teams[2] = { ...teams[2]!, slotNumber: 7 };
+    teams[3] = { ...teams[3]!, slotNumber: 5 };
+    const issues = validateSessionDraft(validDraft({ teams }));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.field).toBe("teams");
+    expect(issues[0]?.message).toContain("5");
+    expect(issues[0]?.message).toContain("7");
   });
 });
 

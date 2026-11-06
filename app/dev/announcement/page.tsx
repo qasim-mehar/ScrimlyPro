@@ -52,10 +52,15 @@ export default async function DevAnnouncementPage() {
   }
 
   const teamRows = (await db
-    .select({ id: teams.id, name: teams.name, logoUrl: teams.logoUrl })
+    .select({
+      id: teams.id,
+      name: teams.name,
+      logoUrl: teams.logoUrl,
+      slotNumber: teams.slotNumber,
+    })
     .from(teams)
     .where(eq(teams.sessionId, SEED_SESSION_ID))
-    .orderBy(asc(teams.name)))
+    .orderBy(asc(teams.slotNumber), asc(teams.name)))
     .map((team, i) => ({
       ...team,
       // Every 4th team (index % 4 === 0) carries the placeholder logo; the

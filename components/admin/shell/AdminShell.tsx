@@ -238,7 +238,7 @@ export function AdminShell({
           {/* Top bar (§4.4): search field, bell, primary action. Search /
               bell / impersonation behaviors land with WP10/WP11; the chrome
               is present from WP1. */}
-          <header className="flex items-center gap-3">
+          <header className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-[var(--hq-ink-2)] hover:bg-[var(--hq-surface)] lg:hidden"
@@ -248,9 +248,11 @@ export function AdminShell({
               <IconMenu />
             </button>
 
-            <SearchField />
+            <div className="min-w-0 flex-1">
+              <SearchField />
+            </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex shrink-0 items-center gap-2">
               <NotificationsBell events={events} />
               <ImpersonateDialog />
               <AccountMenu email={email ?? null} />

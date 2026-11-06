@@ -421,6 +421,43 @@ describe("session page", () => {
     expect(standings[0]!.total).toBe(26);
   });
 
+  it("getSessionPageData orders teams by slot_number ASC NULLS LAST, then name", async () => {
+    const user = "99999999-9999-9999-9999-999999999995";
+    const orgId = await ensureOrg(db, user);
+    await db.insert(sessions).values({
+      id: "slot-session",
+      userId: user,
+      orgId,
+      name: "Slot Ordering",
+      plannedMatches: 1,
+      teamCount: 4,
+      templateId: "dark-gold",
+      scoringRules: RULES,
+      status: "active",
+      createdAt: "2025-01-01T00:00:00.000Z",
+    });
+    await db.insert(teams).values([
+      { id: "slot-zulu", sessionId: "slot-session", name: "Zulu", slotNumber: 5 },
+      { id: "slot-alpha", sessionId: "slot-session", name: "Alpha", slotNumber: 2 },
+      { id: "slot-bravo", sessionId: "slot-session", name: "Bravo", slotNumber: null },
+      { id: "slot-able", sessionId: "slot-session", name: "Able", slotNumber: null },
+    ]);
+
+    const page = (await getSessionPageData(db, "slot-session", user))!;
+    expect(page.teams.map((t) => t.name)).toEqual([
+      "Alpha",
+      "Zulu",
+      "Able",
+      "Bravo",
+    ]);
+    expect(page.teams.map((t) => t.slotNumber)).toEqual([
+      2,
+      5,
+      null,
+      null,
+    ]);
+  });
+
   it("unlock keeps other sessions untouched", async () => {
     const { matchIds } = await seedTwoConfirmed(db);
     await db.insert(sessions).values({

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:auth": "node --env-file=.env.local scripts/dev-auth-server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

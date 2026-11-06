@@ -94,7 +94,7 @@ export function Notifications({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-13 z-40 w-80 overflow-hidden rounded-dash bg-dash-surface shadow-lg">
+        <div className="fixed inset-x-4 top-[4.5rem] z-40 overflow-hidden rounded-dash bg-dash-surface shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-13 sm:w-80">
           <p className="border-b border-dash-line px-4 py-3 text-sm font-bold text-dash-ink">
             Notifications
           </p>

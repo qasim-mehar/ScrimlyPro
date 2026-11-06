@@ -10,7 +10,13 @@ export type ResultRow = {
   placementPoints: number;
 };
 
-export type TeamRow = { id: string; name: string; logoUrl: string | null };
+export type TeamRow = {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  // Optional: scoring doesn't use it, but it flows through to graphics.
+  slotNumber?: number | null;
+};
 
 export type StandingRow = {
   teamId: string;

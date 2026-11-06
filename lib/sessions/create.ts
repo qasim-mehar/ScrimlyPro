@@ -53,6 +53,7 @@ export async function createSessionWithTeams(
         sessionId,
         name: team.name.trim(),
         logoUrl: team.logoUrl,
+        slotNumber: team.slotNumber,
       })),
     );
   });

@@ -3,6 +3,7 @@
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sanitizeNextOr } from "@/lib/auth/next-url";
+import { INVALID_CREDENTIALS_COPY } from "@/lib/auth/responses";
 import panel from "./login-panel.module.css";
 
 import { AlertIcon } from "@/components/dashboard/icons";
@@ -22,7 +23,7 @@ const ENDPOINT: Record<Mode, string> = {
 };
 
 const FAILURE_COPY: Record<Mode, string> = {
-  login: "Invalid email or password.",
+  login: INVALID_CREDENTIALS_COPY,
   signup: "Could not sign up. Check the form and try again.",
   forgot: "Could not send the reset link. Try again shortly.",
   reset: "Could not update the password. Try again shortly.",
@@ -94,19 +95,20 @@ export function AuthForm({
         setNotice(data.message ?? "Done.");
         return;
       }
-      if (res.status === 429) {
-        setFailure("Too many attempts. Wait a bit and try again.");
-        return;
-      }
       if (data.fields && Object.keys(data.fields).length > 0) {
         setFieldErrors(data.fields);
         return;
       }
-      setFailure(
-        res.status === 401 && mode === "login"
-          ? FAILURE_COPY.login
-          : FAILURE_COPY[mode],
-      );
+      if (res.status === 429) {
+        // The server computes the real wait time (per-email lockout included).
+        setFailure(
+          data.message ?? "Too many attempts. Wait a bit and try again.",
+        );
+        return;
+      }
+      // Show the server's actionable reason (unconfirmed email, provider
+      // unreachable, …); the generic copy is only a fallback.
+      setFailure(data.message ?? FAILURE_COPY[mode]);
     } catch {
       setFailure("Network error. Try again.");
     } finally {

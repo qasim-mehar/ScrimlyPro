@@ -4,6 +4,7 @@ import { Fragment } from "react";
 
 import { getTemplate, headerFor, slotToStyle, type AestheticId } from "@/lib/graphics";
 import { announcementRows } from "@/lib/graphics/announcement";
+import { announcementSlotLabels } from "@/lib/sessions/slots";
 import type { TeamRow } from "@/lib/scoring";
 
 // Logo plate = logo ink + a 10px ring band (the standings-plate precedent);
@@ -15,7 +16,7 @@ type AnnouncementGraphicProps = {
   title: string; // event/session name
   subtitle: string; // PARTICIPATING_TEAMS
   organizer?: string | null;
-  teams: ReadonlyArray<Pick<TeamRow, "id" | "name" | "logoUrl">>;
+  teams: ReadonlyArray<Pick<TeamRow, "id" | "name" | "logoUrl" | "slotNumber">>;
 };
 
 export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, teams }: AnnouncementGraphicProps) {
@@ -23,6 +24,7 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
   const { announcement, palette } = config;
   const header = headerFor(config, "announcement");
   const rows = announcementRows(teams.length, announcement);
+  const slotLabels = announcementSlotLabels(teams);
   const plateD = announcement.logoSize + PLATE_PAD;
   return (
     <>
@@ -73,7 +75,8 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                 }}
               />
             ) : null}
-            {/* Slot number: zero-padded "01".."25", centered in its box. */}
+            {/* Slot number: the organizer-assigned seat when present,
+                otherwise the legacy sequential index (zero-padded). */}
             <div
               style={{
                 position: "absolute",
@@ -87,7 +90,7 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                 color: isRankOne ? palette.accent : palette.textMuted,
               }}
             >
-              {String(i + 1).padStart(2, "0")}
+              {slotLabels[i]}
             </div>
             {team.logoUrl ? (
               <>

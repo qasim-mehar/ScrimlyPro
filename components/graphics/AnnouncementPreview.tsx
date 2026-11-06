@@ -14,7 +14,7 @@ type AnnouncementPreviewProps = {
   title: string;
   subtitle: string;
   organizer?: string | null;
-  teams: ReadonlyArray<Pick<TeamRow, "id" | "name" | "logoUrl">>;
+  teams: ReadonlyArray<Pick<TeamRow, "id" | "name" | "logoUrl" | "slotNumber">>;
 };
 
 export function AnnouncementPreview({

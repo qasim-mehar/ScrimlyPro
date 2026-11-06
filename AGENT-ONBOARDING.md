@@ -246,7 +246,9 @@ updating ERD.md first.**
   `template_id` (aesthetic), `scoring_rules` (SUPER JSON), `status`
   (`active|completed`), `created_at`.
 - `teams` — session-scoped, `UNIQUE(session_id, name)`, optional
-  `logo_url` (PNG data URL, client-resized 256px).
+  `logo_url` (PNG data URL, client-resized 256px), optional `slot_number`
+  (1–99, unique per session when non-NULL; NULL falls back to row order in
+  the announcement graphic).
 - `rosters` — PK `(team_id, player_norm)`; learned player names per team
   (normalized form + first-seen display spelling). Suggestion fuel only.
 - `matches` — `UNIQUE(session_id, match_no)`; `status` (`draft|confirmed`);

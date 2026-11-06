@@ -1,4 +1,7 @@
 import { readFileSync } from "node:fs";
+import { createElement as h } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { AnnouncementGraphic } from "@/components/graphics/AnnouncementGraphic";
 import {
   AESTHETICS,
   announcementRowLayout,
@@ -819,5 +822,61 @@ describe("P7 — font wiring (source-level)", () => {
     const src = readFileSync("components/graphics/GraphicCanvas.tsx", "utf8");
     expect(src).toContain('const FONT_STACK = \'"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif\';');
     expect(src).toContain("WATERMARK_FONT = `600 26px ${FONT_STACK}`");
+  });
+});
+
+describe("AnnouncementGraphic slot numbers (SSR)", () => {
+  function render(
+    teams: Array<{
+      id: string;
+      name: string;
+      logoUrl: string | null;
+      slotNumber: number | null;
+    }>,
+  ): string {
+    return renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "dark-gold",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams,
+      }),
+    );
+  }
+
+  it("renders the assigned slot number instead of the sequential index", () => {
+    const html = render([
+      { id: "t1", name: "Alpha", logoUrl: null, slotNumber: 7 },
+      { id: "t2", name: "Bravo", logoUrl: null, slotNumber: 25 },
+    ]);
+    expect(html).toContain(">07<");
+    expect(html).toContain(">25<");
+    // The first row must not fall back to 01 when a slot is assigned.
+    expect(html).not.toContain(">01<");
+  });
+
+  it("falls back to 01, 02, 03… when slotNumber is null", () => {
+    const html = render([
+      { id: "t1", name: "Alpha", logoUrl: null, slotNumber: null },
+      { id: "t2", name: "Bravo", logoUrl: null, slotNumber: null },
+      { id: "t3", name: "Charlie", logoUrl: null, slotNumber: null },
+    ]);
+    expect(html).toContain(">01<");
+    expect(html).toContain(">02<");
+    expect(html).toContain(">03<");
+  });
+
+  it("never repeats an assigned slot when a NULL team falls back", () => {
+    const html = render([
+      { id: "t1", name: "Alpha", logoUrl: null, slotNumber: 2 },
+      { id: "t2", name: "Bravo", logoUrl: null, slotNumber: null },
+      { id: "t3", name: "Charlie", logoUrl: null, slotNumber: null },
+    ]);
+    // Alpha keeps 02; the two NULLs skip it and take 03, 04.
+    expect(html).toContain(">02<");
+    expect(html).toContain(">03<");
+    expect(html).toContain(">04<");
+    expect(html.match(/>02</g)).toHaveLength(1);
   });
 });
