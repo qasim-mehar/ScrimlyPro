@@ -1,7 +1,14 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep Turbopack's watch scope inside this repo. Without this, the root is
+  // inferred from a package-lock.json that lives in the parent folder, so the
+  // dev server watches every sibling project and reloads on unrelated writes.
+  turbopack: {
+    root: path.join(__dirname),
+  },
   async headers() {
     return [
       {

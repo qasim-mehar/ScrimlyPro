@@ -87,6 +87,7 @@ next-env.d.ts
 # local logs
 studio.log
 dev.log
+dev-auth.log
 
 # local tooling artifacts / sibling-lane scratch
 .tmp/
