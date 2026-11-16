@@ -10,9 +10,18 @@
 > `README.md` (run book + assumptions log), then this file. This file is a
 > snapshot and will drift; the truth files and code will not.
 >
-> **Verified snapshot:** 2026-11-06, branch `main`, tip `124cef4`
-> (2026-10-27, "Merge remote-tracking branch 'origin/landing-page'").
-> Working tree is **dirty** with active WIP — see §13.
+> **Verified snapshot:** 2026-11-16, branch `main`, local tip `6f4d475`
+> (2026-11-16, "chore(config): pin turbopack root and untrack dev-auth.log")
+> on top of `88a9daa` (2026-11-06, slots + login UX + dashboard
+> refinements). This file is committed immediately after as a docs-only
+> commit. Working tree is **dirty** with only the WIP art drop — see §13.
+>
+> **Known truth-file drift (read this before trusting a doc literally):**
+> `PRD.md` is the v1-CORE spec — its "Out (deferred)" list still names auth,
+> accounts, dashboard and share links (all built since M1/Wave 1), and its §10
+> stack line still says SQLite. `ERD.md` §6/§7 are the as-built Postgres +
+> tenancy record. `PRODUCT.md` still says "three dev-gradient aesthetics ship
+> now"; six aesthetics ship today. The code remains the final authority.
 
 ---
 
@@ -28,8 +37,9 @@ anything:
    data. Read node_modules/next/dist/docs/ before writing Next-specific code.
 3. Read the truth files in order: PRD.md, ERD.md, PLAN.md, then skim
    README.md (run book + Assumptions log).
-4. Note the working tree is dirty with four WIP themes (see PROJECT-CONTEXT.md
-   §13). Do not revert or "clean up" uncommitted work without being asked.
+4. Note the working tree is dirty with small WIP drift (see
+   PROJECT-CONTEXT.md §13). Do not revert or "clean up" uncommitted work
+   without being asked.
 5. Never invent product claims, metrics, users, or testimonials. Nothing is
    deployed yet.
 
@@ -89,36 +99,46 @@ landing page at `/`.
 - **Nothing is deployed.** There are no real users, customers, testimonials, or
   pilot numbers.
 - The next major milestone is the hosted Supabase cut-over
-  (`docs/deploy/cut-over.md`).
+  (`docs/deploy/cut-over.md`). A hosted-env attempt failed on a project ref
+  that does not resolve; `.env.local` has since been restored to the local
+  Postgres + dev-auth stack (the dead hosted config is preserved in
+  `.env.local.hosted-dead.bak`), and no deployment is live (see §14).
 - Dashboards that lack a real data source use explicit honest fallbacks — never
   invented numbers (`PRODUCT.md` law).
 
 ---
 
-## 2. Where we stand right now (verified 2026-11-06)
+## 2. Where we stand right now (verified 2026-11-16)
 
 | Item | State |
 |---|---|
-| Branch | `main`, synchronized with `origin/main` |
-| Tip | `124cef4` — 2026-10-27, merge of `origin/landing-page` |
-| Working tree | **Dirty**: 35 modified + 6 untracked files, nothing staged/committed/pushed |
+| Branch | `main`, ahead of `origin/main` (`88a9daa`) by the two chore/docs commits below — not pushed |
+| Tip | `6f4d475` — 2026-11-16, turbopack root + `dev-auth.log` untracking (docs commit lands on top) |
+| Working tree | **Dirty**: only the WIP art drop (1 modified template PNG + 5 untracked art files), nothing staged |
 | Runtime | Node `v25.6.1`, npm `11.9.0` |
 | Next.js | `16.4.3` (App Router, no `src/`, alias `@/*`) |
-| Database | PostgreSQL at `127.0.0.1:54329`, db `scrimlypro_dev` (reachable) |
-| Latest migration | `0021_teams-slot-number.sql` — **created but not applied** |
-| Typecheck | ✅ `npm run typecheck` passes |
-| Lint | ✅ `npm run lint` passes with 0 errors, 98 warnings (mostly `.claude/skills` scripts + pre-existing) |
-| Targeted tests | ✅ 5 files / 145 tests pass (`session-slots`, `login-errors`, `session-input`, `rate-limit`, `graphics`) |
-| Full suite | ✅ `npm test` — **57 files / 656 tests passed** (DB-backed; 453s and 435s across two runs on 2026-11-06) |
+| Database | ✅ Local Postgres 17.6 **running** at `127.0.0.1:54329`, db `scrimlypro_main`, live backends healthy (restored 2026-11-16 — see §14) |
+| Latest migration | `0021_teams-slot-number.sql` — **applied and verified locally** 2026-11-16 (`column slot_number integer NULL`, partial unique index `teams_session_slot_uq`, journal entry id 11) |
+| Typecheck | ✅ `npm run typecheck` passes, 0 errors (re-run 2026-11-16) |
+| Lint | ✅ `npm run lint` passes with 0 errors, 98 warnings (re-run 2026-11-16; mostly `.claude/skills` scripts + pre-existing) |
+| Build | ✅ `npm run build` passes (Next 16.4.3 Turbopack, re-run 2026-11-16) |
+| Bundle secrets | ✅ `npm run verify:secrets` — no secret material in build output (re-run 2026-11-16) |
+| Full suite | ✅ `npm test` — **57 files / 656 tests passed** in 314s (DB-backed, re-run 2026-11-16 against the restored local Postgres; exit 0) |
 
-### The four uncommitted WIP themes (full detail in §13)
+### The four WIP themes landed in `88a9daa` (2026-11-06)
 
-1. **Team room slot numbers** — end-to-end feature (`teams.slot_number`).
+They are committed and pushed to `origin/main`; this file's older snapshot
+described them as uncommitted. Full detail in §13.
+
+1. **Team room slot numbers** — end-to-end feature (`teams.slot_number`,
+   migration `0021`).
 2. **Login error UX** — actionable provider errors, 429 lockout, `/login`
    no longer stuck on skeleton.
 3. **Local dev auth stub** — `scripts/dev-auth-server.mjs` + `npm run dev:auth`.
 4. **Responsive/mobile polish** — dashboard top bar, command palette,
    notifications, admin shell/search, impersonation dialog, attention tables.
+
+The current uncommitted drift is different and much smaller — see §13.2.
 
 ---
 
@@ -131,7 +151,8 @@ why a large surface exists without an uncontrolled architecture.
   graphics, session UI, match loop, finale, hardening) → M1 (Postgres/GoTrue/
   RLS port) → Wave 1 lanes (M2 orgs, M3 admin, deps, ops) → P4–P7 (graphics
   template engine v3 + font swap) → M5 (member dashboard) → M6 (super-admin
-  dashboard) → landing page.
+  dashboard) → landing page → `88a9daa` (team slots, login error UX, dev auth
+  stub, responsive polish).
 - **Rule:** pure business logic lives in `/lib` as typed, tested functions. UI
   components are dumb. If a component contains a scoring/matching rule, it is a
   bug.
@@ -143,9 +164,9 @@ why a large surface exists without an uncontrolled architecture.
   migration graph forked.
 - **Rule:** deviations are recorded in `README.md` → Assumptions, with reasons.
   Check there before "fixing" something unusual — it may be deliberate.
-- **Migration numbering:** 0010–0014 = orgs, 0020 = admin, 0021 = current slot
-  feature. 0030–0039 are RESERVED and unused. The drizzle journal is the source
-  of truth.
+- **Migration numbering:** 0010–0014 = orgs, 0020 = admin, 0021 = team slots
+  (committed in `88a9daa`). 0030–0039 are RESERVED and unused. The drizzle
+  journal is the source of truth.
 - **Do not start** parking-lot work without instruction: payments/
   entitlements, email delivery of invites, per-match graphics, custom template
   upload, org-level kill-switch wiring, Redis-backed limiters, Storage-bucket
@@ -158,7 +179,7 @@ why a large surface exists without an uncontrolled architecture.
 - **Next.js 16.4.3** — App Router, `proxy.ts` (not `middleware.ts`), error
   boundary prop is `retry` in addition to `reset`. Read
   `node_modules/next/dist/docs/` before writing Next-specific code.
-- **React 19**, **TypeScript strict, zero `any`**, **Tailwind CSS v4**.
+- **React 19.2.8**, **TypeScript strict, zero `any`**, **Tailwind CSS v4**.
 - **Postgres** via `postgres.js` + **Drizzle ORM** (`drizzle-orm/pg-core`).
   Migrations are committed SQL in `db/migrations/`.
 - **Supabase auth (GoTrue)** via `@supabase/ssr`. **FORCE RLS** on every table.
@@ -240,7 +261,9 @@ failure.
 - **Public surface** is enumerated in exactly one place:
   `lib/auth/public-paths.ts`.
   - `PUBLIC_PAGES`: `/`, `/login`, `/signup`, `/forgot-password`,
-    `/reset-password`, `/auth/callback`, `/auth/error`, `/invite/*`, `/share/*`.
+    `/reset-password`, `/auth/callback`, `/auth/error`, `/invite`, `/share`
+    (the last two match by prefix, covering `/invite/[token]` and
+    `/share/[token]`).
   - `PUBLIC_API_PATHS`: `/api/health` only (exact match).
 - `tests/architecture/guards.test.ts` is a meta-test that fails if a new authed
   route/page ships without its guard.
@@ -268,13 +291,15 @@ failure.
   (`lib/auth/rate-limit.ts`). `TRUST_PROXY` is **distrust-by-default**; see
   README's deployment matrix.
 - Enumeration-safe auth copy: identical messages whether an account exists.
-  (Login errors are the deliberate exception — see §13.2.)
+  (Login errors are the deliberate exception — see §13.1.)
 - Tokens (`org_invites`, `share_links`) are stored **SHA-256 hashed**. The raw
   token is shown once and never lands in the DB.
 - `audit_log` is append-only — RLS grants no update/delete policy to anyone.
 - **User kill switch:** a `feature_flags` row `('user', <id>, 'disabled')` locks
   the account out of every authed surface; fails closed. The org-level switch is
-  schema-ready but deliberately unwired (`/admin/flags` refuses it).
+  schema-ready but deliberately unwired — no request path probes an
+  org-subject `disabled` flag. The generic `/admin/flags` editor refuses ANY
+  `disabled` row; the Tenants console is the single audited disable path.
 - **Impersonation:** HMAC-signed cookie (`IMP_SECRET`; production fails closed
   without it) + `impersonation_sessions` ledger row (expiry/revocation checked
   server-side, never trusted from the cookie) + audit events + visible banner.
@@ -333,13 +358,16 @@ ScrimlyPro/
 │   └── dev/                # dev-only fixture pages (404 in production)
 │
 ├── components/
+│   ├── app/                # shared app shell bits (AccountMenu, icons, ui)
 │   ├── landing/ + reserve-section.tsx + site-footer.tsx
-│   ├── auth/               # AuthForm, AccountHeader, login-panel
+│   ├── auth/               # AuthForm, AccountHeader, login-panel, AuthShell
 │   ├── forms/              # CreateSessionWizard, resize-logo
 │   ├── matches/            # UploadPanel, ReviewForm, resize-images
-│   ├── session/            # SessionView, tabs, NudgeBanner, CompleteButton, SharePanel
+│   ├── session/            # SessionView, Matches/Standings/Graphics tabs,
+│   │                       #   NudgeBanner, CompleteButton, SharePanel
 │   ├── mvp/                # MvpEditor, UnlockButton
-│   ├── graphics/           # GraphicCanvas, graphics, previews, export.ts
+│   ├── graphics/           # GraphicCanvas, standings/MVP/announcement,
+│   │                       #   previews, AestheticChips, export.ts
 │   ├── dashboard/          # M5 widgets (sidebar, top-bar, palette, notifications…)
 │   ├── admin/              # shell, dashboard widgets, impersonation UI
 │   ├── orgs/               # org + invite + quota forms
@@ -448,11 +476,13 @@ Postgres without GoTrue; all blocks no-op on hosted Supabase.
 sets — all `to authenticated`, with USING + WITH CHECK pairing; child tables
 walk up to `sessions.user_id`/`org_id` via `public.org_role()`.
 
-### Current slot-number change (uncommitted)
+### Team slot numbers (committed)
 
 `teams.slot_number` integer + partial unique index
 `teams_session_slot_uq (session_id, slot_number) WHERE slot_number IS NOT NULL`.
-Applied by `db/migrations/0021_teams-slot-number.sql` (not yet run).
+Applied by `db/migrations/0021_teams-slot-number.sql` (journal idx 10,
+committed in `88a9daa`); run `npm run db:migrate` against a reachable database
+to apply it locally.
 
 ---
 
@@ -569,7 +599,7 @@ browser
 - `APP_ORIGIN` is required in production for recovery links — the flow fails
   closed without it.
 - **Local dev without hosted GoTrue:** `npm run dev:auth` starts
-  `scripts/dev-auth-server.mjs` (see §13.3) on port 54321. It implements only
+  `scripts/dev-auth-server.mjs` (see §13.1) on port 54321. It implements only
   the endpoints `@supabase/ssr` + auth-js touch, scrypt-hashes passwords into
   `public.dev_auth_users`, mirrors identities into the `auth.users` shim, and
   refuses to start against a real GoTrue schema.
@@ -629,7 +659,7 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
 
 - `/api/auth/{signup,login,logout,forgot-password,reset-password}` —
   server-mediated credentials; rate-limited; enumeration-safe (login errors are
-  actionably typed — see §13.2).
+  actionably typed — see §13.1).
 - `/api/ocr` — Gemini ingest (`withTenantRoute` + org quota + meter).
 - `/api/sessions/[id]/share` — mint/revoke share links.
 - `/api/orgs/[id]/invites` — mint/list org invites.
@@ -669,9 +699,9 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   length ≥4; canonical spelling = most frequent raw spelling; top-5 by
   `kills DESC → name ASC`. Empty-normalized names never merge (even with each
   other). Similar names on different teams must never merge.
-- **Slot numbers (new):** optional 1–99 per team, unique per session when
-  assigned. Assigned slots order first; unassigned teams fall back to name
-  order in queries and to free row numbers in the announcement labels.
+- **Slot numbers:** optional 1–99 per team, unique per session when assigned.
+  Assigned slots order first; unassigned teams fall back to name order in
+  queries and to free row numbers in the announcement labels.
 
 ---
 
@@ -686,7 +716,11 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   + coordinate config.** Six aesthetics (`lib/graphics/aesthetics.ts`): three
   dev gradients (dark-gold, purple-butterfly, pink-blossom) and three
   art-backed (pmpl-light, neon-green, challengers-red; art in
-  `public/templates/<id>/<variant>.png|jpeg`).
+  `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
+  variant-specific: pmpl-light backs standings + announcement, neon-green
+  backs standings, challengers-red backs MVP (its tracked `overall.png` is
+  currently unused). An untracked `public/templates/Ewc-yellow/` art drop is
+  WIP and not registered in `aesthetics.ts` (see §13.2).
 - `TemplateConfig` (engine v3) key ideas: per-variant `backgrounds`;
   `statColumns` (ordered value boxes); `labelsBakedIn` / `subtitleBakedIn`
   (per-variant — the art already prints the labels); `variantHeaders` +
@@ -731,8 +765,10 @@ BASE_URL=http://127.0.0.1:<port> bash scripts/verify-auth-matrix.sh
 
 ### Test suite facts
 
-- `npm test` → Vitest, node env, `tests/**/*.test.ts`; at this snapshot **57
-  files / 656 tests pass** (~7–8 min).
+- `npm test` → Vitest, node env, `tests/**/*.test.ts`; `npx vitest list`
+  enumerates **57 files / 656 tests**. Last full green: **2026-11-16 —
+  57 files / 656 tests, 314s, exit 0** (DB-backed, local Postgres 17.6; the
+  2026-11-06 run took ~7–8 min).
 - Expected noisy-but-benign output:
   - Postgres `NOTICE ... trigger ... does not exist, skipping` from throwaway DB
     setup/teardown;
@@ -779,114 +815,57 @@ BASE_URL=http://127.0.0.1:<port> bash scripts/verify-auth-matrix.sh
 
 ---
 
-## 13. Active uncommitted work (do not revert blindly)
+## 13. Working-tree state (do not revert blindly)
 
-The working tree has four coherent themes. Nothing is staged, committed, or
-pushed. If asked to finish or commit, keep these separate and follow the commit
-style.
+### 13.1 The four themes landed in `88a9daa`
 
-### 13.1 Team room slot numbers
+The themes this file previously described as uncommitted are now committed and
+pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
 
-**Files:** `db/migrations/0021_teams-slot-number.sql`,
-`db/migrations/meta/0021_snapshot.json`, `db/migrations/meta/_journal.json`,
-`lib/db/schema.ts`, `lib/sessions/slots.ts` (new), `lib/sessions/input.ts`,
-`lib/sessions/create.ts`, `lib/sessions/queries.ts`,
-`components/forms/CreateSessionWizard.tsx`,
-`components/graphics/AnnouncementGraphic.tsx`,
-`components/graphics/AnnouncementPreview.tsx`, `app/dev/announcement/page.tsx`,
-`lib/scoring/standings.ts`, `ERD.md`, `AGENT-ONBOARDING.md`,
-`tests/session-slots.test.ts` (new), plus updates to
-`tests/session-input.test.ts`, `tests/session-create.test.ts`,
-`tests/session-page.test.ts`, `tests/session-quota.test.ts`,
-`tests/graphics.test.ts`.
+1. **Team room slot numbers** — `teams.slot_number` (nullable, 1–99, unique
+   per session when assigned), migration `0021`, validation in
+   `lib/sessions/input.ts`, persistence in `createSessionWithTeams`,
+   `slot_number ASC NULLS LAST, name ASC` query ordering,
+   `lib/sessions/slots.ts` (`compareTeamsBySlot`, `orderTeamsBySlot`,
+   `announcementSlotLabels`), wizard input, announcement labels, and tests
+   (`tests/session-slots.test.ts` + updates).
+2. **Login error UX** — `describeLoginError` maps provider failures to 503 /
+   403 / 401 / 429 / 502 responses; a per-email failure bucket returns the real
+   `Retry-After`; `/login` reads `?disabled` inside `<Suspense>` and no longer
+   sticks on a skeleton. Credential-mismatch copy stays enumeration-safe.
+3. **Local dev auth stub** — `scripts/dev-auth-server.mjs` + `npm run dev:auth`
+   (port `DEV_AUTH_PORT`, default 54321; scrypt passwords in
+   `public.dev_auth_users`; mirrors `auth.users`; refuses a real GoTrue schema).
+   `dev-auth.log` was committed in the same commit (see §13.3).
+4. **Responsive/mobile polish** — dashboard top bar, command palette,
+   notifications, admin shell/search, impersonation dialog, attention tables;
+   no schema or business-logic changes.
 
-**Behavior:**
+### 13.2 Current uncommitted drift (verified 2026-11-16)
 
-- `teams.slot_number` nullable integer; partial unique index on
-  `(session_id, slot_number) WHERE slot_number IS NOT NULL`.
-- Validation (`validateSessionDraft`): assigned slot must be a whole number
-  1–99 and unique within the session; `null`/`undefined` allowed for legacy/
-  unassigned teams; duplicate slots report a `teams` issue.
-- Persistence in `createSessionWithTeams`.
-- Query ordering: `slot_number ASC NULLS LAST, name ASC` via explicit SQL.
-- `lib/sessions/slots.ts`:
-  - `compareTeamsBySlot` / `orderTeamsBySlot` — assigned first ascending, then
-    unassigned by name.
-  - `announcementSlotLabels` — zero-padded labels; assigned slots win;
-    unassigned teams get the next free row number so a partial line-up never
-    renders duplicate slot labels; all-null lists still render `01, 02, 03…`.
-- Wizard input for per-team slot numbers; announcement graphic uses the labels.
+Only the art drop is uncommitted — nothing staged:
 
-**Blocker/next step:** run `npm run db:migrate` to apply `0021` before
-exercising the feature against the local DB. The migration journal was updated.
+- `public/templates/challengers-red/overall.png` — replaced artwork. The
+  current config does **not** use it (challengers-red standings still renders
+  the gradient fallback), so it is art-in-waiting, not a wired template.
+- Untracked art: `public/templates/Ewc-yellow/Max_a_canvas_-__portrait_2 (2).png`
+  plus several `public/templates/Max_a_*.png` design exports (including
+  `Max_a_You_are_an_expert_im (4|5).png`). None is registered in
+  `lib/graphics/aesthetics.ts`; treat this as an unfinished seventh aesthetic.
+  Do not wire art without measuring geometry and updating the pinned graphics
+  tests (`tests/graphics.test.ts`, `tests/graphics-contrast.test.ts`).
+- `next.config.ts` and `dev-auth.log` are no longer part of the drift — both
+  landed in `6f4d475` (see §13.3).
 
-### 13.2 Login error UX
+### 13.3 Working-tree hygiene
 
-**Files:** `lib/auth/responses.ts`, `lib/auth/route-helpers.ts`,
-`lib/auth/rate-limit.ts`, `app/api/auth/login/route.ts`,
-`components/auth/login-panel.tsx`, `components/auth/AuthForm.tsx`,
-`app/login/page.tsx`, `tests/login-errors.test.ts` (new),
-`tests/enumeration-copy.test.ts`, `tests/rate-limit.test.ts`.
-
-**Behavior:**
-
-- `describeLoginError` maps provider failures to actionable HTTP responses:
-  - infrastructure/5xx/unreachable → `503 auth_unavailable`;
-  - `email_not_confirmed` → `403`;
-  - `user_banned` → `403 account suspended`;
-  - `invalid_credentials` → `401` with the enumeration-safe copy;
-  - provider `429`/rate limit → `429` with `Retry-After`;
-  - unknown → `502 auth_failed` (never echoes provider internals).
-- Per-email **failure** bucket: checked before the provider call, recorded only
-  for real credential mismatches, cleared on success. A lockout returns `429`
-  with the real wait time and `Retry-After` — it must not masquerade as a wrong
-  password. Infrastructure outages never lock a legitimate user out.
-- `LoginPanel` reads `?disabled` client-side inside `<Suspense>` so `/login` no
-  longer gets stuck rendering a skeleton.
-- Client shows the server's `message`.
-
-**Important:** this deliberately relaxes enumeration-safe copy for
-non-credential failures. The credential-mismatch message stays byte-identical
-for unknown email vs wrong password; tests pin both properties.
-
-### 13.3 Local dev auth stub
-
-**Files:** `scripts/dev-auth-server.mjs` (new), `package.json` (`dev:auth`),
-`dev-auth.log` (untracked runtime log — consider gitignoring).
-
-**Behavior:**
-
-- `npm run dev:auth` → `node --env-file=.env.local scripts/dev-auth-server.mjs`.
-- Port `DEV_AUTH_PORT` (default `54321`), `DEV_AUTH_SECRET` for HMAC.
-- Implements `/signup`, `/token`, `/user`, `/logout`, `/recover` — only the
-  endpoints `@supabase/ssr` + auth-js touch.
-- Passwords are scrypt-hashed into `public.dev_auth_users`; identities mirror
-  into the `auth.users` shim from migration `0002` so the profile trigger and RLS
-  keep working.
-- **Refuses to start** when `auth.users` has an `encrypted_password` column
-  (i.e. a real GoTrue schema). Never point it at a hosted/cut-over database.
-
-### 13.4 Responsive / mobile polish
-
-**Files:** `components/dashboard/top-bar.tsx`,
-`components/dashboard/command-palette.tsx`,
-`components/dashboard/notifications.tsx`,
-`components/admin/shell/AdminShell.tsx`,
-`components/admin/shell/SearchField.tsx`,
-`components/admin/shell/ImpersonateDialog.tsx`,
-`components/admin/dashboard/AttentionList.tsx`,
-`components/admin/dashboard/NeedsAttentionTable.tsx`.
-
-**Behavior:** mobile/responsive layout fixes across the member dashboard and
-admin shell; no schema or business-logic changes.
-
-### Working-tree hygiene
-
-- `dev-auth.log` is untracked and should probably be added to `.gitignore`
-  rather than committed.
-- The migration `0021` snapshot is new; do not regenerate it without checking
-  the journal (`db/migrations/meta/_journal.json`).
-- Before committing, re-run the green gates and split commits by theme.
+- ✅ `dev-auth.log` is now **untracked and ignored**: `.gitignore` lists it
+  (under "local logs") and the file was removed from the index with
+  `git rm --cached` in `6f4d475`; it still exists on disk as a runtime log.
+- Do not regenerate `db/migrations/meta/0021_snapshot.json` without checking
+  `db/migrations/meta/_journal.json` (idx 10).
+- Before committing, re-run the green gates; keep config chores, docs and any
+  art work in separate commits.
 
 ---
 
@@ -901,19 +880,58 @@ admin shell; no schema or business-logic changes.
   server in the same directory.
 - **Local Postgres (Windows box):** user-space PostgreSQL 17 at
   `C:\Users\mianq\Projects\pg-embedded`, port **54329**. It does **not**
-  auto-start after reboot. Start it with:
+  auto-start after reboot. The naive start — fine from a clean native shell,
+  but **not** from Git Bash (see the fix below):
 
   ```powershell
   & "C:/Users/mianq/Projects/pg-embedded/pgsql/bin/pg_ctl.exe" -D "C:/Users/mianq/Projects/pg-embedded/data" -l "C:/Users/mianq/Projects/pg-embedded/pg.log" start
   ```
 
-  Stop with the same command + `stop`. A system PostgreSQL 18 on 5432 has unknown
+  Stop with the same command + `stop`. The local database name is
+  `scrimlypro_main` (per `.env.local.prehosted`); README still says
+  `scrimlypro_m1`, and older snapshots of this file said `scrimlypro_dev` —
+  trust the actual DSN. A system PostgreSQL 18 on 5432 has unknown
   credentials — leave it alone.
+  **Current state (2026-11-16):** the cluster is **running** (PostgreSQL 17.6,
+  healthy backends; `SELECT current_database(), current_setting('server_version')`
+  returns `scrimlypro_main | 17.6`). The former `0xC0000142`
+  (`STATUS_DLL_INIT_FAILED`) backend crash is fixed by **how** the cluster is
+  started, not by changing the cluster:
+  1. Git Bash prepends `/mingw64/bin` and `/usr/bin` to `PATH`, so child
+     backends picked up incompatible `libcrypto`/`libssl`/`zlib` DLLs instead of
+     `pg-embedded\pgsql\bin`; and
+  2. backends spawned inside an agent's headless Git Bash subshell inherit
+     restricted console/job-object handles.
+  Start it with a sanitized `PATH` and detached from the calling job, e.g. via
+  WMI (spawns under `svchost`, clean environment and no inherited job):
+
+  ```powershell
+  $cmd = 'cmd.exe /c "set PATH=C:\Users\mianq\Projects\pg-embedded\pgsql\bin;C:\Windows\System32;C:\Windows&& C:\Users\mianq\Projects\pg-embedded\pgsql\bin\pg_ctl.exe -D C:\Users\mianq\Projects\pg-embedded\data -l C:\Users\mianq\Projects\pg-embedded\pg.log start"'
+  Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{
+    CommandLine = $cmd; CurrentDirectory = "C:\Users\mianq\Projects\pg-embedded\pgsql\bin" }
+  ```
+
+  (`schtasks /Run` on a one-shot task is the fallback if `Invoke-CimMethod` is
+  blocked.) `psql.exe` needs `PGPASSWORD` from the DSN or it blocks on a
+  prompt; `-w` plus `PGSSLMODE=disable` gives a clean non-interactive check.
 - **Env:** copy `.env.example` → `.env.local`. `SUPABASE_DB_URL` + Supabase URL/
   anon key are required for anything beyond static pages; `GEMINI_API_KEY` only
   for OCR.
+  **Current state (2026-11-16):** `.env.local` was restored from
+  `.env.local.prehosted` — `SUPABASE_DB_URL` targets the local cluster
+  (`postgresql://127.0.0.1:54329/scrimlypro_main`),
+  `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321` (the dev-auth stub's
+  default port, so `npm run dev:auth` works with no extra vars),
+  `SAMPLE_OCR=1`, `GEMINI_API_KEY` empty (fixtures), `IMP_SECRET`/`AUDIT_SALT`
+  set. `APP_ORIGIN` is absent — it is a production-only fail-closed check.
+  The failed hosted config (Supabase ref `bhkjxxkypdwmlwgqiihv`, pooler host
+  that failed with `ENOTFOUND`) is preserved in
+  `.env.local.hosted-dead.bak`. A test run can also override
+  `SUPABASE_DB_URL` in the environment. All `.env*` files are gitignored.
 - **Auth locally:** either point `NEXT_PUBLIC_SUPABASE_URL` at a local GoTrue
-  (`supabase start`) or use `npm run dev:auth` (the stub in §13.3).
+  (`supabase start`) or use `npm run dev:auth` (the stub in §8.5/§13.1).
+  `DEV_AUTH_PORT` / `DEV_AUTH_SECRET` are read from `.env.local` but are not
+  present in `.env.example` — add them when using the stub.
 - **Don't broadly kill node** on this box — you will kill unrelated projects'
   servers. Kill by port/PID.
 - **Landing page:** real implementation is `app/page.tsx` +
@@ -931,7 +949,7 @@ admin shell; no schema or business-logic changes.
 | Var | Scope | Meaning |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Supabase project URL + anon key. |
-| `SUPABASE_DB_URL` | server | Postgres connection (Drizzle + migrations). Required beyond static pages. |
+| `SUPABASE_DB_URL` | server | Postgres connection (Drizzle + migrations + tests). Required beyond static pages; must be reachable for DB-backed tests. |
 | `SUPABASE_SERVICE_ROLE_KEY` | server, scripts only | Bypasses RLS. Only `lib/db/admin.ts` + one-off scripts. |
 | `GEMINI_API_KEY` | server, `/api/ocr` only | OCR key. |
 | `GEMINI_MODEL` / `GEMINI_MODEL_FALLBACKS` | server | Default `gemini-3.1-flash-lite` + 404 fallback chain. |
@@ -940,22 +958,38 @@ admin shell; no schema or business-logic changes.
 | `IMP_SECRET` | server | 32-byte hex HMAC key for impersonation cookies; production fails closed. |
 | `AUDIT_SALT` | server | sha256(ip + salt) for audit `ip_hash`; missing ⇒ rows carry no hash. |
 | `TRUST_PROXY` | server | Distrust-by-default; set `true` only behind a proxy that overwrites `x-forwarded-for`. |
-| `DEV_AUTH_PORT` / `DEV_AUTH_SECRET` | local only | Dev auth stub port (default 54321) + HMAC secret. |
+| `DEV_AUTH_PORT` / `DEV_AUTH_SECRET` | local only | Dev auth stub port (default 54321) + HMAC secret. Not listed in `.env.example`; set in `.env.local` when using the stub. |
 
 ---
 
 ## 15. Open work / suggested next steps
 
-1. **Finish and commit the four WIP themes** (§13), one commit per theme,
-   after the green gates pass.
-2. **Apply migration `0021`** (`npm run db:migrate`) and verify the slot feature
-   against the local DB + a full suite run.
-3. **Get the full test suite confirmed green** on this snapshot (it is
-   DB-backed and slow; the targeted 145 tests pass).
-4. **Add `dev-auth.log` to `.gitignore`** if the dev auth stub is kept.
-5. **Hosted Supabase cut-over** — the next major milestone, per
-   `docs/deploy/cut-over.md` (v2, rehearsal-proven).
-6. **Parking lot — do not start without instruction:** payments/entitlements,
+**Done on 2026-11-16 (all green-gated):**
+
+- ✅ **Local database restored.** Postgres 17.6 is running on `127.0.0.1:54329`
+  (`scrimlypro_main`) with healthy backends — the `0xC0000142` crash is fixed
+  by the sanitized-PATH / detached WMI start in §14.
+- ✅ **Migration `0021` verified locally** (`npm run db:migrate`): `teams.slot_number`
+  is `integer NULL`, `teams_session_slot_uq` is the partial unique index on
+  `(session_id, slot_number) WHERE slot_number IS NOT NULL`, and
+  `drizzle.__drizzle_migrations` holds all 11 committed migrations (id 11 =
+  `0021`).
+- ✅ **Full suite re-confirmed:** `npm test` → **57 files / 656 tests passed**
+  (314s, exit 0) against the restored database.
+- ✅ **Hygiene committed:** `next.config.ts` Turbopack root pinned and
+  `dev-auth.log` added to `.gitignore` + `git rm --cached` in `6f4d475`
+  (file kept on disk); this doc update lands in its own docs-only commit.
+
+**Remaining:**
+
+1. **Decide the art WIP:** either wire `Ewc-yellow` / the replaced
+   `challengers-red/overall.png` with measured geometry + pinned tests, or
+   remove the untracked exports. Do not ship unregistered art.
+2. **Hosted Supabase cut-over** — still the next major milestone, per
+   `docs/deploy/cut-over.md` (v2, rehearsal-proven). The hosted ref in
+   `.env.local.hosted-dead.bak` is dead; re-run the runbook from step 1 rather
+   than patching it.
+3. **Parking lot — do not start without instruction:** payments/entitlements,
    email delivery of invites, per-match graphics (data already supports it),
    custom template upload, org-level kill-switch wiring, Redis-backed limiters,
    Storage-bucket logos (still data URLs), share-link OG tags, Next 17 upgrade.
