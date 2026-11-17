@@ -5,7 +5,8 @@ export type AestheticId =
   | "pmpl-light"
   | "neon-green"
   | "challengers-red"
-  | "ewc-yellow";
+  | "ewc-yellow"
+  | "pmgc-crimson";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -68,6 +69,9 @@ export type StandingsTableSpec = {
   ranksBakedIn?: boolean; // table-wide default for StandingsColumnSpec.ranksBakedIn
   rowsPerColumn?: number; // table-wide default left-column capacity
   fixedRowPitch?: boolean; // table-wide default for StandingsColumnSpec.fixedRowPitch
+  uniformStatInk?: boolean; // true → every stat value (including rank-1 TOTAL)
+  // uses palette.text; art tables whose baked rank badge already supplies the
+  // rank-1 emphasis keep all numerals in pure white (pmgc-crimson)
   nameFont: string;
   statFont: string;
   labelFont: string;

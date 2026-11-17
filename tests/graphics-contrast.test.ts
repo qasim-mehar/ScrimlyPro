@@ -69,6 +69,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "pmgc-crimson",
   ];
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
@@ -332,6 +333,45 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
   it("ewc-yellow: fallback gradient keeps text + muted ink readable", () => {
     const p = getTemplate("ewc-yellow").palette;
     for (const bg of Object.values(getTemplate("ewc-yellow").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  // pmgc-crimson/overall.png (4096×6144, ×0.263671875). Zone means measured
+  // with the same per-pixel WCAG relative-luminance algorithm used for the
+  // other art templates (sharp scan; JPEG-in-.png payload).
+  const PMGC = {
+    // art(569,1669,1365,152) = canvas(150,440,360,40) — row 1 pitch-black bar
+    rowBar: 0.000006,
+    // art(3816,994,129,137) = canvas(1006,262,34,36) — the open gold slot to
+    // the right of the baked "#"; mean RGB ≈ (229,170,38).
+    matchChip: 0.4568,
+    // art(2882,5954,1062,121) = canvas(760,1570,280,32) — watermark glyph zone
+    watermark: { r: 31.2, g: 17.1, b: 21.5 },
+  };
+
+  it("pmgc-crimson: white row text clears black bars ≥ 15:1, espresso chip ink ≥ 8:1", () => {
+    const config = getTemplate("pmgc-crimson");
+    const p = config.palette;
+    expect(p.text).toBe("#FFFFFF");
+    expect(p.wwcdText).toBe("#FFFFFF"); // rank-1 team name stays broadcast white
+    expect(config.standings.uniformStatInk).toBe(true); // all stat numerals white
+    expect(ratioOver(PMGC.rowBar, p.text)).toBeGreaterThanOrEqual(15); // AAA hard gate
+    const chipInk = config.variantHeaders?.standings?.subtitleColor ?? "#140A00";
+    expect(chipInk).toBe("#140A00");
+    expect(ratioOver(PMGC.matchChip, chipInk)).toBeGreaterThanOrEqual(8);
+  });
+
+  it("pmgc-crimson: 85%-white watermark clears the dark footer (≥ 4.5)", () => {
+    const bg = PMGC.watermark;
+    const ink = { r: 255 * 0.85 + bg.r * 0.15, g: 255 * 0.85 + bg.g * 0.15, b: 255 * 0.85 + bg.b * 0.15 };
+    expect(contrastRatio(ink, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("pmgc-crimson: crimson-black fallback keeps white + muted ink readable", () => {
+    const p = getTemplate("pmgc-crimson").palette;
+    for (const bg of Object.values(getTemplate("pmgc-crimson").backgrounds)) {
       if (bg.type !== "gradient") continue;
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);

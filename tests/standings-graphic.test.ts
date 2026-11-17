@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { StatColumnKey } from "@/lib/graphics";
+import { getTemplate, type StatColumnKey } from "@/lib/graphics";
 import {
   resolveStandingsFilename,
   STANDINGS_LABELS,
@@ -136,6 +136,38 @@ describe("withRanks", () => {
     // Rows unmutated: originals keep their exact 7-field shape, no rank added.
     expect(Object.keys(input[0]).sort()).toEqual(
       ["kp", "logoUrl", "pp", "teamId", "teamName", "total", "wwcd"].sort(),
+    );
+  });
+});
+
+describe("pmgc-crimson standings data wiring", () => {
+  const config = getTemplate("pmgc-crimson");
+
+  it("uses only the four stat keys the pure standings layer can resolve", () => {
+    const base = row({ wwcd: 2, pp: 41, kp: 17, total: 70 });
+    const keys = ["wwcd", "pp", "kp", "total"] as const;
+    for (const col of config.standings.columns) {
+      expect(col.statColumns.map((c) => c.key)).toEqual([...keys]);
+      for (const { key } of col.statColumns) {
+        expect(statColumnValue(base, key, 6)).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("derives the baked match-number slot from the same subtitle helpers", () => {
+    expect(config.subtitleMode).toBe("matchNumber");
+    expect(subtitleMatchNumber(standingsSubtitle(6, false))).toBe("6");
+    // A final session still gets its digit from the threaded matchCount at
+    // the preview layer — the art only renders the number (see SSR tests).
+    expect(subtitleMatchNumber(standingsSubtitle(6, true))).toBe("");
+  });
+
+  it("resolves the export filename for mid-session and final standings", () => {
+    expect(resolveStandingsFilename(standingsSubtitle(3, false), 3, false)).toBe(
+      "scrimlypro-standings-after-match-3.png",
+    );
+    expect(resolveStandingsFilename(standingsSubtitle(6, true), 6, true)).toBe(
+      "scrimlypro-final-standings.png",
     );
   });
 });

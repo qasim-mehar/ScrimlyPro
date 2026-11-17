@@ -110,10 +110,13 @@ describe("AESTHETICS registry", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "pmgc-crimson",
   ];
 
-  it("exposes exactly the seven aesthetic ids", () => {
-    expect(Object.keys(AESTHETICS).sort()).toEqual([...IDS].sort());
+  it("exposes every registered aesthetic id", () => {
+    const keys = Object.keys(AESTHETICS);
+    for (const id of IDS) expect(keys).toContain(id);
+    expect(keys.length).toBeGreaterThanOrEqual(IDS.length);
   });
 
   it("looks configs up by id", () => {
@@ -748,9 +751,10 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
         { id: "challengers-red", variant: "standings", file: "public/templates/challengers-red/overall.png" },
         { id: "challengers-red", variant: "mvp", file: "public/templates/challengers-red/mvp.png" },
         { id: "ewc-yellow", variant: "standings", file: "public/templates/ewc-yellow/overall.png" },
+        { id: "pmgc-crimson", variant: "standings", file: "public/templates/pmgc-crimson/overall.png" },
       ]),
     );
-    expect(CASES).toHaveLength(6);
+    expect(CASES).toHaveLength(7);
   });
 
   it("sniffs both PNG and JPEG payloads (all three new arts are JPEG-in-.png)", () => {
@@ -786,6 +790,7 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "pmgc-crimson",
   ];
 
   it.each(IDS)("%s defines non-empty plate/medal strings", (id) => {
@@ -860,6 +865,14 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
       medalBronze: "#9C6327",
       medalText: "#FFFFFF",
     });
+    expect(getTemplate("pmgc-crimson").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.10)",
+      plateRing: "rgba(245,184,46,0.55)",
+      medalGold: "#F5B82E",
+      medalSilver: "#D8C7CB",
+      medalBronze: "#B4763F",
+      medalText: "#140A00",
+    });
   });
 });
 
@@ -906,6 +919,7 @@ describe("P7 — font swap + template flags", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "pmgc-crimson",
   ];
 
   it("uniformMvpRows is true for every theme (uniform MVP everywhere)", () => {

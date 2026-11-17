@@ -201,7 +201,9 @@ function StandingsRow({
             font: st.statFont,
             fontVariantNumeric: "tabular-nums",
             letterSpacing: "-0.02em",
-            color: key === "total" && isRankOne ? palette.accent : palette.text,
+            // Art tables (pmgc-crimson) keep every numeral in white — their
+            // baked gold rank-1 badge already carries the emphasis.
+            color: st.uniformStatInk !== true && key === "total" && isRankOne ? palette.accent : palette.text,
           }}
         >
           {statColumnValue(row, key, matchCount)}

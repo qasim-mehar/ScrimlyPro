@@ -692,6 +692,141 @@ const EWC_YELLOW: TemplateConfig = {
   },
 };
 
+const PMGC_CRIMSON_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #120309 0%, #1C0410 55%, #2A0615 100%)",
+  decor: [],
+};
+
+/** PMGC Crimson — the 2023 PMGC Grand Finals broadcast leaderboard look. The
+ * delivered file is a 4096×6144 JPEG payload inside a .png name → canvas
+ * ×1080/4096 = 0.263671875. Every number below was measured off those pixels:
+ * - Baked "OVERALL RANKINGS" title (measured white ink ≈ x92–800 y202–308) and
+ *   the slanted gold "MATCH #" badge (gold fill x809–1056 y244–316; the dark
+ *   "#" ink ends at x1002 y266). `variantHideScrimName.standings` skips the
+ *   session name; the number renders in the open gold slot at x1006 y260 in
+ *   deep espresso (#140A00 ≈ 9.5:1 against the measured gold, mean lum 0.456).
+ * - Baked silver header bar y355–412 prints RANK | TEAM | WWCD | PLACE PTS |
+ *   ELIMS | TOTAL twice (labelsBakedIn). Measured dark-ink centers (canvas):
+ *   left 321 / 378.5 / 434.5 / 498.5, right 795 / 853 / 909 / 973 (≈+474).
+ *   52px value boxes at 295 / 352.5 / 408.5 / 472.5 (right 769 / 827 / 883 /
+ *   947) center on them, stay inside the black bars and clear of the right cap.
+ * - Baked rank badges: gold #1 / crimson #2–#24 at x70–130 (left) and x548–
+ *   607 (right) → ranksBakedIn skips code numerals; team slot starts at 138 /
+ *   615 and stops before the first stat box (290 / 767).
+ * - 12 dark row bars per column: native-scan tops 434, 510.2, 585.3, 661.0,
+ *   736.2, 812.9, 888.1, 962.9, 1037.6, 1113.8, 1189.7, 1262.5; bar height
+ *   ≈55 (row 12 bottom 1318.4). One fixed pitch of 75.31 keeps all 12 rows
+ *   dead-center (max drift < 3px) — the art's own spacing wobbles ±2px, so a
+ *   single pitch is the closest fit. rowsPerColumn 12 splits 24 → [12,12].
+ * - MVP + announcement have no art → deep crimson-black / gold gradient
+ *   fallback. White Exo 2 800 text reads 21:1 on the measured black row
+ *   interior (lum 0.000006); the brand-law watermark stays hardcoded. */
+const PMGC_CRIMSON: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgc-crimson",
+  name: "PMGC Crimson",
+  backgrounds: {
+    standings: { type: "image", src: "/templates/pmgc-crimson/overall.png" },
+    mvp: PMGC_CRIMSON_FALLBACK_BG,
+    announcement: PMGC_CRIMSON_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Match digits sit inside the gold parallelogram, right of the baked "#".
+      subtitle: { x: 1006, y: 260, w: 36, align: "center" },
+      subtitleFont: `800 30px ${FONTS}`,
+      subtitleColor: "#140A00",
+      // The generic organizer slot (y236) would land on the baked title; park
+      // it in the clear dark band above "OVERALL RANKINGS" if ever supplied.
+      organizer: { x: 140, y: 120, w: 800, align: "center" },
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS" across the top band
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 70, // baked gold/crimson badge x70–130; no code numeral
+        teamX: 138, // first clear pixel inside the black row
+        teamW: 152, // ends at 290, before the WWCD box at 295
+        statColumns: [
+          { key: "wwcd", x: 295 },
+          { key: "pp", x: 352.5 },
+          { key: "kp", x: 408.5 },
+          { key: "total", x: 472.5 },
+        ],
+        stripX: 130,
+        stripW: 396,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 547, // baked badge x548–607
+        teamX: 615,
+        teamW: 152, // ends at 767, before the WWCD box at 769
+        statColumns: [
+          { key: "wwcd", x: 769 },
+          { key: "pp", x: 827 },
+          { key: "kp", x: 883 },
+          { key: "total", x: 947 },
+        ],
+        stripX: 607,
+        stripW: 396,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 355,
+    rowY0: 434,
+    rowPitch: 75.31,
+    rowHeight: 55,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 52,
+    logoPlate: 34,
+    logoNameGap: 40,
+    uniformStatInk: true, // every stat numeral white — the baked gold badge
+    // already marks rank 1; no code-drawn accent TOTAL over the broadcast art
+    nameFont: `800 23px ${FONTS}`,
+    statFont: `800 25px ${FONTS}`,
+    labelFont: `700 20px ${FONTS}`,
+  },
+  palette: {
+    accent: "#F5B82E", // Championship Gold
+    text: "#FFFFFF",
+    textMuted: "#E8D9DE",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // rank-1 strip invisible; badge already baked
+    wwcdText: "#FFFFFF", // rank-1 team name stays pure broadcast white (stat
+    // ink is kept white too by standings.uniformStatInk)
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(245,184,46,0.55)",
+    medalGold: "#F5B82E",
+    medalSilver: "#D8C7CB",
+    medalBronze: "#B4763F",
+    medalText: "#140A00",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -700,6 +835,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "neon-green": NEON_GREEN,
   "challengers-red": CHALLENGERS_RED,
   "ewc-yellow": EWC_YELLOW,
+  "pmgc-crimson": PMGC_CRIMSON,
 };
 
 /** Look up a template config by aesthetic id. Unknown/legacy ids (the seed's

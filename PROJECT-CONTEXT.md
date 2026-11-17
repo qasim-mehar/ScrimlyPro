@@ -713,13 +713,14 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   (`scale(calc(100cqw / 1080px))`) preserves the ratio with zero JS.
 - `GraphicCanvas` (required `variant`: `standings | mvp | announcement`) renders
   absolutely-positioned slots over a background. **Templates = background image
-  + coordinate config.** Seven aesthetics (`lib/graphics/aesthetics.ts`): three
-  dev gradients (dark-gold, purple-butterfly, pink-blossom) and four art-backed
-  (pmpl-light, neon-green, challengers-red, ewc-yellow; art in
+  + coordinate config.** Eight aesthetics (`lib/graphics/aesthetics.ts`): three
+  dev gradients (dark-gold, purple-butterfly, pink-blossom) and five art-backed
+  (pmpl-light, neon-green, challengers-red, ewc-yellow, pmgc-crimson; art in
   `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
   variant-specific: pmpl-light backs standings + announcement, neon-green backs
   standings, challengers-red backs standings (`overall.png`) + MVP (`mvp.png`;
-  announcement stays on the gradient fallback), ewc-yellow backs standings.
+  announcement stays on the gradient fallback), ewc-yellow / pmgc-crimson back
+  standings only.
   The challengers-red standings wiring is working-tree WIP, not in the
   ewc-yellow commit — see §13.2. ewc-yellow's `overall.png` is also a
   4096×6144 JPEG payload in a `.png`-named file: 12 painted bars per column
@@ -729,6 +730,16 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   `.png`-named file (canvas ×1080/4096 = 0.263671875) with 12 painted row bars
   per column: tops 389 + i×67.3636, height 62, rank numerals 1–24, stat ink
   centers 373.5/413.5/454/493 (left) and 831/871.5/912/951.5 (right).
+  pmgc-crimson (P8(3)) backs standings at `/templates/pmgc-crimson/overall.png`
+  (another 4096×6144 JPEG payload in a `.png` name, ×0.263671875): the 2023 PMGC
+  Grand Finals broadcast leaderboard — baked "OVERALL RANKINGS" title (session
+  name hidden for standings), slanted gold "MATCH #" badge (number slot x1006
+  y260, espresso ink #140A00), baked ranks 1–24 on 12 black bars/column (rowY0
+  434, pitch 75.31, height 55, row 12 bottom 1318), silver header labels on both
+  sides (WWCD/PLACE PTS/ELIMS/TOTAL ink centers 321/378.5/434.5/498.5 left,
+  +474 right; 52px boxes) and pure-white Exo 2 800 text. MVP + announcement fall
+  back to a deep crimson-black / gold gradient. Pinned by
+  `tests/pmgc-standings.test.ts`.
 - `TemplateConfig` (engine v3) key ideas: per-variant `backgrounds`;
   `statColumns` (ordered value boxes, per-table `statBoxW`); `labelsBakedIn` /
   `subtitleBakedIn` (per-variant — the art already prints the labels);

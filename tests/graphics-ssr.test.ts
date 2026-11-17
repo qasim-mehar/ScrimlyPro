@@ -97,6 +97,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "pmgc-crimson",
   ];
 
   it("standings logo plates use plateBg/plateRing; rank-1 ring uses accent", () => {
@@ -323,6 +324,7 @@ describe("P7 � font swap + config flags (SSR)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "pmgc-crimson",
   ];
 
   it("rendered graphics carry the Exo 2 font stack in their inline styles", () => {
@@ -444,5 +446,65 @@ describe("P8 — ewc-yellow standings SSR rendering", () => {
     expect(html).toContain(">01<");
     expect(html).toContain(">16<");
     expect(html).toContain("SQUAD 16");
+  });
+});
+
+describe("P8 — pmgc-crimson standings SSR rendering", () => {
+  it("renders 24 teams on the 12/12 painted bars with baked ranks/labels skipped", () => {
+    const html = renderToStaticMarkup(standings("pmgc-crimson", "AFTER MATCH 5", 24, { matchCount: 5 }));
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">TEAM<");
+    expect(html).not.toContain(">WWCD<");
+    expect(html).not.toContain("left:70px");
+    expect(html).not.toContain("left:547px");
+    expect((html.match(/left:138px/g) ?? []).length).toBe(12);
+    expect((html.match(/left:615px/g) ?? []).length).toBe(12);
+    expect(html).toContain("SQUAD 1");
+    expect(html).toContain("SQUAD 24");
+    // Four stat columns per side at the measured silver-header ink centers.
+    for (const x of [295, 352.5, 408.5, 472.5, 769, 827, 883, 947]) {
+      expect(html).toContain(`left:${x}px`);
+    }
+    expect(html).toContain("font:800 25px");
+    expect(html).toContain("font-variant-numeric:tabular-nums");
+  });
+
+  it("hides the baked-title collision and renders only the match digits in the gold slot", () => {
+    const html = renderToStaticMarkup(standings("pmgc-crimson", "FINAL RESULTS", 16, { matchCount: 6 }));
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain("FINAL RESULTS");
+    expect(html).toContain("left:1006px");
+    expect(html).toContain("color:#140A00");
+    expect(html).toContain(">6<");
+  });
+
+  it("renders the MVP and announcement variants on the crimson gradient fallback", () => {
+    const mvp = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "pmgc-crimson",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(mvp).toContain("SCRIM");
+    expect(mvp).toContain("TOP 5 FRAGGERS");
+    expect(mvp).toContain("ALPHA");
+    expect(mvp).toContain(">24<");
+
+    const ann = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "pmgc-crimson",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(ann).toContain("SCRIM");
+    expect(ann).toContain("PARTICIPATING TEAMS");
+    expect(ann).toContain(">01<");
+    expect(ann).toContain("SQUAD 16");
   });
 });
