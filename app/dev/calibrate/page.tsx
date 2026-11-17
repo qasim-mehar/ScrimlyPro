@@ -56,6 +56,7 @@ function dataset(n: number): StandingRow[] {
       teamName,
       logoUrl: dummyLogo(teamName),
       wwcd,
+      matches: 6,
       pp: total - kp - wwcd * 10,
       kp,
       total,
@@ -69,13 +70,15 @@ export default async function CalibratePage() {
   await requireUser();
   return (
     <main className="mx-auto max-w-6xl p-4">
-      <h1 className="text-xl font-bold tracking-widest text-gold">PMPL-LIGHT CALIBRATION</h1>
+      <h1 className="text-xl font-bold tracking-widest text-gold">STANDINGS CALIBRATION</h1>
       <p className="mt-1 text-sm text-muted">
-        P4b — dev route. Dummy standings at 16 / 19 / 25 teams over the real art, 100px grid above it,
+        Dev route. Dummy standings at 16 / 19 / 24 / 25 teams over each template&apos;s art, 100px grid above it,
         live config readout beside it.
       </p>
       <div className="mt-4">
-        <CalibrateClient datasets={{ 16: dataset(16), 19: dataset(19), 25: dataset(25) }} />
+        <CalibrateClient
+          datasets={{ 16: dataset(16), 19: dataset(19), 24: dataset(24), 25: dataset(25) }}
+        />
       </div>
     </main>
   );

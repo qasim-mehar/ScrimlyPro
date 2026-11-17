@@ -6,7 +6,7 @@ import { AnnouncementGraphic } from "@/components/graphics/AnnouncementGraphic";
 import { GraphicCanvas } from "@/components/graphics/GraphicCanvas";
 import { MvpGraphic } from "@/components/graphics/MvpGraphic";
 import { OverallStandingsGraphic } from "@/components/graphics/OverallStandingsGraphic";
-import { effectivePitch, getTemplate, splitRows, type AestheticId } from "@/lib/graphics";
+import { effectivePitch, getTemplate, hideScrimNameFor, splitRows, type AestheticId } from "@/lib/graphics";
 import type { MvpDisplayEntry } from "@/lib/graphics/mvp";
 import type { StandingRow } from "@/lib/scoring";
 
@@ -96,6 +96,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     "pmpl-light",
     "neon-green",
     "challengers-red",
+    "ewc-yellow",
   ];
 
   it("standings logo plates use plateBg/plateRing; rank-1 ring uses accent", () => {
@@ -321,6 +322,7 @@ describe("P7 � font swap + config flags (SSR)", () => {
     "pmpl-light",
     "neon-green",
     "challengers-red",
+    "ewc-yellow",
   ];
 
   it("rendered graphics carry the Exo 2 font stack in their inline styles", () => {
@@ -340,13 +342,13 @@ describe("P7 � font swap + config flags (SSR)", () => {
     }
   });
 
-  it("hideScrimName skips the scrim-name slot in all three renderers (neon-green only)", () => {
+  it("hideScrimName skips the scrim-name slot per variant (neon-green everywhere)", () => {
     for (const id of IDS) {
-      const hidden = getTemplate(id).hideScrimName === true;
-      expect(hidden).toBe(id === "neon-green");
-      const htmls = [
-        renderToStaticMarkup(standings(id, "AFTER MATCH 1", 4, { matchCount: 1 })),
-        renderToStaticMarkup(
+      const config = getTemplate(id);
+      expect(config.hideScrimName === true).toBe(id === "neon-green");
+      const htmls = {
+        standings: renderToStaticMarkup(standings(id, "AFTER MATCH 1", 4, { matchCount: 1 })),
+        mvp: renderToStaticMarkup(
           h(MvpGraphic, {
             aestheticId: id,
             title: "SCRIM",
@@ -355,7 +357,7 @@ describe("P7 � font swap + config flags (SSR)", () => {
             entries: mvpEntries(),
           }),
         ),
-        renderToStaticMarkup(
+        announcement: renderToStaticMarkup(
           h(AnnouncementGraphic, {
             aestheticId: id,
             title: "SCRIM",
@@ -364,10 +366,11 @@ describe("P7 � font swap + config flags (SSR)", () => {
             teams: announceTeams(4),
           }),
         ),
-      ];
-      for (const html of htmls) {
-        if (hidden) expect(html).not.toContain("SCRIM");
-        else expect(html).toContain("SCRIM");
+      };
+      for (const variant of ["standings", "mvp", "announcement"] as const) {
+        const hidden = hideScrimNameFor(config, variant);
+        if (hidden) expect(htmls[variant]).not.toContain("SCRIM");
+        else expect(htmls[variant]).toContain("SCRIM");
       }
     }
   });
@@ -385,5 +388,61 @@ describe("P7 � font swap + config flags (SSR)", () => {
       expect(standingsHtml).toContain("scrimlypro.com");
       expect(annHtml).toContain("scrimlypro.com");
     }
+  });
+});
+
+describe("P8 — ewc-yellow standings SSR rendering", () => {
+  it("renders standings with matches stat column, 12-split, and omits duplicate rank numbers", () => {
+    const html = renderToStaticMarkup(
+      h(OverallStandingsGraphic, {
+        aestheticId: "ewc-yellow",
+        title: "SCRIM",
+        subtitle: "AFTER MATCH 5",
+        organizer: null,
+        standings: rows(24, false),
+        matchCount: 5,
+      }),
+    );
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">WWCD<");
+    expect(html).not.toContain("left:96px;top:393px;width:48px");
+    expect((html.match(/>5</g) ?? []).length).toBeGreaterThanOrEqual(24);
+    expect((html.match(/left:146px/g) ?? []).length).toBe(12);
+    expect((html.match(/left:612px/g) ?? []).length).toBe(12);
+    expect(html).toContain("SQUAD 1");
+    expect(html).toContain("SQUAD 24");
+  });
+
+  it("renders MVP cleanly with gradient fallback", () => {
+    const html = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "ewc-yellow",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(html).toContain("SCRIM");
+    expect(html).toContain("TOP 5 FRAGGERS");
+    expect(html).toContain("ALPHA");
+    expect(html).toContain(">24<");
+  });
+
+  it("renders announcement cleanly with gradient fallback", () => {
+    const html = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "ewc-yellow",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(html).toContain("SCRIM");
+    expect(html).toContain("PARTICIPATING TEAMS");
+    expect(html).toContain(">01<");
+    expect(html).toContain(">16<");
+    expect(html).toContain("SQUAD 16");
   });
 });

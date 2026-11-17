@@ -1,4 +1,11 @@
-export type AestheticId = "dark-gold" | "purple-butterfly" | "pink-blossom" | "pmpl-light" | "neon-green" | "challengers-red";
+export type AestheticId =
+  | "dark-gold"
+  | "purple-butterfly"
+  | "pink-blossom"
+  | "pmpl-light"
+  | "neon-green"
+  | "challengers-red"
+  | "ewc-yellow";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -22,21 +29,25 @@ export type Background =
   | { type: "gradient"; css: string; decor: DecorShape[] }
   | { type: "image"; src: string }; // future real PNG templates — config-only swap
 
-export type StatColumnKey = "wwcd" | "pp" | "kp" | "total";
+export type StatColumnKey = "wwcd" | "matches" | "pp" | "kp" | "total";
 
-/** One stat value box: left edge of a 58-wide centered box. Order in the
- * array is the render order (left to right). */
+/** One stat value box: left edge of the table's centered value box (see
+ * `StandingsTableSpec.statBoxW` for its width). Array order is render order. */
 export type StatColumn = { key: StatColumnKey; x: number };
 
 export type StandingsColumnSpec = {
   rankX: number; // left edge of rank box (48 wide, centered text)
   teamX: number; // left edge of name (logo renders AT teamX when present, name shifts +52)
   teamW: number; // max name width before CSS ellipsis
-  statColumns: StatColumn[]; // ordered per-template columns (each stat box 58 wide, centered)
+  statColumns: StatColumn[]; // ordered per-template columns (each stat box is
+  // `standings.statBoxW` wide, centered; default 58)
   stripX: number; // row background strip
   stripW: number;
   rowsBottom?: number; // bottom edge of this column's table area — when set,
   // rows auto-fit: pitch = (rowsBottom − rowY0) / rowsInColumn (P4)
+  ranksBakedIn?: boolean; // true → art bakes the 1–24 rank numerals; draw no rank
+  rowsPerColumn?: number; // fixed left-column capacity (team N+1 starts right)
+  fixedRowPitch?: boolean; // true → ignore rowsBottom and use rowPitch verbatim
 };
 
 export type StandingsTableSpec = {
@@ -49,6 +60,14 @@ export type StandingsTableSpec = {
   singleColumn?: boolean; // true → one full-width table (neon-green art):
   // OverallStandingsGraphic renders columns[0] with ALL rows and skips
   // columns[1]; splitRows/maxRowsLeft do not apply.
+  rankBoxW?: number; // width of the centered rank value box (default 48)
+  statBoxW?: number; // width of each centered stat value box (default 58;
+  // ewc-yellow's five baked header slots need 46 to stay non-overlapping)
+  logoPlate?: number; // logo plate diameter (default 44)
+  logoNameGap?: number; // logo → name offset inside teamW (default 52)
+  ranksBakedIn?: boolean; // table-wide default for StandingsColumnSpec.ranksBakedIn
+  rowsPerColumn?: number; // table-wide default left-column capacity
+  fixedRowPitch?: boolean; // table-wide default for StandingsColumnSpec.fixedRowPitch
   nameFont: string;
   statFont: string;
   labelFont: string;
@@ -113,6 +132,8 @@ export type HeaderSpec = {
   organizer: Slot;
   titleFont: string;
   subtitleFont: string;
+  subtitleColor?: string; // optional per-variant ink override for the subtitle
+  // (challengers-red standings: black digits inside the baked cyan MATCH chip)
   organizerFont: string;
 };
 
@@ -129,6 +150,9 @@ export type TemplateConfig = {
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
   hideScrimName?: boolean; // true → renderers skip the scrim-name (title) slot
   // entirely (neon-green: the art's title band is intentionally blank)
+  variantHideScrimName?: Partial<Record<GraphicVariant, boolean>>; // per-variant
+  // override of hideScrimName (challengers-red: the standings art bakes its
+  // own title, but the MVP art still wants the session name)
   uniformMvpRows?: boolean; // true → MvpGraphic renders all 5 rows identically:
   // neutral plates, text ink, no rank-1 accent, no metal medallions (P7)
   watermarkYOffset?: number; // extra px added to the fixed brand-law watermark y

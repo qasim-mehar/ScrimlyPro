@@ -21,7 +21,7 @@
 > accounts, dashboard and share links (all built since M1/Wave 1), and its §10
 > stack line still says SQLite. `ERD.md` §6/§7 are the as-built Postgres +
 > tenancy record. `PRODUCT.md` still says "three dev-gradient aesthetics ship
-> now"; six aesthetics ship today. The code remains the final authority.
+> now"; seven aesthetics ship today. The code remains the final authority.
 
 ---
 
@@ -114,7 +114,7 @@ landing page at `/`.
 |---|---|
 | Branch | `main`, ahead of `origin/main` (`88a9daa`) by the two chore/docs commits below — not pushed |
 | Tip | `6f4d475` — 2026-11-16, turbopack root + `dev-auth.log` untracking (docs commit lands on top) |
-| Working tree | **Dirty**: only the WIP art drop (1 modified template PNG + 5 untracked art files), nothing staged |
+| Working tree | **Dirty**: challengers-red standings WIP (1 modified template PNG + untracked test) plus untracked design exports — nothing staged; ewc-yellow lands in the commit on top of this docs snapshot |
 | Runtime | Node `v25.6.1`, npm `11.9.0` |
 | Next.js | `16.4.3` (App Router, no `src/`, alias `@/*`) |
 | Database | ✅ Local Postgres 17.6 **running** at `127.0.0.1:54329`, db `scrimlypro_main`, live backends healthy (restored 2026-11-16 — see §14) |
@@ -713,25 +713,39 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   (`scale(calc(100cqw / 1080px))`) preserves the ratio with zero JS.
 - `GraphicCanvas` (required `variant`: `standings | mvp | announcement`) renders
   absolutely-positioned slots over a background. **Templates = background image
-  + coordinate config.** Six aesthetics (`lib/graphics/aesthetics.ts`): three
-  dev gradients (dark-gold, purple-butterfly, pink-blossom) and three
-  art-backed (pmpl-light, neon-green, challengers-red; art in
+  + coordinate config.** Seven aesthetics (`lib/graphics/aesthetics.ts`): three
+  dev gradients (dark-gold, purple-butterfly, pink-blossom) and four art-backed
+  (pmpl-light, neon-green, challengers-red, ewc-yellow; art in
   `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
-  variant-specific: pmpl-light backs standings + announcement, neon-green
-  backs standings, challengers-red backs MVP (its tracked `overall.png` is
-  currently unused). An untracked `public/templates/Ewc-yellow/` art drop is
-  WIP and not registered in `aesthetics.ts` (see §13.2).
+  variant-specific: pmpl-light backs standings + announcement, neon-green backs
+  standings, challengers-red backs standings (`overall.png`) + MVP (`mvp.png`;
+  announcement stays on the gradient fallback), ewc-yellow backs standings.
+  The challengers-red standings wiring is working-tree WIP, not in the
+  ewc-yellow commit — see §13.2. ewc-yellow's `overall.png` is also a
+  4096×6144 JPEG payload in a `.png`-named file: 12 painted bars per column
+  (top 393 + i×79, height 67), baked labels/ranks and five stat slots
+  (WWCD/MATCHES/PP/ELIMS/TOTAL) at 46-wide boxes.
+  challengers-red's `overall.png` is a 4096×6144 JPEG payload inside a
+  `.png`-named file (canvas ×1080/4096 = 0.263671875) with 12 painted row bars
+  per column: tops 389 + i×67.3636, height 62, rank numerals 1–24, stat ink
+  centers 373.5/413.5/454/493 (left) and 831/871.5/912/951.5 (right).
 - `TemplateConfig` (engine v3) key ideas: per-variant `backgrounds`;
-  `statColumns` (ordered value boxes); `labelsBakedIn` / `subtitleBakedIn`
-  (per-variant — the art already prints the labels); `variantHeaders` +
-  `headerFor()`; `singleColumn` (neon's one full-width table); `rowsBottom`-
-  driven row auto-fit (`announcementRowLayout`, `columnPitch` in
+  `statColumns` (ordered value boxes, per-table `statBoxW`); `labelsBakedIn` /
+  `subtitleBakedIn` (per-variant — the art already prints the labels);
+  `ranksBakedIn` (art prints the rank numerals), `rowsPerColumn` (fixed
+  left-column capacity via `splitRowsAt`, e.g. challengers 12/12) and
+  `fixedRowPitch` (never stretch rows off painted bars); `variantHeaders` +
+  `headerFor()`; `variantHideScrimName` + `hideScrimNameFor()` (challengers-red
+  hides the scrim name for standings only — the art bakes "OVERALL RANKINGS");
+  `singleColumn` (neon's one full-width table); `rowsBottom`-driven row
+  auto-fit (`announcementRowLayout`, `columnPitch` in
   `lib/graphics/layout.ts`); P7 flags `hideScrimName`, `uniformMvpRows`,
   `watermarkYOffset`.
 - The watermark `scrimlypro.com` is **hardcoded bottom-right** — brand law,
   never configurable.
 - Font stack: `"Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui,
-  sans-serif`; data-bearing fonts weight 700 (P7).
+  sans-serif`; data-bearing fonts weight 700 (P7), bumped to 800 on the
+  challengers-red/ewc-yellow art tables.
 - Geometry for art-backed templates is **measured from the art pixels** and
   pinned by tests (`tests/graphics.test.ts`,
   `tests/graphics-contrast.test.ts` pins contrast ratios). Changing art means
@@ -739,8 +753,8 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
 - Dev routes render all graphics from fixtures and are hard-404'd in production
   (`NODE_ENV` gate in every page): `/dev/graphics`, `/dev/standings`,
   `/dev/mvp`, `/dev/announcement`, `/dev/glyphs` (glyph torture fixtures),
-  `/dev/calibrate` (16/19/25-team calibration datasets with pixel grid and live
-  config readout), `/dev/boom` (error boundary test).
+  `/dev/calibrate` (16/19/24/25-team calibration datasets, template selector,
+  pixel grid and live config readout), `/dev/boom` (error boundary test).
 
 ---
 
@@ -841,19 +855,24 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
    notifications, admin shell/search, impersonation dialog, attention tables;
    no schema or business-logic changes.
 
-### 13.2 Current uncommitted drift (verified 2026-11-16)
+### 13.2 Current uncommitted drift (verified 2026-11-17)
 
-Only the art drop is uncommitted — nothing staged:
-
-- `public/templates/challengers-red/overall.png` — replaced artwork. The
-  current config does **not** use it (challengers-red standings still renders
-  the gradient fallback), so it is art-in-waiting, not a wired template.
-- Untracked art: `public/templates/Ewc-yellow/Max_a_canvas_-__portrait_2 (2).png`
-  plus several `public/templates/Max_a_*.png` design exports (including
-  `Max_a_You_are_an_expert_im (4|5).png`). None is registered in
-  `lib/graphics/aesthetics.ts`; treat this as an unfinished seventh aesthetic.
-  Do not wire art without measuring geometry and updating the pinned graphics
-  tests (`tests/graphics.test.ts`, `tests/graphics-contrast.test.ts`).
+- `public/templates/challengers-red/overall.png` + the challengers-red config:
+  the replaced artwork is now **wired as the standings template** (12/12
+  painted rows, baked 1–24 ranks, baked "OVERALL RANKINGS"/MATCH chip, white
+  800-weight rows). MVP still uses `mvp.png`; announcement keeps the gradient
+  fallback.
+- Untracked art: several `public/templates/Max_a_*.png` design exports
+  (including `Max_a_You_are_an_expert_im (4|5).png`) and
+  `public/templates/challengers-red/refrence-image.jpeg` (reference only, never
+  rendered). `ewc-yellow` is now fully wired as the production standings
+  template with 12/12 painted bars, baked labels/ranks, 5-stat layout, and
+  authoritative esports typography (pinned by `tests/graphics.test.ts`,
+  `tests/graphics-contrast.test.ts`, `tests/graphics-ssr.test.ts`, and
+  `tests/ewc-standings.test.ts`).
+  Do not wire further art without measuring geometry and updating the pinned
+  graphics tests (`tests/graphics.test.ts`,
+  `tests/graphics-contrast.test.ts`, `tests/challengers-standings.test.ts`).
 - `next.config.ts` and `dev-auth.log` are no longer part of the drift — both
   landed in `6f4d475` (see §13.3).
 
@@ -982,9 +1001,10 @@ Only the art drop is uncommitted — nothing staged:
 
 **Remaining:**
 
-1. **Decide the art WIP:** either wire `Ewc-yellow` / the replaced
-   `challengers-red/overall.png` with measured geometry + pinned tests, or
-   remove the untracked exports. Do not ship unregistered art.
+1. **Decide remaining art WIP:** `ewc-yellow` is now wired with measured
+   geometry and pinned tests. Decide on the replaced
+   `challengers-red/overall.png` or remove the untracked exports. Do not ship
+   unregistered art.
 2. **Hosted Supabase cut-over** — still the next major milestone, per
    `docs/deploy/cut-over.md` (v2, rehearsal-proven). The hosted ref in
    `.env.local.hosted-dead.bak` is dead; re-run the runbook from step 1 rather
@@ -1036,7 +1056,7 @@ Only the art drop is uncommitted — nothing staged:
 | **Confirm** | Atomic, idempotent write of `match_results` + roster learning. |
 | **Unlock** | Delete results → draft → rebuild rosters, in one transaction. |
 | **MVP list** | Top-5 per-player kill aggregation, edited then locked; sole source for the MVP graphic. |
-| **Aesthetic** | A graphic template: background art + coordinate config (6 total). |
+| **Aesthetic** | A graphic template: background art + coordinate config (7 total). |
 | **Effective identity** | The impersonation target when a valid admin session exists; otherwise the real user. |
 | **Kill switch** | A `feature_flags` `disabled` row that locks a user out of every authed surface. |
 | **Trust proxy** | Whether `x-forwarded-for` is honored for rate-limit attribution (default: no). |

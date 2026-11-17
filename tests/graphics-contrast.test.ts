@@ -68,6 +68,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "pmpl-light",
     "neon-green",
     "challengers-red",
+    "ewc-yellow",
   ];
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
@@ -282,6 +283,59 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
     expect(ratioOver(CHAL.killsBand, p.accent)).toBeGreaterThanOrEqual(3);
     // 44px bold title on the teal band → large-text floor
     expect(ratioOver(CHAL.titleBand, p.text)).toBeGreaterThanOrEqual(3);
+  });
+
+  // challengers-red/overall.png (4096×6144, ×0.263671875)
+  const CHAL_STANDINGS = {
+    // art(569,1498,1327,171) = canvas(150,395,350,45) — row 1 dark charcoal bar interior
+    rowBar: 0.008568,
+    // art(3663,872,174,174) = canvas(966,230,46,46) — cyan Match # slot
+    cyanSlot: 0.498412,
+  };
+
+  it("challengers-red standings: white text clears dark bars (≥ 7:1) and black ink clears cyan slot (≥ 4.5:1)", () => {
+    const config = getTemplate("challengers-red");
+    const p = config.palette;
+    expect(ratioOver(CHAL_STANDINGS.rowBar, p.text)).toBeGreaterThanOrEqual(7);
+    const subColor = config.variantHeaders?.standings?.subtitleColor ?? "#061014";
+    expect(ratioOver(CHAL_STANDINGS.cyanSlot, subColor)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // ewc-yellow/overall.png (4096×6144, ×0.263671875). Measured with the same
+  // per-pixel WCAG relative-luminance mean used for the P6 zones.
+  const EWC = {
+    // art(569,1520,1360,200) = canvas(150,401,359,53) — white row-bar interior
+    rowBar: 0.83776,
+    // art(531,493,3034,152) = canvas(140,130,800,40) — orange title band
+    titleBand: 0.476325,
+    // art(3861,880,197,167) = canvas(1018,232,52,44) — slanted Match # ribbon
+    ribbon: 0.279865,
+    // art(2882,5954,1062,121) = canvas(760,1570,280,32) — watermark glyph zone
+    watermark: { r: 169.5, g: 79.4, b: 94.7 },
+  };
+
+  it("ewc-yellow: espresso text clears the white bars, orange title band and ribbon", () => {
+    const p = getTemplate("ewc-yellow").palette;
+    expect(ratioOver(EWC.rowBar, p.text)).toBeGreaterThanOrEqual(7); // hard ≥7 row gate
+    expect(ratioOver(EWC.rowBar, p.textMuted)).toBeGreaterThanOrEqual(7);
+    expect(ratioOver(EWC.titleBand, p.text)).toBeGreaterThanOrEqual(4.5);
+    expect(ratioOver(EWC.ribbon, p.text)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("ewc-yellow: 90%-white watermark ink clears the dark purple swirls (≥ 4.5)", () => {
+    const bg = EWC.watermark;
+    // rgba(255,255,255,0.9) composited over the measured mean zone color.
+    const ink = { r: 255 * 0.9 + bg.r * 0.1, g: 255 * 0.9 + bg.g * 0.1, b: 255 * 0.9 + bg.b * 0.1 };
+    expect(contrastRatio(ink, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("ewc-yellow: fallback gradient keeps text + muted ink readable", () => {
+    const p = getTemplate("ewc-yellow").palette;
+    for (const bg of Object.values(getTemplate("ewc-yellow").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
 

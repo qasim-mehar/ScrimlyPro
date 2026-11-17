@@ -7,6 +7,7 @@ export const VALID_TEMPLATE_IDS = [
   "pmpl-light",
   "neon-green",
   "challengers-red",
+  "ewc-yellow",
 ] as const;
 
 export type TeamDraft = {
@@ -85,7 +86,7 @@ export function validateSessionDraft(draft: SessionDraft): ValidationIssue[] {
   }
 
   if (!VALID_TEMPLATE_IDS.includes(draft.templateId as AestheticId)) {
-    issues.push({ field: "templateId", message: "Pick one of the six aesthetics." });
+    issues.push({ field: "templateId", message: "Pick one of the seven aesthetics." });
   }
 
   // Org context: format-checked here; MEMBERSHIP is verified inside the

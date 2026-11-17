@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { GraphicCanvas } from "@/components/graphics/GraphicCanvas";
 import { OverallStandingsGraphic } from "@/components/graphics/OverallStandingsGraphic";
-import { effectivePitch, getTemplate, splitRows } from "@/lib/graphics";
+import {
+  AESTHETICS,
+  effectivePitch,
+  getTemplate,
+  splitRows,
+  splitRowsAt,
+  type AestheticId,
+} from "@/lib/graphics";
 import type { StandingRow } from "@/lib/scoring";
 
 const GRID_STEP = 100;
@@ -73,20 +80,41 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
   const counts = Object.keys(datasets).map(Number).sort((a, b) => a - b);
   const [count, setCount] = useState<number>(counts.includes(19) ? 19 : counts[0]);
   const [grid, setGrid] = useState(true);
-  const config = getTemplate("pmpl-light");
+  const [id, setId] = useState<AestheticId>("pmpl-light");
+  const config = getTemplate(id);
   const rows = datasets[String(count)] ?? [];
-  const [leftCount, rightCount] = splitRows(rows.length);
-  const pitches = config.standings.columns.map((col, i) =>
+  const singleColumn = config.standings.singleColumn === true;
+  const splitAt = config.standings.columns[0].rowsPerColumn ?? config.standings.rowsPerColumn;
+  const [leftCount, rightCount] =
+    splitAt !== undefined ? splitRowsAt(rows.length, splitAt) : splitRows(rows.length);
+  const columns = singleColumn ? [config.standings.columns[0]] : config.standings.columns;
+  const pitches = columns.map((col, i) =>
     effectivePitch(
       config.standings.rowY0,
       config.standings.rowPitch,
       col.rowsBottom,
-      i === 0 ? leftCount : rightCount,
+      singleColumn ? rows.length : i === 0 ? leftCount : rightCount,
+      col.fixedRowPitch ?? config.standings.fixedRowPitch === true,
     ),
   );
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {(Object.keys(AESTHETICS) as AestheticId[]).map((aestheticId) => (
+          <button
+            key={aestheticId}
+            type="button"
+            onClick={() => setId(aestheticId)}
+            aria-pressed={id === aestheticId}
+            className={`min-h-[44px] border border-line px-3 text-xs tracking-widest ${
+              id === aestheticId ? "bg-surface-2 text-gold" : "bg-surface text-muted"
+            }`}
+          >
+            {AESTHETICS[aestheticId].name}
+          </button>
+        ))}
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         {counts.map((n) => (
           <button
@@ -114,7 +142,7 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
         <div className="w-full max-w-xl flex-1">
           <GraphicCanvas config={config} variant="standings">
             <OverallStandingsGraphic
-              aestheticId="pmpl-light"
+              aestheticId={id}
               title="CALIBRATION SCRIM"
               subtitle="AFTER MATCH 6"
               organizer={null}
@@ -125,7 +153,7 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
           </GraphicCanvas>
         </div>
         <aside className="flex-1 rounded-lg border border-line bg-surface p-4 font-mono text-xs text-muted">
-          <p className="font-semibold tracking-widest text-gold">PMPL-LIGHT GEOMETRY</p>
+          <p className="font-semibold tracking-widest text-gold">{config.name.toUpperCase()} GEOMETRY</p>
           <pre className="mt-2 whitespace-pre-wrap">
             {JSON.stringify(
               {
@@ -134,7 +162,12 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
                 subtitle: config.header.subtitle,
                 subtitleFont: config.header.subtitleFont,
                 rowY0: config.standings.rowY0,
+                rowPitch: config.standings.rowPitch,
                 rowHeight: config.standings.rowHeight,
+                statBoxW: config.standings.statBoxW,
+                labelsBakedIn: config.labelsBakedIn ?? false,
+                ranksBakedIn: config.standings.ranksBakedIn ?? false,
+                rowsPerColumn: splitAt ?? null,
                 columns: config.standings.columns.map((col) => ({
                   rankX: col.rankX,
                   teamX: col.teamX,
@@ -143,6 +176,8 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
                   stripX: col.stripX,
                   stripW: col.stripW,
                   rowsBottom: col.rowsBottom,
+                  ranksBakedIn: col.ranksBakedIn ?? null,
+                  fixedRowPitch: col.fixedRowPitch ?? null,
                 })),
                 split: { left: leftCount, right: rightCount },
                 pitch: pitches,

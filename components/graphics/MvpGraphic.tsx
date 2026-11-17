@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { getTemplate, headerFor, slotToStyle, type AestheticId } from "@/lib/graphics";
+import { getTemplate, headerFor, hideScrimNameFor, slotToStyle, type AestheticId } from "@/lib/graphics";
 import type { MvpDisplayEntry } from "@/lib/graphics/mvp";
 
 type MvpGraphicProps = {
@@ -84,13 +84,13 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
   const uniform = config.uniformMvpRows === true;
   return (
     <>
-      {config.hideScrimName ? null : (
+      {hideScrimNameFor(config, "mvp") ? null : (
         <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
           {title}
         </div>
       )}
       {mvp.subtitleBakedIn ? null : (
-        <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
+        <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: header.subtitleColor ?? palette.accent }}>
           {subtitle}
         </div>
       )}

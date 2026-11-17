@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 
-import { getTemplate, headerFor, slotToStyle, type AestheticId } from "@/lib/graphics";
+import { getTemplate, headerFor, hideScrimNameFor, slotToStyle, type AestheticId } from "@/lib/graphics";
 import { announcementRows } from "@/lib/graphics/announcement";
 import { announcementSlotLabels } from "@/lib/sessions/slots";
 import type { TeamRow } from "@/lib/scoring";
@@ -28,13 +28,13 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
   const plateD = announcement.logoSize + PLATE_PAD;
   return (
     <>
-      {config.hideScrimName ? null : (
+      {hideScrimNameFor(config, "announcement") ? null : (
         <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
           {title}
         </div>
       )}
       {announcement.subtitleBakedIn ? null : (
-        <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
+        <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: header.subtitleColor ?? palette.accent }}>
           {subtitle}
         </div>
       )}

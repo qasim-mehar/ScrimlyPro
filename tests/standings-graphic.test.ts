@@ -4,6 +4,7 @@ import {
   resolveStandingsFilename,
   STANDINGS_LABELS,
   standingsSubtitle,
+  statColumnValue,
   subtitleMatchNumber,
   withRanks,
 } from "@/lib/graphics/standings";
@@ -28,20 +29,55 @@ describe("standingsSubtitle", () => {
 });
 
 describe("STANDINGS_LABELS", () => {
-  it("has exactly the 6 standings columns", () => {
-    expect(Object.keys(STANDINGS_LABELS).sort()).toEqual(["kp", "pp", "rank", "team", "total", "wwcd"]);
+  it("has exactly the 7 standings columns", () => {
+    expect(Object.keys(STANDINGS_LABELS).sort()).toEqual([
+      "kp",
+      "matches",
+      "pp",
+      "rank",
+      "team",
+      "total",
+      "wwcd",
+    ]);
   });
 
   it("stat labels cover exactly the StatColumnKey columns", () => {
     // Compile-time half: this assignment only typechecks if the stat keys are
-    // exactly wwcd/pp/kp/total; runtime half pins the label strings.
+    // exactly wwcd/matches/pp/kp/total; runtime half pins the label strings.
     const statLabels: Record<StatColumnKey, string> = {
       wwcd: STANDINGS_LABELS.wwcd,
+      matches: STANDINGS_LABELS.matches,
       pp: STANDINGS_LABELS.pp,
       kp: STANDINGS_LABELS.kp,
       total: STANDINGS_LABELS.total,
     };
-    expect(statLabels).toEqual({ wwcd: "WWCD", pp: "PP", kp: "KP", total: "TOTAL" });
+    expect(statLabels).toEqual({
+      wwcd: "WWCD",
+      matches: "MATCHES",
+      pp: "PP",
+      kp: "KP",
+      total: "TOTAL",
+    });
+  });
+});
+
+describe("statColumnValue", () => {
+  const base = row({ wwcd: 2, pp: 41, kp: 17, total: 70 });
+
+  it("maps wwcd/pp/kp/total straight off the row", () => {
+    expect(statColumnValue(base, "wwcd")).toBe(2);
+    expect(statColumnValue(base, "pp")).toBe(41);
+    expect(statColumnValue(base, "kp")).toBe(17);
+    expect(statColumnValue(base, "total")).toBe(70);
+  });
+
+  it("matches falls back to the session-level confirmed count", () => {
+    expect(statColumnValue(base, "matches", 6)).toBe(6);
+  });
+
+  it("matches prefers a row-level override, then 0 with no source", () => {
+    expect(statColumnValue(row({ matches: 4 }), "matches", 6)).toBe(4);
+    expect(statColumnValue(base, "matches")).toBe(0);
   });
 });
 

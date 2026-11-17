@@ -76,7 +76,7 @@ describe("validateSessionDraft", () => {
   it("rejects a bogus templateId", () => {
     const issues = validateSessionDraft(validDraft({ templateId: "bogus" }));
     expect(issues).toEqual([
-      { field: "templateId", message: "Pick one of the six aesthetics." },
+      { field: "templateId", message: "Pick one of the seven aesthetics." },
     ]);
   });
 

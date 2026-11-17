@@ -5,22 +5,24 @@ import {
   effectivePitch,
   getTemplate,
   headerFor,
+  hideScrimNameFor,
   slotToStyle,
   splitRows,
+  splitRowsAt,
   type AestheticId,
   type StandingsColumnSpec,
   type TemplateConfig,
 } from "@/lib/graphics";
-import { STANDINGS_LABELS, subtitleMatchNumber, withRanks } from "@/lib/graphics/standings";
+import { STANDINGS_LABELS, statColumnValue, subtitleMatchNumber, withRanks } from "@/lib/graphics/standings";
 import type { StandingRow } from "@/lib/scoring";
 
-// Box widths prescribed by the master prompt + types.ts comments, not yet
-// TemplateConfig fields (flagged in README Assumptions for a template phase).
-const RANK_BOX_W = 48; // StandingsColumnSpec.rankX: "48 wide, centered text"
-const STAT_BOX_W = 58; // StandingsColumnSpec.statColumns: "58 wide, centered"
-const LOGO_PLATE = 44; // PRD F6: "optional 44px logos" — the plate is the 44px circle
-const LOGO_IMG = 34; // logo ink inside the plate (plate ring stays visible)
-const LOGO_NAME_GAP = 52; // StandingsColumnSpec.teamX: "name shifts +52"
+// Box widths default to the master prompt values; art-backed templates may
+// override them per table (ewc-yellow's five baked header slots are 46 wide).
+const DEFAULT_RANK_BOX_W = 48; // StandingsColumnSpec.rankX: "48 wide, centered text"
+const DEFAULT_STAT_BOX_W = 58; // StandingsColumnSpec.statColumns: "58 wide, centered"
+const DEFAULT_LOGO_PLATE = 44; // PRD F6: "optional 44px logos" — the plate is the 44px circle
+const LOGO_INSET = 10; // logo ink sits 10px inside the plate ring
+const DEFAULT_LOGO_NAME_GAP = 52; // StandingsColumnSpec.teamX: "name shifts +52"
 
 type RankedRow = StandingRow & { rank: number };
 
@@ -49,10 +51,10 @@ function StandingsHeader({
       : subtitle;
   return (
     <>
-      {config.hideScrimName ? null : (
+      {hideScrimNameFor(config, "standings") ? null : (
         <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>{title}</div>
       )}
-      <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
+      <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: header.subtitleColor ?? palette.accent }}>
         {subtitleText}
       </div>
       {organizer ? (
@@ -70,15 +72,22 @@ function StandingsRow({
   row,
   rowIdx,
   pitch,
+  matchCount,
 }: {
   config: TemplateConfig;
   col: StandingsColumnSpec;
   row: RankedRow;
   rowIdx: number;
   pitch: number;
+  matchCount?: number;
 }) {
   const st = config.standings;
   const { palette } = config;
+  const rankBoxW = st.rankBoxW ?? DEFAULT_RANK_BOX_W;
+  const statBoxW = st.statBoxW ?? DEFAULT_STAT_BOX_W;
+  const logoPlate = st.logoPlate ?? DEFAULT_LOGO_PLATE;
+  const logoImg = Math.max(16, logoPlate - LOGO_INSET);
+  const logoNameGap = st.logoNameGap ?? DEFAULT_LOGO_NAME_GAP;
   const y = st.rowY0 + rowIdx * pitch;
   const isRankOne = row.rank === 1;
   const teamStyle: CSSProperties = {
@@ -88,6 +97,8 @@ function StandingsRow({
     lineHeight: `${st.rowHeight}px`,
     font: st.nameFont,
     color: isRankOne ? palette.wwcdText : palette.text,
+    letterSpacing: "-0.01em",
+    fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -118,21 +129,24 @@ function StandingsRow({
           }}
         />
       ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: col.rankX,
-          top: y,
-          width: RANK_BOX_W,
-          height: st.rowHeight,
-          lineHeight: `${st.rowHeight}px`,
-          textAlign: "center",
-          font: st.statFont,
-          color: isRankOne ? palette.accent : palette.textMuted,
-        }}
-      >
-        {row.rank}
-      </div>
+      {(col.ranksBakedIn ?? st.ranksBakedIn) ? null : (
+        <div
+          style={{
+            position: "absolute",
+            left: col.rankX,
+            top: y,
+            width: rankBoxW,
+            height: st.rowHeight,
+            lineHeight: `${st.rowHeight}px`,
+            textAlign: "center",
+            font: st.statFont,
+            fontVariantNumeric: "tabular-nums",
+            color: isRankOne ? palette.accent : palette.textMuted,
+          }}
+        >
+          {row.rank}
+        </div>
+      )}
       {row.logoUrl ? (
         <>
           {/* Logo plate: palette circle behind the logo ink; rank-1 ring
@@ -141,9 +155,9 @@ function StandingsRow({
             style={{
               position: "absolute",
               left: col.teamX,
-              top: y + (st.rowHeight - LOGO_PLATE) / 2,
-              width: LOGO_PLATE,
-              height: LOGO_PLATE,
+              top: y + (st.rowHeight - logoPlate) / 2,
+              width: logoPlate,
+              height: logoPlate,
               borderRadius: "50%",
               background: palette.plateBg,
               border: isRankOne ? `2px solid ${palette.accent}` : `1px solid ${palette.plateRing}`,
@@ -156,10 +170,10 @@ function StandingsRow({
             alt=""
             style={{
               position: "absolute",
-              left: col.teamX + (LOGO_PLATE - LOGO_IMG) / 2,
-              top: y + (st.rowHeight - LOGO_IMG) / 2,
-              width: LOGO_IMG,
-              height: LOGO_IMG,
+              left: col.teamX + (logoPlate - logoImg) / 2,
+              top: y + (st.rowHeight - logoImg) / 2,
+              width: logoImg,
+              height: logoImg,
               borderRadius: "50%",
               objectFit: "cover",
             }}
@@ -167,7 +181,7 @@ function StandingsRow({
         </>
       ) : null}
       {row.logoUrl ? (
-        <div style={{ ...teamStyle, left: col.teamX + LOGO_NAME_GAP, width: col.teamW - LOGO_NAME_GAP }}>
+        <div style={{ ...teamStyle, left: col.teamX + logoNameGap, width: col.teamW - logoNameGap }}>
           {row.teamName}
         </div>
       ) : (
@@ -180,15 +194,17 @@ function StandingsRow({
             position: "absolute",
             left: x,
             top: y,
-            width: STAT_BOX_W,
+            width: statBoxW,
             height: st.rowHeight,
             lineHeight: `${st.rowHeight}px`,
             textAlign: "center",
             font: st.statFont,
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "-0.02em",
             color: key === "total" && isRankOne ? palette.accent : palette.text,
           }}
         >
-          {row[key]}
+          {statColumnValue(row, key, matchCount)}
         </div>
       ))}
     </>
@@ -199,12 +215,16 @@ function StandingsColumn({
   config,
   col,
   rows,
+  matchCount,
 }: {
   config: TemplateConfig;
   col: StandingsColumnSpec;
   rows: RankedRow[];
+  matchCount?: number;
 }) {
   const st = config.standings;
+  const rankBoxW = st.rankBoxW ?? DEFAULT_RANK_BOX_W;
+  const statBoxW = st.statBoxW ?? DEFAULT_STAT_BOX_W;
   const labelStyle = {
     top: st.headerLabelsY,
     font: st.labelFont,
@@ -213,13 +233,21 @@ function StandingsColumn({
   } as const;
   // Art-backed templates carry their own baked label row — code draws none.
   const showLabels = !config.labelsBakedIn;
-  const pitch = effectivePitch(st.rowY0, st.rowPitch, col.rowsBottom, rows.length);
+  // fixedRowPitch: the art's bars are already drawn at an exact pitch — never
+  // stretch rows to fill an area (that would drift off the painted bars).
+  const pitch = effectivePitch(
+    st.rowY0,
+    st.rowPitch,
+    col.rowsBottom,
+    rows.length,
+    col.fixedRowPitch ?? st.fixedRowPitch === true,
+  );
   return (
     <>
       {showLabels ? (
         <>
           {/* Nudge RANK left so it clears the TEAM header at col.teamX. */}
-          <div style={{ position: "absolute", left: col.rankX - 5, width: RANK_BOX_W, textAlign: "center", ...labelStyle }}>
+          <div style={{ position: "absolute", left: col.rankX - 5, width: rankBoxW, textAlign: "center", ...labelStyle }}>
             {STANDINGS_LABELS.rank}
           </div>
           <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>{STANDINGS_LABELS.team}</div>
@@ -229,7 +257,7 @@ function StandingsColumn({
               style={{
                 position: "absolute",
                 left: x,
-                width: STAT_BOX_W,
+                width: statBoxW,
                 textAlign: "center",
                 ...labelStyle,
               }}
@@ -240,7 +268,15 @@ function StandingsColumn({
         </>
       ) : null}
       {rows.map((row, i) => (
-        <StandingsRow key={row.teamId} config={config} col={col} row={row} rowIdx={i} pitch={pitch} />
+        <StandingsRow
+          key={row.teamId}
+          config={config}
+          col={col}
+          row={row}
+          rowIdx={i}
+          pitch={pitch}
+          matchCount={matchCount}
+        />
       ))}
     </>
   );
@@ -268,7 +304,11 @@ export function OverallStandingsGraphic({
 }: OverallStandingsGraphicProps) {
   const config = getTemplate(aestheticId);
   const singleColumn = config.standings.singleColumn === true;
-  const [leftCount] = splitRows(standings.length);
+  // rowsPerColumn lets an art-backed table wrap at its painted bar count
+  // (ewc-yellow: 12 per side, so team #13 starts the right column).
+  const splitAt = config.standings.columns[0].rowsPerColumn ?? config.standings.rowsPerColumn;
+  const [leftCount] =
+    splitAt !== undefined ? splitRowsAt(standings.length, splitAt) : splitRows(standings.length);
   const ranked = withRanks(standings);
   // singleColumn (neon-green): ONE full-width table renders every row and the
   // second column spec is skipped entirely.
@@ -281,6 +321,7 @@ export function OverallStandingsGraphic({
           key={col.stripX}
           config={config}
           col={col}
+          matchCount={matchCount}
           rows={
             singleColumn
               ? ranked

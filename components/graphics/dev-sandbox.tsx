@@ -3,12 +3,18 @@
 import { useRef, useState } from "react";
 import {
   AESTHETICS,
+  effectivePitch,
+  headerFor,
+  hideScrimNameFor,
   slotToStyle,
+  splitRowsAt,
   splitRows,
   type AestheticId,
   type StandingsColumnSpec,
+  type StatColumnKey,
   type TemplateConfig,
 } from "@/lib/graphics";
+import { STANDINGS_LABELS, subtitleMatchNumber } from "@/lib/graphics/standings";
 import { DownloadPngButton } from "./DownloadPngButton";
 import { GraphicCanvas } from "./GraphicCanvas";
 
@@ -33,22 +39,26 @@ const DUMMY_NAMES = [
   "HYDRA OPS PAK",
 ];
 
-function dummyStats(rank: number): Record<"wwcd" | "pp" | "kp" | "total", number> {
+function dummyStats(rank: number): Record<StatColumnKey, number> {
   const total = 100 - rank * 3;
   const wwcd = rank === 1 ? 3 : rank <= 5 ? 1 : 0;
   const kp = 21 - Math.floor(rank / 4);
-  return { wwcd, pp: total - kp - wwcd * 15, kp, total };
+  return { wwcd, matches: 6, pp: total - kp - wwcd * 15, kp, total };
 }
 
 function GraphicHeader({ config }: { config: TemplateConfig }) {
-  const { header, palette, name } = config;
+  const { palette, name } = config;
+  const header = headerFor(config, "standings");
+  const subtitle = config.subtitleMode === "matchNumber" ? subtitleMatchNumber("AFTER MATCH 2") : "AFTER MATCH 2";
   return (
     <>
-      <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
-        {name.toUpperCase()}
-      </div>
-      <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: palette.accent }}>
-        AFTER MATCH 2
+      {hideScrimNameFor(config, "standings") ? null : (
+        <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>
+          {name.toUpperCase()}
+        </div>
+      )}
+      <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: header.subtitleColor ?? palette.accent }}>
+        {subtitle}
       </div>
       <div style={{ ...slotToStyle(header.organizer), font: header.organizerFont, color: palette.textMuted }}>
         DEV SANDBOX
@@ -62,19 +72,24 @@ function DummyRow({
   col,
   rank,
   rowIdx,
+  pitch,
 }: {
   config: TemplateConfig;
   col: StandingsColumnSpec;
   rank: number;
   rowIdx: number;
+  pitch: number;
 }) {
   const st = config.standings;
-  const y = st.rowY0 + rowIdx * st.rowPitch;
+  const y = st.rowY0 + rowIdx * pitch;
   const isRankOne = rank === 1;
   const stats = dummyStats(rank);
+  const rankBoxW = st.rankBoxW ?? 48;
+  const statBoxW = st.statBoxW ?? 58;
+  const ranksBakedIn = col.ranksBakedIn ?? st.ranksBakedIn;
   return (
     <>
-      {rowIdx % 2 === 1 ? (
+      {isRankOne || rowIdx % 2 === 1 ? (
         <div
           style={{
             position: "absolute",
@@ -82,28 +97,28 @@ function DummyRow({
             top: y,
             width: col.stripW,
             height: st.rowHeight,
-            background: config.palette.rowAlt,
-            opacity: config.palette.rowAltOpacity,
+            background: isRankOne ? config.palette.wwcdBg : config.palette.rowAlt,
+            opacity: isRankOne ? 1 : config.palette.rowAltOpacity,
           }}
         />
       ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: col.rankX,
-          top: y,
-          width: 48,
-          height: st.rowHeight,
-          lineHeight: `${st.rowHeight}px`,
-          textAlign: "center",
-          font: st.statFont,
-          ...(isRankOne
-            ? { background: config.palette.wwcdBg, color: config.palette.wwcdText, borderRadius: 10 }
-            : { color: config.palette.text }),
-        }}
-      >
-        {rank}
-      </div>
+      {ranksBakedIn ? null : (
+        <div
+          style={{
+            position: "absolute",
+            left: col.rankX,
+            top: y,
+            width: rankBoxW,
+            height: st.rowHeight,
+            lineHeight: `${st.rowHeight}px`,
+            textAlign: "center",
+            font: st.statFont,
+            color: isRankOne ? config.palette.wwcdText : config.palette.text,
+          }}
+        >
+          {rank}
+        </div>
+      )}
       <div
         style={{
           position: "absolute",
@@ -113,13 +128,13 @@ function DummyRow({
           height: st.rowHeight,
           lineHeight: `${st.rowHeight}px`,
           font: st.nameFont,
-          color: config.palette.text,
+          color: isRankOne ? config.palette.wwcdText : config.palette.text,
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
         }}
       >
-        {DUMMY_NAMES[rank - 1]}
+        {DUMMY_NAMES[(rank - 1) % DUMMY_NAMES.length]}
       </div>
       {col.statColumns.map(({ key, x }) => (
         <div
@@ -128,12 +143,13 @@ function DummyRow({
             position: "absolute",
             left: x,
             top: y,
-            width: 58,
+            width: statBoxW,
             height: st.rowHeight,
             lineHeight: `${st.rowHeight}px`,
             textAlign: "center",
             font: st.statFont,
-            color: key === "total" ? config.palette.accent : config.palette.text,
+            fontVariantNumeric: "tabular-nums",
+            color: key === "total" && isRankOne ? config.palette.accent : config.palette.text,
           }}
         >
           {stats[key]}
@@ -155,6 +171,15 @@ function StandingsColumn({
   rowCount: number;
 }) {
   const st = config.standings;
+  const rankBoxW = st.rankBoxW ?? 48;
+  const statBoxW = st.statBoxW ?? 58;
+  const pitch = effectivePitch(
+    st.rowY0,
+    st.rowPitch,
+    col.rowsBottom,
+    rowCount,
+    col.fixedRowPitch ?? st.fixedRowPitch === true,
+  );
   const labelStyle = {
     top: st.headerLabelsY,
     font: st.labelFont,
@@ -162,34 +187,45 @@ function StandingsColumn({
   } as const;
   return (
     <>
-      <div
-        style={{
-          position: "absolute",
-          left: col.rankX,
-          width: 48,
-          textAlign: "center",
-          ...labelStyle,
-        }}
-      >
-        RANK
-      </div>
-      <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>TEAM</div>
-      {col.statColumns.map(({ key, x }) => (
-        <div
-          key={key}
-          style={{
-            position: "absolute",
-            left: x,
-            width: 58,
-            textAlign: "center",
-            ...labelStyle,
-          }}
-        >
-          {key.toUpperCase()}
-        </div>
-      ))}
+      {config.labelsBakedIn ? null : (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              left: col.rankX,
+              width: rankBoxW,
+              textAlign: "center",
+              ...labelStyle,
+            }}
+          >
+            {STANDINGS_LABELS.rank}
+          </div>
+          <div style={{ position: "absolute", left: col.teamX, ...labelStyle }}>{STANDINGS_LABELS.team}</div>
+          {col.statColumns.map(({ key, x }) => (
+            <div
+              key={key}
+              style={{
+                position: "absolute",
+                left: x,
+                width: statBoxW,
+                textAlign: "center",
+                ...labelStyle,
+              }}
+            >
+              {STANDINGS_LABELS[key]}
+            </div>
+          ))}
+        </>
+      )}
       {Array.from({ length: rowCount }, (_, i) => (
-        <DummyRow key={firstRank + i} config={config} col={col} rank={firstRank + i} rowIdx={i} />
+        <DummyRow
+          key={firstRank + i}
+          config={config}
+          col={col}
+          rank={firstRank + i}
+          rowIdx={i}
+          pitch={pitch}
+        />
       ))}
     </>
   );
@@ -199,22 +235,27 @@ function SandboxSection({ id }: { id: AestheticId }) {
   const config = AESTHETICS[id];
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  // Generalized team count (C7.1 Pass 4): splitRows(n) instead of a
-  // hardcoded 16 — the render below uses the 16-team default.
-  const [leftRows, rightRows] = splitRows(16);
+  // Generalised row split: honour the art's painted bars-per-side when set
+  // (ewc-yellow / challengers-red: 12), otherwise the default two-column split.
+  const totalTeams = 16;
+  const singleColumn = config.standings.singleColumn === true;
+  const splitAt = config.standings.columns[0].rowsPerColumn ?? config.standings.rowsPerColumn;
+  const [leftRows, rightRows] =
+    splitAt !== undefined ? splitRowsAt(totalTeams, splitAt) : splitRows(totalTeams);
+  const columns = singleColumn ? [config.standings.columns[0]] : config.standings.columns;
 
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-lg font-bold tracking-widest text-gold">{config.name}</h2>
       <GraphicCanvas config={config} variant="standings" stageRef={stageRef}>
         <GraphicHeader config={config} />
-        {config.standings.columns.map((col, colIdx) => (
+        {columns.map((col, colIdx) => (
           <StandingsColumn
             key={col.stripX}
             config={config}
             col={col}
             firstRank={colIdx === 0 ? 1 : leftRows + 1}
-            rowCount={colIdx === 0 ? leftRows : rightRows}
+            rowCount={singleColumn ? totalTeams : colIdx === 0 ? leftRows : rightRows}
           />
         ))}
       </GraphicCanvas>

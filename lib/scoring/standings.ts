@@ -26,6 +26,9 @@ export type StandingRow = {
   pp: number;
   kp: number;
   total: number;
+  /** Optional confirmed-match count for per-row MATCHES rendering. The
+   * standings graphic falls back to its session-level matchCount prop. */
+  matches?: number;
 };
 
 export function computeStandings(

@@ -3,10 +3,25 @@ import type { AnnouncementSpec, GraphicVariant, Slot, TemplateConfig } from "./t
 
 /**
  * Two-column split for n teams: [left, right].
- * left = min(13, ceil(n/2)); right = n - left. 16→[8,8], 25→[13,12].
+ * left = min(maxLeft, ceil(n/2)); right = n - left.
+ * Default maxLeft 13: 16→[8,8], 25→[13,12].
+ * Art with 12 bars per side passes 12: 24→[12,12], 25→[12,13].
  */
-export function splitRows(n: number): [number, number] {
-  const left = Math.min(13, Math.ceil(n / 2));
+export function splitRows(n: number, maxLeft = 13): [number, number] {
+  const left = Math.min(maxLeft, Math.ceil(n / 2));
+  return [left, n - left];
+}
+
+/**
+ * Fixed-capacity two-column split for tables whose ranks are baked into the
+ * art: the left column fills first up to `rowsPerColumn` (12 on
+ * challengers-red), then the rest go right. 24 → [12,12], 16 → [12,4],
+ * 25 → [12,13] (the overflow row renders below the painted table, never
+ * dropped). n ≤ 0 → [0,0].
+ */
+export function splitRowsAt(n: number, rowsPerColumn: number): [number, number] {
+  if (n <= 0 || rowsPerColumn <= 0) return [0, 0];
+  const left = Math.min(n, rowsPerColumn);
   return [left, n - left];
 }
 
@@ -40,6 +55,12 @@ export function headerFor(config: TemplateConfig, variant: GraphicVariant): Temp
   return override ? { ...config.header, ...override } : config.header;
 }
 
+/** Per-variant scrim-name visibility: the variant flag wins when present,
+ * otherwise the template-wide flag applies (neon-green hides it everywhere). */
+export function hideScrimNameFor(config: TemplateConfig, variant: GraphicVariant): boolean {
+  return config.variantHideScrimName?.[variant] ?? config.hideScrimName === true;
+}
+
 /**
  * Row auto-fit pitch for art-backed templates (P4): rows stretch to fill the
  * column's table area for ANY team count.
@@ -52,15 +73,17 @@ export function columnPitch(rowY0: number, rowsBottom: number, rowsInColumn: num
 
 /**
  * Effective pitch for one standings column: auto-fit when the column sets
- * rowsBottom, else the template's fixed rowPitch.
+ * rowsBottom, else the template's fixed rowPitch. `fixed` (baked-slot art)
+ * always keeps the fixed pitch so rows stay dead-center in painted bars.
  */
 export function effectivePitch(
   rowY0: number,
   fallbackPitch: number,
   rowsBottom: number | undefined,
   rowsInColumn: number,
+  fixed = false,
 ): number {
-  if (rowsBottom === undefined) return fallbackPitch;
+  if (fixed || rowsBottom === undefined) return fallbackPitch;
   return columnPitch(rowY0, rowsBottom, rowsInColumn);
 }
 

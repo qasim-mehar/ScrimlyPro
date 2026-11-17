@@ -433,29 +433,34 @@ const CHALLENGERS_RED_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
   decor: [],
 };
 
-/** Challengers-red: dark theme, esports red accent. MVP renders over the
- * user's art (4096×6144 JPEG → ×0.263671875). NOTE: the delivered art is a
- * TEAL/dark-navy design (not red) — the red palette still reads on the dark
- * slot cards (measured 5.45:1) and the aesthetic id is kept per spec.
- * 5 slot cards art y: 1968–2500, 2588–3128, 3216–3760, 3850–4390, 4480–5028
- * (pitch ≈630). "TOP 5 FRAGGERS" + "KILLS" baked → subtitleBakedIn, code
- * draws names + kills numbers only. Kills column centers on the baked KILLS
- * ink (art x3464–3702, center 3583 → canvas 944.7) over the slots' dark
- * interior (digit-band mean lum 0.019–0.023 across all five rows — the
- * chevrons stay clear of the mid-band). Scrim strip is the clear top band
- * (art y18–285); the title renders in palette.text there — accent red on
- * that teal is 1.13:1 (unreadable), so the engine's title=text convention
- * wins. Bottom PUBG logo starts below art y5300 (clear of slot 5); watermark
- * zone has baked corner ticks (P2, brand-law position kept). */
+/** Challengers-red: dark theme, esports red/cyan broadcast aesthetic. Standings
+ * renders over the updated overall.png (4096×6144 JPEG payload inside a .png name
+ * → canvas ×1080/4096 = 0.263671875).
+ * - 12 painted dark charcoal/green row bars per column: y389 top, pitch 67.3636,
+ *   height 62 (row 12 bottom 1192). Ranks 1–24 are baked into the cyan edge strip
+ *   → ranksBakedIn skips code rank numerals. Team slot starts at x150 (left) /
+ *   x600 (right).
+ * - Baked cyan header bar at y326–379 (labelsBakedIn: true) prints RANK | TEAM |
+ *   [Chicken Icon] | PP | KP | TP. Stat value boxes (38px wide) center on the
+ *   measured ink: left centers 373.5 (wwcd), 413.5 (pp), 454 (kp), 493 (total);
+ *   right centers 831 (wwcd), 871.5 (pp), 912 (kp), 951.5 (total).
+ * - Baked "OVERALL RANKINGS" block + top silver trophy → variantHideScrimName
+ *   hides the title for standings (MVP keeps the session name).
+ * - Subtitle slot (x966 y230 w46, #061014) drops the match number into the
+ *   open cyan slot right of the baked "MATCH #" ink.
+ * - MVP renders over mvp.png (5 slot cards at y519 pitch 165.5). Announcement
+ *   keeps the dark gradient fallback. */
 const CHALLENGERS_RED: TemplateConfig = {
   ...GEOMETRY,
   id: "challengers-red",
   name: "Challengers Red",
   backgrounds: {
-    standings: CHALLENGERS_RED_FALLBACK_BG,
+    standings: { type: "image", src: "/templates/challengers-red/overall.png" },
     mvp: { type: "image", src: "/templates/challengers-red/mvp.png" },
     announcement: CHALLENGERS_RED_FALLBACK_BG,
   },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
   uniformMvpRows: true,
   header: {
     title: { x: 140, y: 18, w: 800, align: "center" },
@@ -464,6 +469,64 @@ const CHALLENGERS_RED: TemplateConfig = {
     titleFont: `600 44px ${FONTS}`,
     subtitleFont: `600 40px ${FONTS}`,
     organizerFont: `500 22px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      subtitle: { x: 966, y: 230, w: 46, align: "center" },
+      subtitleColor: "#061014",
+      subtitleFont: `800 36px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 96,
+        teamX: 150,
+        teamW: 198,
+        statColumns: [
+          { key: "wwcd", x: 354.5 },
+          { key: "pp", x: 394.5 },
+          { key: "kp", x: 435 },
+          { key: "total", x: 474 },
+        ],
+        stripX: 145,
+        stripW: 380,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 528,
+        teamX: 600,
+        teamW: 206,
+        statColumns: [
+          { key: "wwcd", x: 812 },
+          { key: "pp", x: 852.5 },
+          { key: "kp", x: 893 },
+          { key: "total", x: 932.5 },
+        ],
+        stripX: 594,
+        stripW: 388,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 326,
+    rowY0: 389,
+    rowPitch: 67.3636,
+    rowHeight: 62,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 38,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 20px ${FONTS}`,
   },
   mvp: {
     rowY0: 519,
@@ -483,8 +546,8 @@ const CHALLENGERS_RED: TemplateConfig = {
   },
   palette: {
     accent: "#ff4655",
-    text: "#f0f0f4",
-    textMuted: "#7a7a8a",
+    text: "#ffffff",
+    textMuted: "#b9c6d2",
     rowAlt: "#ffffff",
     rowAltOpacity: 0.04,
     wwcdBg: "rgba(255,70,85,0.14)",
@@ -499,6 +562,136 @@ const CHALLENGERS_RED: TemplateConfig = {
   },
 };
 
+const EWC_YELLOW_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(170deg, #FFF6DC 0%, #F7E2AE 55%, #EFD08C 100%)",
+  decor: [],
+};
+
+/** EWC Yellow: the PMWC-at-EWC broadcast standings art. The delivered file is
+ * a 4096×6144 JPEG payload inside a .png name (like neon-green /
+ * challengers-red) → canvas ×1080/4096 = 0.263671875. Every coordinate below is
+ * measured from those pixels:
+ * - white row bars: left art x537–1982 → 141.6–522.6, right x2306–3760 →
+ *   608.0–991.4; row 1 top art1490 → 392.87, row 12 top art4786 → 1261.93,
+ *   height art255 → 67.24, pitch art300 → 79.1 (tuned 79 for zero drift).
+ * - baked rank badges (#1–#24, orange/silver/gold) sit left of the bars →
+ *   ranksBakedIn skips the code-drawn rank numerals.
+ * - baked header band y art1342–1423 → 353.9–375.2, labels RANK | TEAM |
+ *   WWCD | MATCHES | PLACE PTS | ELIMS | TOTAL. Numeric ink centers (canvas,
+ *   left): WWCD 304.7, MATCHES 359.4, PLACE PTS 407.5, ELIMS 446.3, TOTAL 492.9
+ *   → 46-wide value boxes at 282/334/380/426/472 (non-overlapping; the right
+ *   column repeats at +466). TEAM names start inside the bar at 146.
+ * - baked title "OVERALL RANKINGS" ink x102.8–798.1 y199.6–268.2; the scrim
+ *   name renders in the clear orange band above it (y130–164). The slanted
+ *   "Match #" ribbon's white ink ends x1013.8 y234.9–271.3 → the match number
+ *   slot starts at 1018 inside the ribbon.
+ * - bottom flame art starts below the table (last bar bottom 1329.2); the
+ *   brand-law watermark at y1570 sits over the dark purple swirls (measured
+ *   glyph-zone mean luminance 0.13 → white ink reads 5.8:1).
+ * MVP + announcement have no art → warm light gradient fallback; dark espresso
+ * text/medal ink keeps every fallback surface high-contrast. */
+const EWC_YELLOW: TemplateConfig = {
+  ...GEOMETRY,
+  id: "ewc-yellow",
+  name: "EWC Yellow",
+  backgrounds: {
+    standings: { type: "image", src: "/templates/ewc-yellow/overall.png" },
+    mvp: EWC_YELLOW_FALLBACK_BG,
+    announcement: EWC_YELLOW_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Clear orange band above the baked "OVERALL RANKINGS" block.
+      title: { x: 140, y: 130, w: 800, align: "center" },
+      // Match number sits immediately right of the baked "Match #" ink
+      // (ends x1013.8) inside the slanted ribbon.
+      subtitle: { x: 1018, y: 232, w: 52, align: "left" },
+      organizer: { x: 140, y: 130, w: 800, align: "center" },
+      titleFont: `700 28px ${FONTS}`,
+      subtitleFont: `800 34px ${FONTS}`,
+      subtitleColor: "#2B0F00", // deep espresso inside the orange ribbon
+      organizerFont: `500 22px ${FONTS}`,
+    },
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 96, // baked badge square; no code-drawn numeral (ranksBakedIn)
+        teamX: 146, // first clear pixel inside the white bar
+        teamW: 132, // ends before the WWCD box at 282
+        statColumns: [
+          { key: "wwcd", x: 282 },
+          { key: "matches", x: 334 },
+          { key: "pp", x: 380 },
+          { key: "kp", x: 426 },
+          { key: "total", x: 472 },
+        ],
+        stripX: 142,
+        stripW: 381,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 562,
+        teamX: 612,
+        teamW: 132,
+        statColumns: [
+          { key: "wwcd", x: 748 },
+          { key: "matches", x: 800 },
+          { key: "pp", x: 846 },
+          { key: "kp", x: 892 },
+          { key: "total", x: 938 },
+        ],
+        stripX: 608,
+        stripW: 383,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 353,
+    rowY0: 393,
+    rowPitch: 79,
+    rowHeight: 67,
+    maxRowsLeft: 12,
+    statBoxW: 46,
+    logoPlate: 34,
+    logoNameGap: 38,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 20px ${FONTS}`,
+  },
+  palette: {
+    accent: "#5C2400",
+    text: "#2B0F00",
+    textMuted: "#4A1C00",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.22,
+    wwcdBg: "rgba(255,196,0,0.26)",
+    wwcdText: "#6E2B00",
+    watermarkColor: "rgba(255,255,255,0.9)",
+    plateBg: "#FFF6E2",
+    plateRing: "rgba(58,20,0,0.30)",
+    medalGold: "#B57E0D",
+    medalSilver: "#7D8698",
+    medalBronze: "#9C6327",
+    medalText: "#FFFFFF",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -506,6 +699,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "pmpl-light": PMPL_LIGHT,
   "neon-green": NEON_GREEN,
   "challengers-red": CHALLENGERS_RED,
+  "ewc-yellow": EWC_YELLOW,
 };
 
 /** Look up a template config by aesthetic id. Unknown/legacy ids (the seed's

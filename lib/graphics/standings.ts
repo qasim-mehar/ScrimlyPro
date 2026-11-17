@@ -1,13 +1,34 @@
+import type { StatColumnKey } from "./types";
 import type { StandingRow } from "@/lib/scoring";
 
 export const STANDINGS_LABELS = {
   rank: "RANK",
   team: "TEAM",
   wwcd: "WWCD",
+  matches: "MATCHES",
   pp: "PP",
   kp: "KP",
   total: "TOTAL",
 } as const;
+
+/** One standings value cell. `matches` is the session's confirmed-match
+ * count (threaded through the graphic props); a row-level override stays
+ * available for future per-team match counts. Never reads an aggregate
+ * column — the count is derived from confirmed matches by the caller. */
+export function statColumnValue(row: StandingRow, key: StatColumnKey, matchCount?: number): number {
+  switch (key) {
+    case "wwcd":
+      return row.wwcd;
+    case "matches":
+      return row.matches ?? matchCount ?? 0;
+    case "pp":
+      return row.pp;
+    case "kp":
+      return row.kp;
+    case "total":
+      return row.total;
+  }
+}
 
 /** "FINAL RESULTS" when isFinal, else "AFTER MATCH N".
  * (0, false) yields "AFTER MATCH 0" — documented edge; callers avoid it. */

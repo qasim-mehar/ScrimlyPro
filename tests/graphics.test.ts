@@ -10,6 +10,7 @@ import {
   getTemplate,
   slotToStyle,
   splitRows,
+  splitRowsAt,
   type AestheticId,
   type AnnouncementSpec,
   type Slot,
@@ -108,9 +109,10 @@ describe("AESTHETICS registry", () => {
     "pmpl-light",
     "neon-green",
     "challengers-red",
+    "ewc-yellow",
   ];
 
-  it("exposes exactly the six aesthetic ids", () => {
+  it("exposes exactly the seven aesthetic ids", () => {
     expect(Object.keys(AESTHETICS).sort()).toEqual([...IDS].sort());
   });
 
@@ -533,9 +535,160 @@ describe("challengers-red config (P6 art calibration)", () => {
 
   it("uses the challengers palette values", () => {
     expect(config.palette.accent).toBe("#ff4655");
-    expect(config.palette.text).toBe("#f0f0f4");
+    expect(config.palette.text).toBe("#ffffff");
     expect(config.palette.watermarkColor).toBe("rgba(255,255,255,0.7)");
     expect(config.palette.medalText).toBe("#0f1015");
+  });
+});
+
+describe("challengers-red standings config (measured 24-slot art)", () => {
+  const config: TemplateConfig = getTemplate("challengers-red");
+  const table = config.standings;
+  const [left, right] = table.columns;
+
+  it("points standings at the real art file, which exists on disk", () => {
+    expect(config.backgrounds.standings).toEqual({
+      type: "image",
+      src: "/templates/challengers-red/overall.png",
+    });
+    expect(() => readFileSync("public/templates/challengers-red/overall.png")).not.toThrow();
+    expect(config.backgrounds.mvp).toEqual({
+      type: "image",
+      src: "/templates/challengers-red/mvp.png",
+    });
+  });
+
+  it("bakes labels, ranks, and subtitleMode matchNumber", () => {
+    expect(config.labelsBakedIn).toBe(true);
+    expect(config.subtitleMode).toBe("matchNumber");
+    expect(table.ranksBakedIn).toBe(true);
+    for (const col of table.columns) {
+      expect(col.ranksBakedIn).toBe(true);
+      expect(col.fixedRowPitch).toBe(true);
+      expect(col.rowsPerColumn).toBe(12);
+    }
+    expect(config.variantHideScrimName?.standings).toBe(true);
+    expect(config.variantHideScrimName?.mvp).not.toBe(true);
+  });
+
+  it("orders 4 statColumns in exact order: wwcd → pp → kp → total", () => {
+    const keys = ["wwcd", "pp", "kp", "total"];
+    expect(left.statColumns.map((c) => c.key)).toEqual(keys);
+    expect(right.statColumns.map((c) => c.key)).toEqual(keys);
+  });
+
+  it("keeps stat column X ranges non-overlapping within the left dark row bar (x <= 493)", () => {
+    const statBoxW = table.statBoxW ?? 38;
+    expect(statBoxW).toBe(38);
+    const sorted = [...left.statColumns].sort((a, b) => a.x - b.x);
+    for (let i = 1; i < sorted.length; i++) {
+      expect(sorted[i].x).toBeGreaterThanOrEqual(sorted[i - 1].x + statBoxW);
+    }
+    expect(sorted[0].x).toBeGreaterThanOrEqual(left.stripX);
+    expect(sorted[sorted.length - 1].x + statBoxW).toBeLessThanOrEqual(left.stripX + left.stripW);
+    expect(sorted[sorted.length - 1].x).toBeLessThanOrEqual(493);
+  });
+
+  it("enforces a 12-rows-per-column split: #1–#12 left, #13–#24 right", () => {
+    expect(table.maxRowsLeft).toBe(12);
+    expect(splitRowsAt(24, 12)).toEqual([12, 12]);
+    expect(splitRowsAt(16, 12)).toEqual([12, 4]);
+    expect(splitRowsAt(19, 12)).toEqual([12, 7]);
+    expect(splitRowsAt(25, 12)).toEqual([12, 13]);
+  });
+
+  it("has zero row overlap across 16, 19, and 24 teams (pitch >= rowHeight)", () => {
+    expect(table.rowPitch).toBeGreaterThanOrEqual(table.rowHeight);
+    for (const count of [16, 19, 24]) {
+      const [leftCount, rightCount] = splitRowsAt(count, 12);
+      for (const colCount of [leftCount, rightCount]) {
+        for (let r = 1; r < colCount; r++) {
+          const prevRowBottom = table.rowY0 + (r - 1) * table.rowPitch + table.rowHeight;
+          const nextRowTop = table.rowY0 + r * table.rowPitch;
+          expect(nextRowTop).toBeGreaterThanOrEqual(prevRowBottom - 1);
+        }
+      }
+    }
+  });
+
+  it("uses pure white text and bold broadcast typography", () => {
+    expect(config.palette.text).toBe("#ffffff");
+    expect(config.palette.textMuted).toBe("#b9c6d2");
+    expect(config.palette.accent).toBe("#ff4655");
+    expect(table.nameFont.startsWith("800 ")).toBe(true);
+    expect(table.statFont.startsWith("800 ")).toBe(true);
+  });
+});
+
+describe("ewc-yellow config (measured 24-slot art)", () => {
+  const config: TemplateConfig = getTemplate("ewc-yellow");
+  const table = config.standings;
+  const [left, right] = table.columns;
+
+  it("points standings at the real art file, which exists on disk", () => {
+    expect(config.backgrounds.standings).toEqual({
+      type: "image",
+      src: "/templates/ewc-yellow/overall.png",
+    });
+    expect(() => readFileSync("public/templates/ewc-yellow/overall.png")).not.toThrow();
+  });
+
+  it("bakes labels, ranks, and subtitleMode matchNumber", () => {
+    expect(config.labelsBakedIn).toBe(true);
+    expect(config.subtitleMode).toBe("matchNumber");
+    for (const col of table.columns) {
+      expect(col.ranksBakedIn).toBe(true);
+      expect(col.fixedRowPitch).toBe(true);
+      expect(col.rowsPerColumn).toBe(12);
+    }
+  });
+
+  it("orders 5 statColumns in exact order: wwcd → matches → pp → kp → total", () => {
+    const keys = ["wwcd", "matches", "pp", "kp", "total"];
+    expect(left.statColumns.map((c) => c.key)).toEqual(keys);
+    expect(right.statColumns.map((c) => c.key)).toEqual(keys);
+  });
+
+  it("keeps stat column X ranges non-overlapping within the left column width", () => {
+    const statBoxW = table.statBoxW ?? 46;
+    expect(statBoxW).toBe(46);
+    const sorted = [...left.statColumns].sort((a, b) => a.x - b.x);
+    for (let i = 1; i < sorted.length; i++) {
+      expect(sorted[i].x).toBeGreaterThanOrEqual(sorted[i - 1].x + statBoxW);
+    }
+    expect(sorted[0].x).toBeGreaterThanOrEqual(left.stripX);
+    expect(sorted[sorted.length - 1].x + statBoxW).toBeLessThanOrEqual(left.stripX + left.stripW);
+  });
+
+  it("enforces a 12-rows-per-column split: #1–#12 left, #13–#24 right", () => {
+    expect(table.maxRowsLeft).toBe(12);
+    expect(splitRowsAt(24, 12)).toEqual([12, 12]);
+    expect(splitRowsAt(16, 12)).toEqual([12, 4]);
+    expect(splitRowsAt(19, 12)).toEqual([12, 7]);
+    expect(splitRowsAt(25, 12)).toEqual([12, 13]);
+  });
+
+  it("has zero row overlap across 16, 19, and 24 teams (pitch >= rowHeight)", () => {
+    expect(table.rowPitch).toBeGreaterThanOrEqual(table.rowHeight);
+    for (const count of [16, 19, 24]) {
+      const [leftCount, rightCount] = splitRowsAt(count, 12);
+      for (const colCount of [leftCount, rightCount]) {
+        for (let r = 1; r < colCount; r++) {
+          const prevRowBottom = table.rowY0 + (r - 1) * table.rowPitch + table.rowHeight;
+          const nextRowTop = table.rowY0 + r * table.rowPitch;
+          expect(nextRowTop).toBeGreaterThanOrEqual(prevRowBottom - 12);
+        }
+      }
+    }
+  });
+
+  it("uses the measured espresso palette and bold broadcast typography", () => {
+    expect(config.palette.text).toBe("#2B0F00");
+    expect(config.palette.textMuted).toBe("#4A1C00");
+    expect(config.palette.accent).toBe("#5C2400");
+    expect(config.palette.wwcdText).toBe("#6E2B00");
+    expect(table.nameFont.startsWith("800 ")).toBe(true);
+    expect(table.statFont.startsWith("800 ")).toBe(true);
   });
 });
 
@@ -586,25 +739,30 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
     }
   }
 
-  it("covers all four delivered art variants", () => {
+  it("covers every delivered art variant (6 image backgrounds)", () => {
     expect(CASES).toEqual(
       expect.arrayContaining([
         { id: "pmpl-light", variant: "standings", file: "public/templates/pmpl-light/overall.png" },
         { id: "pmpl-light", variant: "announcement", file: "public/templates/pmpl-light/announcement.png" },
         { id: "neon-green", variant: "standings", file: "public/templates/neon-green/overall.png" },
+        { id: "challengers-red", variant: "standings", file: "public/templates/challengers-red/overall.png" },
         { id: "challengers-red", variant: "mvp", file: "public/templates/challengers-red/mvp.png" },
+        { id: "ewc-yellow", variant: "standings", file: "public/templates/ewc-yellow/overall.png" },
       ]),
     );
-    expect(CASES).toHaveLength(4);
+    expect(CASES).toHaveLength(6);
   });
 
-  it("sniffs both PNG and JPEG payloads (both new arts are JPEG-in-.png)", () => {
+  it("sniffs both PNG and JPEG payloads (all three new arts are JPEG-in-.png)", () => {
     const neon = readFileSync("public/templates/neon-green/overall.png");
-    const chal = readFileSync("public/templates/challengers-red/mvp.png");
+    const chalMvp = readFileSync("public/templates/challengers-red/mvp.png");
+    const chalStandings = readFileSync("public/templates/challengers-red/overall.png");
     expect(neon[0]).toBe(0xff); // JPEG SOI, not PNG magic
-    expect(chal[0]).toBe(0xff);
+    expect(chalMvp[0]).toBe(0xff);
+    expect(chalStandings[0]).toBe(0xff);
     expect(imageSize(neon)).toEqual({ w: 4096, h: 6144 });
-    expect(imageSize(chal)).toEqual({ w: 4096, h: 6144 });
+    expect(imageSize(chalMvp)).toEqual({ w: 4096, h: 6144 });
+    expect(imageSize(chalStandings)).toEqual({ w: 4096, h: 6144 });
     const pmpl = readFileSync("public/templates/pmpl-light/announcement.png");
     expect(pmpl.readUInt32BE(0)).toBe(0x89504e47);
     expect(imageSize(pmpl)).toEqual({ w: 2132, h: 3200 });
@@ -627,6 +785,7 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "pmpl-light",
     "neon-green",
     "challengers-red",
+    "ewc-yellow",
   ];
 
   it.each(IDS)("%s defines non-empty plate/medal strings", (id) => {
@@ -693,6 +852,14 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
       medalBronze: "#d19a5b",
       medalText: "#0f1015",
     });
+    expect(getTemplate("ewc-yellow").palette).toMatchObject({
+      plateBg: "#FFF6E2",
+      plateRing: "rgba(58,20,0,0.30)",
+      medalGold: "#B57E0D",
+      medalSilver: "#7D8698",
+      medalBronze: "#9C6327",
+      medalText: "#FFFFFF",
+    });
   });
 });
 
@@ -738,6 +905,7 @@ describe("P7 — font swap + template flags", () => {
     "pmpl-light",
     "neon-green",
     "challengers-red",
+    "ewc-yellow",
   ];
 
   it("uniformMvpRows is true for every theme (uniform MVP everywhere)", () => {
@@ -763,7 +931,7 @@ describe("P7 — font swap + template flags", () => {
     }
   });
 
-  it("data-bearing fonts carry weight 700 (readability bump)", () => {
+  it("data-bearing fonts carry weight ≥ 700 (700 body, 800 art-table bump)", () => {
     for (const id of IDS) {
       const c = getTemplate(id);
       for (const font of [
@@ -774,7 +942,9 @@ describe("P7 — font swap + template flags", () => {
         c.announcement.slotFont,
         c.announcement.nameFont,
       ]) {
-        expect(font.startsWith("700 ")).toBe(true);
+        const weight = Number(font.split(" ")[0]);
+        expect(weight).toBeGreaterThanOrEqual(700);
+        expect(weight).toBeLessThanOrEqual(800);
       }
     }
   });
