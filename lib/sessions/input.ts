@@ -8,6 +8,7 @@ export const VALID_TEMPLATE_IDS = [
   "ewc-yellow",
   "onyx-green",
   "pmgc-crimson",
+  "pmwi-violet",
   "grunge-red",
   "esports-clash",
 ] as const;

@@ -949,6 +949,152 @@ const PMGC_CRIMSON: TemplateConfig = {
   },
 };
 
+const PMWI_VIOLET_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #0A0524 0%, #24105C 55%, #062A4A 100%)",
+  decor: [],
+};
+
+/** PMWI Violet — the 2023 PUBG Mobile World Invitational electric violet/cyan
+ *  leaderboard. The delivered art is a TRUE PNG at 941×1672 (not a 4096×6144
+ *  JPEG-in-.png like the other broadcast arts), i.e. taller than the 2:3
+ *  canvas. It is uniformly fitted by WIDTH to 1080 (×1.1477151966 →
+ *  1080×1918.979809) and offset top -130.25 = (1672 − 1620/1.1477151966)/2,
+ *  the exact centred `object-fit: cover` crop. The bottom KRAFTON/LIGHTSPEED
+ *  footer (art y1605+) is cropped out, leaving the dark violet gradient the
+ *  brand-law watermark sits on. Every number below was measured off those art
+ *  pixels through that mapping:
+ *  - Cyan baked header bands art x46–454 / x486–897, y410–443 → canvas
+ *    x52.8–521.1 / x557.8–1029.5, y321.1–358.9. Dark ink centres: left
+ *    ELIMS 287.5 / WWCD 353 / TOTAL 419 → canvas 330 / 405.1 / 480.9; right
+ *    ELIMS 743.5 / WWCD 801.5 / TOTAL 863 → canvas 853.3 / 919.9 / 990.5
+ *    (the right shift is NOT uniform — measured, not assumed). ELIMS maps to
+ *    the kill-points stat (`kp`), then WWCD, then TOTAL.
+ *  - 12 painted dark bars per column: art tops 457…1199 (canvas 375.0…
+ *    1226.6), bottoms 507…1251 (canvas 432.4…1286.3). A fixed 77.42px pitch
+ *    with a 52px row box keeps all 12 rows strictly inside their bars;
+ *    ranksBakedIn skips code numerals (white #1–#24 boxes are baked at art
+ *    x46–99 / x486–539 → canvas 52.8–113.6 / 557.8–618.6).
+ *  - Baked "OVERALL RANKINGS" (art y216–317 → canvas 98–214) and "MATCH #"
+ *    (art y339–367 → canvas 240–272, white ink ends x456 → canvas 523.4).
+ *    The scrim name is hidden for standings; only the match digits render in
+ *    the open slot at x526 y236. The organizer is parked in the narrow dark
+ *    band below "MATCH #" (y282), clear of both baked blocks and the header.
+ *  - MVP + announcement have no art → deep violet/cyan gradient fallback.
+ *    White Exo 2 800 row text reads >12:1 on the measured row bars (lum
+ *    0.014) and the 90%-white watermark clears the violet footer. */
+const PMWI_VIOLET: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmwi-violet",
+  name: "PMWI Violet",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmwi-violet/overall.png",
+      // Uniform ×1080/941 cover crop: art ratio 0.5629 is taller than 2:3, so
+      // the centred crop removes art y0–130.25 and y1541.75–1672.
+      fit: { width: 1080, height: 1918.979809, left: 0, top: -130.25 },
+    },
+    mvp: PMWI_VIOLET_FALLBACK_BG,
+    announcement: PMWI_VIOLET_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep the normal header.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Open slot immediately right of the baked "MATCH #" ink (ends x523.4).
+      subtitle: { x: 526, y: 236, w: 60, align: "left" },
+      subtitleFont: `800 32px ${FONTS}`,
+      subtitleColor: "#FFFFFF", // white digits on the measured dark violet slot
+      // Park the optional organizer in the dark band below "MATCH #" (ends
+      // canvas y271.7) and above the cyan header (starts y321.1) — zero text
+      // collides with the baked title/subtitle art.
+      organizer: { x: 140, y: 282, w: 800, align: "center" },
+      organizerFont: `600 18px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS" across the top band
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 53, // baked white rank box canvas x52.8–113.6; no code numeral
+        teamX: 122, // first clear pixel right of that box
+        teamW: 180, // ends at 302, before the ELIMS/kp box
+        statColumns: [
+          { key: "kp", x: 302 }, // ELIMS ink center 329.97
+          { key: "wwcd", x: 377 }, // WWCD ink center 405.14
+          { key: "total", x: 453 }, // TOTAL ink center 480.89
+        ],
+        stripX: 116, // starts at the baked white rank box's right edge
+        stripW: 405, // right edge 521 — clears the cyan header/bar rim
+        rowsBottom: 1286, // art row 12 bottom 1251 → canvas 1286.3
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 558, // baked white rank box canvas x557.8–619.8 (art x486–540)
+        teamX: 628,
+        teamW: 197, // ends at 825, before the ELIMS/kp box
+        statColumns: [
+          { key: "kp", x: 825 }, // ELIMS ink center 853.33
+          { key: "wwcd", x: 892 }, // WWCD ink center 919.89
+          { key: "total", x: 962 }, // TOTAL ink center 990.48
+        ],
+        stripX: 620, // starts just past the baked white rank box (ends 619.8)
+        stripW: 409, // right edge 1029 — clears the cyan header/bar rim
+        rowsBottom: 1286, // art row 12 bottom 1251 → canvas 1286.3
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 321, // cyan baked label band top — code draws no labels
+    rowY0: 375.1, // art bar 1 top 457 → canvas 375.016
+    rowPitch: 77.42, // measured 12-bar span (1226.62 − 375.02)/11
+    rowHeight: 52, // art bar interior ≈57px; every row box stays inside
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 56, // ≥ three digits at 800 26px; right columns stay 11px apart
+    logoPlate: 34,
+    logoNameGap: 38,
+    uniformStatInk: true, // baked #1 badge carries rank-1 emphasis
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#01F9FE", // measured cyan header ink
+    text: "#FFFFFF", // pure white row ink on the dark translucent bars
+    textMuted: "#B8C7F5",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(1,249,254,0.10)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.9)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(1,249,254,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#120A2E",
+  },
+};
+
 const GRUNGE_RED_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
   type: "gradient",
   css: "linear-gradient(165deg, #0A0506 0%, #1A080C 55%, #2A0A10 100%)",
@@ -1203,9 +1349,14 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "ewc-yellow": EWC_YELLOW,
   "onyx-green": ONYX_GREEN,
   "pmgc-crimson": PMGC_CRIMSON,
+  "pmwi-violet": PMWI_VIOLET,
   "grunge-red": GRUNGE_RED,
   "esports-clash": ESPORTS_CLASH,
 };
+
+/** Registered ids in render order — the single source for chips, dev selectors
+ *  and registration tests (never a hand-maintained second list). */
+export const AESTHETIC_IDS = Object.keys(AESTHETICS) as AestheticId[];
 
 /** Look up a template config by aesthetic id. Unknown/legacy ids (the seed's
  * `dev-dark-gold`) fall back to the original dark-gold skin so graphics never

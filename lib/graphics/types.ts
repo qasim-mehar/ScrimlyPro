@@ -8,6 +8,7 @@ export type AestheticId =
   | "ewc-yellow"
   | "onyx-green"
   | "pmgc-crimson"
+  | "pmwi-violet"
   | "grunge-red"
   | "esports-clash";
 

@@ -71,6 +71,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmwi-violet",
     "grunge-red",
     "esports-clash",
   ];
@@ -404,6 +405,48 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
   it("pmgc-crimson: crimson-black fallback keeps white + muted ink readable", () => {
     const p = getTemplate("pmgc-crimson").palette;
     for (const bg of Object.values(getTemplate("pmgc-crimson").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  // pmwi-violet/overall.png (TRUE PNG 941×1672, uniformly width-fitted by
+  // ×1080/941 with top -130.25 = the centred cover crop). Zone means measured
+  // with the same per-pixel WCAG relative-luminance algorithm used for the
+  // other art templates (sharp scan).
+  const PMWI = {
+    // art(110,460,340,45) = canvas(126,378,390,52) — row 1 dark violet bar
+    rowBar: 0.013973,
+    // art(458,345,44,22) = canvas(526,246,50,25) — open slot right of the
+    // baked "MATCH #" ink (ends art x455 → canvas x522.2)
+    matchSlot: 0.032105,
+    // canvas(760,1570,280,26) → art(662,1498,244,23): dark violet footer the
+    // brand-law watermark sits on (the art's own KRAFTON footer is cropped).
+    watermark: { r: 21.2, g: 28.5, b: 124.9 },
+  };
+
+  it("pmwi-violet: white row text clears dark violet bars ≥ 12:1, match ink ≥ 4.5:1", () => {
+    const config = getTemplate("pmwi-violet");
+    const p = config.palette;
+    expect(p.text).toBe("#FFFFFF");
+    expect(p.wwcdText).toBe("#FFFFFF"); // rank-1 name/ink stays broadcast white
+    expect(config.standings.uniformStatInk).toBe(true);
+    expect(ratioOver(PMWI.rowBar, p.text)).toBeGreaterThanOrEqual(12); // AAA hard gate
+    const chipInk = config.variantHeaders?.standings?.subtitleColor ?? "#FFFFFF";
+    expect(chipInk).toBe("#FFFFFF");
+    expect(ratioOver(PMWI.matchSlot, chipInk)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("pmwi-violet: 90%-white watermark clears the dark violet footer (≥ 4.5)", () => {
+    const bg = PMWI.watermark;
+    const ink = { r: 255 * 0.9 + bg.r * 0.1, g: 255 * 0.9 + bg.g * 0.1, b: 255 * 0.9 + bg.b * 0.1 };
+    expect(contrastRatio(ink, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("pmwi-violet: violet/cyan fallback keeps white + muted ink readable", () => {
+    const p = getTemplate("pmwi-violet").palette;
+    for (const bg of Object.values(getTemplate("pmwi-violet").backgrounds)) {
       if (bg.type !== "gradient") continue;
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);

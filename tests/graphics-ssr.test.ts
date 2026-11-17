@@ -99,6 +99,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmwi-violet",
     "grunge-red",
   ];
 
@@ -330,6 +331,7 @@ describe("P7 � font swap + config flags (SSR)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmwi-violet",
     "grunge-red",
     "esports-clash",
   ];

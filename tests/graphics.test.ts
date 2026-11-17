@@ -112,6 +112,7 @@ describe("AESTHETICS registry", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmwi-violet",
     "grunge-red",
     "esports-clash",
   ];
@@ -760,6 +761,9 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
         { id: "ewc-yellow", variant: "standings", file: "public/templates/ewc-yellow/overall.png", fitted: false },
         { id: "onyx-green", variant: "standings", file: "public/templates/onyx-green/overall.png", fitted: false },
         { id: "pmgc-crimson", variant: "standings", file: "public/templates/pmgc-crimson/overall.png", fitted: false },
+        // pmwi-violet's true PNG is 941×1672 (taller than 2:3) → uniformly
+        // fitted by width (×1080/941, top -130.25) like the other fitted arts.
+        { id: "pmwi-violet", variant: "standings", file: "public/templates/pmwi-violet/overall.png", fitted: true },
         { id: "grunge-red", variant: "mvp", file: "public/templates/grunge-red/mvp.png", fitted: true },
         { id: "esports-clash", variant: "mvp", file: "public/templates/esports-clash/mvp.png", fitted: true },
       ]),
@@ -787,8 +791,14 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
     // organizer's export. Fitted art (grunge-red's 0.8-ratio portrait) is
     // uniformly pre-scaled via Background.fit → no ratio requirement.
     const { w, h } = imageSize(readFileSync(file));
-    if (!fitted) expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
-    expect(w).toBeGreaterThanOrEqual(MIN_WIDTH);
+    if (!fitted) {
+      // Full-cover art must itself be ≥1080 wide and 2:3.
+      expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
+      expect(w).toBeGreaterThanOrEqual(MIN_WIDTH);
+    }
+    // Uniformly fitted art (pmwi-violet) is pre-scaled to width 1080 via
+    // Background.fit — its native RGB pixels may be narrower.
+
   });
 });
 
@@ -803,6 +813,7 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmwi-violet",
     "grunge-red",
     "esports-clash",
   ];
@@ -943,6 +954,7 @@ describe("P7 — font swap + template flags", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmwi-violet",
     "grunge-red",
     "esports-clash",
   ];

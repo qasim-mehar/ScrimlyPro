@@ -7,6 +7,8 @@ import {
   AESTHETICS,
   effectivePitch,
   getTemplate,
+  headerFor,
+  hideScrimNameFor,
   splitRows,
   splitRowsAt,
   type AestheticId,
@@ -82,6 +84,7 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
   const [grid, setGrid] = useState(true);
   const [id, setId] = useState<AestheticId>("pmpl-light");
   const config = getTemplate(id);
+  const standingsHeader = headerFor(config, "standings");
   const rows = datasets[String(count)] ?? [];
   const singleColumn = config.standings.singleColumn === true;
   const splitAt = config.standings.columns[0].rowsPerColumn ?? config.standings.rowsPerColumn;
@@ -157,10 +160,14 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
           <pre className="mt-2 whitespace-pre-wrap">
             {JSON.stringify(
               {
-                title: config.header.title,
-                titleFont: config.header.titleFont,
-                subtitle: config.header.subtitle,
-                subtitleFont: config.header.subtitleFont,
+                // The effective header for standings (variantHeaders win) —
+                // art-backed templates hide/bake their title and move the
+                // match-number slot, so the raw fallback slots would mislead.
+                title: standingsHeader.title,
+                titleFont: standingsHeader.titleFont,
+                subtitle: standingsHeader.subtitle,
+                subtitleFont: standingsHeader.subtitleFont,
+                hideScrimName: hideScrimNameFor(config, "standings"),
                 rowY0: config.standings.rowY0,
                 rowPitch: config.standings.rowPitch,
                 rowHeight: config.standings.rowHeight,
