@@ -1,5 +1,3 @@
-import type { AestheticId } from "@/lib/graphics/types";
-
 export const VALID_TEMPLATE_IDS = [
   "dark-gold",
   "purple-butterfly",
@@ -10,6 +8,8 @@ export const VALID_TEMPLATE_IDS = [
   "ewc-yellow",
   "onyx-green",
   "pmgc-crimson",
+  "grunge-red",
+  "esports-clash",
 ] as const;
 
 export type TeamDraft = {
@@ -87,7 +87,9 @@ export function validateSessionDraft(draft: SessionDraft): ValidationIssue[] {
     });
   }
 
-  if (!VALID_TEMPLATE_IDS.includes(draft.templateId as AestheticId)) {
+  // Cast to string[] so this check stays correct as new aesthetics are
+  // registered in parallel (AestheticId and the tuple may diverge mid-flight).
+  if (!(VALID_TEMPLATE_IDS as readonly string[]).includes(draft.templateId)) {
     issues.push({ field: "templateId", message: "Pick one of the seven aesthetics." });
   }
 

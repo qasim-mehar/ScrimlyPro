@@ -1,7 +1,14 @@
 "use client";
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { slotToStyle, type DecorShape, type GraphicVariant, type Slot, type TemplateConfig } from "@/lib/graphics";
+import {
+  imageFitStyle,
+  slotToStyle,
+  type DecorShape,
+  type GraphicVariant,
+  type Slot,
+  type TemplateConfig,
+} from "@/lib/graphics";
 
 export type { GraphicVariant };
 
@@ -70,7 +77,11 @@ export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCa
             width: 1080,
             height: 1620,
             overflow: "hidden",
-            background: background.type === "gradient" ? background.css : undefined,
+            // A uniformly fitted portrait art may leave side bars; fill them
+            // with the art's own edge ink instead of exposing a transparent
+            // strip in the exported PNG. Full-cover arts are unaffected.
+            background:
+              background.type === "gradient" ? background.css : (config.canvasBackground ?? undefined),
             fontFamily: FONT_STACK,
             color: config.palette.text,
           }}
@@ -82,7 +93,7 @@ export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCa
             <img
               src={background.src}
               alt=""
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              style={imageFitStyle(background)}
             />
           )}
           {children}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Inter_Tight, Lexend } from "next/font/google";
+import { Inter, Inter_Tight, Lexend, Permanent_Marker } from "next/font/google";
 
 import { AccountHeader } from "@/components/auth/AccountHeader";
 import "@fontsource/exo-2/500.css";
@@ -33,6 +33,16 @@ const lexend = Lexend({
   variable: "--font-lexend",
 });
 
+/* Grunge-red's crimson kills brush. Self-hosted by next/font and declared on
+   <body> so it is loaded (and in `document.fonts`) before html-to-image exports
+   the MVP canvas — the brush strokes must be identical on screen and in PNG. */
+const brush = Permanent_Marker({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-brush",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "ScrimlyPro",
   description:
@@ -45,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${interTight.variable} ${inter.variable} ${lexend.variable}`}
+        className={`${interTight.variable} ${inter.variable} ${lexend.variable} ${brush.variable}`}
       >
         <AccountHeader />
         {children}

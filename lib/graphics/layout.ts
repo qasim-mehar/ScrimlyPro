@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { AnnouncementSpec, GraphicVariant, Slot, TemplateConfig } from "./types";
+import type { AnnouncementSpec, Background, GraphicVariant, Slot, TemplateConfig } from "./types";
 
 /**
  * Two-column split for n teams: [left, right].
@@ -59,6 +59,38 @@ export function headerFor(config: TemplateConfig, variant: GraphicVariant): Temp
  * otherwise the template-wide flag applies (neon-green hides it everywhere). */
 export function hideScrimNameFor(config: TemplateConfig, variant: GraphicVariant): boolean {
   return config.variantHideScrimName?.[variant] ?? config.hideScrimName === true;
+}
+
+/** Per-variant label-row visibility: the variant flag wins when present,
+ * otherwise the template-wide flag applies. grunge-red bakes its MVP header
+ * into the art but keeps its clean gradient standings/announcement labels. */
+export function labelsBakedInFor(config: TemplateConfig, variant: GraphicVariant): boolean {
+  return config.variantLabelsBakedIn?.[variant] ?? config.labelsBakedIn === true;
+}
+
+/** Background image style for one variant. `fit` (when present) is a uniformly
+ *  pre-scaled image box: the art keeps its native ratio and its measured slots
+ *  land exactly on the config coordinates — zero stretch, zero distortion.
+ *  Without `fit` the established object-fit: cover behaviour is unchanged. */
+export function imageFitStyle(background: Background): CSSProperties {
+  if (background.type !== "image" || !background.fit) {
+    return {
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    };
+  }
+  const { width, height, left, top } = background.fit;
+  return {
+    position: "absolute",
+    left,
+    top,
+    width,
+    height,
+    objectFit: "fill", // width/height are uniform multiples of the art pixels
+  };
 }
 
 /**

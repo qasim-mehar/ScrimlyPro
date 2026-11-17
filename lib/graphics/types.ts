@@ -7,7 +7,9 @@ export type AestheticId =
   | "challengers-red"
   | "ewc-yellow"
   | "onyx-green"
-  | "pmgc-crimson";
+  | "pmgc-crimson"
+  | "grunge-red"
+  | "esports-clash";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -27,9 +29,15 @@ export type DecorShape = {
   opacity?: number;
 };
 
+/** Uniformly pre-scaled image box (canvas px). Used when the art's native
+ *  ratio differs from the 2:3 canvas: width/height MUST keep the art ratio
+ *  (no distortion); left/top position the art so its painted slots land on
+ *  the config's measured coordinates. */
+export type ImageFit = { width: number; height: number; left: number; top: number };
+
 export type Background =
   | { type: "gradient"; css: string; decor: DecorShape[] }
-  | { type: "image"; src: string }; // future real PNG templates — config-only swap
+  | { type: "image"; src: string; fit?: ImageFit }; // art swap; `fit` keeps portrait art distortion-free
 
 export type StatColumnKey = "wwcd" | "matches" | "pp" | "kp" | "total";
 
@@ -78,6 +86,93 @@ export type StandingsTableSpec = {
   labelFont: string;
 };
 
+/** Starting-five brush lockup (grunge-red): measured slot geometry plus the
+ *  exact ink/font tokens. Pure data — `lib/graphics/mvp.ts` turns it into
+ *  layout slots; MvpGraphic only renders those slots. */
+export type MvpBrushSpec = {
+  rowHeight: number;
+  badge: {
+    x: number;
+    w: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+    rule: string;
+  };
+  name: {
+    x: number;
+    w: number;
+    maxFontSize: number;
+    minFontSize: number;
+    fontFamily: string;
+    fontWeight: number;
+    color: string;
+  };
+  kills: {
+    x: number;
+    w: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+  };
+  watermark: {
+    x: number;
+    w: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+  };
+};
+
+/** English-only esports card lockup (esports-clash). Measured canvas slots and
+ *  exact ink/font tokens. Pure data — `lib/graphics/mvp.ts` derives the row
+ *  slots; `MvpGraphic` only paints them. No team/avatar fields by design. */
+export type MvpEsportsSpec = {
+  rowHeight: number;
+  rank: {
+    x: number;
+    y: number; // offset from the painted card top
+    w: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+  };
+  name: {
+    x: number;
+    y: number;
+    w: number;
+    maxFontSize: number;
+    minFontSize: number;
+    fontFamily: string;
+    fontWeight: number;
+    color: string;
+  };
+  statLabel: {
+    x: number;
+    y: number;
+    w: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+    text: string;
+  };
+  kills: {
+    x: number;
+    y: number;
+    w: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+    glow: readonly [string, string]; // red card / blue card tint
+  };
+};
+
 export type MvpSpec = {
   rowY0: number;
   rowPitch: number;
@@ -94,6 +189,8 @@ export type MvpSpec = {
   statFont: string;
   subtitleBakedIn?: boolean; // true → art bakes the subtitle (challengers-red
   // "TOP 5 FRAGGERS"): MvpGraphic draws no subtitle line.
+  brush?: MvpBrushSpec; // grunge-red starting-five brush typography
+  esports?: MvpEsportsSpec; // esports-clash English-only card lockup
 };
 
 export type AnnouncementSpec = {
@@ -152,6 +249,8 @@ export type TemplateConfig = {
     announcement: Background;
   };
   labelsBakedIn?: boolean; // true → code draws NO label row (art has it)
+  variantLabelsBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant
+  // override (grunge-red: the MVP art bakes its own labels/header)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
   hideScrimName?: boolean; // true → renderers skip the scrim-name (title) slot
   // entirely (neon-green: the art's title band is intentionally blank)
@@ -160,6 +259,14 @@ export type TemplateConfig = {
   // own title, but the MVP art still wants the session name)
   uniformMvpRows?: boolean; // true → MvpGraphic renders all 5 rows identically:
   // neutral plates, text ink, no rank-1 accent, no metal medallions (P7)
+  mvpLayoutStyle?: "standard" | "starting-five-brush" | "esports-card"; // starting-five-brush
+  // → framed rank badge + block-white name + overlapping crimson brush kills
+  // + giant ghost numeral; the PUBGM characters are baked into the art.
+  // esports-clash → italic rank + heavy slanted white name + English kills
+  // block in the left safe zone of each painted red/blue card.
+  mvpShowTeam?: boolean; // false → never render teamName/logo on the MVP art
+  canvasBackground?: string; // fill behind a uniformly fitted portrait art when
+  // its native ratio differs from the 2:3 canvas (letterbox bars, no distortion)
   watermarkYOffset?: number; // extra px added to the fixed brand-law watermark y
   // (announcement variant only; default 0). pmpl-light: drops the watermark
   // into the art's clear footer strip, below its border line (P7)

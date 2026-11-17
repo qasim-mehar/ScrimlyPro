@@ -2,8 +2,22 @@
 
 import type { ReactNode } from "react";
 
-import { getTemplate, headerFor, hideScrimNameFor, slotToStyle, type AestheticId } from "@/lib/graphics";
-import type { MvpDisplayEntry } from "@/lib/graphics/mvp";
+import {
+  getTemplate,
+  headerFor,
+  hideScrimNameFor,
+  labelsBakedInFor,
+  slotToStyle,
+  type AestheticId,
+  type MvpBrushSpec,
+  type MvpEsportsSpec,
+} from "@/lib/graphics";
+import {
+  esportsMvpRowSlots,
+  fixedMvpRowTops,
+  grungeMvpRowSlots,
+  type MvpDisplayEntry,
+} from "@/lib/graphics/mvp";
 
 type MvpGraphicProps = {
   aestheticId: AestheticId;
@@ -75,9 +89,275 @@ function EllipsisText({
   );
 }
 
+/**
+ * Starting-five brush lockup (grunge-red). DUMB renderer: every coordinate,
+ * font size and label comes from `lib/graphics/mvp.ts` slots computed from the
+ * template's measured config. Team names/logos are never painted — the PUBGM
+ * characters are baked into the art.
+ */
+function BrushRows({
+  entries,
+  spec,
+  rowTops,
+}: {
+  entries: MvpDisplayEntry[];
+  spec: MvpBrushSpec;
+  rowTops: number[];
+}) {
+  return (
+    <>
+      {entries.map((entry, i) => {
+        const y = rowTops[i] ?? 0;
+        const slots = grungeMvpRowSlots(entry, y, spec);
+        const nameFont = `${spec.name.fontWeight} ${slots.name.fontSize}px ${spec.name.fontFamily}`;
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: y,
+              width: 1080,
+              height: spec.rowHeight,
+              overflow: "hidden", // clips the giant ghost numeral to the painted bar
+            }}
+          >
+            {/* 4. Giant background kill numeral — behind every foreground slot. */}
+            <div
+              style={{
+                position: "absolute",
+                left: slots.watermark.x,
+                top: slots.watermark.y - y,
+                width: slots.watermark.w,
+                height: slots.watermark.h,
+                font: `${spec.watermark.fontWeight} ${spec.watermark.fontSize}px ${spec.watermark.fontFamily}`,
+                lineHeight: 0.82,
+                color: spec.watermark.color,
+                textAlign: "right",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+            >
+              {slots.watermark.text}
+            </div>
+            {/* 1. Framed rank badge between two hairline white rules. */}
+            <div
+              style={{
+                position: "absolute",
+                left: slots.badge.x,
+                top: slots.badge.y - y,
+                width: slots.badge.w,
+                height: slots.badge.h,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                justifyContent: "center",
+                zIndex: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  borderTop: `1.5px solid ${spec.badge.rule}`,
+                  borderBottom: `1.5px solid ${spec.badge.rule}`,
+                  font: `${spec.badge.fontWeight} ${spec.badge.fontSize}px ${spec.badge.fontFamily}`,
+                  color: spec.badge.color,
+                  fontStyle: "italic",
+                  letterSpacing: "0.08em",
+                  textAlign: "center",
+                  lineHeight: 1.5,
+                  whiteSpace: "nowrap", // "#N FRAGGER" stays one line inside the frame
+                }}
+              >
+                {slots.badge.text}
+              </div>
+            </div>
+            {/* 2. Block-white uppercase player name (glyph-safe stack). */}
+            <div
+              style={{
+                position: "absolute",
+                left: slots.name.x,
+                top: slots.name.y - y,
+                width: slots.name.w,
+                height: slots.name.h,
+                font: nameFont,
+                color: spec.name.color,
+                textTransform: "uppercase",
+                letterSpacing: "0.03em",
+                textShadow: "0 2px 8px rgba(0,0,0,0.7)",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                zIndex: 2,
+              }}
+            >
+              {slots.name.text}
+            </div>
+            {/* 3. Crimson brush kills, rotated, cutting across the name's foot. */}
+            <div
+              style={{
+                position: "absolute",
+                left: slots.kills.x,
+                top: slots.kills.y - y,
+                width: slots.kills.w,
+                height: slots.kills.h,
+                font: `${spec.kills.fontWeight} ${spec.kills.fontSize}px ${spec.kills.fontFamily}`,
+                color: spec.kills.color,
+                transform: "rotate(-2deg)",
+                textShadow: "0 2px 6px rgba(0,0,0,0.85)",
+                whiteSpace: "nowrap",
+                zIndex: 3,
+              }}
+            >
+              {slots.kills.text}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * English-only esports card lockup (esports-clash). DUMB renderer: all five
+ * card slots, the auto-fitted name size and the red/blue kill glow come from
+ * `lib/graphics/mvp.ts` + the measured config. Only the player's IGN, the rank
+ * label and the kills value are painted — no team names, logos or avatars.
+ */
+function EsportsRows({
+  entries,
+  spec,
+  rowTops,
+}: {
+  entries: MvpDisplayEntry[];
+  spec: MvpEsportsSpec;
+  rowTops: number[];
+}) {
+  return (
+    <>
+      {entries.map((entry, i) => {
+        const y = rowTops[i] ?? 0;
+        const s = esportsMvpRowSlots(entry, y, spec, i);
+        const nameFont = `${spec.name.fontWeight} ${s.name.fontSize}px ${spec.name.fontFamily}`;
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: y,
+              width: 1080,
+              height: spec.rowHeight,
+              overflow: "hidden",
+            }}
+          >
+            {/* 1. RANK #01..#05 — small italic, letter-spaced, 85% white. */}
+            <div
+              style={{
+                position: "absolute",
+                left: s.rank.x,
+                top: s.rank.y - y,
+                width: s.rank.w,
+                height: s.rank.h,
+                font: `${spec.rank.fontWeight} ${s.rank.fontSize}px ${spec.rank.fontFamily}`,
+                fontStyle: "italic",
+                letterSpacing: "0.12em",
+                color: spec.rank.color,
+                whiteSpace: "nowrap",
+                textShadow: "0 1px 6px rgba(0,0,0,0.85)",
+              }}
+            >
+              {s.rank.text}
+            </div>
+            {/* 2. Hero IGN — heavy italic skew, pure white, crisp dark shadow. */}
+            <div
+              style={{
+                position: "absolute",
+                left: s.name.x,
+                top: s.name.y - y,
+                width: s.name.w,
+                height: s.name.h,
+                font: nameFont,
+                fontStyle: "italic",
+                transform: "skewX(-10deg)",
+                transformOrigin: "left center",
+                textTransform: "uppercase",
+                letterSpacing: "0.01em",
+                color: spec.name.color,
+                textShadow: "0 2px 10px rgba(0,0,0,0.85)",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {s.name.text}
+            </div>
+            {/* 3. English stat label. */}
+            <div
+              style={{
+                position: "absolute",
+                left: s.statLabel.x,
+                top: s.statLabel.y - y,
+                width: s.statLabel.w,
+                height: s.statLabel.h,
+                font: `${spec.statLabel.fontWeight} ${s.statLabel.fontSize}px ${spec.statLabel.fontFamily}`,
+                letterSpacing: "0.1em",
+                color: spec.statLabel.color,
+                whiteSpace: "nowrap",
+                textShadow: "0 1px 6px rgba(0,0,0,0.85)",
+              }}
+            >
+              {s.statLabel.text}
+            </div>
+            {/* 4. Kills value — black weight with the card's red/blue glow. */}
+            <div
+              style={{
+                position: "absolute",
+                left: s.kills.x,
+                top: s.kills.y - y,
+                width: s.kills.w,
+                height: s.kills.h,
+                font: `${spec.kills.fontWeight} ${s.kills.fontSize}px ${spec.kills.fontFamily}`,
+                color: spec.kills.color,
+                fontVariantNumeric: "tabular-nums",
+                textShadow: `${s.kills.glow}, 0 2px 10px rgba(0,0,0,0.85)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {s.kills.text}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }: MvpGraphicProps) {
   const config = getTemplate(aestheticId);
   const { mvp, palette } = config;
+  // esports-clash: the art bakes "TOP MVP LIST", so no title, subtitle or
+  // organizer text renders. Only the five English card lockups are painted.
+  if (config.mvpLayoutStyle === "esports-card" && mvp.esports) {
+    return <EsportsRows entries={entries} spec={mvp.esports} rowTops={fixedMvpRowTops(entries.length, mvp)} />;
+  }
+  // grunge-red: a completely different, measured typography lockup. The
+  // header is baked into the art, so no title/subtitle/organizer text renders.
+  if (config.mvpLayoutStyle === "starting-five-brush" && mvp.brush) {
+    const baked = labelsBakedInFor(config, "mvp") && hideScrimNameFor(config, "mvp");
+    return (
+      <>
+        {baked ? null : (
+          <div style={{ ...slotToStyle(headerFor(config, "mvp").title), font: headerFor(config, "mvp").titleFont, color: palette.text }}>
+            {title}
+          </div>
+        )}
+        <BrushRows entries={entries} spec={mvp.brush} rowTops={fixedMvpRowTops(entries.length, mvp)} />
+      </>
+    );
+  }
   const header = headerFor(config, "mvp");
   // P7: uniformMvpRows → every row renders identically (neutral plate, text
   // rank digits) with no rank-1 accent strip and no metal medallions.
@@ -157,16 +437,21 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
                 (teamX + teamW) overlaps the kills box left edge (killsX) by
                 ~10px — accepted; text collision is impossible (team
                 ellipsizes before the kills digits' centered start). */}
-            <EllipsisText
-              x={mvp.teamX}
-              y={y}
-              w={mvp.teamW}
-              h={mvp.rowHeight}
-              font={mvp.statFont}
-              color={palette.textMuted}
-            >
-              {entry.teamName}
-            </EllipsisText>
+            {/* Law: art-backed templates whose PUBGM characters are baked in
+                (grunge-red, esports-clash) set mvpShowTeam:false — never render
+                a team name, even if a specialized branch were bypassed. */}
+            {config.mvpShowTeam === false ? null : (
+              <EllipsisText
+                x={mvp.teamX}
+                y={y}
+                w={mvp.teamW}
+                h={mvp.rowHeight}
+                font={mvp.statFont}
+                color={palette.textMuted}
+              >
+                {entry.teamName}
+              </EllipsisText>
+            )}
             <EllipsisText
               x={mvp.killsX}
               y={y}

@@ -99,6 +99,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "grunge-red",
   ];
 
   it("standings logo plates use plateBg/plateRing; rank-1 ring uses accent", () => {
@@ -113,7 +114,9 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
   });
 
   it("MVP rows render uniformly (P7): neutral plates, no metals, no rank-1 accent", () => {
-    for (const id of IDS) {
+    // grunge-red uses the measured starting-five brush lockup (no medallions,
+    // plates or rank-1 strips) — pinned in its own SSR section below.
+    for (const id of IDS.filter((x) => x !== "grunge-red")) {
       const p = getTemplate(id).palette;
       expect(getTemplate(id).uniformMvpRows).toBe(true);
       const html = renderToStaticMarkup(
@@ -327,6 +330,8 @@ describe("P7 � font swap + config flags (SSR)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "grunge-red",
+    "esports-clash",
   ];
 
   it("rendered graphics carry the Exo 2 font stack in their inline styles", () => {
@@ -451,6 +456,61 @@ describe("P8 — ewc-yellow standings SSR rendering", () => {
   });
 });
 
+describe("P8 — onyx-green standings SSR rendering", () => {
+  it("renders 24 teams on the 12/12 painted bars with baked ranks/labels skipped", () => {
+    const html = renderToStaticMarkup(standings("onyx-green", "AFTER MATCH 5", 24, { matchCount: 5 }));
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">TEAM<");
+    expect(html).not.toContain(">WWCD<");
+    expect(html).not.toContain("left:60px;top:400px;width:48px");
+    expect((html.match(/left:110px/g) ?? []).length).toBe(12);
+    expect((html.match(/left:600px/g) ?? []).length).toBe(12);
+    expect(html).toContain("SQUAD 1");
+    expect(html).toContain("SQUAD 24");
+    // Three stat columns per side at the measured ink centers.
+    for (const x of [292, 370, 451, 776, 866, 946]) expect(html).toContain(`left:${x}px`);
+    expect(html).toContain("font-variant-numeric:tabular-nums");
+    expect(html).toContain("font:800 26px");
+  });
+
+  it("hides the baked-title collision and renders only the match digits", () => {
+    const html = renderToStaticMarkup(standings("onyx-green", "FINAL RESULTS", 16, { matchCount: 6 }));
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain("FINAL RESULTS");
+    expect(html).toContain("left:984px");
+    expect(html).toContain("color:#42F57E");
+    expect(html).toContain(">6<");
+  });
+
+  it("renders the MVP and announcement variants on the gradient fallback", () => {
+    const mvp = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "onyx-green",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(mvp).toContain("SCRIM");
+    expect(mvp).toContain("TOP 5 FRAGGERS");
+    expect(mvp).toContain("ALPHA");
+
+    const ann = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "onyx-green",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(ann).toContain("SCRIM");
+    expect(ann).toContain("PARTICIPATING TEAMS");
+    expect(ann).toContain("SQUAD 16");
+  });
+});
+
 describe("P8 — pmgc-crimson standings SSR rendering", () => {
   it("renders 24 teams on the 12/12 painted bars with baked ranks/labels skipped", () => {
     const html = renderToStaticMarkup(standings("pmgc-crimson", "AFTER MATCH 5", 24, { matchCount: 5 }));
@@ -511,57 +571,133 @@ describe("P8 — pmgc-crimson standings SSR rendering", () => {
   });
 });
 
-describe("P8 — onyx-green standings SSR rendering", () => {
-  it("renders 24 teams on the 12/12 painted bars with baked ranks/labels skipped", () => {
-    const html = renderToStaticMarkup(standings("onyx-green", "AFTER MATCH 5", 24, { matchCount: 5 }));
-    expect(html).not.toContain(">RANK<");
-    expect(html).not.toContain(">TEAM<");
-    expect(html).not.toContain(">WWCD<");
-    expect(html).not.toContain("left:60px;top:400px;width:48px");
-    expect((html.match(/left:110px/g) ?? []).length).toBe(12);
-    expect((html.match(/left:600px/g) ?? []).length).toBe(12);
-    expect(html).toContain("SQUAD 1");
-    expect(html).toContain("SQUAD 24");
-    // Three stat columns per side at the measured ink centers.
-    for (const x of [292, 370, 451, 776, 866, 946]) expect(html).toContain(`left:${x}px`);
-    expect(html).toContain("font-variant-numeric:tabular-nums");
-    expect(html).toContain("font:800 26px");
-  });
-
-  it("hides the baked-title collision and renders only the match digits", () => {
-    const html = renderToStaticMarkup(standings("onyx-green", "FINAL RESULTS", 16, { matchCount: 6 }));
-    expect(html).not.toContain("SCRIM");
-    expect(html).not.toContain("FINAL RESULTS");
-    expect(html).toContain("left:984px");
-    expect(html).toContain("color:#42F57E");
-    expect(html).toContain(">6<");
-  });
-
-  it("renders the MVP and announcement variants on the gradient fallback", () => {
-    const mvp = renderToStaticMarkup(
+describe("grunge-red — starting-five brush MVP (SSR)", () => {
+  it("renders the 5-bar lockup: rank badge, block-white name, crimson brush, ghost numeral", () => {
+    const html = renderToStaticMarkup(
       h(MvpGraphic, {
-        aestheticId: "onyx-green",
+        aestheticId: "grunge-red",
         title: "SCRIM",
         subtitle: "TOP 5 FRAGGERS",
         organizer: null,
         entries: mvpEntries(),
       }),
     );
-    expect(mvp).toContain("SCRIM");
-    expect(mvp).toContain("TOP 5 FRAGGERS");
-    expect(mvp).toContain("ALPHA");
+    expect(html).toContain("#1 FRAGGER");
+    expect(html).toContain("#5 FRAGGER");
+    for (const name of ["ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO"]) expect(html).toContain(name);
+    expect(html).toContain("24 KILLS");
+    expect(html).toContain(">24<");
+    expect(html).toContain("color:#E51920");
+    expect(html).toContain("color:#FFFFFF");
+    expect(html).toContain("rgba(255,255,255,0.055)");
+    expect(html).toContain("font:900 152px");
+    // Baked header: neither the scrim name nor the default subtitle renders.
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain("TOP 5 FRAGGERS");
+    // No team names on the art (PUBGM characters are baked into the left of the bars).
+    expect(html).not.toContain("SQUAD 1");
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("undefined");
+  });
 
-    const ann = renderToStaticMarkup(
+  it("renders the gradient standings/announcement fallbacks with baked labels skipped only on mvp", () => {
+    const standingsHtml = renderToStaticMarkup(standings("grunge-red", "AFTER MATCH 1", 4, { matchCount: 1 }));
+    expect(standingsHtml).toContain(">RANK<");
+    expect(standingsHtml).toContain(">TEAM<");
+    expect(standingsHtml).toContain("SQUAD 4");
+    // Gradient lives on GraphicCanvas (verified in the watermark test below).
+
+    const annHtml = renderToStaticMarkup(
       h(AnnouncementGraphic, {
-        aestheticId: "onyx-green",
+        aestheticId: "grunge-red",
         title: "SCRIM",
         subtitle: "PARTICIPATING TEAMS",
         organizer: null,
         teams: announceTeams(16),
       }),
     );
-    expect(ann).toContain("SCRIM");
-    expect(ann).toContain("PARTICIPATING TEAMS");
-    expect(ann).toContain("SQUAD 16");
+    expect(annHtml).toContain("SCRIM");
+    expect(annHtml).toContain("PARTICIPATING TEAMS");
+    expect(annHtml).toContain("SQUAD 16");
+  });
+
+  it("keeps the brand-law watermark at the fixed y on every variant", () => {
+    const config = getTemplate("grunge-red");
+    for (const variant of ["standings", "mvp", "announcement"] as const) {
+      const html = renderToStaticMarkup(h(GraphicCanvas, { config, variant }));
+      expect(html).toContain("top:1570px");
+      expect(html).toContain("scrimlypro.com");
+    }
+  });
+});
+
+describe("esports-clash — English esports card MVP (SSR)", () => {
+  const mvpHtml = renderToStaticMarkup(
+    h(MvpGraphic, {
+      aestheticId: "esports-clash",
+      title: "SCRIM",
+      subtitle: "TOP 5 FRAGGERS",
+      organizer: "ORGANIZER",
+      entries: mvpEntries(),
+    }),
+  );
+
+  it("renders only rank, verbatim name and kills over five measured cards", () => {
+    for (let rank = 1; rank <= 5; rank++) expect(mvpHtml).toContain(`RANK #0${rank}`);
+    for (const name of ["ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO"]) expect(mvpHtml).toContain(name);
+    expect((mvpHtml.match(/TOTAL KILLS/g) ?? []).length).toBe(5);
+    expect(mvpHtml).toContain(">24<");
+    expect(mvpHtml).toContain(">15<");
+    expect(mvpHtml).not.toContain("NaN");
+    expect(mvpHtml).not.toContain("undefined");
+  });
+
+  it("suppresses the baked header, scrim name, team data and default subtitle", () => {
+    expect(mvpHtml).not.toContain("SCRIM");
+    expect(mvpHtml).not.toContain("TOP 5 FRAGGERS");
+    expect(mvpHtml).not.toContain("ORGANIZER");
+    expect(mvpHtml).not.toContain("SQUAD 1");
+    expect(mvpHtml).not.toContain("<img");
+  });
+
+  it("paints heavy italic skew-white names with the full glyph-safe stack", () => {
+    expect(mvpHtml).toContain("font:900 44px");
+    expect(mvpHtml).toContain("font:900 36px");
+    expect(mvpHtml).toContain("font-style:italic");
+    expect(mvpHtml).toContain("transform:skewX(-10deg)");
+    expect(mvpHtml).toContain("color:#FFFFFF");
+    expect(mvpHtml).toContain("Exo 2");
+    expect(mvpHtml).toContain("Rajdhani");
+    expect(mvpHtml).toContain("Noto Sans Symbols 2");
+    expect(mvpHtml).toContain("system-ui");
+  });
+
+  it("renders gradient standings/announcement fallbacks with normal labels", () => {
+    const standingsHtml = renderToStaticMarkup(standings("esports-clash", "AFTER MATCH 1", 4, { matchCount: 1 }));
+    expect(standingsHtml).toContain(">RANK<");
+    expect(standingsHtml).toContain(">TEAM<");
+    expect(standingsHtml).toContain("SQUAD 4");
+    const annHtml = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "esports-clash",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(annHtml).toContain("SCRIM");
+    expect(annHtml).toContain("PARTICIPATING TEAMS");
+    expect(annHtml).toContain("SQUAD 16");
+  });
+
+  it("keeps the brand-law watermark at the fixed y on every variant", () => {
+    const config = getTemplate("esports-clash");
+    for (const variant of ["standings", "mvp", "announcement"] as const) {
+      const html = renderToStaticMarkup(h(GraphicCanvas, { config, variant }));
+      expect(html).toContain("top:1570px");
+      expect(html).toContain("scrimlypro.com");
+    }
   });
 });

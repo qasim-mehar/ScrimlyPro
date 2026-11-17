@@ -112,8 +112,12 @@ describe("AESTHETICS registry", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "grunge-red",
+    "esports-clash",
   ];
 
+  // Parallel-safe: another lane may register onyx-green/ewc-yellow while this
+  // runs — assert known ids are present, never an exact registry length.
   it("exposes every registered aesthetic id", () => {
     const keys = Object.keys(AESTHETICS);
     for (const id of IDS) expect(keys).toContain(id);
@@ -735,28 +739,32 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
     throw new Error("unrecognized image payload");
   }
 
-  type ArtCase = { id: string; variant: string; file: string };
+  type ArtCase = { id: string; variant: string; file: string; fitted: boolean };
   const CASES: ArtCase[] = [];
   for (const [id, config] of Object.entries(AESTHETICS)) {
     for (const [variant, bg] of Object.entries(config.backgrounds)) {
-      if (bg.type === "image") CASES.push({ id, variant, file: `public${bg.src}` });
+      if (bg.type === "image") {
+        CASES.push({ id, variant, file: `public${bg.src}`, fitted: bg.fit !== undefined });
+      }
     }
   }
 
-  it("covers every delivered art variant (parallel-safe)", () => {
+  it("covers every delivered art variant (parallel-safe: at least the known ones)", () => {
     expect(CASES).toEqual(
       expect.arrayContaining([
-        { id: "pmpl-light", variant: "standings", file: "public/templates/pmpl-light/overall.png" },
-        { id: "pmpl-light", variant: "announcement", file: "public/templates/pmpl-light/announcement.png" },
-        { id: "neon-green", variant: "standings", file: "public/templates/neon-green/overall.png" },
-        { id: "challengers-red", variant: "standings", file: "public/templates/challengers-red/overall.png" },
-        { id: "challengers-red", variant: "mvp", file: "public/templates/challengers-red/mvp.png" },
-        { id: "ewc-yellow", variant: "standings", file: "public/templates/ewc-yellow/overall.png" },
-        { id: "pmgc-crimson", variant: "standings", file: "public/templates/pmgc-crimson/overall.png" },
-        { id: "onyx-green", variant: "standings", file: "public/templates/onyx-green/overall.png" },
+        { id: "pmpl-light", variant: "standings", file: "public/templates/pmpl-light/overall.png", fitted: false },
+        { id: "pmpl-light", variant: "announcement", file: "public/templates/pmpl-light/announcement.png", fitted: false },
+        { id: "neon-green", variant: "standings", file: "public/templates/neon-green/overall.png", fitted: false },
+        { id: "challengers-red", variant: "standings", file: "public/templates/challengers-red/overall.png", fitted: false },
+        { id: "challengers-red", variant: "mvp", file: "public/templates/challengers-red/mvp.png", fitted: false },
+        { id: "ewc-yellow", variant: "standings", file: "public/templates/ewc-yellow/overall.png", fitted: false },
+        { id: "onyx-green", variant: "standings", file: "public/templates/onyx-green/overall.png", fitted: false },
+        { id: "pmgc-crimson", variant: "standings", file: "public/templates/pmgc-crimson/overall.png", fitted: false },
+        { id: "grunge-red", variant: "mvp", file: "public/templates/grunge-red/mvp.png", fitted: true },
+        { id: "esports-clash", variant: "mvp", file: "public/templates/esports-clash/mvp.png", fitted: true },
       ]),
     );
-    expect(CASES.length).toBeGreaterThanOrEqual(8);
+    expect(CASES.length).toBeGreaterThanOrEqual(10);
   });
 
   it("sniffs both PNG and JPEG payloads (all three new arts are JPEG-in-.png)", () => {
@@ -774,11 +782,12 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
     expect(imageSize(pmpl)).toEqual({ w: 2132, h: 3200 });
   });
 
-  it.each(CASES)("$id/$variant art ($file): ratio within tolerance AND width ≥ 1080", ({ file }) => {
+  it.each(CASES)("$id/$variant art ($file): ratio within tolerance AND width ≥ 1080", ({ file, fitted }) => {
     // A missing or unreadable art file fails the build, never the
-    // organizer's export.
+    // organizer's export. Fitted art (grunge-red's 0.8-ratio portrait) is
+    // uniformly pre-scaled via Background.fit → no ratio requirement.
     const { w, h } = imageSize(readFileSync(file));
-    expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
+    if (!fitted) expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
     expect(w).toBeGreaterThanOrEqual(MIN_WIDTH);
   });
 });
@@ -794,6 +803,8 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "grunge-red",
+    "esports-clash",
   ];
 
   it.each(IDS)("%s defines non-empty plate/medal strings", (id) => {
@@ -868,14 +879,6 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
       medalBronze: "#9C6327",
       medalText: "#FFFFFF",
     });
-    expect(getTemplate("pmgc-crimson").palette).toMatchObject({
-      plateBg: "rgba(255,255,255,0.10)",
-      plateRing: "rgba(245,184,46,0.55)",
-      medalGold: "#F5B82E",
-      medalSilver: "#D8C7CB",
-      medalBronze: "#B4763F",
-      medalText: "#140A00",
-    });
     expect(getTemplate("onyx-green").palette).toMatchObject({
       plateBg: "rgba(66,245,126,0.12)",
       plateRing: "rgba(66,245,126,0.5)",
@@ -883,6 +886,14 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
       medalSilver: "#C9D1DD",
       medalBronze: "#D19A5B",
       medalText: "#0A100B",
+    });
+    expect(getTemplate("pmgc-crimson").palette).toMatchObject({
+      plateBg: "rgba(255,255,255,0.10)",
+      plateRing: "rgba(245,184,46,0.55)",
+      medalGold: "#F5B82E",
+      medalSilver: "#D8C7CB",
+      medalBronze: "#B4763F",
+      medalText: "#140A00",
     });
   });
 });
@@ -932,6 +943,8 @@ describe("P7 — font swap + template flags", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "grunge-red",
+    "esports-clash",
   ];
 
   it("uniformMvpRows is true for every theme (uniform MVP everywhere)", () => {
@@ -968,6 +981,9 @@ describe("P7 — font swap + template flags", () => {
         c.announcement.slotFont,
         c.announcement.nameFont,
       ]) {
+        // grunge-red's mvp.statFont is a 400-weight marker/brush accent
+        // (spec 400–700), never a data-bearing face. Its names stay 800.
+        if (id === "grunge-red" && font === c.mvp.statFont) continue;
         const weight = Number(font.split(" ")[0]);
         expect(weight).toBeGreaterThanOrEqual(700);
         expect(weight).toBeLessThanOrEqual(800);
@@ -991,6 +1007,9 @@ describe("P7 — font swap + template flags", () => {
         c.announcement.slotFont,
         c.announcement.nameFont,
       ]) {
+        // grunge-red's kills brush is a self-hosted marker face; its
+        // data-bearing names still lead with Exo 2 via FONTS_FULL.
+        if (id === "grunge-red" && font === c.mvp.statFont) continue;
         expect(font).not.toMatch(/px\s+"Rajdhani"/);
         expect(font).toContain('"Exo 2"');
       }

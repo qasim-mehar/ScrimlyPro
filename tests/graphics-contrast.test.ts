@@ -71,6 +71,8 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "grunge-red",
+    "esports-clash",
   ];
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
@@ -339,6 +341,35 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
     }
   });
+
+  // onyx-green/overall.png (4096×6144, ×0.263671875). Measured with the same
+  // per-pixel WCAG relative-luminance mean used for the P6 zones (sharp scan).
+  const ONYX = {
+    // art(417,1516,1558,235) = canvas(110,400,411,62) — row 1 dark bar interior
+    rowBar: 0.02071,
+    // art(3733,952,277,151) = canvas(984,251,73,40) — the match-number slot
+    // above the baked neon underline; the art is near-black there.
+    matchChip: 0.00577,
+  };
+
+  it("onyx-green: white row text clears dark bars ≥ 12:1, neon match ink ≥ 4.5:1", () => {
+    const config = getTemplate("onyx-green");
+    const p = config.palette;
+    expect(p.text).toBe("#FFFFFF");
+    expect(ratioOver(ONYX.rowBar, p.text)).toBeGreaterThanOrEqual(12); // AAA hard gate
+    const matchInk = config.variantHeaders?.standings?.subtitleColor ?? "#42F57E";
+    expect(ratioOver(ONYX.matchChip, matchInk)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("onyx-green: matrix-green fallback keeps white + muted ink readable", () => {
+    const p = getTemplate("onyx-green").palette;
+    for (const bg of Object.values(getTemplate("onyx-green").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   // pmgc-crimson/overall.png (4096×6144, ×0.263671875). Zone means measured
   // with the same per-pixel WCAG relative-luminance algorithm used for the
   // other art templates (sharp scan; JPEG-in-.png payload).
@@ -379,28 +410,38 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
     }
   });
 
-  // onyx-green/overall.png (4096×6144, ×0.263671875). Measured with the same
-  // per-pixel WCAG relative-luminance mean used for the P6 zones (sharp scan).
-  const ONYX = {
-    // art(417,1516,1558,235) = canvas(110,400,411,62) — row 1 dark bar interior
-    rowBar: 0.02071,
-    // art(3733,952,277,151) = canvas(984,251,73,40) — the match-number slot
-    // above the baked neon underline; the art is near-black there.
-    matchChip: 0.00577,
+  // grunge-red/mvp.png (4488×5608 JPEG payload in .png, uniformly fitted).
+  // Zone means measured with the same per-pixel WCAG relative-luminance
+  // algorithm used for the other art templates (sharp scan).
+  const GRUNGE = {
+    // Inner name/badge zone (art x31–65%, y17–28%): the painted dark bar
+    // the white block name, white badge rules and crimson brush sit on.
+    barInterior: 0.013268,
+    // Watermark glyph zone at the footer (art x70–99%, y96–99%).
+    watermark: 0.01389,
   };
 
-  it("onyx-green: white row text clears dark bars ≥ 12:1, neon match ink ≥ 4.5:1", () => {
-    const config = getTemplate("onyx-green");
+  it("grunge-red: white name/badge clears the dark bars ≥ 7:1 and crimson brush ≥ 3:1", () => {
+    const config = getTemplate("grunge-red");
     const p = config.palette;
     expect(p.text).toBe("#FFFFFF");
-    expect(ratioOver(ONYX.rowBar, p.text)).toBeGreaterThanOrEqual(12); // AAA hard gate
-    const matchInk = config.variantHeaders?.standings?.subtitleColor ?? "#42F57E";
-    expect(ratioOver(ONYX.matchChip, matchInk)).toBeGreaterThanOrEqual(4.5);
+    expect(ratioOver(GRUNGE.barInterior, p.text)).toBeGreaterThanOrEqual(7);
+    // The #E51920 brush ink is a large-text callout (56px) → 3:1 floor.
+    expect(ratioOver(GRUNGE.barInterior, "#E51920")).toBeGreaterThanOrEqual(3);
+    // Ghost numeral (rgba white 0.055) is deliberately near-invisible.
+    const ghost = { r: 255, g: 255, b: 255 };
+    expect(relativeLuminance(ghost)).toBeGreaterThan(relativeLuminance({ r: 14, g: 14, b: 14 }));
   });
 
-  it("onyx-green: matrix-green fallback keeps white + muted ink readable", () => {
-    const p = getTemplate("onyx-green").palette;
-    for (const bg of Object.values(getTemplate("onyx-green").backgrounds)) {
+  it("grunge-red: 78%-white watermark clears the dark footer (≥ 4.5)", () => {
+    const bgLum = GRUNGE.watermark;
+    const inkLum = relativeLuminance({ r: 255, g: 255, b: 255 });
+    expect((Math.max(inkLum, bgLum) + 0.05) / (Math.min(inkLum, bgLum) + 0.05)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("grunge-red: dark-crimson fallback keeps white + muted ink readable", () => {
+    const p = getTemplate("grunge-red").palette;
+    for (const bg of Object.values(getTemplate("grunge-red").backgrounds)) {
       if (bg.type !== "gradient") continue;
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
@@ -438,5 +479,46 @@ describe("pmpl-light announcement art contrast (live PNG decode)", () => {
     // Both zones are genuinely light — guards against a black art swap
     expect(interior).toBeGreaterThan(0.8);
     expect(strip).toBeGreaterThan(0.9);
+  });
+});
+
+describe("esports-clash art left-zone contrast (measured from the art)", () => {
+  // Mean per-pixel WCAG relative luminance over the painted left text zone
+  // (canvas x100–600, y mid ±50) of the 3764×6688 art, height-fitted to the
+  // canvas. Red cards average darker than blue, so these are per-card.
+  const CARD_LUM = [0.0254, 0.0541, 0.0270, 0.0528, 0.0244];
+  const over = (bg: number, fg: string) => {
+    const fgLum = relativeLuminance(parseHexColor(fg));
+    return (Math.max(bg, fgLum) + 0.05) / (Math.min(bg, fgLum) + 0.05);
+  };
+
+  it("pure-white hero name + kills clear every red/blue card (≥ 7:1)", () => {
+    const p = getTemplate("esports-clash").palette;
+    expect(p.text).toBe("#FFFFFF");
+    for (const lum of CARD_LUM) {
+      expect(over(lum, p.text)).toBeGreaterThanOrEqual(7);
+    }
+  });
+
+  it("transparent rank/label inks clear every card (≥ 4.5:1)", () => {
+    // Conservative lower bound: composite the semi-transparent white over
+    // BLACK (the darkest possible backdrop → the dimmest ink), then compare it
+    // with the BRIGHTEST measured card. Real ink over a card is brighter, so
+    // passing here guarantees the composited pair passes on every card.
+    const worst = Math.max(...CARD_LUM);
+    for (const alpha of [0.85, 0.72]) {
+      const ink = { r: 255 * alpha, g: 255 * alpha, b: 255 * alpha };
+      const inkLum = relativeLuminance(ink);
+      expect((Math.max(worst, inkLum) + 0.05) / (Math.min(worst, inkLum) + 0.05)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("dark gradient fallback keeps white + muted ink readable", () => {
+    const p = getTemplate("esports-clash").palette;
+    for (const bg of Object.values(getTemplate("esports-clash").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });

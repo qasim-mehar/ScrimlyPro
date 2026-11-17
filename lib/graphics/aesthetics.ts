@@ -1,10 +1,5 @@
 import type { AestheticId, TemplateConfig } from "./types";
-
-/** Font stack appended to EVERY font string in every config. Exo 2 is the
- * primary display face (P7); Rajdhani stays as the metric fallback until the
- * browser loads Exo 2, and "Noto Sans Symbols 2" covers the C1.1 glyph set
- * (× · | _ ₛ ≌) that Exo 2 lacks. */
-const FONTS = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif';
+import { BRUSH_FONTS, FONTS, FONTS_FULL } from "./fonts";
 
 /** Geometry shared by the three gradient aesthetics — identical until real
  * PNG templates (P4) need per-template geometry. */
@@ -954,6 +949,250 @@ const PMGC_CRIMSON: TemplateConfig = {
   },
 };
 
+const GRUNGE_RED_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #0A0506 0%, #1A080C 55%, #2A0A10 100%)",
+  decor: [],
+};
+
+/** Grunge Red — the "starting five" brush-overlay MVP art. The delivered file
+ *  is a 4488×5608 JPEG payload inside a .png name (native ratio 0.8003, not
+ *  2:3). Every slot below is measured off those pixels:
+ *  - five painted dark bars span art x 8.9%–76.9% (silhouettes x 8.9%–31%);
+ *    red left ticks / separator peaks at art y 905, 1699, 2571, 3434, 4323,
+ *    5122. `fit` scales the art uniformly by 0.2691 (1208×1509, no distortion)
+ *    and offsets it (-11,-17) so those bars land on the calibration brief's
+ *    canvas intervals 13.6–26.8%, 28–41.2%, 42.3–55.5%, 56.7–69.9%, 71–84.3%.
+ *  - the art bakes "MVP LIST" in crimson brush, the header labels and the
+ *    PUBGM helmet characters; only rank badge + player name + kill brush +
+ *    ghost kill numeral are rendered (never team names or logos).
+ *  - standings/announcement have no art → clean dark-crimson gradient fallback. */
+const GRUNGE_RED: TemplateConfig = {
+  ...GEOMETRY,
+  id: "grunge-red",
+  name: "Grunge Red",
+  backgrounds: {
+    standings: GRUNGE_RED_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/grunge-red/mvp.png",
+      fit: { width: 1207.599624, height: 1508.961384, left: -11, top: -17 },
+    },
+    announcement: GRUNGE_RED_FALLBACK_BG,
+  },
+  uniformMvpRows: true,
+  mvpLayoutStyle: "starting-five-brush",
+  mvpShowTeam: false,
+  // The 0.8-ratio portrait art is uniformly fitted (scale 0.2691) to land its
+  // painted bars on the measured canvas slots; the short bottom letterbox is
+  // filled with the art's dark ink so exports never show a transparent strip.
+  canvasBackground: "#0A0506",
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `700 40px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  mvp: {
+    rowY0: 226,
+    rowPitch: 232,
+    rowHeight: 204,
+    rankX: 370,
+    playerX: 482,
+    playerW: 340,
+    teamX: 482, // never rendered (mvpShowTeam: false)
+    teamW: 340,
+    killsX: 496,
+    killsW: 290,
+    rankFont: `700 64px ${FONTS}`,
+    playerFont: `800 68px ${FONTS_FULL}`,
+    statFont: `400 56px ${BRUSH_FONTS}`,
+    subtitleBakedIn: true,
+    brush: {
+      rowHeight: 204,
+      badge: {
+        x: 370,
+        w: 110,
+        fontFamily: FONTS,
+        // "#N FRAGGER" is a single-line callout inside the 110px frame.
+        // Measured 20px italic Exo 2 (letter-spacing .08em) needs ~131px and
+        // wraps to two lines, overflowing the 48px badge box; 16px fits ~105px.
+        fontSize: 16,
+        fontWeight: 600,
+        color: "#FFFFFF",
+        rule: "rgba(255,255,255,0.78)",
+      },
+      name: {
+        x: 482,
+        w: 340,
+        maxFontSize: 68,
+        minFontSize: 24,
+        fontFamily: FONTS_FULL,
+        fontWeight: 800,
+        color: "#FFFFFF",
+      },
+      kills: {
+        x: 496,
+        w: 290,
+        fontFamily: BRUSH_FONTS,
+        fontSize: 56,
+        fontWeight: 400,
+        color: "#E51920",
+      },
+      watermark: {
+        x: 650,
+        w: 180,
+        fontFamily: FONTS,
+        fontSize: 152,
+        fontWeight: 900,
+        color: "rgba(255,255,255,0.055)",
+      },
+    },
+  },
+  palette: {
+    accent: "#E51920", // the painted "MVP LIST" brush ink
+    text: "#FFFFFF",
+    textMuted: "#C9CDD2",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(229,25,32,0.14)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.78)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(229,25,32,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#0A0506",
+  },
+};
+
+const ESPORTS_CLASH_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #15161a 0%, #1e1e20 55%, #2a1015 100%)",
+  decor: [],
+};
+
+/** Esports Clash — the "TOP MVP LIST" PUBGM art (delivered as a 3764×6688 JPEG
+ *  payload inside a .png name, i.e. 9:16, not the 2:3 canvas). Every number
+ *  below is measured off those pixels through the distortion-free `fit`:
+ *  scale = 1620/6688 = 0.2422248804 → art drawn 911.734×1620 at x84.13 (the
+ *  ~84px side bars are filled by `canvasBackground` with the art's own #1e1e1e
+ *  edge ink). The baked header spans canvas y132–292; five alternating cards
+ *  start at y325/568/811/1054/1297 (pitch 243, painted height ≈231), and the
+ *  PUBG MOBILE logo occupies y1497–1597 — so row 5 ends at 1493, clear of it.
+ *  Text is confined to canvas x100–570 (< 60% = 648); the helmet characters
+ *  are painted from x≈843 onward, so the left zone never touches them.
+ *  Only RANK #01–#05, the player IGN and TOTAL KILLS are rendered (English
+ *  only; no team names, logos or avatars). Standings/announcement fall back
+ *  to a clean dark gradient. */
+const ESPORTS_CLASH: TemplateConfig = {
+  ...GEOMETRY,
+  id: "esports-clash",
+  name: "Esports Clash",
+  backgrounds: {
+    standings: ESPORTS_CLASH_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/esports-clash/mvp.png",
+      fit: { width: 911.73445, height: 1620, left: 84.132775, top: 0 },
+    },
+    announcement: ESPORTS_CLASH_FALLBACK_BG,
+  },
+  canvasBackground: "#1E1E1E",
+  uniformMvpRows: true,
+  mvpLayoutStyle: "esports-card",
+  mvpShowTeam: false,
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS_FULL}`,
+    subtitleFont: `700 40px ${FONTS_FULL}`,
+    organizerFont: `500 24px ${FONTS_FULL}`,
+  },
+  mvp: {
+    rowY0: 325,
+    rowPitch: 243,
+    rowHeight: 196,
+    rankX: 100,
+    playerX: 100,
+    playerW: 470,
+    teamX: 570, // never rendered (mvpShowTeam: false)
+    teamW: 0,
+    killsX: 100,
+    killsW: 200,
+    rankFont: `700 15px ${FONTS_FULL}`,
+    playerFont: `800 44px ${FONTS_FULL}`,
+    statFont: `800 34px ${FONTS_FULL}`,
+    subtitleBakedIn: true,
+    esports: {
+      rowHeight: 196,
+      rank: {
+        x: 100,
+        y: 18,
+        w: 190,
+        fontFamily: FONTS_FULL,
+        fontSize: 15,
+        fontWeight: 700,
+        color: "rgba(255,255,255,0.85)",
+      },
+      name: {
+        x: 100,
+        y: 44,
+        w: 470, // right edge 570 = 52.8% — inside the 60% safe zone
+        maxFontSize: 44,
+        minFontSize: 18,
+        fontFamily: FONTS_FULL,
+        fontWeight: 900,
+        color: "#FFFFFF",
+      },
+      statLabel: {
+        x: 100,
+        y: 122,
+        w: 240,
+        fontFamily: FONTS_FULL,
+        fontSize: 13,
+        fontWeight: 700,
+        color: "rgba(255,255,255,0.72)",
+        text: "TOTAL KILLS",
+      },
+      kills: {
+        x: 100,
+        y: 143,
+        w: 200,
+        fontFamily: FONTS_FULL,
+        fontSize: 36,
+        fontWeight: 900,
+        color: "#FFFFFF",
+        glow: ["0 0 18px rgba(255,45,61,0.55)", "0 0 18px rgba(45,135,220,0.55)"],
+      },
+    },
+  },
+  palette: {
+    accent: "#FF2D3D", // painted red card ink
+    text: "#FFFFFF",
+    textMuted: "#C9CDD2",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(255,45,61,0.14)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(255,255,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#101014",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -964,6 +1203,8 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "ewc-yellow": EWC_YELLOW,
   "onyx-green": ONYX_GREEN,
   "pmgc-crimson": PMGC_CRIMSON,
+  "grunge-red": GRUNGE_RED,
+  "esports-clash": ESPORTS_CLASH,
 };
 
 /** Look up a template config by aesthetic id. Unknown/legacy ids (the seed's
