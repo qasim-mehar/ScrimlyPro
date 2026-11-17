@@ -5,6 +5,7 @@ import { SUPER_RULES } from "@/lib/scoring";
 import { createSessionWithTeams } from "@/lib/sessions/create";
 import type { SessionDraft } from "@/lib/sessions/input";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
+import { assignDefaultTeamSlots } from "@/lib/sessions/slots";
 
 import { testDb } from "./helpers/pg";
 import { ensureOrg } from "./helpers/orgs";
@@ -82,6 +83,30 @@ describe("createSessionWithTeams", () => {
     expect(new Set(teamRows.map((t) => t.slotNumber))).toEqual(
       new Set(Array.from({ length: 16 }, (_, i) => i + 1)),
     );
+  });
+
+  it("persists the wizard's default 5, 6, 7 … slot sequence", async () => {
+    const assigned = assignDefaultTeamSlots(SAMPLE_TEAM_NAMES);
+    const draft = validDraft();
+    draft.teams = assigned.map((row) => ({
+      name: row.name,
+      logoUrl: null,
+      slotNumber: row.slotNumber,
+    }));
+
+    const sessionId = await createSessionWithTeams(
+      db, draft, OWNER, await ensureOrg(db, OWNER));
+    const teamRows = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.sessionId, sessionId));
+
+    expect(teamRows).toHaveLength(16);
+    expect(new Set(teamRows.map((t) => t.slotNumber))).toEqual(
+      new Set(Array.from({ length: 16 }, (_, i) => 5 + i)),
+    );
+    expect(teamRows.find((t) => t.name === "Straight Forward")?.slotNumber).toBe(5);
+    expect(teamRows.find((t) => t.name === "Nova Legends")?.slotNumber).toBe(20);
   });
 
   it("throws (fail-loud) on an invalid draft with duplicate names", async () => {

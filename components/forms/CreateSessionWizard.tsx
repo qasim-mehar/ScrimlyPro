@@ -29,7 +29,14 @@ import {
   type ValidationIssue,
 } from "@/lib/sessions/input";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
-import { announcementSlotLabels, orderTeamsBySlot } from "@/lib/sessions/slots";
+import {
+  announcementSlotLabels,
+  assignDefaultTeamSlots,
+  defaultSlotForIndex,
+  findDuplicateSlots,
+  orderTeamsBySlot,
+  parseSlotInput,
+} from "@/lib/sessions/slots";
 import type { ActiveOrg } from "@/lib/orgs/orgs";
 import { resizeLogoFile } from "./resize-logo";
 
@@ -75,11 +82,16 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
   // uploads — editing a name after uploading loses that association
   // (documented, acceptable for v1: re-upload).
   const [logos, setLogos] = useState<Record<string, string>>({});
-  // Slots are also keyed by NAME (same trade-off as logos): assigning the
-  // in-game room seat and re-parsing the textarea keeps the value attached.
-  const [slotNumbers, setSlotNumbers] = useState<Record<string, number | null>>(
-    {},
-  );
+  // Manual slot overrides are keyed by ROW INDEX (not name): fixing a typo in
+  // a name keeps its assigned seat, and appending a line gets a fresh default.
+  // A present key — even with a null value — means "the user chose this", so
+  // an explicit clear is never overwritten by the sequential default. The
+  // trade-off (documented deliberately): deleting/reordering lines can move a
+  // manual seat to a different team or leave a dormant key at the old index —
+  // any resulting collision is still caught inline by duplicate-slot feedback.
+  const [slotOverrides, setSlotOverrides] = useState<
+    Record<number, number | null>
+  >({});
   const [logoErrors, setLogoErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [resultIssues, setResultIssues] = useState<ValidationIssue[]>([]);
@@ -87,16 +99,23 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
 
   const parsed = useMemo(() => parseTeamInput(rawTeams), [rawTeams]);
 
+  // Slot defaults + reconciliation live in lib/sessions/slots.ts; this
+  // component only renders the resulting rows and stores manual overrides.
+  const slotRows = useMemo(
+    () => assignDefaultTeamSlots(parsed, slotOverrides),
+    [parsed, slotOverrides],
+  );
+
   const draft: SessionDraft = useMemo(
     () => ({
       name,
       plannedMatches: Number(plannedMatches),
       teamCount: Number(teamCount),
       templateId,
-      teams: parsed.map((teamName) => ({
-        name: teamName,
-        logoUrl: logos[teamName] ?? null,
-        slotNumber: slotNumbers[teamName] ?? null,
+      teams: slotRows.map((row) => ({
+        name: row.name,
+        logoUrl: logos[row.name] ?? null,
+        slotNumber: row.slotNumber,
       })),
       orgId,
     }),
@@ -105,28 +124,25 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
       plannedMatches,
       teamCount,
       templateId,
-      parsed,
+      slotRows,
       logos,
-      slotNumbers,
       orgId,
     ],
   );
 
   // Confirm-step preview uses the same slot ordering and labelling as the
   // announcement graphic, so numbers do not change after Create.
-  const confirmTeams = useMemo(
-    () =>
-      orderTeamsBySlot(
-        parsed.map((teamName) => ({
-          name: teamName,
-          slotNumber: slotNumbers[teamName] ?? null,
-        })),
-      ),
-    [parsed, slotNumbers],
-  );
+  const confirmTeams = useMemo(() => orderTeamsBySlot(slotRows), [slotRows]);
   const confirmSlotLabels = useMemo(
     () => announcementSlotLabels(confirmTeams),
     [confirmTeams],
+  );
+
+  // Duplicate slots are derived from the same resolved rows the validator
+  // sees, so a collision is flagged inline the instant two inputs match.
+  const duplicateSlots = useMemo(
+    () => findDuplicateSlots(slotRows.map((row) => row.slotNumber)),
+    [slotRows],
   );
 
   const allIssues = useMemo(() => validateSessionDraft(draft), [draft]);
@@ -502,9 +518,9 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                   className={fieldStyles.textarea}
                 />
                 <p className={fieldStyles.help}>
-                  Duplicate names are ignored. Assign each team its in-game
-                  room slot (1–99), or leave blank to auto-number it on the
-                  graphic.
+                  Duplicate names are flagged. Each team gets the next in-game
+                  room slot automatically (5, 6, 7, …) — edit any slot to a
+                  number from 1–99, or clear it to leave the team unassigned.
                 </p>
               </div>
 
@@ -524,8 +540,14 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                 {process.env.NODE_ENV === "development" && (
                   <button
                     type="button"
-                    onClick={() => setRawTeams(SAMPLE_TEAM_NAMES.join("\n"))}
-                    className="min-h-9 rounded-full border border-dash-line px-3 text-xs font-semibold text-dash-ink2 transition-colors hover:bg-dash-bg"
+                    onClick={() => {
+                      // Loading a fresh roster is an explicit fresh start:
+                      // drop any manual seats from the previous list so the
+                      // sample teams show the clean 5, 6, 7… ladder.
+                      setSlotOverrides({});
+                      setRawTeams(SAMPLE_TEAM_NAMES.join("\n"));
+                    }}
+                    className="min-h-11 rounded-full border border-dash-line px-3 text-xs font-semibold text-dash-ink2 transition-colors hover:bg-dash-bg"
                   >
                     Load 16 sample teams
                   </button>
@@ -535,7 +557,7 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
               {teamsIssues.length > 0 && (
                 <ul
                   className="rounded-[12px] border border-dash-amber-bg bg-dash-amber-bg/40 p-3"
-                  role="alert"
+                  aria-live="polite"
                 >
                   {teamsIssues.map((issue, i) => (
                     <li
@@ -559,6 +581,7 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                 <ul className="overflow-hidden rounded-dash border border-dash-line">
                   {parsed.map((teamName, index) => {
                     const logo = logos[teamName];
+                    const slot = slotRows[index]!;
                     const issue = indexedIssueMessage(
                       allIssues,
                       "teamName",
@@ -569,6 +592,15 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                       "slotNumber",
                       index,
                     );
+                    const slotCollision =
+                      slot.slotNumber !== null &&
+                      duplicateSlots.has(slot.slotNumber);
+                    const slotErrorId = slotIssue
+                      ? `slot-range-error-${index}`
+                      : undefined;
+                    const slotCollisionId = slotCollision
+                      ? `slot-collision-${index}`
+                      : undefined;
                     return (
                       <li
                         key={`${index}-${teamName}`}
@@ -587,8 +619,19 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                             </span>
                           ) : null}
                           {slotIssue ? (
-                            <span className="block truncate text-[11px] font-medium text-dash-danger-ink">
+                            <span
+                              id={slotErrorId}
+                              className="block truncate text-[11px] font-medium text-dash-danger-ink"
+                            >
                               {slotIssue}
+                            </span>
+                          ) : null}
+                          {slotCollision ? (
+                            <span
+                              id={slotCollisionId}
+                              className="block truncate text-[11px] font-medium text-dash-danger-ink"
+                            >
+                              Slot #{slot.slotNumber} is used by another team.
                             </span>
                           ) : null}
                         </span>
@@ -599,16 +642,27 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
                             inputMode="numeric"
                             min={1}
                             max={99}
-                            value={slotNumbers[teamName] ?? ""}
+                            value={slot.slotNumber ?? ""}
+                            placeholder={String(defaultSlotForIndex(index))}
                             onChange={(e) => {
-                              const raw = e.target.value;
-                              setSlotNumbers((prev) => ({
+                              setSlotOverrides((prev) => ({
                                 ...prev,
-                                [teamName]: raw === "" ? null : Number(raw),
+                                [index]: parseSlotInput(e.target.value),
                               }));
                             }}
                             aria-label={`Slot number for ${teamName}`}
-                            className="w-16 rounded-[10px] border border-dash-line bg-dash-surface px-2 py-1.5 text-center text-sm font-semibold tabular-nums text-dash-ink outline-none focus:ring-2 focus:ring-inset focus:ring-dash-lime [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            aria-invalid={Boolean(slotIssue || slotCollision)}
+                            aria-describedby={
+                              [slotErrorId, slotCollisionId]
+                                .filter(Boolean)
+                                .join(" ") || undefined
+                            }
+                            className={clsx(
+                              "min-h-11 w-16 rounded-[10px] border bg-dash-surface px-2 py-1.5 text-center text-sm font-semibold tabular-nums text-dash-ink outline-none focus:ring-2 focus:ring-inset focus:ring-dash-lime [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                              slotIssue || slotCollision
+                                ? "border-dash-danger-dot"
+                                : "border-dash-line",
+                            )}
                           />
                         </label>
                         {logo ? (

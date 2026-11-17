@@ -9,6 +9,7 @@ import {
   type TeamDraft,
 } from "@/lib/sessions/input";
 import { SAMPLE_TEAM_NAMES } from "@/lib/sessions/samples";
+import { assignDefaultTeamSlots } from "@/lib/sessions/slots";
 
 function validDraft(overrides: Partial<SessionDraft> = {}): SessionDraft {
   return {
@@ -231,6 +232,48 @@ describe("validateSessionDraft", () => {
         index: 0,
       });
     }
+  });
+
+  it("accepts the wizard's default 5, 6, 7 … slot ladder straight through", () => {
+    const assigned = assignDefaultTeamSlots(SAMPLE_TEAM_NAMES);
+    expect(assigned.map((row) => row.slotNumber)).toEqual(
+      SAMPLE_TEAM_NAMES.map((_, i) => 5 + i),
+    );
+    const teams: TeamDraft[] = assigned.map((row) => ({
+      name: row.name,
+      logoUrl: null,
+      slotNumber: row.slotNumber,
+    }));
+    expect(validateSessionDraft(validDraft({ teams }))).toEqual([]);
+  });
+
+  it("accepts the full 25-team default ladder (5..29) end to end", () => {
+    const names = Array.from({ length: 25 }, (_, i) => `Team ${String(i + 1).padStart(2, "0")}`);
+    const assigned = assignDefaultTeamSlots(names);
+    expect(assigned[24]?.slotNumber).toBe(29);
+    const draft = validDraft({
+      teamCount: 25,
+      teams: assigned.map((row) => ({
+        name: row.name,
+        logoUrl: null,
+        slotNumber: row.slotNumber,
+      })),
+    });
+    expect(validateSessionDraft(draft)).toEqual([]);
+  });
+
+  it("rejects a manual slot change that collides with another team's default", () => {
+    const assigned = assignDefaultTeamSlots(SAMPLE_TEAM_NAMES);
+    // Team 1 is moved from its default 5 onto Team 2's default 6.
+    const teams: TeamDraft[] = assigned.map((row, index) => ({
+      name: row.name,
+      logoUrl: null,
+      slotNumber: index === 0 ? 6 : row.slotNumber,
+    }));
+    const issues = validateSessionDraft(validDraft({ teams }));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.field).toBe("teams");
+    expect(issues[0]?.message).toContain("6");
   });
 
   it("rejects duplicate slot numbers as ONE teams issue naming each slot", () => {
