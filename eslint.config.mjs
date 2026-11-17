@@ -276,6 +276,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // gitignored scratch/measurement dir — never lint throwaway scripts
+    ".tmp/**",
   ]),
 ]);
 

@@ -68,6 +68,13 @@ export function labelsBakedInFor(config: TemplateConfig, variant: GraphicVariant
   return config.variantLabelsBakedIn?.[variant] ?? config.labelsBakedIn === true;
 }
 
+/** Per-variant subtitle-label visibility: the variant flag wins when present.
+ *  subtitles baked into the art (pmgc-aqua's "MATCH #") still render their
+ *  digits via `subtitleMode: "matchNumber"` — this only records the fact. */
+export function subtitleBakedInFor(config: TemplateConfig, variant: GraphicVariant): boolean {
+  return config.subtitleBakedIn?.[variant] === true;
+}
+
 /** Background image style for one variant. `fit` (when present) is a uniformly
  *  pre-scaled image box: the art keeps its native ratio and its measured slots
  *  land exactly on the config coordinates — zero stretch, zero distortion.

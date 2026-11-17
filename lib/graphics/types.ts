@@ -8,6 +8,7 @@ export type AestheticId =
   | "ewc-yellow"
   | "onyx-green"
   | "pmgc-crimson"
+  | "pmgc-aqua"
   | "pmwi-violet"
   | "grunge-red"
   | "esports-clash";
@@ -253,6 +254,9 @@ export type TemplateConfig = {
   variantLabelsBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant
   // override (grunge-red: the MVP art bakes its own labels/header)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
+  subtitleBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant: the art already
+  // prints the subtitle LABEL (pmgc-aqua's baked "MATCH #"); the slot renders
+  // only the digits. Mirrors variantLabelsBakedIn / variantHideScrimName.
   hideScrimName?: boolean; // true → renderers skip the scrim-name (title) slot
   // entirely (neon-green: the art's title band is intentionally blank)
   variantHideScrimName?: Partial<Record<GraphicVariant, boolean>>; // per-variant

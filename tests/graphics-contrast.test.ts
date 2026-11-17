@@ -71,6 +71,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmgc-aqua",
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
@@ -559,6 +560,55 @@ describe("esports-clash art left-zone contrast (measured from the art)", () => {
   it("dark gradient fallback keeps white + muted ink readable", () => {
     const p = getTemplate("esports-clash").palette;
     for (const bg of Object.values(getTemplate("esports-clash").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+describe("pmgc-aqua light-bar / dark-badge contrast (measured from the art)", () => {
+  const CONFIG = getTemplate("pmgc-aqua");
+  const over = (bgLum: number, fgHex: string) => {
+    const fgLum = relativeLuminance(parseHexColor(fgHex));
+    return (Math.max(bgLum, fgLum) + 0.05) / (Math.min(bgLum, fgLum) + 0.05);
+  };
+  // Zone means measured on the 968×1625 art with the per-pixel WCAG algorithm
+  // (same as the other art templates): light ice-grey row bar, near-black
+  // MATCH # slot, dark rocky footer at the fixed watermark position.
+  const ROW_BAR = 0.82158;
+  const MATCH_SLOT = 0.00814;
+  const FOOTER = { r: 25.7, g: 34.7, b: 38.5 };
+
+  it("dark charcoal row ink clears the light bars ≥ 14:1", () => {
+    const p = CONFIG.palette;
+    expect(p.text).toBe("#0D1B1E");
+    expect(p.wwcdText).toBe("#0D1B1E");
+    expect(CONFIG.standings.uniformStatInk).toBe(true);
+    expect(over(ROW_BAR, p.text)).toBeGreaterThanOrEqual(14);
+    expect(over(ROW_BAR, p.textMuted)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("electric-cyan match digits clear the dark badge ≥ 4.5:1", () => {
+    const ink = CONFIG.variantHeaders?.standings?.subtitleColor ?? "#00F5E1";
+    expect(over(MATCH_SLOT, ink)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("88%-white brand watermark clears the dark rocky footer ≥ 4.5:1", () => {
+    const a = 0.88;
+    const ink = {
+      r: 255 * a + FOOTER.r * (1 - a),
+      g: 255 * a + FOOTER.g * (1 - a),
+      b: 255 * a + FOOTER.b * (1 - a),
+    };
+    expect(contrastRatio(ink, FOOTER)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("light aqua/ice fallback keeps dark + muted ink readable on MVP + announcement", () => {
+    const p = CONFIG.palette;
+    const bgs = Object.values(CONFIG.backgrounds).filter((bg) => bg.type === "gradient");
+    expect(bgs.length).toBeGreaterThanOrEqual(1);
+    for (const bg of bgs) {
       if (bg.type !== "gradient") continue;
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);

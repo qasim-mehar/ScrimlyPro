@@ -1095,6 +1095,164 @@ const PMWI_VIOLET: TemplateConfig = {
   },
 };
 
+const PMGC_AQUA_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Light aqua → ice-teal with a dark-slate ink (palette.text). The row bars
+  // are light ice-grey in the art, so ALL row ink must be dark; a light
+  // fallback keeps that same ink WCAG-legible on the artless MVP/announcement
+  // variants (≥12:1 against every stop).
+  css: "linear-gradient(165deg, #EAFBF7 0%, #CBF0E8 55%, #A9E2D9 100%)",
+  decor: [],
+};
+
+/** PMGC Aqua — the 2022 PMGC aqua/mint/cyan broadcast leaderboard. The art is
+ *  a TRUE PNG at 968×1625 (not a 4096×6144 JPEG-in-.png like the other
+ *  broadcast arts), ratio 0.5957 — taller/narrower than the 2:3 canvas. It is
+ *  uniformly fitted by WIDTH to 1080 (×1080/968 = 1.1157024793 →
+ *  1080×1813.016529) and centred with top −96.508264, i.e. the exact
+ *  `object-fit: cover` crop (art y0–86.5 and y1538.5–1625 are trimmed). No
+ *  stretch. All canvas coordinates below were measured on those art pixels
+ *  and converted with canvasX = artX × S, canvasY = (artY − 86.5) × S:
+ *  - 12 light ice-grey bars per column. Native bright-divider tops 415, 477,
+ *    541, …, 1112, 1176 → canvas rowY0 366.5, uniform pitch 70.7, bar height
+ *    ≈69 (68px text box centred on the painted bar). 24 teams → [12,12];
+ *    the 25th overflows below the last painted bar, never dropped.
+ *  - Baked bright-cyan rank squares (#1–#24) end at art x104 / x548 → canvas
+ *    x116 / x611.4; the team/logo compartment starts there, cleanly inside
+ *    the ice-grey bar. Team width stops before the first stat divider.
+ *  - Baked dark header band (art y370–409 → canvas 316–360) prints RANK |
+ *    TEAM | ELIMS | PLACE | WWCD | TOTAL twice. Faint painted vertical cell
+ *    dividers at art x262.5/313/364/415 (left) and x708.5/759.5/810.5/861.5
+ *    (right) → the FOUR stat boxes centre on art x287.75/338.5/389.5/444.25
+ *    and x734/785/836/890.25 (canvas centres 321/377.7/434.6/495.7 and
+ *    818.9/875.8/932.7/993.3). Order is ELIMS(kp) → PLACE(pp) → WWCD →
+ *    TOTAL — NOT the WWCD-first order of the other templates. 56px boxes keep
+ *    3-digit values (190/158) centred between dividers with zero overlap.
+ *  - Baked "OVERALL RANKINGS" + dark cyan-bordered "MATCH #" badge (art
+ *    x649–925 y245–330 → canvas x724–1032 y177–272). The baked "#" ink ends
+ *    at art x814 → canvas x908; the cyan underline sits at art y308 → canvas
+ *    y247. Match digits render in the open dark slot x912 y186 (above the
+ *    underline, right of the #) at canvas y186–226, never overlapping either.
+ *  - Row bar interior lum 0.82 → dark charcoal/teal-black ink #0D1B1E at
+ *    weight 800 reads ≥14:1. The match slot (lum 0.008) and rocky footer
+ *    (lum 0.038) are dark → electric-cyan digits and a 88%-white watermark.
+ *  - MVP + announcement have no art → light aqua/ice gradient; dark slate ink
+ *    and muted teal clear every stop. Brand-law watermark stays hardcoded. */
+const PMGC_AQUA: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgc-aqua",
+  name: "PMGC Aqua",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgc-aqua/overall.png",
+      // Uniform ×1080/968 cover crop: art ratio 0.5957 is taller than 2:3,
+      // so the centred crop removes art y0–86.5 and y1538.5–1625. No stretch.
+      fit: { width: 1080, height: 1813.01652892562, left: 0, top: -96.50826446281 },
+    },
+    mvp: PMGC_AQUA_FALLBACK_BG,
+    announcement: PMGC_AQUA_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: true },
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep the normal header.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Open dark area right of the baked "#" (ends canvas x908) and above
+      // the baked cyan underline (canvas y247) — digits sit cleanly inside.
+      subtitle: { x: 912, y: 186, w: 108, align: "center" },
+      subtitleFont: `800 34px ${FONTS}`,
+      subtitleColor: "#00F5E1", // electric cyan on the measured near-black slot
+      // Park the optional organizer between the badge (ends y272) and the
+      // baked header band (starts y316) so it collides with neither.
+      organizer: { x: 140, y: 282, w: 800, align: "center" },
+      organizerFont: `600 18px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS" across the top band
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 52, // baked cyan square art x47–104; no code-drawn numeral
+        teamX: 117, // first clear pixel inside the ice-grey bar
+        teamW: 170, // ends at 287, before the ELIMS divider at 292.9
+        statColumns: [
+          { key: "kp", x: 293 }, // ELIMS centre 321
+          { key: "pp", x: 350 }, // PLACE centre 377.7
+          { key: "wwcd", x: 407 }, // WWCD centre 434.6
+          { key: "total", x: 468 }, // TOTAL centre 495.7
+        ],
+        stripX: 116, // 1px left of teamX so strips never overlap the name slot
+        stripW: 412, // right edge 528, inside the bar (art right divider 528.3)
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 547, // baked cyan square art x490–548
+        teamX: 612, // first clear pixel inside the right ice-grey bar
+        teamW: 172, // ends at 784, before the ELIMS divider at 790.5
+        statColumns: [
+          { key: "kp", x: 791 }, // ELIMS centre 818.9
+          { key: "pp", x: 848 }, // PLACE centre 875.8
+          { key: "wwcd", x: 905 }, // WWCD centre 932.7
+          { key: "total", x: 965 }, // TOTAL centre 993.3
+        ],
+        stripX: 611, // 1px left of teamX so strips never overlap the name slot
+        stripW: 414, // right edge 1025, inside the bar (art right divider 1025.3)
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 316, // baked dark header band top — code draws no labels
+    rowY0: 366.5,
+    rowPitch: 70.7,
+    rowHeight: 68,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 56, // 3 digits at 800 26px stay inside one painted compartment
+    logoPlate: 32,
+    logoNameGap: 40,
+    uniformStatInk: true, // every numeral the same dark ink — the baked cyan
+    // rank square already supplies rank-1 emphasis; no accent TOTAL here
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 20px ${FONTS}`,
+  },
+  palette: {
+    accent: "#0C8C84", // deep teal — legible on the light fallback gradient
+    text: "#0D1B1E", // dark charcoal/teal-black ink on the light row bars
+    textMuted: "#1E4A4A", // muted dark teal (labels/slots on light surfaces)
+    rowAlt: "#0D1B1E",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // rank-1 strip invisible; baked badge is emphasis
+    wwcdText: "#0D1B1E", // rank-1 team name keeps the same dark row ink
+    watermarkColor: "rgba(255,255,255,0.88)", // bright on the dark rocky footer
+    plateBg: "rgba(13,27,30,0.10)",
+    plateRing: "rgba(13,27,30,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#9C6327",
+    medalText: "#0A1416", // distinct from palette.text so uniform MVP rows
+    // never paint a medal-digit accent (≥3:1 on every metal)
+  },
+};
+
 const GRUNGE_RED_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
   type: "gradient",
   css: "linear-gradient(165deg, #0A0506 0%, #1A080C 55%, #2A0A10 100%)",
@@ -1349,6 +1507,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "ewc-yellow": EWC_YELLOW,
   "onyx-green": ONYX_GREEN,
   "pmgc-crimson": PMGC_CRIMSON,
+  "pmgc-aqua": PMGC_AQUA,
   "pmwi-violet": PMWI_VIOLET,
   "grunge-red": GRUNGE_RED,
   "esports-clash": ESPORTS_CLASH,

@@ -99,6 +99,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmgc-aqua",
     "pmwi-violet",
     "grunge-red",
   ];
@@ -331,6 +332,7 @@ describe("P7 � font swap + config flags (SSR)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmgc-aqua",
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
@@ -701,5 +703,73 @@ describe("esports-clash — English esports card MVP (SSR)", () => {
       expect(html).toContain("top:1570px");
       expect(html).toContain("scrimlypro.com");
     }
+  });
+});
+
+describe("P8(6) — pmgc-aqua standings SSR rendering", () => {
+  const config = getTemplate("pmgc-aqua");
+  const render = (subtitle: string, n: number, matchCount: number) =>
+    renderToStaticMarkup(standings("pmgc-aqua", subtitle, n, { matchCount }));
+
+  it("renders mid-session (AFTER MATCH 3) into the baked MATCH # slot", () => {
+    const html = render("AFTER MATCH 3", 24, 3);
+    expect(html).toContain("left:912px");
+    expect(html).toContain("color:#00F5E1");
+    expect(html).toContain(">3<");
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain(">RANK<");
+    expect((html.match(/left:117px/g) ?? []).length).toBe(12);
+    expect((html.match(/left:612px/g) ?? []).length).toBe(12);
+  });
+
+  it("renders completed (FINAL RESULTS) state with the final match number", () => {
+    const html = render("FINAL RESULTS", 16, 6);
+    expect(html).toContain("left:912px");
+    expect(html).toContain(">6<");
+    expect((html.match(/left:117px/g) ?? []).length).toBe(12);
+    expect((html.match(/left:612px/g) ?? []).length).toBe(4);
+  });
+
+  it("keeps 3-digit values centred in their painted stat boxes", () => {
+    const html = renderToStaticMarkup(
+      h(OverallStandingsGraphic, {
+        aestheticId: "pmgc-aqua",
+        title: "SCRIM",
+        subtitle: "FINAL RESULTS",
+        organizer: null,
+        matchCount: 6,
+        standings: [
+          {
+            teamId: "t0",
+            teamName: "LONG GLYPH NAME × · | ₛ ≌",
+            logoUrl: null,
+            wwcd: 1,
+            pp: 190,
+            kp: 158,
+            total: 348,
+          },
+        ],
+      }),
+    );
+    expect(html).toContain(">190<");
+    expect(html).toContain(">158<");
+    expect(html).toContain(">348<");
+    for (const x of [293, 350, 407, 468]) expect(html).toContain(`left:${x}px`);
+    expect(html).not.toContain("NaN");
+  });
+
+  it("keeps the hardcoded brand watermark at y1570 on all three variants", () => {
+    const config = getTemplate("pmgc-aqua");
+    for (const variant of ["standings", "mvp", "announcement"] as const) {
+      const html = renderToStaticMarkup(h(GraphicCanvas, { config, variant }));
+      expect(html).toContain("top:1570px");
+      expect(html).toContain("scrimlypro.com");
+    }
+  });
+
+  it("hides the scrim name only for standings", () => {
+    expect(hideScrimNameFor(config, "standings")).toBe(true);
+    expect(hideScrimNameFor(config, "mvp")).not.toBe(true);
+    expect(hideScrimNameFor(config, "announcement")).not.toBe(true);
   });
 });

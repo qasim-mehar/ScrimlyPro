@@ -112,6 +112,7 @@ describe("AESTHETICS registry", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmgc-aqua",
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
@@ -796,9 +797,8 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
       expect(Math.abs(w / h - 2 / 3)).toBeLessThanOrEqual(RATIO_TOLERANCE);
       expect(w).toBeGreaterThanOrEqual(MIN_WIDTH);
     }
-    // Uniformly fitted art (pmwi-violet) is pre-scaled to width 1080 via
-    // Background.fit — its native RGB pixels may be narrower.
-
+    // Uniformly fitted art (pmwi-violet / pmgc-aqua) is pre-scaled to width
+    // 1080 via Background.fit — its native RGB pixels may be narrower.
   });
 });
 
@@ -813,6 +813,7 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmgc-aqua",
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
@@ -954,6 +955,7 @@ describe("P7 — font swap + template flags", () => {
     "ewc-yellow",
     "onyx-green",
     "pmgc-crimson",
+    "pmgc-aqua",
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
