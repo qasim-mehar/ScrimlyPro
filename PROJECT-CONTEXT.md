@@ -713,14 +713,14 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   (`scale(calc(100cqw / 1080px))`) preserves the ratio with zero JS.
 - `GraphicCanvas` (required `variant`: `standings | mvp | announcement`) renders
   absolutely-positioned slots over a background. **Templates = background image
-  + coordinate config.** Eight aesthetics (`lib/graphics/aesthetics.ts`): three
-  dev gradients (dark-gold, purple-butterfly, pink-blossom) and five art-backed
-  (pmpl-light, neon-green, challengers-red, ewc-yellow, pmgc-crimson; art in
-  `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
+  + coordinate config.** Nine aesthetics (`lib/graphics/aesthetics.ts`): three
+  dev gradients (dark-gold, purple-butterfly, pink-blossom) and six art-backed
+  (pmpl-light, neon-green, challengers-red, ewc-yellow, onyx-green, pmgc-crimson;
+  art in `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
   variant-specific: pmpl-light backs standings + announcement, neon-green backs
   standings, challengers-red backs standings (`overall.png`) + MVP (`mvp.png`;
-  announcement stays on the gradient fallback), ewc-yellow / pmgc-crimson back
-  standings only.
+  announcement stays on the gradient fallback), ewc-yellow / onyx-green /
+  pmgc-crimson back standings only.
   The challengers-red standings wiring is working-tree WIP, not in the
   ewc-yellow commit — see §13.2. ewc-yellow's `overall.png` is also a
   4096×6144 JPEG payload in a `.png`-named file: 12 painted bars per column
@@ -730,6 +730,17 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   `.png`-named file (canvas ×1080/4096 = 0.263671875) with 12 painted row bars
   per column: tops 389 + i×67.3636, height 62, rank numerals 1–24, stat ink
   centers 373.5/413.5/454/493 (left) and 831/871.5/912/951.5 (right).
+  onyx-green (P8(4)) backs standings at `/templates/onyx-green/overall.png`
+  (another 4096×6144 JPEG payload in a `.png` name, ×0.263671875): the PUBG
+  Pro League (ONYX) leaderboard — baked "STANDING" title (session name hidden
+  for standings), baked ranks 1–24 on 12 dark bars/column (rowY0 400, pitch
+  70.7727 measured from baked rank-ink centers 432…1210.5, height 63), three
+  painted stat labels TEAM | WWCD | TOTALKILL | TOTALPOINT per side (ink centers
+  316/394/475 left, 800/890/970 right — the right shift is NOT uniform; 48px
+  boxes centered there) and a neon-green
+  underline at y≈294 with the match digits slot at x984 y250. MVP +
+  announcement fall back to a dark matrix-green gradient. Pinned by
+  `tests/onyx-standings.test.ts`.
   pmgc-crimson (P8(3)) backs standings at `/templates/pmgc-crimson/overall.png`
   (another 4096×6144 JPEG payload in a `.png` name, ×0.263671875): the 2023 PMGC
   Grand Finals broadcast leaderboard — baked "OVERALL RANKINGS" title (session
@@ -740,16 +751,6 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   +474 right; 52px boxes) and pure-white Exo 2 800 text. MVP + announcement fall
   back to a deep crimson-black / gold gradient. Pinned by
   `tests/pmgc-standings.test.ts`.
-  onyx-green (P8(4)) backs standings at `/templates/onyx-green/overall.png`
-  (another 4096×6144 JPEG payload in a `.png` name, ×0.263671875): the PUBG
-  Pro League (ONYX) leaderboard — baked "STANDING" title (session name hidden
-  for standings), baked ranks 1–24 on 12 dark bars/column (rowY0 400, pitch
-  70.7727 measured from baked rank-ink centers 432…1210.5, height 63), three
-  painted stat labels TEAM | WWCD | TOTALKILL | TOTALPOINT per side (ink centers
-  316/394/475 left, 800/890/970 right — the right shift is NOT uniform; 48px
-  boxes centered there) and a neon-green underline at y≈294 with the match
-  digits slot at x984 y250. MVP + announcement fall back to a dark matrix-green
-  gradient. Pinned by `tests/onyx-standings.test.ts`.
 - `TemplateConfig` (engine v3) key ideas: per-variant `backgrounds`;
   `statColumns` (ordered value boxes, per-table `statBoxW`); `labelsBakedIn` /
   `subtitleBakedIn` (per-variant — the art already prints the labels);
@@ -888,9 +889,11 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
   `tests/graphics-ssr.test.ts`, `tests/ewc-standings.test.ts`, and
   `tests/challengers-standings.test.ts`).
   onyx-green (P8(4)) is wired the same way with a measured 3-stat layout; its
-  `overall.png` and `tests/onyx-standings.test.ts` land in this chunk.
-  Do not wire further art without measuring geometry and updating the pinned
-  graphics tests.
+  `overall.png` and `tests/onyx-standings.test.ts` land in that chunk.
+  pmgc-crimson (P8(3)) is wired with a measured 12/12 crimson layout, gold
+  "MATCH #" number slot and bold white Exo 2 800 type; its `overall.png` and
+  `tests/pmgc-standings.test.ts` land in this chunk. Do not wire further art
+  without measuring geometry and updating the pinned graphics tests.
 - `next.config.ts` and `dev-auth.log` are no longer part of the drift — both
   landed in `6f4d475` (see §13.3).
 
