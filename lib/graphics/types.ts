@@ -6,6 +6,7 @@ export type AestheticId =
   | "neon-green"
   | "challengers-red"
   | "ewc-yellow"
+  | "onyx-green"
   | "pmgc-crimson";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */

@@ -69,6 +69,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "onyx-green",
     "pmgc-crimson",
   ];
 
@@ -372,6 +373,34 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
   it("pmgc-crimson: crimson-black fallback keeps white + muted ink readable", () => {
     const p = getTemplate("pmgc-crimson").palette;
     for (const bg of Object.values(getTemplate("pmgc-crimson").backgrounds)) {
+      if (bg.type !== "gradient") continue;
+      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  // onyx-green/overall.png (4096×6144, ×0.263671875). Measured with the same
+  // per-pixel WCAG relative-luminance mean used for the P6 zones (sharp scan).
+  const ONYX = {
+    // art(417,1516,1558,235) = canvas(110,400,411,62) — row 1 dark bar interior
+    rowBar: 0.02071,
+    // art(3733,952,277,151) = canvas(984,251,73,40) — the match-number slot
+    // above the baked neon underline; the art is near-black there.
+    matchChip: 0.00577,
+  };
+
+  it("onyx-green: white row text clears dark bars ≥ 12:1, neon match ink ≥ 4.5:1", () => {
+    const config = getTemplate("onyx-green");
+    const p = config.palette;
+    expect(p.text).toBe("#FFFFFF");
+    expect(ratioOver(ONYX.rowBar, p.text)).toBeGreaterThanOrEqual(12); // AAA hard gate
+    const matchInk = config.variantHeaders?.standings?.subtitleColor ?? "#42F57E";
+    expect(ratioOver(ONYX.matchChip, matchInk)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("onyx-green: matrix-green fallback keeps white + muted ink readable", () => {
+    const p = getTemplate("onyx-green").palette;
+    for (const bg of Object.values(getTemplate("onyx-green").backgrounds)) {
       if (bg.type !== "gradient") continue;
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);

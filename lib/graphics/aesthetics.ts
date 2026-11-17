@@ -692,6 +692,133 @@ const EWC_YELLOW: TemplateConfig = {
   },
 };
 
+const ONYX_GREEN_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(170deg, #070D09 0%, #0F1F15 100%)",
+  decor: [],
+};
+
+/** Onyx Green — the PUBG Pro League (ONYX) broadcast leaderboard. The delivered
+ * file is a 4096×6144 JPEG payload inside a .png name → canvas ×1080/4096 =
+ * 0.263671875. Every number below was measured off those pixels (sharp scan):
+ * - Baked "STANDING" stencil title x334–790 y115–245 and "MATCH #" neon ink
+ *   x812–968 y261–297 → the session name is hidden for standings; only the
+ *   match digits render, in the clear slot x984–1060 just above the green
+ *   underline (measured x980–1064 at y294). "LEADERBOARD" parallelogram sits
+ *   at y312–336, well below the slot. Painted row-bar zone mean luminance
+ *   0.0207 and match slot 0.0058 → white/neon ink reads >12:1.
+ * - Header band y356–392 prints TEAM | WWCD | TOTALKILL | TOTALPOINT twice.
+ *   Measured label ink centers (canvas): left 316 / 394 / 475, right 800 /
+ *   890 / 970. The art's right TEAM/WWCD sit only +484 from the left (the
+ *   column shift is NOT uniform — measured, not assumed). 48px value boxes
+ *   at 292 / 370 / 451 (right 776 / 866 / 946) center on them, stop before
+ *   the 528–534 / 1028–1033 neon accent bars, and leave the team slot
+ *   (x110–290 / x600–776) uncluttered.
+ * - 12 dark row bars per column. Baked white rank numerals 1–24 sit at canvas
+ *   centers 432, 502.5, …, 1210.5 → a 70.7727px center-to-center pitch with
+ *   rowY0 400 (63px text box center 431.5, dead-on the painted rank ink) and
+ *   ZERO cumulative drift through row 12. ranksBakedIn + rowsPerColumn 12
+ *   split 24 teams into [12,12]; the 25th overflows below the painted table.
+ * - MVP + announcement have no art → deep cyber-charcoal / matrix-green
+ *   gradient fallback (never a broken render). Watermark stays hardcoded. */
+const ONYX_GREEN: TemplateConfig = {
+  ...GEOMETRY,
+  id: "onyx-green",
+  name: "Onyx Green",
+  backgrounds: {
+    standings: { type: "image", src: "/templates/onyx-green/overall.png" },
+    mvp: ONYX_GREEN_FALLBACK_BG,
+    announcement: ONYX_GREEN_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Standings hides the title (baked "STANDING"); these slots serve the
+    // gradient-fallback MVP + announcement variants.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `700 40px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Match digits sit directly above the baked neon underline (x980–1064
+      // at y294), right of the baked "MATCH #" ink (ends x968).
+      subtitle: { x: 984, y: 250, w: 76, align: "center" },
+      subtitleFont: `800 34px ${FONTS}`,
+      subtitleColor: "#42F57E", // neon matrix green on the measured dark slot
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art already prints "STANDING" in giant white stencil
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 60, // baked rank box (x48–100); no code-drawn numeral
+        teamX: 110, // first clear pixel right of the rank divider at x107
+        teamW: 180, // ends at 290, before the WWCD box at 292
+        statColumns: [
+          { key: "wwcd", x: 292 },
+          { key: "kp", x: 370 },
+          { key: "total", x: 451 },
+        ],
+        stripX: 108,
+        stripW: 419, // right edge 527 — clears the neon bar's 528 start
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 552,
+        teamX: 600, // first clear pixel right of the rank divider at x597
+        teamW: 174, // ends at 774, 2px before the WWCD box at 776
+        statColumns: [
+          { key: "wwcd", x: 776 }, // ink center 799.5 (not the spec's ~810)
+          { key: "kp", x: 866 },
+          { key: "total", x: 946 },
+        ],
+        stripX: 598,
+        stripW: 429, // right edge 1027 — clears the neon bar's 1028 start
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 356,
+    rowY0: 400,
+    rowPitch: 70.7727, // measured baked-rank ink centers (432 … 1210.5) / 11
+    rowHeight: 63,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48,
+    nameFont: `800 22px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#42F57E", // neon matrix green
+    text: "#FFFFFF",
+    textMuted: "#A8C4B0",
+    rowAlt: "#121D15", // dark matrix-green card surface
+    rowAltOpacity: 0.3, // subtle only — the art paints its own row gradients
+    wwcdBg: "rgba(66,245,126,0.14)",
+    wwcdText: "#42F57E",
+    watermarkColor: "rgba(255,255,255,0.78)",
+    plateBg: "rgba(66,245,126,0.12)",
+    plateRing: "rgba(66,245,126,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#0A100B",
+  },
+};
+
 const PMGC_CRIMSON_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
   type: "gradient",
   css: "linear-gradient(165deg, #120309 0%, #1C0410 55%, #2A0615 100%)",
@@ -835,6 +962,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "neon-green": NEON_GREEN,
   "challengers-red": CHALLENGERS_RED,
   "ewc-yellow": EWC_YELLOW,
+  "onyx-green": ONYX_GREEN,
   "pmgc-crimson": PMGC_CRIMSON,
 };
 

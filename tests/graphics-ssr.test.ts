@@ -97,6 +97,7 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "onyx-green",
     "pmgc-crimson",
   ];
 
@@ -324,6 +325,7 @@ describe("P7 � font swap + config flags (SSR)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "onyx-green",
     "pmgc-crimson",
   ];
 
@@ -505,6 +507,61 @@ describe("P8 — pmgc-crimson standings SSR rendering", () => {
     expect(ann).toContain("SCRIM");
     expect(ann).toContain("PARTICIPATING TEAMS");
     expect(ann).toContain(">01<");
+    expect(ann).toContain("SQUAD 16");
+  });
+});
+
+describe("P8 — onyx-green standings SSR rendering", () => {
+  it("renders 24 teams on the 12/12 painted bars with baked ranks/labels skipped", () => {
+    const html = renderToStaticMarkup(standings("onyx-green", "AFTER MATCH 5", 24, { matchCount: 5 }));
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">TEAM<");
+    expect(html).not.toContain(">WWCD<");
+    expect(html).not.toContain("left:60px;top:400px;width:48px");
+    expect((html.match(/left:110px/g) ?? []).length).toBe(12);
+    expect((html.match(/left:600px/g) ?? []).length).toBe(12);
+    expect(html).toContain("SQUAD 1");
+    expect(html).toContain("SQUAD 24");
+    // Three stat columns per side at the measured ink centers.
+    for (const x of [292, 370, 451, 776, 866, 946]) expect(html).toContain(`left:${x}px`);
+    expect(html).toContain("font-variant-numeric:tabular-nums");
+    expect(html).toContain("font:800 26px");
+  });
+
+  it("hides the baked-title collision and renders only the match digits", () => {
+    const html = renderToStaticMarkup(standings("onyx-green", "FINAL RESULTS", 16, { matchCount: 6 }));
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain("FINAL RESULTS");
+    expect(html).toContain("left:984px");
+    expect(html).toContain("color:#42F57E");
+    expect(html).toContain(">6<");
+  });
+
+  it("renders the MVP and announcement variants on the gradient fallback", () => {
+    const mvp = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "onyx-green",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(mvp).toContain("SCRIM");
+    expect(mvp).toContain("TOP 5 FRAGGERS");
+    expect(mvp).toContain("ALPHA");
+
+    const ann = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "onyx-green",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(16),
+      }),
+    );
+    expect(ann).toContain("SCRIM");
+    expect(ann).toContain("PARTICIPATING TEAMS");
     expect(ann).toContain("SQUAD 16");
   });
 });

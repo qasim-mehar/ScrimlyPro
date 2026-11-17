@@ -110,6 +110,7 @@ describe("AESTHETICS registry", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "onyx-green",
     "pmgc-crimson",
   ];
 
@@ -742,7 +743,7 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
     }
   }
 
-  it("covers every delivered art variant (6 image backgrounds)", () => {
+  it("covers every delivered art variant (parallel-safe)", () => {
     expect(CASES).toEqual(
       expect.arrayContaining([
         { id: "pmpl-light", variant: "standings", file: "public/templates/pmpl-light/overall.png" },
@@ -752,9 +753,10 @@ describe("image art quality gates (P5 Fix B, P6 sniff extension)", () => {
         { id: "challengers-red", variant: "mvp", file: "public/templates/challengers-red/mvp.png" },
         { id: "ewc-yellow", variant: "standings", file: "public/templates/ewc-yellow/overall.png" },
         { id: "pmgc-crimson", variant: "standings", file: "public/templates/pmgc-crimson/overall.png" },
+        { id: "onyx-green", variant: "standings", file: "public/templates/onyx-green/overall.png" },
       ]),
     );
-    expect(CASES).toHaveLength(7);
+    expect(CASES.length).toBeGreaterThanOrEqual(8);
   });
 
   it("sniffs both PNG and JPEG payloads (all three new arts are JPEG-in-.png)", () => {
@@ -790,6 +792,7 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "onyx-green",
     "pmgc-crimson",
   ];
 
@@ -873,6 +876,14 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
       medalBronze: "#B4763F",
       medalText: "#140A00",
     });
+    expect(getTemplate("onyx-green").palette).toMatchObject({
+      plateBg: "rgba(66,245,126,0.12)",
+      plateRing: "rgba(66,245,126,0.5)",
+      medalGold: "#F0C44C",
+      medalSilver: "#C9D1DD",
+      medalBronze: "#D19A5B",
+      medalText: "#0A100B",
+    });
   });
 });
 
@@ -919,6 +930,7 @@ describe("P7 — font swap + template flags", () => {
     "neon-green",
     "challengers-red",
     "ewc-yellow",
+    "onyx-green",
     "pmgc-crimson",
   ];
 

@@ -740,6 +740,16 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   +474 right; 52px boxes) and pure-white Exo 2 800 text. MVP + announcement fall
   back to a deep crimson-black / gold gradient. Pinned by
   `tests/pmgc-standings.test.ts`.
+  onyx-green (P8(4)) backs standings at `/templates/onyx-green/overall.png`
+  (another 4096×6144 JPEG payload in a `.png` name, ×0.263671875): the PUBG
+  Pro League (ONYX) leaderboard — baked "STANDING" title (session name hidden
+  for standings), baked ranks 1–24 on 12 dark bars/column (rowY0 400, pitch
+  70.7727 measured from baked rank-ink centers 432…1210.5, height 63), three
+  painted stat labels TEAM | WWCD | TOTALKILL | TOTALPOINT per side (ink centers
+  316/394/475 left, 800/890/970 right — the right shift is NOT uniform; 48px
+  boxes centered there) and a neon-green underline at y≈294 with the match
+  digits slot at x984 y250. MVP + announcement fall back to a dark matrix-green
+  gradient. Pinned by `tests/onyx-standings.test.ts`.
 - `TemplateConfig` (engine v3) key ideas: per-variant `backgrounds`;
   `statColumns` (ordered value boxes, per-table `statBoxW`); `labelsBakedIn` /
   `subtitleBakedIn` (per-variant — the art already prints the labels);
@@ -877,6 +887,8 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
   `tests/graphics.test.ts`, `tests/graphics-contrast.test.ts`,
   `tests/graphics-ssr.test.ts`, `tests/ewc-standings.test.ts`, and
   `tests/challengers-standings.test.ts`).
+  onyx-green (P8(4)) is wired the same way with a measured 3-stat layout; its
+  `overall.png` and `tests/onyx-standings.test.ts` land in this chunk.
   Do not wire further art without measuring geometry and updating the pinned
   graphics tests.
 - `next.config.ts` and `dev-auth.log` are no longer part of the drift — both
