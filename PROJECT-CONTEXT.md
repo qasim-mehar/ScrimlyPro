@@ -112,18 +112,18 @@ landing page at `/`.
 
 | Item | State |
 |---|---|
-| Branch | `main`, ahead of `origin/main` (`88a9daa`) by the two chore/docs commits below — not pushed |
-| Tip | `6f4d475` — 2026-11-16, turbopack root + `dev-auth.log` untracking (docs commit lands on top) |
-| Working tree | **Dirty**: challengers-red standings WIP (1 modified template PNG + untracked test) plus untracked design exports — nothing staged; ewc-yellow lands in the commit on top of this docs snapshot |
+| Branch | `main`, ahead of `origin/main` (`88a9daa`) — not pushed |
+| Tip | P8(1) / P8(2) graphics template wiring |
+| Working tree | Untracked design exports only (`Max_a_*.png` + challengers reference image) — ewc-yellow and challengers-red templates fully wired and tested |
 | Runtime | Node `v25.6.1`, npm `11.9.0` |
 | Next.js | `16.4.3` (App Router, no `src/`, alias `@/*`) |
 | Database | ✅ Local Postgres 17.6 **running** at `127.0.0.1:54329`, db `scrimlypro_main`, live backends healthy (restored 2026-11-16 — see §14) |
 | Latest migration | `0021_teams-slot-number.sql` — **applied and verified locally** 2026-11-16 (`column slot_number integer NULL`, partial unique index `teams_session_slot_uq`, journal entry id 11) |
-| Typecheck | ✅ `npm run typecheck` passes, 0 errors (re-run 2026-11-16) |
-| Lint | ✅ `npm run lint` passes with 0 errors, 98 warnings (re-run 2026-11-16; mostly `.claude/skills` scripts + pre-existing) |
-| Build | ✅ `npm run build` passes (Next 16.4.3 Turbopack, re-run 2026-11-16) |
-| Bundle secrets | ✅ `npm run verify:secrets` — no secret material in build output (re-run 2026-11-16) |
-| Full suite | ✅ `npm test` — **57 files / 656 tests passed** in 314s (DB-backed, re-run 2026-11-16 against the restored local Postgres; exit 0) |
+| Typecheck | ✅ `npm run typecheck` passes, 0 errors (re-run 2026-11-17) |
+| Lint | ✅ `npm run lint` passes with 0 errors, 98 warnings (re-run 2026-11-17; pre-existing) |
+| Build | ✅ `npm run build` passes (Next 16.4.3 Turbopack, re-run 2026-11-17) |
+| Bundle secrets | ✅ `npm run verify:secrets` — no secret material in build output (re-run 2026-11-17) |
+| Full suite | ✅ `npm test` — **59 files / 722 tests passed** in 334s (DB-backed, re-run 2026-11-17 against local Postgres 17.6; exit 0) |
 
 ### The four WIP themes landed in `88a9daa` (2026-11-06)
 
@@ -857,22 +857,17 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
 
 ### 13.2 Current uncommitted drift (verified 2026-11-17)
 
-- `public/templates/challengers-red/overall.png` + the challengers-red config:
-  the replaced artwork is now **wired as the standings template** (12/12
-  painted rows, baked 1–24 ranks, baked "OVERALL RANKINGS"/MATCH chip, white
-  800-weight rows). MVP still uses `mvp.png`; announcement keeps the gradient
-  fallback.
-- Untracked art: several `public/templates/Max_a_*.png` design exports
+- Untracked art: several root `public/templates/Max_a_*.png` design exports
   (including `Max_a_You_are_an_expert_im (4|5).png`) and
   `public/templates/challengers-red/refrence-image.jpeg` (reference only, never
-  rendered). `ewc-yellow` is now fully wired as the production standings
-  template with 12/12 painted bars, baked labels/ranks, 5-stat layout, and
-  authoritative esports typography (pinned by `tests/graphics.test.ts`,
-  `tests/graphics-contrast.test.ts`, `tests/graphics-ssr.test.ts`, and
-  `tests/ewc-standings.test.ts`).
+  rendered). Both `ewc-yellow` (P8(1)) and `challengers-red` (P8(2)) are now
+  fully wired as production standings templates with measured 12/12 painted
+  bars, baked labels/ranks, and bold typography (pinned by
+  `tests/graphics.test.ts`, `tests/graphics-contrast.test.ts`,
+  `tests/graphics-ssr.test.ts`, `tests/ewc-standings.test.ts`, and
+  `tests/challengers-standings.test.ts`).
   Do not wire further art without measuring geometry and updating the pinned
-  graphics tests (`tests/graphics.test.ts`,
-  `tests/graphics-contrast.test.ts`, `tests/challengers-standings.test.ts`).
+  graphics tests.
 - `next.config.ts` and `dev-auth.log` are no longer part of the drift — both
   landed in `6f4d475` (see §13.3).
 
