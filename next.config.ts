@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // Set by the Next.js security upgrade handoff (16.4.3 → 16.4.6).
+  experimental: {
+    agentUpgrade: "security",
+  },
   async headers() {
     return [
       {
