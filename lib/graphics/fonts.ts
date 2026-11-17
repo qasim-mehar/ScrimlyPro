@@ -7,6 +7,12 @@ export const FONTS = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif';
  *  before the generic fallback keeps Arabic/CJK/katakana glyphs intact. */
 export const FONTS_FULL = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif';
 
+/** Editorial grotesque stack used by the rundown-orange announcement art
+ * (refrence-image.jpg): Inter leads the clean neo-grotesque look, with the
+ * established graphics faces kept as metric/glyph fallbacks. */
+export const FONTS_EDITORIAL =
+  '"Inter", "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif';
+
 /** Brush/marker accent face for the grunge-red kills callout. `--font-brush`
  *  is declared by next/font/google in the root layout and self-hosted, so it
  *  is guaranteed present before `document.fonts.ready` resolves on export

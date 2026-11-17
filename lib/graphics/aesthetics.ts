@@ -1,5 +1,5 @@
 import type { AestheticId, TemplateConfig } from "./types";
-import { BRUSH_FONTS, FONTS, FONTS_FULL } from "./fonts";
+import { BRUSH_FONTS, FONTS, FONTS_EDITORIAL, FONTS_FULL } from "./fonts";
 
 /** Geometry shared by the three gradient aesthetics — identical until real
  * PNG templates (P4) need per-template geometry. */
@@ -1497,6 +1497,122 @@ const ESPORTS_CLASH: TemplateConfig = {
   },
 };
 
+const RUNDOWN_ORANGE_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #D93800 0%, #EA580C 55%, #F59E0B 100%)",
+  decor: [],
+};
+
+/** Rundown Orange — the "team participation" single-column announcement art.
+ *
+ *  Measured from `public/templates/rundown-orange/announcement.png` (a 4096×6144
+ *  JPEG payload inside a `.png` name → canvas ×1080/4096 = 0.263671875, no
+ *  crop). The art paints 29 full-width WHITE DIVIDER LINES at canvas x212–868:
+ *
+ *    LINE_Y = [289.1162, 329.9853, 370.9863, 411.5918, 452.5933, 493.3301,
+ *              533.9354, 574.5405, 615.1739, 656.1685, 696.8847, 737.0880,
+ *              776.7379, 816.9293, 857.3441, 897.5391, 937.7497, 977.8273,
+ *              1017.6409, 1057.1924, 1096.8750, 1136.1623, 1175.4492,
+ *              1214.8614, 1254.4190, 1293.9858, 1333.6525, 1373.0715,
+ *              1412.3584]
+ *
+ *  Rows 0–23 live between consecutive lines 0–24 (`rowsBottom` = line 24).
+ *  The art's spacing is NOT perfectly uniform (39.29–41.00 canvas px), so
+ *  `lineYs` stores the exact measured centres: row i spans line i → line i+1
+ *  and its text-box centre is the exact pixel midpoint, with ZERO cumulative
+ *  pitch drift. `rowY0`/`rowPitch`/`rowHeight` are the nominal (average) values
+ *  kept for config consumers; `lineYs` is authoritative in
+ *  `announcementRowLayout`. Rows never stretch with team count (fixedRowPitch)
+ *  and never split into two columns (singleColumn). Logo plates and row strips
+ *  are suppressed (transparent cardBg) so the baked lines stay unobstructed.
+ *
+ *  The art bakes "team participation", the vertical "rundown" watermarks and
+ *  the PUBG MOBILE | KRAFTON footer — the scrim name, subtitle and organizer
+ *  are therefore suppressed for the announcement variant. Standings + MVP
+ *  fall back to the warm orange gradient. Typography follows refrence-image.jpg.
+ */
+const RUNDOWN_ORANGE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "rundown-orange",
+  name: "Rundown Orange (Participation)",
+  backgrounds: {
+    standings: RUNDOWN_ORANGE_FALLBACK_BG,
+    mvp: RUNDOWN_ORANGE_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/rundown-orange/announcement.png" },
+  },
+  header: {
+    title: { x: 0, y: 0, w: 0 },
+    subtitle: { x: 0, y: 0, w: 0 },
+    organizer: { x: 0, y: 0, w: 0 },
+    titleFont: `500 1px ${FONTS_EDITORIAL}`,
+    subtitleFont: `500 1px ${FONTS_EDITORIAL}`,
+    organizerFont: `500 1px ${FONTS_EDITORIAL}`,
+  },
+  variantHideScrimName: { announcement: true },
+  variantHeaders: {
+    // HeaderSpec slots are coordinate objects (not strings): park every
+    // dynamic slot off-canvas at zero width. AnnouncementGraphic's
+    // single-column path skips the header entirely, so the art's baked
+    // "team participation" / footer lockups stay unobstructed.
+    announcement: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  announcement: {
+    rowsTop: 289.1162, // first baked line — clears the "team participation" band
+    rowsBottom: 1254.419, // line 24 — clears the PUBG MOBILE | KRAFTON footer
+    slotX: 212, // left edge of the baked lines (canvas x212)
+    slotW: 88, // fixed left column, tabular '#' labels
+    logoX: 300,
+    teamX: 300, // team name follows the slot column, left-aligned
+    teamW: 568, // ends at x868, the baked lines' right edge
+    logoSize: 30,
+    rowHeight: 40.22095, // nominal pitch; exact per-row heights come from lineYs
+    slotFont: `500 22px ${FONTS_EDITORIAL}`,
+    nameFont: `500 23px ${FONTS_EDITORIAL}`,
+    subtitleBakedIn: true, // art bakes "team participation"
+    // --- Single-column, line-locked geometry ---
+    singleColumn: true,
+    fixedRowPitch: true,
+    rowY0: 289.1162,
+    rowPitch: 40.22095,
+    rowsPerColumn: 24,
+    leftX: 212,
+    rightX: 868,
+    colWidth: 656,
+    lineYs: [
+      289.1162, 329.9853, 370.9863, 411.5918, 452.5933, 493.3301, 533.9354,
+      574.5405, 615.1739, 656.1685, 696.8847, 737.0880, 776.7379, 816.9293,
+      857.3441, 897.5391, 937.7497, 977.8273, 1017.6409, 1057.1924, 1096.8750,
+      1136.1623, 1175.4492, 1214.8614, 1254.4190, 1293.9858, 1333.6525,
+      1373.0715, 1412.3584,
+    ],
+    rankFont: `500 22px ${FONTS_EDITORIAL}`,
+    inkColor: "#FFFFFF",
+    accentColor: "#FFFFFF",
+    mutedColor: "#FED7AA",
+    cardBg: "transparent",
+  },
+  palette: {
+    accent: "#FFFFFF", // pure-white slot + name ink (refrence-image.jpg)
+    text: "#FFFFFF",
+    textMuted: "#FED7AA",
+    rowAlt: "rgba(0,0,0,0)",
+    rowAltOpacity: 0, // no code stripes — the baked dividers do the separating
+    wwcdBg: "rgba(0,0,0,0)", // no rank-1 pill over the art
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(255,255,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#2B0F00",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -1511,6 +1627,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "pmwi-violet": PMWI_VIOLET,
   "grunge-red": GRUNGE_RED,
   "esports-clash": ESPORTS_CLASH,
+  "rundown-orange": RUNDOWN_ORANGE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

@@ -26,6 +26,89 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
   const rows = announcementRows(teams.length, announcement);
   const slotLabels = announcementSlotLabels(teams);
   const plateD = announcement.logoSize + PLATE_PAD;
+
+  // Art-backed single-column announcement (rundown-orange). The art bakes the
+  // header ("team participation") and the horizontal divider lines, so no
+  // dynamic header, logo plate or row strip renders here. One flex row per
+  // team spans the measured gap between white line i and white line i+1:
+  // row.y = line i, row.pitch = line i+1 − line i, so the centre of the row
+  // (and of both text spans) is the exact pixel midpoint between the lines.
+  // `lineHeight: 1` is ALWAYS declared AFTER the `font` shorthand — otherwise
+  // `font` resets line-height to `normal` and pushes text off the midline.
+  if (announcement.singleColumn && announcement.fixedRowPitch) {
+    const left = announcement.leftX ?? announcement.slotX;
+    const width = announcement.colWidth ?? announcement.teamX + announcement.teamW - left;
+    return (
+      <>
+        {rows.map((row, i) => {
+          const team = teams[i];
+          return (
+            <div
+              key={team.id}
+              style={{
+                position: "absolute",
+                left,
+                top: row.y,
+                width,
+                height: row.pitch,
+                display: "flex",
+                alignItems: "center",
+                font: announcement.nameFont,
+                lineHeight: 1,
+              }}
+            >
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: "100%",
+                  width: announcement.slotW,
+                  flex: "0 0 auto",
+                  font: announcement.rankFont ?? announcement.slotFont,
+                  lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "-0.02em",
+                  color: announcement.inkColor ?? palette.text,
+                }}
+              >
+                {slotLabels[i]}
+              </span>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: "100%",
+                  flex: "1 1 auto",
+                  minWidth: 0, // let the flex item shrink so the inner block can ellipsize
+                  font: announcement.nameFont,
+                  lineHeight: 1,
+                  letterSpacing: "-0.01em",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  color: announcement.inkColor ?? palette.text,
+                }}
+              >
+                {/* text-overflow needs a BLOCK container — a bare flex text
+                    node would hard-clip long names instead of showing '…'. */}
+                <div
+                  style={{
+                    width: "100%",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {team.name}
+                </div>
+              </span>
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
   return (
     <>
       {hideScrimNameFor(config, "announcement") ? null : (

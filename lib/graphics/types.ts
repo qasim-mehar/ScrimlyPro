@@ -11,7 +11,8 @@ export type AestheticId =
   | "pmgc-aqua"
   | "pmwi-violet"
   | "grunge-red"
-  | "esports-clash";
+  | "esports-clash"
+  | "rundown-orange";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -209,6 +210,25 @@ export type AnnouncementSpec = {
   nameFont: string; // font for team names
   subtitleBakedIn?: boolean; // true → art bakes the subtitle (pmpl-light
   // "PARTICIPATING TEAMS"): AnnouncementGraphic draws no subtitle line.
+
+  // --- Art-backed single-column geometry (rundown-orange) ---
+  // These optional fields are additive: every existing template keeps the
+  // auto-fit P6 behaviour below. They exist so an art-backed announcement can
+  // lock EVERY row to a baked divider line regardless of team count (1–24).
+  singleColumn?: boolean; // one full-width band column; rows never split
+  fixedRowPitch?: boolean; // true → rows use the art's measured lines verbatim
+  rowY0?: number; // canvas y of the first baked divider (= row 0 top)
+  rowPitch?: number; // nominal pitch between baked dividers (canvas px)
+  rowsPerColumn?: number; // number of row bands baked into the art (24)
+  leftX?: number; // canvas x of the baked lines' left edge (212)
+  rightX?: number; // canvas x of the baked lines' right edge (868)
+  colWidth?: number; // full single-column width (rightX − leftX = 656)
+  lineYs?: readonly number[]; // exact measured divider centres (zero drift)
+  rankFont?: string; // slot '#' font (prompt vocabulary; alias of slotFont)
+  inkColor?: string; // slot + name ink (pure white on the orange art)
+  accentColor?: string;
+  mutedColor?: string;
+  cardBg?: string; // transparent → baked dividers/gradient stay unobstructed
 };
 
 export type Palette = {

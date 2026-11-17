@@ -26,15 +26,38 @@ export function splitRowsAt(n: number, rowsPerColumn: number): [number, number] 
 }
 
 /**
- * Announcement list: n rows auto-fitted between rowsTop and rowsBottom.
- * pitch = (rowsBottom − rowsTop) / n; row i sits at rowsTop + i*pitch.
- * n ≤ 0 → []. Works 4–25 (rowHeight bounds the card; pitch stretches).
+ * Announcement list rows.
+ *
+ * P6 default: n rows auto-fitted between rowsTop and rowsBottom
+ * (pitch = (rowsBottom − rowsTop) / n; row i sits at rowsTop + i*pitch).
+ *
+ * Art-backed single-column templates (rundown-orange) set `fixedRowPitch`:
+ * rows never stretch with team count. When `lineYs` is present it holds the
+ * measured canvas centres of the baked white divider lines, so row i spans
+ * line i → line i+1 and its text-box centre lands on the EXACT pixel midpoint
+ * between those two lines with zero cumulative pitch drift (the art's line
+ * spacing is not perfectly uniform — a single average pitch would drift up
+ * to ~5.5px by row 24). Without `lineYs`, nominal `rowY0`/`rowPitch` are used.
+ *
+ * n ≤ 0 → [].
  */
 export function announcementRowLayout(
   n: number,
   spec: AnnouncementSpec,
 ): Array<{ y: number; pitch: number }> {
   if (n <= 0) return [];
+  const lines = spec.lineYs;
+  if (spec.fixedRowPitch && lines && lines.length >= n + 1) {
+    return Array.from({ length: n }, (_, i) => ({
+      y: lines[i],
+      pitch: lines[i + 1] - lines[i],
+    }));
+  }
+  const rowY0 = spec.rowY0;
+  const rowPitch = spec.rowPitch;
+  if (spec.fixedRowPitch && rowY0 !== undefined && rowPitch !== undefined) {
+    return Array.from({ length: n }, (_, i) => ({ y: rowY0 + i * rowPitch, pitch: rowPitch }));
+  }
   const pitch = (spec.rowsBottom - spec.rowsTop) / n;
   return Array.from({ length: n }, (_, i) => ({ y: spec.rowsTop + i * pitch, pitch }));
 }
