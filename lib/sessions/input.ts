@@ -13,6 +13,8 @@ export const VALID_TEMPLATE_IDS = [
   "grunge-red",
   "esports-clash",
   "rundown-orange",
+  "royal-blue",
+  "varsity-yellow",
 ] as const;
 
 export type TeamDraft = {

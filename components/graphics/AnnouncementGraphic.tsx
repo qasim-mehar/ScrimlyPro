@@ -2,7 +2,14 @@
 
 import { Fragment } from "react";
 
-import { getTemplate, headerFor, hideScrimNameFor, slotToStyle, type AestheticId } from "@/lib/graphics";
+import {
+  effectiveAnnouncementSpec,
+  getTemplate,
+  headerFor,
+  hideScrimNameFor,
+  slotToStyle,
+  type AestheticId,
+} from "@/lib/graphics";
 import { announcementRows } from "@/lib/graphics/announcement";
 import { announcementSlotLabels } from "@/lib/sessions/slots";
 import type { TeamRow } from "@/lib/scoring";
@@ -21,7 +28,14 @@ type AnnouncementGraphicProps = {
 
 export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, teams }: AnnouncementGraphicProps) {
   const config = getTemplate(aestheticId);
-  const { announcement, palette } = config;
+  const { palette } = config;
+  // A template-level `announcementLayout` (onyx-green's 24-row single-column
+  // art) wins over the shared announcement spec; every other template —
+  // including royal-blue's two-column art — is passed through unchanged.
+  const announcement = effectiveAnnouncementSpec(config);
+  const rowInk = config.announcementLayout?.rowColors;
+  const inkFor = (i: number): string =>
+    rowInk ? rowInk[i % 2] : announcement.inkColor ?? palette.text;
   const header = headerFor(config, "announcement");
   const rows = announcementRows(teams.length, announcement);
   const slotLabels = announcementSlotLabels(teams);
@@ -136,14 +150,17 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
     );
   }
 
-  // Art-backed single-column announcement (rundown-orange). The art bakes the
-  // header ("team participation") and the horizontal divider lines, so no
-  // dynamic header, logo plate or row strip renders here. One flex row per
-  // team spans the measured gap between white line i and white line i+1:
-  // row.y = line i, row.pitch = line i+1 − line i, so the centre of the row
-  // (and of both text spans) is the exact pixel midpoint between the lines.
-  // `lineHeight: 1` is ALWAYS declared AFTER the `font` shorthand — otherwise
-  // `font` resets line-height to `normal` and pushes text off the midline.
+  // Art-backed single-column announcement (rundown-orange, onyx-green). The
+  // art bakes the header ("TEAM PARTICIPATION") and the horizontal divider
+  // lines, so no dynamic header, logo plate or row strip renders here. One
+  // flex row per team spans the measured gap between white line i and white
+  // line i+1: row.y = line i, row.pitch = line i+1 − line i, so the centre of
+  // the row (and of both text spans) is the exact pixel midpoint between the
+  // lines — zero drift through all 24 onyx-green rows. `lineHeight: 1` is
+  // ALWAYS declared AFTER the `font` shorthand — otherwise `font` resets
+  // line-height to `normal` and pushes text off the neon-tick midline.
+  // onyx-green's `announcementLayout.rowColors` paints even rows neon green
+  // and odd rows pure white (the baked HOME/AWAY legend + reference look).
   if (announcement.singleColumn && announcement.fixedRowPitch) {
     const left = announcement.leftX ?? announcement.slotX;
     const width = announcement.colWidth ?? announcement.teamX + announcement.teamW - left;
@@ -159,7 +176,11 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                 left,
                 top: row.y,
                 width,
-                height: row.pitch,
+                // Bar-backed art (varsity-yellow) returns rowH = rowHeight so
+                // the flex box IS the painted bar and the text centre lands
+                // dead-on its vertical midpoint. Divider-line arts keep the
+                // pitch-height behaviour (no rowH from the layout).
+                height: row.rowH ?? row.pitch,
                 display: "flex",
                 alignItems: "center",
                 font: announcement.nameFont,
@@ -176,8 +197,8 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                   font: announcement.rankFont ?? announcement.slotFont,
                   lineHeight: 1,
                   fontVariantNumeric: "tabular-nums",
-                  letterSpacing: "-0.02em",
-                  color: announcement.inkColor ?? palette.text,
+                  letterSpacing: announcement.tracking ?? (rowInk ? "0.06em" : "-0.02em"),
+                  color: inkFor(i),
                 }}
               >
                 {slotLabels[i]}
@@ -191,11 +212,12 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                   minWidth: 0, // let the flex item shrink so the inner block can ellipsize
                   font: announcement.nameFont,
                   lineHeight: 1,
-                  letterSpacing: "-0.01em",
+                  textTransform: announcement.uppercaseNames || rowInk ? "uppercase" : undefined,
+                  letterSpacing: announcement.tracking ?? (rowInk ? "0.06em" : "-0.01em"),
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  color: announcement.inkColor ?? palette.text,
+                  color: inkFor(i),
                 }}
               >
                 {/* text-overflow needs a BLOCK container — a bare flex text
@@ -276,9 +298,10 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                 top: contentY,
                 width: announcement.slotW,
                 height: announcement.rowHeight,
-                lineHeight: `${announcement.rowHeight}px`,
                 textAlign: "center",
                 font: announcement.slotFont,
+                // After the `font` shorthand (which resets line-height).
+                lineHeight: `${announcement.rowHeight}px`,
                 color: isRankOne ? palette.accent : palette.textMuted,
               }}
             >

@@ -31,7 +31,8 @@ export function splitRowsAt(n: number, rowsPerColumn: number): [number, number] 
  * P6 default: n rows auto-fitted between rowsTop and rowsBottom
  * (pitch = (rowsBottom − rowsTop) / n; row i sits at rowsTop + i*pitch).
  *
- * Art-backed single-column templates (rundown-orange) set `fixedRowPitch`:
+ * Art-backed single-column templates (rundown-orange, and onyx-green via its
+ * template-level `announcementLayout`) set `fixedRowPitch`:
  * rows never stretch with team count. When `lineYs` is present it holds the
  * measured canvas centres of the baked white divider lines, so row i spans
  * line i → line i+1 and its text-box centre lands on the EXACT pixel midpoint
@@ -94,10 +95,52 @@ export function announcementRowLayout(
   const rowY0 = spec.rowY0;
   const rowPitch = spec.rowPitch;
   if (spec.fixedRowPitch && rowY0 !== undefined && rowPitch !== undefined) {
-    return Array.from({ length: n }, (_, i) => ({ y: rowY0 + i * rowPitch, pitch: rowPitch }));
+    // Bar-backed single-column art (varsity-yellow): the row box IS the painted
+    // white bar, so its height is `rowHeight` — the text centre is rowY0 +
+    // i*rowPitch + rowHeight/2. Divider-line arts (rundown-orange, onyx-green)
+    // take the `lineYs` branch above and keep the pitch-height behaviour.
+    return Array.from({ length: n }, (_, i) => ({
+      y: rowY0 + i * rowPitch,
+      pitch: rowPitch,
+      rowH: spec.rowHeight,
+    }));
   }
   const pitch = (spec.rowsBottom - spec.rowsTop) / n;
   return Array.from({ length: n }, (_, i) => ({ y: spec.rowsTop + i * pitch, pitch }));
+}
+
+/**
+ * Effective announcement geometry for one template. When `announcementLayout`
+ * is present (onyx-green's 24-row single-column participation art) it overrides
+ * the shared announcement spec's art-backed fields; otherwise the spec is
+ * returned unchanged (royal-blue's two-column art, rundown-orange, and every
+ * gradient fallback). `slotColWidth` maps onto the spec's slot box and the font
+ * aliases land on the canonical `rankFont`/`nameFont` fields. `rowColors` is
+ * consumed by the renderer directly — it is not a geometry field.
+ *
+ * The two-column / line-locked algorithm in `announcementRowLayout` is left
+ * completely intact — this helper only chooses WHICH spec it is given.
+ */
+export function effectiveAnnouncementSpec(config: TemplateConfig): AnnouncementSpec {
+  const layout = config.announcementLayout;
+  if (!layout) return config.announcement;
+  return {
+    ...config.announcement,
+    singleColumn: layout.singleColumn ?? config.announcement.singleColumn,
+    fixedRowPitch: layout.fixedRowPitch ?? config.announcement.fixedRowPitch,
+    rowsPerColumn: layout.rowsPerColumn ?? config.announcement.rowsPerColumn,
+    rowY0: layout.rowY0,
+    rowPitch: layout.rowPitch,
+    rowHeight: layout.rowHeight,
+    rowsBottom: layout.rowsBottom,
+    leftX: layout.leftX,
+    rightX: layout.rightX ?? config.announcement.rightX,
+    colWidth: layout.colWidth,
+    lineYs: layout.lineYs ?? config.announcement.lineYs,
+    slotW: layout.slotColWidth ?? config.announcement.slotW,
+    rankFont: layout.rankFont ?? config.announcement.rankFont,
+    nameFont: layout.nameFont ?? config.announcement.nameFont,
+  };
 }
 
 /** Slot → absolute-position style. width only when slot.w defined. */

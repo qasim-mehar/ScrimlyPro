@@ -792,9 +792,42 @@ const ONYX_GREEN: TemplateConfig = {
     fixedRowPitch: true,
     ranksBakedIn: true,
     statBoxW: 48,
-    nameFont: `800 22px ${FONTS}`,
+    // 20px keeps Straight Forward / Shadow Syndicate inside the 180/174px slots.
+    nameFont: `800 20px ${FONTS}`,
     statFont: `800 26px ${FONTS}`,
     labelFont: `700 18px ${FONTS}`,
+  },
+  // ANNOUNCEMENT-ONLY geometry. The empty art is a 4096×6144 JPEG payload in
+  // a .png name (uniform ×1080/4096 = 0.263671875 onto the 1080×1620 canvas).
+  // A sharp scan finds exactly 25 white horizontal divider lines at the canvas
+  // centres in `lineYs` (native y2346.5 … 5449.5), i.e. 24 row bands of a
+  // nominal 34.0812px pitch. `lineYs` is authoritative: row i spans line i →
+  // line i+1, so its text centre is the EXACT midpoint and accumulates zero
+  // pitch drift across all 24 rows. The baked neon-green ticks sit at canvas
+  // x172.7..198.3 (left) and x880.4..905.7 (right); content x214..868 clears
+  // both by ≥15px. Reference typography = bold collegiate "mean green HOOPS":
+  // Exo 2 800 20px, uppercase, 0.06em tracking, neon/white alternating ink.
+  announcementLayout: {
+    singleColumn: true,
+    fixedRowPitch: true,
+    rowsPerColumn: 24,
+    leftX: 214,
+    rightX: 868,
+    colWidth: 654,
+    rowY0: 618.7625,
+    rowPitch: 34.0812,
+    rowHeight: 34.0812,
+    rowsBottom: 1436.7114,
+    lineYs: [
+      618.7625, 652.7928, 687.2839, 721.7456, 755.9321, 789.6065, 823.9597,
+      857.9807, 892.0178, 925.9251, 960.1758, 994.0079, 1028.0087, 1061.9874,
+      1096.0775, 1130.0834, 1164.2768, 1198.3514, 1232.6198, 1266.7584,
+      1300.606, 1334.6087, 1368.8735, 1402.8487, 1436.7114,
+    ],
+    slotColWidth: 120,
+    rankFont: `800 20px ${FONTS}`,
+    nameFont: `800 20px ${FONTS}`,
+    rowColors: ["#66FF1A", "#FFFFFF"],
   },
   palette: {
     accent: "#42F57E", // neon matrix green
@@ -1716,6 +1749,135 @@ const ROYAL_BLUE: TemplateConfig = {
   },
 };
 
+/** Collegiate athletic condensed stack matched to the OREGON MEN'S BASKETBALL
+ *  2025-26 schedule reference: Rajdhani leads, Exo 2 keeps the established
+ *  metric fallback, Noto Sans Symbols 2 guards the PUBG glyph set. */
+const FONTS_ATHLETIC = '"Rajdhani", "Exo 2", "Noto Sans Symbols 2", sans-serif';
+
+const VARSITY_YELLOW_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(180deg, #065F31 0%, #044322 100%)",
+  decor: [],
+};
+
+/** Varsity Yellow — the PUBG MOBILE "TEAM PARTICIPATION" single-column art.
+ *
+ *  The source art (`announcement.jpeg`, a 4096×6144 JPEG converted 1:1 to the
+ *  1080×1620 `announcement.png`) bakes the PUBG MOBILE logo + dark-green
+ *  "TEAM PARTICIPATION" ribbon at y0..415, the yellow board with its stacked
+ *  white row bars, and the PUBG MOBILE | KRAFTON lockup at y1405..1485.
+ *
+ *  Measured white-bar pixels on the canvas (sharp scan, threshold >200):
+ *  bar 1 top 444.8, mean height ≈28, bar 1 centre 458.8, last bar bottom
+ *  1355.8. The campaign geometry locks the fixed-pitch single column to
+ *  rowY0 444.8 / rowHeight 28 / rowPitch 39.7 / rowsBottom 1382, with 24
+ *  painted row bands (rowsPerColumn 24). NOTE: the delivered art actually
+ *  paints 22 bars at ~42.2px pitch; the campaign geometry above is used by
+ *  deliberate decision (the prompt's 24-band spec), so rows beyond the first
+ *  drift from those bars. `announcementRowLayout` therefore
+ *  places row i at top = rowY0 + i*rowPitch with height = rowHeight; its
+ *  vertical midpoint is the row's text centre. Fewer than 24 teams never
+ *  stretch the pitch — the unused bars below team N stay clean and empty.
+ *
+ *  Content is confined to x296..784 inside the painted bars (canvas x281..799):
+ *  left-aligned Slot '#' column at x296 (105 wide), team name at x401. Both
+ *  ink colours are the deep forest green #074725 of the reference schedule /
+ *  KRAFTON footer (>10:1 WCAG AAA on the white bars), cardBg transparent so
+ *  the painted bars show through with no double-drawn boxes. Typography is
+ *  Rajdhani-led 700 19px uppercase, 0.05em tracking, tabular slot numerals.
+ *
+ *  The art bakes the title/footer, so the announcement variant hides every
+ *  dynamic header slot. Standings + MVP have no art → deep forest gradient. */
+const VARSITY_YELLOW: TemplateConfig = {
+  ...GEOMETRY,
+  id: "varsity-yellow",
+  name: "Varsity Yellow (Participation)",
+  backgrounds: {
+    standings: VARSITY_YELLOW_FALLBACK_BG,
+    mvp: VARSITY_YELLOW_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/varsity-yellow/announcement.png" },
+  },
+  header: {
+    title: { x: -9999, y: -9999, w: 0 },
+    subtitle: { x: -9999, y: -9999, w: 0 },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `500 1px ${FONTS}`,
+    subtitleFont: `500 1px ${FONTS}`,
+    organizerFont: `500 1px ${FONTS}`,
+  },
+  variantHideScrimName: { announcement: true },
+  variantHeaders: {
+    announcement: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  announcement: {
+    rowsTop: 444.8,
+    rowsBottom: 1382,
+    slotX: 296,
+    slotW: 105,
+    logoX: 401,
+    teamX: 401,
+    teamW: 383, // ends at x784 = leftX + colWidth
+    logoSize: 30,
+    rowHeight: 28,
+    slotFont: `700 19px ${FONTS_ATHLETIC}`,
+    nameFont: `700 19px ${FONTS_ATHLETIC}`,
+    subtitleBakedIn: true, // art bakes "TEAM PARTICIPATION"
+    // --- Single-column, fixed-pitch bar geometry (1–24 teams) ---
+    singleColumn: true,
+    fixedRowPitch: true,
+    rowsPerColumn: 24,
+    rowY0: 444.8,
+    rowPitch: 39.7,
+    leftX: 296,
+    rightX: 784,
+    colWidth: 488,
+    rankFont: `700 19px ${FONTS_ATHLETIC}`,
+    inkColor: "#074725",
+    accentColor: "#074725",
+    mutedColor: "#14532D",
+    cardBg: "transparent",
+    tracking: "0.05em",
+    uppercaseNames: true,
+  },
+  // Template-level override (onyx-green's pattern) — identical coordinates to
+  // the spec above so both resolution paths agree exactly.
+  announcementLayout: {
+    singleColumn: true,
+    fixedRowPitch: true,
+    rowsPerColumn: 24,
+    leftX: 296,
+    rightX: 784,
+    colWidth: 488,
+    rowY0: 444.8,
+    rowPitch: 39.7,
+    rowHeight: 28,
+    rowsBottom: 1382,
+    slotColWidth: 105,
+    rankFont: `700 19px ${FONTS_ATHLETIC}`,
+    nameFont: `700 19px ${FONTS_ATHLETIC}`,
+  },
+  palette: {
+    accent: "#074725", // deep forest green — both slot + name ink
+    text: "#074725",
+    textMuted: "#14532D",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the white bars — no code strips
+    wwcdBg: "rgba(0,0,0,0)", // no rank-1 pill over the baked art
+    wwcdText: "#074725",
+    watermarkColor: "rgba(7,71,37,0.85)",
+    plateBg: "rgba(7,71,37,0.08)",
+    plateRing: "rgba(7,71,37,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#FFFFFF",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -1732,6 +1894,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "esports-clash": ESPORTS_CLASH,
   "rundown-orange": RUNDOWN_ORANGE,
   "royal-blue": ROYAL_BLUE,
+  "varsity-yellow": VARSITY_YELLOW,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

@@ -13,7 +13,8 @@ export type AestheticId =
   | "grunge-red"
   | "esports-clash"
   | "rundown-orange"
-  | "royal-blue";
+  | "royal-blue"
+  | "varsity-yellow";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -212,7 +213,8 @@ export type AnnouncementSpec = {
   subtitleBakedIn?: boolean; // true → art bakes the subtitle (pmpl-light
   // "PARTICIPATING TEAMS"): AnnouncementGraphic draws no subtitle line.
 
-  // --- Art-backed single-column geometry (rundown-orange) ---
+  // --- Art-backed single-column geometry (rundown-orange; onyx-green uses the
+  // template-level `announcementLayout` override on TemplateConfig) ---
   // These optional fields are additive: every existing template keeps the
   // auto-fit P6 behaviour below. They exist so an art-backed announcement can
   // lock EVERY row to a baked divider line regardless of team count (1–24).
@@ -230,6 +232,38 @@ export type AnnouncementSpec = {
   accentColor?: string;
   mutedColor?: string;
   cardBg?: string; // transparent → baked dividers/gradient stay unobstructed
+  tracking?: string; // optional letter-spacing override for the single-column
+  // spans (varsity-yellow's 0.05em athletic tracking); the renderer keeps its
+  // existing 0.06em default when absent, so onyx-green / rundown-orange are
+  // pixel-identical.
+  uppercaseNames?: boolean; // true → uppercase names on bar-backed art that
+  // has no alternating `rowColors` (varsity-yellow); onyx-green keeps its
+  // rowColors-driven uppercase unchanged.
+};
+
+/** Art-backed ANNOUNCEMENT-only geometry override. This lives at the
+ *  TEMPLATE level (not inside `StandingsTableSpec`) so a single-column
+ *  participation art can lock 24 rows to its baked divider lines without
+ *  touching the 2-column standings geometry that
+ *  `tests/onyx-standings.test.ts` pins on `TemplateConfig.standings`.
+ *  Pure data — `effectiveAnnouncementSpec()` folds it into the renderer's
+ *  announcement spec; no renderer contains business logic. */
+export type AnnouncementLayout = {
+  singleColumn?: boolean;
+  fixedRowPitch?: boolean;
+  rowsPerColumn?: number;
+  leftX: number;
+  rightX?: number;
+  colWidth: number;
+  rowY0: number;
+  rowPitch: number;
+  rowHeight: number;
+  rowsBottom: number;
+  slotColWidth?: number; // width of the left Slot '#' column (falls back to spec.slotW)
+  rankFont?: string;
+  nameFont?: string;
+  rowColors?: [string, string]; // alternating row ink: [even rows, odd rows]
+  lineYs?: readonly number[]; // exact measured divider centres (zero drift)
 };
 
 export type Palette = {
@@ -304,5 +338,7 @@ export type TemplateConfig = {
   standings: StandingsTableSpec;
   mvp: MvpSpec;
   announcement: AnnouncementSpec;
+  announcementLayout?: AnnouncementLayout; // art-backed announcement override
+  // (onyx-green's 24-row single-column participation art); Standings is untouched.
   palette: Palette;
 };
