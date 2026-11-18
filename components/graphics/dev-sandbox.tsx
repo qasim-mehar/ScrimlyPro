@@ -110,9 +110,9 @@ function DummyRow({
             top: y,
             width: rankBoxW,
             height: st.rowHeight,
-            lineHeight: `${st.rowHeight}px`,
             textAlign: "center",
             font: st.statFont,
+            lineHeight: `${st.rowHeight}px`,
             color: isRankOne ? config.palette.wwcdText : config.palette.text,
           }}
         >
@@ -126,8 +126,8 @@ function DummyRow({
           top: y,
           width: col.teamW,
           height: st.rowHeight,
-          lineHeight: `${st.rowHeight}px`,
           font: st.nameFont,
+          lineHeight: `${st.rowHeight}px`,
           color: isRankOne ? config.palette.wwcdText : config.palette.text,
           whiteSpace: "nowrap",
           overflow: "hidden",
@@ -145,9 +145,9 @@ function DummyRow({
             top: y,
             width: statBoxW,
             height: st.rowHeight,
-            lineHeight: `${st.rowHeight}px`,
             textAlign: "center",
             font: st.statFont,
+            lineHeight: `${st.rowHeight}px`,
             fontVariantNumeric: "tabular-nums",
             color: key === "total" && isRankOne ? config.palette.accent : config.palette.text,
           }}

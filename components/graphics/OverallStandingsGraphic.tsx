@@ -94,8 +94,10 @@ function StandingsRow({
     position: "absolute",
     top: y,
     height: st.rowHeight,
-    lineHeight: `${st.rowHeight}px`,
     font: st.nameFont,
+    // `font` shorthand resets line-height to `normal`; set it AFTER `font`
+    // so the glyphs are truly centered in the painted row box.
+    lineHeight: `${st.rowHeight}px`,
     color: isRankOne ? palette.wwcdText : palette.text,
     letterSpacing: "-0.01em",
     fontVariantNumeric: "tabular-nums",
@@ -137,9 +139,9 @@ function StandingsRow({
             top: y,
             width: rankBoxW,
             height: st.rowHeight,
-            lineHeight: `${st.rowHeight}px`,
             textAlign: "center",
             font: st.statFont,
+            lineHeight: `${st.rowHeight}px`,
             fontVariantNumeric: "tabular-nums",
             color: isRankOne ? palette.accent : palette.textMuted,
           }}
@@ -196,9 +198,9 @@ function StandingsRow({
             top: y,
             width: statBoxW,
             height: st.rowHeight,
-            lineHeight: `${st.rowHeight}px`,
             textAlign: "center",
             font: st.statFont,
+            lineHeight: `${st.rowHeight}px`,
             fontVariantNumeric: "tabular-nums",
             letterSpacing: "-0.02em",
             // Art tables (pmgc-crimson) keep every numeral in white — their

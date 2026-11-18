@@ -158,7 +158,7 @@ describe("challengers-red standings config (measured 24-slot art)", () => {
   it("drops the match number into the open cyan slot right of the baked #", () => {
     // "MATCH #" ink ends art x3657 → 964.3; chip ends art x3839 → 1012.3.
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 966, y: 230, w: 46, align: "center" });
+    expect(sub).toEqual({ x: 970, y: 228, w: 42, align: "center" });
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#061014");
   });
 
@@ -216,7 +216,7 @@ describe("challengers-red standings render (SSR)", () => {
 
   it("renders the match number in the cyan chip and tabular stats", () => {
     const html = render(24);
-    expect(html).toContain("left:966px");
+    expect(html).toContain("left:970px");
     expect(html).toContain("color:#061014");
     expect(html).toContain(">6<");
     expect(html).toContain("font-variant-numeric:tabular-nums");

@@ -10,13 +10,24 @@ import {
   slotToStyle,
   type AestheticId,
   type MvpBrushSpec,
-  type MvpEsportsSpec,
+  type MvpEsportsSpec,  type MvpSlatePillSpec,
+  type MvpSupercrossSpec,
+  type MvpStartingFiveSpec,
+  type MvpParchmentSpec,
+
   type MvpPaperBannerSpec,
 } from "@/lib/graphics";
 import {
   esportsMvpRowSlots,
   fixedMvpRowTops,
   grungeMvpRowSlots,
+  duskMvpRowSlots,
+  startingFiveRowSlots,
+  supercrossMvpRowSlots,
+  supercrossMvpRowTops,
+  fitSlateNameFontSize,
+  mvpKillLabel,
+  slateNameParts,
   type MvpDisplayEntry,
 } from "@/lib/graphics/mvp";
 
@@ -453,6 +464,367 @@ function PaperBannerRows({ entries, spec }: { entries: MvpDisplayEntry[]; spec: 
   );
 }
 
+/**
+ * Draft-parchment bars (dusk-amber). DUMB renderer: the tan bars, PUBG MOBILE
+ * branding, poster frame and character portraits are baked into the art — only
+ * the five locked entries paint. The two-line group is flex-centred in a box
+ * whose height equals the group's own computed height, so the group midpoint
+ * is exactly the measured painted bar centre for every rank. No team names,
+ * logos or synthetic header titles are ever rendered.
+ */
+function ParchmentRows({
+  entries,
+  spec,
+}: {
+  entries: MvpDisplayEntry[];
+  spec: MvpParchmentSpec;
+}) {
+  return (
+    <>
+      {entries.map((entry, i) => {
+        const s = duskMvpRowSlots(entry, i, spec);
+        // CSS font-shorthand law: `lineHeight` is declared AFTER `font` on both
+        // lines (React serializes style keys in insertion order), otherwise
+        // the shorthand resets line-height to `normal` and kills centring.
+        const nameFont = `${spec.name.fontWeight} ${s.fontSize}px ${spec.name.fontFamily}`;
+        const subFont = `${spec.subline.fontWeight} ${s.subline.fontSize}px ${spec.subline.fontFamily}`;
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: s.barTop,
+              width: 1080,
+              height: spec.rowHeight,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: spec.textLeft,
+                top: s.blockTop - s.barTop,
+                width: spec.textWidth,
+                height: s.blockBottom - s.blockTop,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-end",
+                boxSizing: "border-box",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  textAlign: "right",
+                  textTransform: "uppercase",
+                  font: nameFont,
+                  lineHeight: spec.name.lineHeight,
+                  letterSpacing: spec.name.letterSpacing,
+                  color: spec.name.color,
+                  textShadow: spec.name.textShadow,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {s.name.text}
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  textAlign: "right",
+                  textTransform: "uppercase",
+                  font: subFont,
+                  lineHeight: spec.subline.lineHeight,
+                  letterSpacing: spec.subline.letterSpacing,
+                  color: spec.subline.color,
+                  marginTop: spec.subline.gap,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {s.subline.text}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+
+/**
+ * Cardinal-gold "STARTING FIVE" lockup. DUMB renderer: the five painted bar
+ * boxes, the open right-hand text zone, both font sizes and both label strings
+ * come from `lib/graphics/mvp.ts` + the measured config. The stacked text group
+ * is flex-centred on each bar's Y axis, so its midpoint equals the bar's exact
+ * measured centre. Team names/logos are never painted — the PUBGM characters
+ * (including bar 5's sniper barrel) are baked into the art.
+ */
+function StartingFiveRows({
+  entries,
+  spec,
+}: {
+  entries: MvpDisplayEntry[];
+  spec: MvpStartingFiveSpec;
+}) {
+  return (
+    <>
+      {entries.map((entry, i) => {
+        const s = startingFiveRowSlots(entry, i, spec);
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: s.textLeft,
+              top: s.top,
+              width: s.textWidth,
+              height: s.height,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "flex-end",
+              boxSizing: "border-box",
+              overflow: "hidden",
+            }}
+          >
+            {/* 1. Crisp white kills/rank line. `lineHeight` is declared AFTER
+                `font` — the shorthand would otherwise reset it to normal. */}
+            <div
+              style={{
+                width: "100%",
+                textAlign: "right",
+                font: `${spec.kills.fontWeight} ${spec.kills.fontSize}px ${spec.kills.fontFamily}`,
+                lineHeight: spec.kills.lineHeight,
+                color: spec.kills.color,
+                textTransform: "uppercase",
+                letterSpacing: spec.kills.letterSpacing,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {s.killsText}
+            </div>
+            {/* 2. Warm varsity-gold IGN, auto-fitted, right-aligned, clipped. */}
+            <div
+              style={{
+                width: "100%",
+                textAlign: "right",
+                font: `${spec.name.fontWeight} ${s.nameFontSize}px ${spec.name.fontFamily}`,
+                lineHeight: spec.name.lineHeight,
+                color: spec.name.color,
+                textTransform: "uppercase",
+                letterSpacing: spec.name.letterSpacing,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {s.nameText}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+
+/**
+ * Apex Blaze single-line motorsport lockup. DUMB renderer: every coordinate,
+ * exact row centre, fitted font size and label comes from `lib/graphics/mvp.ts`
+ * + the measured config. The art bakes "PUBG MOBILE", "TOP 5 /// FINISHES" and
+ * the orange P1/..P5/ prefixes + divider rules — so no header, rank, team or
+ * logo is painted. Each row is a fixed-height flex band whose vertical centre
+ * lands on the baked glyph midpoint; `font` is always declared BEFORE
+ * `lineHeight` (the shorthand otherwise resets line-height and drifts Y).
+ */
+function SupercrossRows({
+  entries,
+  spec,
+  rowTops,
+}: {
+  entries: MvpDisplayEntry[];
+  spec: MvpSupercrossSpec;
+  rowTops: number[];
+}) {
+  return (
+    <>
+      {entries.map((entry, i) => {
+        const y = rowTops[i] ?? 0;
+        const slots = supercrossMvpRowSlots(entry, y, spec);
+        const nameFont = `${spec.name.fontWeight} ${slots.name.fontSize}px ${spec.name.fontFamily}`;
+        const softFont = `${spec.name.softWeight} ${slots.name.fontSize}px ${spec.name.fontFamily}`;
+        const killsFont = `${spec.kills.numberFontWeight} ${spec.kills.numberFontSize}px ${spec.kills.fontFamily}`;
+        const unitFont = `${spec.kills.unitFontWeight} ${spec.kills.unitFontSize}px ${spec.kills.fontFamily}`;
+        // Reference poster's dual-weight pairing: medium first name, heavy
+        // surname. Single-token names stay fully heavy (no phantom space).
+        const words = entry.name.trim().split(/\s+/u).filter(Boolean);
+        const first = words[0] ?? "";
+        const rest = words.slice(1).join(" ");
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: slots.name.x,
+              top: y,
+              width: spec.textWidth,
+              height: spec.rowHeight,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              boxSizing: "border-box",
+              overflow: "hidden",
+            }}
+          >
+            <span
+              style={{
+                flex: "1 1 auto",
+                minWidth: 0,
+                font: nameFont,
+                lineHeight: "1",
+                textTransform: "uppercase",
+                letterSpacing: spec.name.tracking,
+                color: spec.name.color,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {rest ? (
+                <>
+                  <span style={{ font: softFont, lineHeight: "1" }}>{first}</span>{" "}
+                  <span style={{ font: nameFont, lineHeight: "1" }}>{rest}</span>
+                </>
+              ) : (
+                first
+              )}
+            </span>
+            <span
+              style={{
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: "0.28em",
+                font: killsFont,
+                lineHeight: "1",
+                color: spec.kills.color,
+                textTransform: "uppercase",
+                letterSpacing: spec.kills.tracking,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span style={{ font: killsFont, lineHeight: "1", color: spec.kills.color }}>
+                {entry.kills}
+              </span>
+              <span style={{ font: unitFont, lineHeight: "1", color: spec.kills.color }}>
+                {entry.kills === 1 ? spec.kills.singular : spec.kills.plural}
+              </span>
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+
+/**
+ * Rounded off-white bar lockup (urban-slate). The art bakes the five bars, the
+ * monochrome PUBGM characters, the STARTING Five headline and the KRAFTON
+ * footer. DUMB renderer: the exact painted bar boxes, font sizes and inks all
+ * come from `lib/graphics` measurement data. Each row is an absolutely
+ * positioned flex column locked to [barTop, barHeight] and [textLeft,
+ * textWidth]; `justifyContent: center` pins the two-line stack's midpoint to
+ * the bar's measured centre with zero Y drift. `line-height` is ALWAYS declared
+ * AFTER the `font` shorthand on both lines — otherwise `font` resets it to
+ * `normal` and the text drifts off the Y-axis. No team data, logos or avatars.
+ */
+function SlatePillRows({ entries, spec }: { entries: MvpDisplayEntry[]; spec: MvpSlatePillSpec }) {
+  return (
+    <>
+      {entries.slice(0, 5).map((entry, i) => {
+        const bar = spec.bars[i];
+        if (!bar) return null;
+        const parts = slateNameParts(entry.name);
+        const fontSize = fitSlateNameFontSize(entry.name, spec);
+        const nameFont = `${spec.name.boldWeight} ${fontSize}px ${spec.name.fontFamily}`;
+        const killsFont = `${spec.kills.fontWeight} ${spec.kills.fontSize}px ${spec.kills.fontFamily}`;
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: spec.textLeft,
+              top: bar.top,
+              width: spec.textWidth,
+              height: bar.height,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              textAlign: "center",
+              boxSizing: "border-box",
+            }}
+          >
+            {/* 1. Tall condensed athletic IGN — dual-weight split for two-part
+                    names (light leading token + ultra-bold primary token). */}
+            <div
+              style={{
+                font: nameFont,
+                lineHeight: 0.94,
+                color: spec.name.color,
+                textTransform: "uppercase",
+                letterSpacing: "-0.01em",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: "100%",
+              }}
+            >
+              {parts.hasSplit ? (
+                <>
+                  <span style={{ fontWeight: spec.name.lightWeight }}>{parts.lead}</span>
+                  <span style={{ fontWeight: spec.name.boldWeight }}>{parts.main}</span>
+                </>
+              ) : (
+                entry.name
+              )}
+            </div>
+            {/* 2. Wide-tracked extra-bold KILLS subline, modelled on the
+                    reference poster's GUARD / FORWARD line. */}
+            <div
+              style={{
+                font: killsFont,
+                lineHeight: 1.05,
+                color: spec.kills.color,
+                textTransform: "uppercase",
+                letterSpacing: spec.kills.letterSpacing,
+                marginTop: 2,
+                whiteSpace: "nowrap",
+                maxWidth: "100%",
+              }}
+            >
+              {mvpKillLabel(entry.kills)}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+
 export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }: MvpGraphicProps) {
   const config = getTemplate(aestheticId);
   const { mvp, palette } = config;
@@ -460,6 +832,34 @@ export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }:
   // KRAFTON footer and all five paper banners. Only rank + IGN + kills render.
   if (config.mvpLayoutStyle === "paper-banner" && mvp.paperBanner) {
     return <PaperBannerRows entries={entries} spec={mvp.paperBanner} />;
+  }
+  // dusk-amber: the art bakes the PUBG MOBILE logo, poster frame and all five
+  // portraits — the entire header is suppressed; only the two-line bar lockups
+  // render (no title, subtitle, organizer, team name or synthetic header).
+  if (config.mvpLayoutStyle === "draft-parchment-bars" && mvp.parchment) {
+    return <ParchmentRows entries={entries} spec={mvp.parchment} />;
+  }
+  // cardinal-gold: the art bakes STARTING / FIVE | SC / PUBG MOBILE | KRAFTON
+  // and the painted crimson bars, so no synthetic header paints over them.
+  if (config.mvpLayoutStyle === "starting-five-crimson" && mvp.startingFive) {
+    return <StartingFiveRows entries={entries} spec={mvp.startingFive} />;
+  }
+  // apex-blaze: the art bakes the header, the P# / prefixes and the divider
+  // rules. Only one uppercase, dual-weight IGN + kills line per row is painted.
+  if (config.mvpLayoutStyle === "supercross-row-list" && mvp.supercross) {
+    return (
+      <SupercrossRows
+        entries={entries}
+        spec={mvp.supercross}
+        rowTops={supercrossMvpRowTops(entries.length, mvp.supercross)}
+      />
+    );
+  }
+  // urban-slate: the art bakes the STARTING Five headline, the hardwood frame
+  // and the PUBG MOBILE | KRAFTON footer. No synthetic header paints over them;
+  // only the two-line IGN + KILLS stack is rendered in each open white zone.
+  if (config.mvpLayoutStyle === "starting-five-slate-pills" && mvp.slatePills) {
+    return <SlatePillRows entries={entries} spec={mvp.slatePills} />;
   }
   // esports-clash: the art bakes "TOP MVP LIST", so no title, subtitle or
   // organizer text renders. Only the five English card lockups are painted.

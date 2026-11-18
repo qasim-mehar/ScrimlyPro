@@ -200,7 +200,7 @@ describe("grunge-red — content + typography", () => {
 
   it("uses block white 800/900 names, crimson brush kills and ghost numerals", () => {
     const html = render();
-    expect(html).toContain("font:800 68px"); // auto-fit picks 68px for short IGNs
+    expect(html).toContain("font:800 56px"); // capped at 56px for short IGNs
     expect(html).toContain("Exo 2"); // React escapes the quotes in the stack
     expect(html).toContain("color:#FFFFFF");
     expect(html).toContain("color:#E51920");

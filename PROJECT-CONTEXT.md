@@ -10,18 +10,19 @@
 > `README.md` (run book + assumptions log), then this file. This file is a
 > snapshot and will drift; the truth files and code will not.
 >
-> **Verified snapshot:** 2026-11-16, branch `main`, local tip `6f4d475`
-> (2026-11-16, "chore(config): pin turbopack root and untrack dev-auth.log")
-> on top of `88a9daa` (2026-11-06, slots + login UX + dashboard
-> refinements). This file is committed immediately after as a docs-only
-> commit. Working tree is **dirty** with only the WIP art drop — see §13.
+> **Verified snapshot:** 2026-11-18, branch `main`, local tip `c813eef`
+> (2026-11-17, "P8(6): wire pmgc-aqua standings graphic template").
+> `origin/main` is `aa591c0` (2026-11-17 docs sync), so `main` is **2 commits
+> ahead and unpushed**. Working tree is **dirty** with an in-progress graphics
+> row-alignment fix and untracked art exports — see §13.2.
 >
 > **Known truth-file drift (read this before trusting a doc literally):**
 > `PRD.md` is the v1-CORE spec — its "Out (deferred)" list still names auth,
 > accounts, dashboard and share links (all built since M1/Wave 1), and its §10
 > stack line still says SQLite. `ERD.md` §6/§7 are the as-built Postgres +
 > tenancy record. `PRODUCT.md` still says "three dev-gradient aesthetics ship
-> now"; seven aesthetics ship today. The code remains the final authority.
+> now"; **thirteen** aesthetics are registered today. The code remains the
+> final authority.
 
 ---
 
@@ -33,13 +34,13 @@ PUBG Mobile scrim screenshots into standings and MVP graphics. Before doing
 anything:
 
 1. Read PROJECT-CONTEXT.md (this file) fully.
-2. Read AGENTS.md — this is Next.js 16.4.3, not the Next.js in your training
+2. Read AGENTS.md — this is Next.js 16.4.6, not the Next.js in your training
    data. Read node_modules/next/dist/docs/ before writing Next-specific code.
 3. Read the truth files in order: PRD.md, ERD.md, PLAN.md, then skim
    README.md (run book + Assumptions log).
-4. Note the working tree is dirty with small WIP drift (see
-   PROJECT-CONTEXT.md §13). Do not revert or "clean up" uncommitted work
-   without being asked.
+4. Note the working tree is dirty with an in-progress graphics alignment
+   fix and untracked art exports (see PROJECT-CONTEXT.md §13.2). Do not
+   revert or "clean up" uncommitted work without being asked.
 5. Never invent product claims, metrics, users, or testimonials. Nothing is
    deployed yet.
 
@@ -108,22 +109,22 @@ landing page at `/`.
 
 ---
 
-## 2. Where we stand right now (verified 2026-11-16)
+## 2. Where we stand right now (verified 2026-11-18)
 
 | Item | State |
 |---|---|
-| Branch | `main`, ahead of `origin/main` (`88a9daa`) — not pushed |
-| Tip | P8(1) / P8(2) graphics template wiring |
-| Working tree | Untracked design exports only (`Max_a_*.png` + challengers reference image) — ewc-yellow and challengers-red templates fully wired and tested |
+| Branch | `main`, 2 commits ahead of `origin/main` (`aa591c0`) — not pushed |
+| Tip | P8(6) — pmgc-aqua standings template (P8(5) pmwi-violet just before it) |
+| Working tree | WIP graphics row-alignment fix + temp `/dev/verify` harness + untracked art exports — see §13.2 |
 | Runtime | Node `v25.6.1`, npm `11.9.0` |
-| Next.js | `16.4.3` (App Router, no `src/`, alias `@/*`) |
+| Next.js | `16.4.6` (security upgrade from 16.4.3 in `e54cf9a`; App Router, no `src/`, alias `@/*`; `eslint-config-next` still 16.4.3) |
 | Database | ✅ Local Postgres 17.6 **running** at `127.0.0.1:54329`, db `scrimlypro_main`, live backends healthy (restored 2026-11-16 — see §14) |
-| Latest migration | `0021_teams-slot-number.sql` — **applied and verified locally** 2026-11-16 (`column slot_number integer NULL`, partial unique index `teams_session_slot_uq`, journal entry id 11) |
-| Typecheck | ✅ `npm run typecheck` passes, 0 errors (re-run 2026-11-17) |
-| Lint | ✅ `npm run lint` passes with 0 errors, 98 warnings (re-run 2026-11-17; pre-existing) |
-| Build | ✅ `npm run build` passes (Next 16.4.3 Turbopack, re-run 2026-11-17) |
-| Bundle secrets | ✅ `npm run verify:secrets` — no secret material in build output (re-run 2026-11-17) |
-| Full suite | ✅ `npm test` — **59 files / 722 tests passed** in 334s (DB-backed, re-run 2026-11-17 against local Postgres 17.6; exit 0) |
+| Latest migration | `0021_teams-slot-number.sql` — **applied and verified locally** 2026-11-16 (`column slot_number integer NULL`, partial unique index `teams_session_slot_uq`, journal idx 10 / DB id 11) |
+| Typecheck | ✅ `npm run typecheck` passes, 0 errors (re-run 2026-11-18) |
+| Lint | ✅ `npm run lint` passes with 0 errors, 98 warnings (re-run 2026-11-18; pre-existing) |
+| Build | ✅ `npm run build` passes (Next 16.4.6 Turbopack; last recorded 2026-11-17) |
+| Bundle secrets | ✅ `npm run verify:secrets` — no secret material in build output (last recorded 2026-11-17) |
+| Full suite | ⚠️ `npm test` (2026-11-18) — **65 files / 913 tests: 903 passed, 10 failed in 7 files** (426s, DB-backed). All failures are the in-flight graphics WIP (§13.2): 6 pinned geometry/SSR assertions (`ewc-standings` ×3, `onyx-standings` ×2, `graphics-ssr` ×1), 2 replaced-art dimension checks (`pmgc-aqua`, `pmwi-standings`), 2 public-surface checks (`auth-public-paths`, `architecture/guards`) from the temp `/dev/verify` entry. Last full green before this WIP: 2026-11-17, 59 files / 722 tests. Detail in §12. |
 
 ### The four WIP themes landed in `88a9daa` (2026-11-06)
 
@@ -138,7 +139,17 @@ described them as uncommitted. Full detail in §13.
 4. **Responsive/mobile polish** — dashboard top bar, command palette,
    notifications, admin shell/search, impersonation dialog, attention tables.
 
-The current uncommitted drift is different and much smaller — see §13.2.
+### P8 art-backed template wave (2026-11-17, all committed)
+
+After `88a9daa`, ten commits landed: `d3e2ddd` challengers-red standings,
+`b563bc1` ewc-yellow standings, `76cd070` pmgc-crimson standings, `e54cf9a`
+Next 16.4.3 → 16.4.6 security upgrade, `d0799aa` onyx-green standings,
+`de1ff9a` grunge-red MVP, `cb8ff5b` esports-clash MVP, `aa591c0` docs sync,
+`23eebd1` pmwi-violet standings, `c813eef` pmgc-aqua standings. Together with
+P4–P7 this brings the registered aesthetic count to **13** (3 gradients +
+10 art-backed). Per-template measurement detail is in §11.
+
+The current uncommitted drift is a separate graphics-alignment WIP — see §13.2.
 
 ---
 
@@ -152,7 +163,8 @@ why a large surface exists without an uncontrolled architecture.
   RLS port) → Wave 1 lanes (M2 orgs, M3 admin, deps, ops) → P4–P7 (graphics
   template engine v3 + font swap) → M5 (member dashboard) → M6 (super-admin
   dashboard) → landing page → `88a9daa` (team slots, login error UX, dev auth
-  stub, responsive polish).
+  stub, responsive polish) → P8 (eight new art-backed aesthetics + Next 16.4.6
+  security upgrade).
 - **Rule:** pure business logic lives in `/lib` as typed, tested functions. UI
   components are dumb. If a component contains a scoring/matching rule, it is a
   bug.
@@ -176,9 +188,10 @@ why a large surface exists without an uncontrolled architecture.
 
 ## 4. Tech stack
 
-- **Next.js 16.4.3** — App Router, `proxy.ts` (not `middleware.ts`), error
-  boundary prop is `retry` in addition to `reset`. Read
-  `node_modules/next/dist/docs/` before writing Next-specific code.
+- **Next.js 16.4.6** — upgraded from 16.4.3 by `e54cf9a` (security); App
+  Router, `proxy.ts` (not `middleware.ts`), error boundary prop is `retry` in
+  addition to `reset`. Read `node_modules/next/dist/docs/` before writing
+  Next-specific code.
 - **React 19.2.8**, **TypeScript strict, zero `any`**, **Tailwind CSS v4**.
 - **Postgres** via `postgres.js` + **Drizzle ORM** (`drizzle-orm/pg-core`).
   Migrations are committed SQL in `db/migrations/`.
@@ -186,7 +199,7 @@ why a large surface exists without an uncontrolled architecture.
 - **`@google/genai`** for OCR. The API key exists only inside
   `app/api/ocr/route.ts` (server).
 - **`html-to-image`** for client-side PNG export at exactly 1080×1620.
-- **Vitest** for the full suite (pure logic + DB/RLS/API integration on
+- **Vitest 4.1.12** for the full suite (pure logic + DB/RLS/API integration on
   throwaway databases).
 - **Fonts:** Exo 2 (primary graphics face), Rajdhani (metric fallback, always
   loaded), Noto Sans Symbols 2 (symbol glyphs) via `@fontsource/*`; Inter,
@@ -355,7 +368,8 @@ ScrimlyPro/
 │   │   └── [id]/           # session page, matches/[matchNo]/, mvp/
 │   ├── admin/              # super-admin dashboard + tenants|flags|audit|orgs
 │   ├── api/                # route handlers
-│   └── dev/                # dev-only fixture pages (404 in production)
+│   └── dev/                # dev-only fixture pages (404 in production);
+│                           #   + untracked temp /dev/verify harness (§13.2)
 │
 ├── components/
 │   ├── app/                # shared app shell bits (AccountMenu, icons, ui)
@@ -399,10 +413,11 @@ ScrimlyPro/
 │
 ├── db/migrations/          # committed versioned SQL + drizzle journal/meta
 ├── scripts/                # operational + verification scripts
-├── tests/                  # full Vitest suite (57 test files)
+├── tests/                  # full Vitest suite (65 test files / 913 tests enumerated)
 ├── styles/admin-theme.css
 ├── public/                 # icons, art, templates/<aesthetic>/<variant>.png|jpeg
-├── docs/                   # reports/, deploy/cut-over.md, reference/
+├── docs/                   # reports/, deploy/cut-over.md, reference/,
+│                           #   MASTER-PROMPT-graphic-alignment.md (untracked WIP)
 ├── shots/                  # screenshot evidence + golden images
 └── data/                   # (gitignored) legacy SQLite db — historical only
 ```
@@ -671,7 +686,9 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
 
 **Dev-only (NODE_ENV-gated, 404 in production):** `/dev/graphics`,
 `/dev/standings`, `/dev/mvp`, `/dev/announcement`, `/dev/glyphs`,
-`/dev/calibrate`, `/dev/boom`.
+`/dev/calibrate`, `/dev/boom`. Plus an untracked temp `/dev/verify`
+standings-alignment harness (with a temporary `PUBLIC_PAGES` entry) — see
+§13.2; both must be removed before delivery.
 
 ---
 
@@ -713,16 +730,18 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   (`scale(calc(100cqw / 1080px))`) preserves the ratio with zero JS.
 - `GraphicCanvas` (required `variant`: `standings | mvp | announcement`) renders
   absolutely-positioned slots over a background. **Templates = background image
-  + coordinate config.** Nine aesthetics (`lib/graphics/aesthetics.ts`): three
-  dev gradients (dark-gold, purple-butterfly, pink-blossom) and six art-backed
-  (pmpl-light, neon-green, challengers-red, ewc-yellow, onyx-green, pmgc-crimson;
-  art in `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
-  variant-specific: pmpl-light backs standings + announcement, neon-green backs
-  standings, challengers-red backs standings (`overall.png`) + MVP (`mvp.png`;
-  announcement stays on the gradient fallback), ewc-yellow / onyx-green /
-  pmgc-crimson back standings only.
-  The challengers-red standings wiring is working-tree WIP, not in the
-  ewc-yellow commit — see §13.2. ewc-yellow's `overall.png` is also a
+  + coordinate config.** Thirteen aesthetics (`lib/graphics/aesthetics.ts`;
+  `AESTHETIC_IDS` is the single registry): three dev gradients (dark-gold,
+  purple-butterfly, pink-blossom) and ten art-backed (pmpl-light, neon-green,
+  challengers-red, ewc-yellow, onyx-green, pmgc-crimson, pmwi-violet,
+  pmgc-aqua, grunge-red, esports-clash; art in
+  `public/templates/<id>/<variant>.png|jpeg`). Art coverage is partial and
+  variant-specific: pmpl-light backs standings + announcement; neon-green,
+  ewc-yellow, onyx-green, pmgc-crimson, pmwi-violet and pmgc-aqua back
+  standings only; challengers-red backs standings + MVP; grunge-red and
+  esports-clash back **MVP only**. Every uncovered variant falls back to a
+  per-aesthetic gradient so missing art never breaks a render.
+  ewc-yellow's `overall.png` is a
   4096×6144 JPEG payload in a `.png`-named file: 12 painted bars per column
   (top 393 + i×79, height 67), baked labels/ranks and five stat slots
   (WWCD/MATCHES/PP/ELIMS/TOTAL) at 46-wide boxes.
@@ -751,23 +770,60 @@ palette), `/orgs`, `/orgs/new`, `/orgs/[id]`, `/sessions` (layout only),
   +474 right; 52px boxes) and pure-white Exo 2 800 text. MVP + announcement fall
   back to a deep crimson-black / gold gradient. Pinned by
   `tests/pmgc-standings.test.ts`.
+  pmwi-violet (P8(5)) backs standings at `/templates/pmwi-violet/overall.png`
+  — a TRUE 941×1672 PNG (not the 4096×6144 JPEG-in-.png of the other
+  broadcast arts), uniformly width-fitted to 1080 (×1.1477) and centre-cropped
+  (top −130.25), dropping the baked footer. 2023 PMWI electric violet/cyan
+  leaderboard: baked "OVERALL RANKINGS" + "MATCH #" (digits slot x526 y236),
+  baked ranks, 12 painted bars/column (canvas rowY0 375.1, pitch 77.42, box
+  height 52) with stat order ELIMS(kp)→WWCD→TOTAL, scrim name hidden for
+  standings, dark violet/cyan gradient fallback for MVP + announcement.
+  Pinned by `tests/pmwi-standings.test.ts`.
+  pmgc-aqua (P8(6)) backs standings at `/templates/pmgc-aqua/overall.png`
+  — a true 968×1625 PNG, width-fitted (×1080/968) and centre-cropped
+  (top −96.51). 2023 PMGC aqua/ice leaderboard: baked "OVERALL RANKINGS" +
+  dark cyan-bordered "MATCH #" badge (digits slot x912 y186), baked ranks,
+  fixed-pitch bars with stat order ELIMS(kp)→PLACE(pp)→WWCD→TOTAL (NOT the
+  WWCD-first order of the other templates), dark charcoal ink on light bars,
+  scrim name hidden for standings, light aqua gradient fallback for MVP +
+  announcement. Pinned by `tests/pmgc-aqua-standings.test.ts`.
+  grunge-red (P8(3)) backs **MVP only** at `/templates/grunge-red/mvp.png`
+  — a 4488×5608 JPEG-in-.png "starting five" brush art, uniformly scaled
+  ×0.2691 with offset (−11,−17). Baked "MVP LIST", header labels and helmet
+  characters; only rank badge + player name + kill brush + ghost numeral are
+  rendered (no team names or logos), `mvpLayoutStyle: "starting-five-brush"`,
+  `mvpShowTeam: false`. Standings + announcement fall back to a dark-crimson
+  gradient. Pinned by `tests/grunge-red-mvp.test.ts`.
+  esports-clash (P8(4)) backs **MVP only** at
+  `/templates/esports-clash/mvp.png` — a 9:16 JPEG-in-.png (3764×6688) drawn
+  at scale 1620/6688 with x84.13 side bars filled by
+  `canvasBackground: "#1E1E1E"`. Five alternating cards (pitch 243) with a
+  baked PUBG MOBILE logo; only RANK #01–#05, player IGN and TOTAL KILLS render
+  (English only), `mvpLayoutStyle: "esports-card"`, `mvpShowTeam: false`.
+  Standings + announcement fall back to a dark gradient. Pinned by
+  `tests/esports-clash-mvp.test.ts`.
 - `TemplateConfig` (engine v3) key ideas: per-variant `backgrounds`;
   `statColumns` (ordered value boxes, per-table `statBoxW`); `labelsBakedIn` /
   `subtitleBakedIn` (per-variant — the art already prints the labels);
   `ranksBakedIn` (art prints the rank numerals), `rowsPerColumn` (fixed
   left-column capacity via `splitRowsAt`, e.g. challengers 12/12) and
   `fixedRowPitch` (never stretch rows off painted bars); `variantHeaders` +
-  `headerFor()`; `variantHideScrimName` + `hideScrimNameFor()` (challengers-red
-  hides the scrim name for standings only — the art bakes "OVERALL RANKINGS");
+  `headerFor()`; `variantHideScrimName` + `hideScrimNameFor()` (all broadcast
+  standings arts hide the scrim name — the art bakes "OVERALL RANKINGS");
   `singleColumn` (neon's one full-width table); `rowsBottom`-driven row
   auto-fit (`announcementRowLayout`, `columnPitch` in
   `lib/graphics/layout.ts`); P7 flags `hideScrimName`, `uniformMvpRows`,
-  `watermarkYOffset`.
+  `watermarkYOffset`. P8 additions: `subtitleMode: "matchNumber"` (the art
+  bakes the words, the engine paints only the digits), `mvpLayoutStyle` +
+  `mvpShowTeam` (art-backed MVP layouts), `variantLabelsBakedIn` /
+  `labelsBakedInFor()`, `canvasBackground`, and `imageFitStyle()` for the
+  non-2:3 art crops.
 - The watermark `scrimlypro.com` is **hardcoded bottom-right** — brand law,
   never configurable.
 - Font stack: `"Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui,
-  sans-serif`; data-bearing fonts weight 700 (P7), bumped to 800 on the
-  challengers-red/ewc-yellow art tables.
+  sans-serif`; data-bearing fonts weight 700 (P7), bumped to 800 on all
+  art-backed broadcast tables (challengers-red, ewc-yellow, onyx-green,
+  pmgc-crimson, pmwi-violet, pmgc-aqua).
 - Geometry for art-backed templates is **measured from the art pixels** and
   pinned by tests (`tests/graphics.test.ts`,
   `tests/graphics-contrast.test.ts` pins contrast ratios). Changing art means
@@ -801,10 +857,26 @@ BASE_URL=http://127.0.0.1:<port> bash scripts/verify-auth-matrix.sh
 
 ### Test suite facts
 
-- `npm test` → Vitest, node env, `tests/**/*.test.ts`; `npx vitest list`
-  enumerates **57 files / 656 tests**. Last full green: **2026-11-16 —
-  57 files / 656 tests, 314s, exit 0** (DB-backed, local Postgres 17.6; the
-  2026-11-06 run took ~7–8 min).
+- `npm test` → Vitest 4, node env, `tests/**/*.test.ts`; `npx vitest list`
+  enumerates **65 files / 913 tests** (re-enumerated 2026-11-18). Last full
+  green before the current WIP: **2026-11-17 — 59 files / 722 tests, 334s,
+  exit 0** (DB-backed, local Postgres 17.6; the 2026-11-06 run took ~7–8 min).
+- ⚠️ **2026-11-18 verification run is red (exit 1): 65 files, 913 tests —
+  903 passed, 10 failed in 7 files, 426s.** Every failure traces to the
+  in-flight graphics-alignment WIP (§13.2), not to a regression in the
+  committed core:
+  - `tests/ewc-standings.test.ts` (3), `tests/onyx-standings.test.ts` (2),
+    `tests/graphics-ssr.test.ts` (1) — pinned measurement values no longer
+    match the live `lib/graphics/aesthetics.ts` edits (e.g. ewc subtitle
+    `x1018/y232/w52` expected vs `x1028/y228/w50` live).
+  - `tests/pmgc-aqua-standings.test.ts` (1), `tests/pmwi-standings.test.ts` (1)
+    — the replaced `overall.png` files have different dimensions / magic bytes
+    than the pinned fixtures.
+  - `tests/auth-public-paths.test.ts` (1), `tests/architecture/guards.test.ts`
+    (1) — the temporary `/dev/verify` page and its `PUBLIC_PAGES` entry (the
+    meta-test reports `["dev/verify/page.tsx"]` as unguarded).
+  Re-measure/update the pinned tests against the final art and remove the temp
+  harness, then re-run the full green-gate set before committing.
 - Expected noisy-but-benign output:
   - Postgres `NOTICE ... trigger ... does not exist, skipping` from throwaway DB
     setup/teardown;
@@ -824,6 +896,8 @@ BASE_URL=http://127.0.0.1:<port> bash scripts/verify-auth-matrix.sh
   - Root files: scoring, matching, mvp, gemini, ocr-form/ingest,
     session-create/input/page/quota/slots, matches-mapping/confirm,
     standings-graphic, graphics + contrast + ssr + glyph-fixtures,
+    art-backed graphics (ewc-, challengers-, pmgc-, onyx-, pmwi-,
+    pmgc-aqua-standings; grunge-red-, esports-clash-mvp),
     mvp-lock/announcement, rate-limit, auth (public paths, next-url,
     origin-guard, action-guard), login-errors, enumeration-copy, db, sqlite, cn.
   - `tests/api/*`: auth-matrix, admin-guard/search/audit-events,
@@ -855,8 +929,9 @@ BASE_URL=http://127.0.0.1:<port> bash scripts/verify-auth-matrix.sh
 
 ### 13.1 The four themes landed in `88a9daa`
 
-The themes this file previously described as uncommitted are now committed and
-pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
+The themes this file previously described as uncommitted are committed and were
+pushed in `88a9daa` (2026-11-06). `origin/main` has since advanced to `aa591c0`
+and local `main` is 2 commits ahead:
 
 1. **Team room slot numbers** — `teams.slot_number` (nullable, 1–99, unique
    per session when assigned), migration `0021`, validation in
@@ -877,25 +952,44 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
    notifications, admin shell/search, impersonation dialog, attention tables;
    no schema or business-logic changes.
 
-### 13.2 Current uncommitted drift (verified 2026-11-17)
+### 13.2 Current uncommitted drift (verified 2026-11-18)
 
-- Untracked art: several root `public/templates/Max_a_*.png` design exports
-  (including `Max_a_You_are_an_expert_im (4|5).png`) and
-  `public/templates/challengers-red/refrence-image.jpeg` (reference only, never
-  rendered). Both `ewc-yellow` (P8(1)) and `challengers-red` (P8(2)) are now
-  fully wired as production standings templates with measured 12/12 painted
-  bars, baked labels/ranks, and bold typography (pinned by
-  `tests/graphics.test.ts`, `tests/graphics-contrast.test.ts`,
-  `tests/graphics-ssr.test.ts`, `tests/ewc-standings.test.ts`, and
-  `tests/challengers-standings.test.ts`).
-  onyx-green (P8(4)) is wired the same way with a measured 3-stat layout; its
-  `overall.png` and `tests/onyx-standings.test.ts` land in that chunk.
-  pmgc-crimson (P8(3)) is wired with a measured 12/12 crimson layout, gold
-  "MATCH #" number slot and bold white Exo 2 800 type; its `overall.png` and
-  `tests/pmgc-standings.test.ts` land in this chunk. Do not wire further art
-  without measuring geometry and updating the pinned graphics tests.
+This is an **active graphics row-alignment fix**, not the old art drop. All P8
+templates listed in §11 are committed and pinned by tests — do not revert them.
+
+- **Modified tracked files (6):**
+  - `lib/graphics/aesthetics.ts` — live re-measurement of art-backed template
+    geometry (subtitle slots, `rowY0` / `rowPitch` / `rowHeight`, name fonts).
+    The per-template pixel numbers quoted in §11 are the **committed** values;
+    treat them as approximate while this edit is in flight. This file was
+    still changing during the 2026-11-18 verification pass.
+  - `components/graphics/OverallStandingsGraphic.tsx` and
+    `components/graphics/dev-sandbox.tsx` — move `lineHeight` to **after**
+    the `font` shorthand in `StandingsRow` / `DummyRow`. The `font` shorthand
+    resets line-height to `normal`, which had been pushing text off the
+    painted row centre. This is the core fix from
+    `docs/MASTER-PROMPT-graphic-alignment.md`.
+  - `public/templates/pmgc-aqua/overall.png` and
+    `public/templates/pmwi-violet/overall.png` — replaced art payloads. The
+    pinned configs/tests were measured against the older files, so re-measure
+    before trusting them.
+  - `lib/auth/public-paths.ts` — one temporary line adding `/dev/verify` to
+    `PUBLIC_PAGES`.
+- **Untracked harness:** `app/dev/verify/page.tsx` — a TEMP standings
+  alignment harness (`?id=<aesthetic>`, dev-only `notFound()` in production).
+  It and its `PUBLIC_PAGES` entry **must be removed before delivery** — they
+  deliberately bypass the "public surface enumerated in one place" law.
+- **Untracked design exports:** root-level `public/templates/Max_a_*` design
+  exports (variants `(7)|(8)|(9)|(10)` and other `Max_a_*` JPEGs), plus
+  `refrence-image` files under
+  `challengers-red`, `esports-clash`, `grunge-red`, `pmgc-aqua`,
+  `pmgc-crimson`, `pmwi-violet`, and downloaded result PNGs under several
+  template dirs. These are reference/evidence only — never rendered.
 - `next.config.ts` and `dev-auth.log` are no longer part of the drift — both
   landed in `6f4d475` (see §13.3).
+- Do not wire further art without measuring geometry and updating the pinned
+  graphics tests (`tests/graphics*.test.ts`, `tests/*-standings.test.ts`,
+  `tests/*-mvp.test.ts`).
 
 ### 13.3 Working-tree hygiene
 
@@ -1022,10 +1116,15 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
 
 **Remaining:**
 
-1. **Decide remaining art WIP:** `ewc-yellow` is now wired with measured
-   geometry and pinned tests. Decide on the replaced
-   `challengers-red/overall.png` or remove the untracked exports. Do not ship
-   unregistered art.
+1. **Finish the graphics alignment WIP (working tree, 2026-11-18):** the
+   uncommitted `line-height`-after-`font` fix plus the replaced
+   `pmgc-aqua/overall.png` and `pmwi-violet/overall.png` follow
+   `docs/MASTER-PROMPT-graphic-alignment.md`. Re-measure the pinned geometry
+   tests against the new art and keep them green. The 2026-11-18 suite run is
+   red with 10 failures (§12), all from this WIP. **Remove the temp
+   `/dev/verify` harness and its `PUBLIC_PAGES` entry before delivery.** Decide
+   on / remove the untracked `Max_a_*` exports and `refrence-image` files — do
+   not ship unregistered art.
 2. **Hosted Supabase cut-over** — still the next major milestone, per
    `docs/deploy/cut-over.md` (v2, rehearsal-proven). The hosted ref in
    `.env.local.hosted-dead.bak` is dead; re-run the runbook from step 1 rather
@@ -1077,7 +1176,7 @@ pushed (`main` = `origin/main` = `88a9daa`, 2026-11-06):
 | **Confirm** | Atomic, idempotent write of `match_results` + roster learning. |
 | **Unlock** | Delete results → draft → rebuild rosters, in one transaction. |
 | **MVP list** | Top-5 per-player kill aggregation, edited then locked; sole source for the MVP graphic. |
-| **Aesthetic** | A graphic template: background art + coordinate config (7 total). |
+| **Aesthetic** | A graphic template: background art + coordinate config (13 total: 3 gradients + 10 art-backed). |
 | **Effective identity** | The impersonation target when a valid admin session exists; otherwise the real user. |
 | **Kill switch** | A `feature_flags` `disabled` row that locks a user out of every authed surface. |
 | **Trust proxy** | Whether `x-forwarded-for` is honored for rate-limit attribution (default: no). |

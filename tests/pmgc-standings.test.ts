@@ -189,16 +189,16 @@ describe("pmgc-crimson standings config (measured 24-slot art)", () => {
   it("drops the match number into the open gold slot right of the baked #", () => {
     // "#" ink ends art x3798 → 1001.8; gold badge ends art x4000 → 1054.7.
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 1006, y: 260, w: 36, align: "center" });
+    expect(sub).toEqual({ x: 1012, y: 254, w: 44, align: "center" });
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#140A00");
-    expect(sub!.x!).toBeGreaterThan(1002);
-    expect(sub!.x! + sub!.w!).toBeLessThan(1043);
+    expect(sub!.x!).toBeGreaterThan(1005);
+    expect(sub!.x! + sub!.w!).toBeLessThanOrEqual(1056);
   });
 
   it("uses pure white 800-weight Exo 2 row typography", () => {
     expect(CONFIG.palette.text).toBe("#FFFFFF");
     expect(CONFIG.palette.wwcdText).toBe("#FFFFFF");
-    expect(st.nameFont.startsWith("800 23px ")).toBe(true);
+    expect(st.nameFont.startsWith("800 20px ")).toBe(true);
     expect(st.statFont.startsWith("800 25px ")).toBe(true);
     expect(st.nameFont).toContain('"Exo 2"');
     expect(st.statFont).toContain('"Exo 2"');
@@ -251,7 +251,7 @@ describe("pmgc-crimson standings render (SSR)", () => {
 
   it("renders the match number in the gold chip with tabular stats", () => {
     const html = render(24);
-    expect(html).toContain("left:1006px");
+    expect(html).toContain("left:1012px");
     expect(html).toContain("color:#140A00");
     expect(html).toContain(">6<");
     expect(html).toContain("font-variant-numeric:tabular-nums");

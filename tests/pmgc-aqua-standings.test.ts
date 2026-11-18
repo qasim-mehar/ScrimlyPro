@@ -25,7 +25,8 @@ import type { StandingRow } from "@/lib/scoring";
 const CONFIG: TemplateConfig = getTemplate("pmgc-aqua");
 const st = CONFIG.standings;
 
-/** The art is a true 968×1625 PNG (ratio 0.5957, NOT 2:3). It is uniformly
+/** The art on disk is now a 3872×6500 JPEG-in-.png — exactly 4× the 968×1625
+ *  file these logical art coordinates were measured against. It is uniformly
  *  fitted by width (S = 1080/968) and centred (top −96.508), i.e. the exact
  *  object-fit:cover crop of art y0–86.5 / y1538.5–1625. Every canvas number
  *  below was measured on those pixels and converted with these two helpers. */
@@ -80,15 +81,28 @@ describe("pmgc-aqua registration + art fit", () => {
     expect(VALID_TEMPLATE_IDS).toContain("pmgc-aqua");
   });
 
-  it("backs standings with the measured 968×1625 overall.png", () => {
+  it("backs standings with the measured (4× upscaled) overall.png", () => {
     const bg = CONFIG.backgrounds.standings;
     expect(bg.type).toBe("image");
     if (bg.type !== "image") throw new Error("standings background must be art");
     expect(bg.src).toBe("/templates/pmgc-aqua/overall.png");
     expect(() => readFileSync("public/templates/pmgc-aqua/overall.png")).not.toThrow();
     const bytes = readFileSync("public/templates/pmgc-aqua/overall.png");
-    expect(bytes.readUInt32BE(0)).toBe(0x89504e47); // true PNG, not JPEG-in-.png
-    expect({ w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20) }).toEqual({ w: 968, h: 1625 });
+    // The upscaled file on disk is a JPEG payload inside a .png name (SOI + SOF).
+    expect(bytes[0]).toBe(0xff);
+    expect(bytes[1]).toBe(0xd8);
+    let size: { w: number; h: number } | null = null;
+    for (let pos = 2; pos + 10 <= bytes.length; ) {
+      if (bytes[pos] !== 0xff) { pos += 1; continue; }
+      const marker = bytes[pos + 1];
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        size = { h: bytes.readUInt16BE(pos + 5), w: bytes.readUInt16BE(pos + 7) };
+        break;
+      }
+      if (marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) { pos += 2; continue; }
+      pos += 2 + bytes.readUInt16BE(pos + 2);
+    }
+    expect(size).toEqual({ w: 3872, h: 6500 });
     // The art is not exact 2:3 — a distorted stretch would break every
     // measured coordinate below, so its cover fit must be uniform.
     expect(968 / 1625).toBeLessThan(2 / 3);
@@ -227,7 +241,7 @@ describe("pmgc-aqua baked header + MATCH # digit slot", () => {
 
   it("drops the match digits in the open dark box right of # and above the underline", () => {
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 912, y: 186, w: 108, align: "center" });
+    expect(sub).toEqual({ x: 920, y: 184, w: 96, align: "center" });
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#00F5E1");
     // Badge dark fill: art x649–925, y245–330 → canvas x724–1032, y177–272.
     expect(sub!.x!).toBeGreaterThan(cx(649));
@@ -251,7 +265,7 @@ describe("pmgc-aqua measured contrast (WCAG)", () => {
     expect(CONFIG.palette.wwcdText).toBe("#0D1B1E");
     expect(st.uniformStatInk).toBe(true); // no accent TOTAL over the baked row
     expect(ratioOver(ROW_BAR, CONFIG.palette.text)).toBeGreaterThanOrEqual(14);
-    expect(st.nameFont.startsWith("800 24px ")).toBe(true);
+    expect(st.nameFont.startsWith("800 21px ")).toBe(true);
     expect(st.statFont.startsWith("800 26px ")).toBe(true);
     expect(st.nameFont).toContain('"Exo 2"');
     expect(st.statFont).toContain('"Exo 2"');
@@ -317,13 +331,13 @@ describe("pmgc-aqua standings SSR (measured layout)", () => {
 
   it("renders mid-session and final states into the baked MATCH # slot", () => {
     const mid = render(24, "AFTER MATCH 3", 3);
-    expect(mid).toContain("left:912px");
+    expect(mid).toContain("left:920px");
     expect(mid).toContain("color:#00F5E1");
     expect(mid).toContain(">3<");
     expect(mid).toContain("font-variant-numeric:tabular-nums");
 
     const final = render(24, "FINAL RESULTS", 6);
-    expect(final).toContain("left:912px");
+    expect(final).toContain("left:920px");
     expect(final).toContain(">6<");
   });
 

@@ -87,13 +87,13 @@ describe("ewc-yellow standings config (measured 24-slot art)", () => {
     }
   });
 
-  it("lays 12 painted bars per side: y393, pitch 79, height 67", () => {
+  it("lays 12 painted bars per side: y393, pitch 79, height 66", () => {
     expect(table.rowY0).toBe(393);
     expect(table.rowPitch).toBe(79);
-    expect(table.rowHeight).toBe(67);
+    expect(table.rowHeight).toBe(66);
     near(table.rowY0, 1490);
     near(table.rowPitch, 300);
-    near(table.rowHeight, 255);
+    near(table.rowHeight, 252);
     // Row 12 bottom stays above the flame art (last bar bottom 1329.2).
     expect(table.rowY0 + 11 * table.rowPitch + table.rowHeight).toBeLessThanOrEqual(1330);
     expect(table.headerLabelsY).toBeLessThanOrEqual(table.rowY0);
@@ -163,10 +163,10 @@ describe("ewc-yellow standings config (measured 24-slot art)", () => {
   });
 
   it("drops the match number inside the slanted Match # ribbon", () => {
-    // White "Match #" ink ends art x3845 → 1013.8; ribbon continues past it.
+    // Re-measured: baked "Match #" ink ends canvas x1016; digits start x1028.
     const header = CONFIG.variantHeaders?.standings;
-    expect(header?.subtitle).toEqual({ x: 1018, y: 232, w: 52, align: "left" });
-    near(header!.subtitle!.x!, 3861);
+    expect(header?.subtitle).toEqual({ x: 1028, y: 228, w: 50, align: "left" });
+    near(header!.subtitle!.x!, 3898);
     expect(header?.subtitleColor).toBe("#2B0F00");
   });
 
@@ -257,7 +257,7 @@ describe("ewc-yellow standings render (SSR)", () => {
     expect(html).toContain("SCRIM");
     expect(html).toContain("left:140px");
     expect(html).toContain("top:130px");
-    expect(html).toContain("left:1018px");
+    expect(html).toContain("left:1028px");
     expect(html).toContain("color:#2B0F00");
     expect(html).toContain(">6<");
     expect(html).not.toContain("FINAL RESULTS");

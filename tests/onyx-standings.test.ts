@@ -201,9 +201,9 @@ describe("onyx-green standings config (measured 24-slot Pro League art)", () => 
   it("drops the match digits above the baked neon underline, right of MATCH #", () => {
     // Green underline ink spans art x980–1064 at y294; "MATCH #" ink ends x968.
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 984, y: 250, w: 76, align: "center" });
+    expect(sub).toEqual({ x: 986, y: 246, w: 72, align: "center" });
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#42F57E");
-    near(sub!.x!, 3735, 2); // art 3735 → canvas 984.6
+    near(sub!.x!, 3741, 2); // re-measured art x3741 → canvas 986.3
     expect(sub!.y! + 34).toBeLessThanOrEqual(294); // clears the underline ink
   });
 
@@ -266,7 +266,7 @@ describe("onyx-green fallback + SSR rendering", () => {
   it("hides the standings scrim name but keeps the match number and tabular stats", () => {
     const html = render(24);
     expect(html).not.toContain("SCRIM");
-    expect(html).toContain("left:984px");
+    expect(html).toContain("left:986px");
     expect(html).toContain("color:#42F57E");
     expect(html).toContain(">6<");
     expect(html).toContain("font-variant-numeric:tabular-nums");

@@ -12,6 +12,10 @@ export type AestheticId =
   | "pmwi-violet"
   | "grunge-red"
   | "esports-clash"
+  | "dusk-amber"
+  | "cardinal-gold"
+  | "apex-blaze"
+  | "urban-slate"
   | "rundown-orange"
   | "royal-blue"
   | "varsity-yellow"
@@ -179,6 +183,146 @@ export type MvpEsportsSpec = {
   };
 };
 
+/** Art-backed "draft parchment bar" lockup (dusk-amber). Pure measured data:
+ *  the five painted tan bars' canvas-space vertical CENTRES plus one shared
+ *  right-aligned text axis in the open parchment zone. `lib/graphics/mvp.ts`
+ *  turns it into two-line row slots whose combined midpoint is, by
+ *  construction, the painted bar's centre for every rank (zero Y drift). */
+export type MvpParchmentSpec = {
+  rowHeight: number; // text container height, strictly inside each painted bar
+  barCenterYs: readonly number[]; // exact measured bar centres on the 1080×1620 canvas
+  textLeft: number; // left edge of the shared right-aligned text box
+  textWidth: number; // right edge = textLeft + textWidth (clears all 5 portraits)
+  name: {
+    fontFamily: string;
+    fontWeight: number;
+    maxFontSize: number;
+    minFontSize: number;
+    color: string; // espresso ink on the warm tan bar
+    letterSpacing: string;
+    lineHeight: number; // unitless multiplier; declared AFTER `font` in CSS
+    textShadow: string; // subtle vintage dual-tone print shadow
+  };
+  subline: {
+    fontFamily: string;
+    fontWeight: number;
+    ratio: number; // subline font size / name font size (~0.53)
+    color: string;
+    letterSpacing: string;
+    lineHeight: number;
+    gap: number; // px between line 1 and line 2
+  };
+};
+
+
+/** Measured 1080×1620 canvas geometry for the cardinal-gold "STARTING FIVE"
+  *  art: five painted crimson bars, each with an open right-hand text zone.
+  *  Pure data — `lib/graphics/mvp.ts` derives the row boxes, `MvpGraphic` only
+  *  paints them. `barTops`/`barBottoms` hold the exact measured boundaries so
+  *  row i spans bar i and its stacked-text midpoint is that bar's exact
+  *  pixel centre (zero cumulative pitch drift across the five bars). */
+export type MvpStartingFiveSpec = {
+  rowHeight: number; // nominal bar height (canvas px)
+  rowY0: number; // nominal first bar top
+  rowPitch: number; // nominal bar pitch (config consumers only)
+  barTops: readonly number[]; // exact measured painted-bar tops (canvas px)
+  barBottoms: readonly number[]; // exact measured painted-bar bottoms (canvas px)
+  textLeft: number; // left edge of the open crimson right-hand text zone
+  textWidth: number; // its width; right edge must stay inside the painted bar
+  kills: {
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    letterSpacing: string;
+    lineHeight: string;
+    color: string; // crisp white
+  };
+  name: {
+    fontFamily: string;
+    maxFontSize: number;
+    minFontSize: number;
+    fontWeight: number;
+    letterSpacing: string;
+    lineHeight: string;
+    color: string; // warm varsity gold
+  };
+};
+
+
+/** Apex Blaze — the Supercross "TOP 5 /// FINISHES" single-line row lockup.
+ *  Pure measured data: the exact canvas Y centres of the five baked orange
+ *  P# / glyph bands (authoritative — the art's pitch is NOT uniform), plus the
+ *  horizontal span from just right of the baked slash to the right end of the
+ *  black divider rules. `lib/graphics/mvp.ts` derives row slots; the renderer
+ *  only paints them. */
+export type MvpSupercrossSpec = {
+  rowHeight: number;
+  rowCenterYs: readonly number[]; // exact measured glyph-band midpoints (canvas px)
+  rowPitch: number; // nominal fallback pitch for rows beyond the baked five
+  textLeft: number; // strictly right of every baked orange slash (max slashRightX)
+  textRight: number; // right end of the baked horizontal divider rules
+  textWidth: number; // textRight - textLeft
+  nameGap: number; // minimum gap between the IGN box and the kills readout
+  name: {
+    maxFontSize: number;
+    minFontSize: number;
+    fontFamily: string;
+    fontWeight: number; // heavy surname / surname-only names (800)
+    softWeight: number; // medium first name in the reference poster (500)
+    color: string; // track-black ink on the white textured card
+    tracking: string;
+  };
+  kills: {
+    fontFamily: string;
+    numberFontSize: number;
+    unitFontSize: number;
+    numberFontWeight: number; // 800
+    unitFontWeight: number; // 500
+    color: string;
+    tracking: string;
+    reserveWidth: number; // right-aligned box reserved for "NN KILLS"
+    singular: string;
+    plural: string;
+  };
+};
+
+
+/** One painted off-white rounded bar baked into urban-slate's mvp.png, mapped
+ *  onto the 1080×1620 canvas through the uniform `Background.fit`. `centerY`
+ *  is exactly `top + height / 2` — the two-line text stack is locked to this
+ *  box so its vertical midpoint lands dead-on the bar's measured midline. */
+export type MvpSlateBar = {
+  top: number;
+  height: number;
+  centerY: number;
+};
+
+/** Urban Slate — five rounded off-white bars (monochrome PUBGM character on
+ *  the left, open white zone on the right). Pure data: every coordinate and
+ *  ink/font token is measured off the art; `MvpGraphic` only paints the two
+ *  centered text lines. No team data, logos or avatars (mvpShowTeam: false). */
+export type MvpSlatePillSpec = {
+  bars: readonly [MvpSlateBar, MvpSlateBar, MvpSlateBar, MvpSlateBar, MvpSlateBar];
+  textLeft: number; // canvas x of the open zone, right of the portrait/scope
+  textWidth: number; // width of that open zone (right inner edge − margin)
+  name: {
+    fontFamily: string; // Rajdhani-first condensed athletic stack
+    maxFontSize: number;
+    minFontSize: number;
+    lightWeight: number; // leading token (e.g. "TEAM" in "TEAM SAMI")
+    boldWeight: number; // primary token / whole single-token IGN
+    color: string;
+  };
+  kills: {
+    fontFamily: string; // Exo 2-first geometric stack
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+    letterSpacing: string;
+  };
+};
+
+
 export type MvpSpec = {
   rowY0: number;
   rowPitch: number;
@@ -196,7 +340,12 @@ export type MvpSpec = {
   subtitleBakedIn?: boolean; // true → art bakes the subtitle (challengers-red
   // "TOP 5 FRAGGERS"): MvpGraphic draws no subtitle line.
   brush?: MvpBrushSpec; // grunge-red starting-five brush typography
-  esports?: MvpEsportsSpec; // esports-clash English-only card lockup
+  esports?: MvpEsportsSpec;  slatePills?: MvpSlatePillSpec; // urban-slate rounded off-white bar lockup
+  supercross?: MvpSupercrossSpec; // apex-blaze single-line motorsport rows
+  startingFive?: MvpStartingFiveSpec; // cardinal-gold right-aligned white/gold
+  // stacked lockup inside five painted crimson bars
+  parchment?: MvpParchmentSpec; // dusk-amber five painted parchment bars
+ // esports-clash English-only card lockup
   paperBanner?: MvpPaperBannerSpec; // court-orange paper-cutout banner lockup
 };
 
@@ -361,7 +510,7 @@ export type TemplateConfig = {
   // own title, but the MVP art still wants the session name)
   uniformMvpRows?: boolean; // true → MvpGraphic renders all 5 rows identically:
   // neutral plates, text ink, no rank-1 accent, no metal medallions (P7)
-  mvpLayoutStyle?: "standard" | "starting-five-brush" | "esports-card" | "paper-banner"; // starting-five-brush
+  mvpLayoutStyle?: "standard" | "starting-five-brush" | "esports-card" | "paper-banner" | "draft-parchment-bars" | "starting-five-crimson" | "supercross-row-list" | "starting-five-slate-pills";
   // → framed rank badge + block-white name + overlapping crimson brush kills
   // + giant ghost numeral; the PUBGM characters are baked into the art.
   // esports-clash → italic rank + heavy slanted white name + English kills

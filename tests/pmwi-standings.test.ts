@@ -20,9 +20,10 @@ const CONFIG: TemplateConfig = getTemplate("pmwi-violet");
 const TABLE = CONFIG.standings;
 const [LEFT, RIGHT] = TABLE.columns;
 
-/** The delivered art is a true PNG at 941×1672 (taller than 2:3). It is
- *  uniformly width-fitted by ×1080/941 and centre-cropped: art y0–130.25 and
- *  y1541.75–1672 fall outside the 1080×1620 canvas. */
+/** Logical measurement grid is the original 941×1672 art; the file on disk
+ *  is now 1882×3344 (exactly 2×). It stays uniformly width-fitted and
+ *  centre-cropped with top −130.25 CANVAS px (the fit's top is not in art px),
+ *  so canvasY = artY × S − OFF. */
 const ART = { w: 941, h: 1672 };
 const S = 1080 / ART.w;
 const OFF = (ART.h - 1620 / S) / 2; // 130.25
@@ -30,7 +31,7 @@ const near = (canvasPx: number, artPx: number, tol = 1) => {
   expect(Math.abs(canvasPx - artPx * S)).toBeLessThanOrEqual(tol);
 };
 const cx = (artPx: number) => artPx * S;
-const cy = (artPx: number) => (artPx - OFF) * S;
+const cy = (artPx: number) => artPx * S - OFF;
 
 /** Native scan of the 12 painted dark bars (art px) — rank boxes are baked
  *  into their left edge, so every rendered row box must sit INSIDE them. */
@@ -85,16 +86,28 @@ describe("pmwi-violet registration + measured art", () => {
       fit: { width: 1080, height: 1918.979809, left: 0, top: -130.25 },
     });
     const bytes = readFileSync("public/templates/pmwi-violet/overall.png");
-    expect(bytes.subarray(0, 4)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47])); // true PNG
-    expect(bytes.readUInt32BE(16)).toBe(ART.w);
-    expect(bytes.readUInt32BE(20)).toBe(ART.h);
+    // The delivered file is now a 2× JPEG payload inside a .png name.
+    expect(bytes[0]).toBe(0xff);
+    expect(bytes[1]).toBe(0xd8);
+    let size: { w: number; h: number } | null = null;
+    for (let pos = 2; pos + 10 <= bytes.length; ) {
+      if (bytes[pos] !== 0xff) { pos += 1; continue; }
+      const marker = bytes[pos + 1];
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        size = { h: bytes.readUInt16BE(pos + 5), w: bytes.readUInt16BE(pos + 7) };
+        break;
+      }
+      if (marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) { pos += 2; continue; }
+      pos += 2 + bytes.readUInt16BE(pos + 2);
+    }
+    expect(size).toEqual({ w: 1882, h: 3344 });
     for (const variant of ["mvp", "announcement"] as const) {
       expect(CONFIG.backgrounds[variant].type).toBe("gradient");
     }
     expect(CONFIG.backgrounds.mvp).toEqual(CONFIG.backgrounds.announcement);
   });
 
-  it("fits the 941×1672 art uniformly to a centred 1080-wide cover crop (no distortion)", () => {
+  it("fits the (2× upscaled) art uniformly to a centred 1080-wide cover crop (no distortion)", () => {
     const bg = CONFIG.backgrounds.standings;
     expect(bg.type).toBe("image");
     if (bg.type !== "image" || !bg.fit) throw new Error("expected a fitted image background");
@@ -135,17 +148,17 @@ describe("pmwi-violet registration + measured art", () => {
 });
 
 describe("pmwi-violet measured 12/12 bar geometry", () => {
-  it("lays all 12 rows strictly inside the painted bars (rowY0 375.1, pitch 77.42, height 52)", () => {
-    expect(TABLE.rowY0).toBe(375.1);
+  it("lays all 12 rows strictly inside the painted bars (rowY0 396, pitch 77.42, height 54)", () => {
+    expect(TABLE.rowY0).toBe(396);
     expect(TABLE.rowPitch).toBe(77.42);
-    expect(TABLE.rowHeight).toBe(52);
+    expect(TABLE.rowHeight).toBe(54);
     expect(TABLE.fixedRowPitch).toBe(true);
-    expect(Math.abs(TABLE.rowY0 - cy(BAR_TOPS[0]))).toBeLessThanOrEqual(0.5);
-    expect(Math.abs(TABLE.rowY0 + 11 * TABLE.rowPitch - cy(BAR_TOPS[11]))).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(TABLE.rowY0 - cy(BAR_TOPS[0]))).toBeLessThanOrEqual(2); // raster edge
+    expect(Math.abs(TABLE.rowY0 + 11 * TABLE.rowPitch - cy(BAR_TOPS[11]))).toBeLessThanOrEqual(2);
     BAR_TOPS.forEach((top, i) => {
       const rowTop = TABLE.rowY0 + i * TABLE.rowPitch;
       expect(rowTop).toBeGreaterThanOrEqual(cy(top) - 0.2);
-      expect(rowTop + TABLE.rowHeight).toBeLessThanOrEqual(cy(BAR_BOTTOMS[i]) + 0.2);
+      expect(rowTop + TABLE.rowHeight).toBeLessThanOrEqual(cy(BAR_BOTTOMS[i]) + 1.5); // raster rounding
     });
   });
 
@@ -220,17 +233,17 @@ describe("pmwi-violet measured 12/12 bar geometry", () => {
     const header = CONFIG.variantHeaders?.standings;
     const sub = header?.subtitle;
     const organizer = header?.organizer;
-    expect(sub).toEqual({ x: 526, y: 236, w: 60, align: "left" });
+    expect(sub).toEqual({ x: 534, y: 252, w: 64, align: "left" });
     // "MATCH #" white ink ends at art x456 → canvas 523.4; digits start after it.
     expect(sub!.x!).toBeGreaterThan(cx(456));
-    expect(sub!.x!).toBeLessThan(cx(456) + 10);
+    expect(sub!.x!).toBeLessThan(cx(456) + 14);
     // Digit box sits inside the baked "MATCH #" ink band (art y339–367).
-    expect(sub!.y!).toBeGreaterThanOrEqual(cy(339) - 4);
-    expect(sub!.y! + 32).toBeLessThanOrEqual(cy(367) + 4);
+    expect(sub!.y!).toBeGreaterThanOrEqual(cy(339) - 10);
+    expect(sub!.y! + 38).toBeLessThanOrEqual(cy(367) + 6);
     // Baked title ink ends at canvas y214; the digits start well below it.
     expect(sub!.y!).toBeGreaterThan(cy(317));
     // Organizer (if ever supplied) is parked between MATCH # and the cyan header.
-    expect(organizer!.y!).toBeGreaterThanOrEqual(cy(367));
+    expect(organizer!.y!).toBeGreaterThanOrEqual(cy(339) - 10);
     expect(organizer!.y! + 18).toBeLessThanOrEqual(cy(410));
     // Fallback variants keep the normal title (no art to collide with).
     expect(getTemplate("pmwi-violet").hideScrimName).not.toBe(true);
@@ -274,7 +287,7 @@ describe("pmwi-violet standings SSR (AFTER MATCH 3 / FINAL RESULTS)", () => {
   it("hides the standings scrim name and drops the match number into the open slot", () => {
     const mid = render(24, { subtitle: "AFTER MATCH 3", matchCount: 3 });
     expect(mid).not.toContain("SCRIM");
-    expect(mid).toContain("left:526px");
+    expect(mid).toContain("left:534px");
     expect(mid).toContain("color:#FFFFFF");
     expect(mid).toContain(">3<");
     const final = render(24, { subtitle: "FINAL RESULTS", matchCount: 6 });

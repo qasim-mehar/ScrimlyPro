@@ -76,7 +76,7 @@ describe("Fix A — matchCount/isFinal renders (SSR)", () => {
     // FINAL RESULTS with no count → the documented empty slot (callers must
     // pass matchCount; GraphicsTab always does when confirmedCount > 0).
     const fin = renderToStaticMarkup(standings("pmpl-light", "FINAL RESULTS", 16));
-    expect(fin).toMatch(/left:620px;[^"]*">\s*<\/div>/);
+    expect(fin).toMatch(/left:632px;[^"]*">\s*<\/div>/);
   });
 
   it.each(["dark-gold", "purple-butterfly", "pink-blossom"] as AestheticId[])(
@@ -483,7 +483,7 @@ describe("P8 — onyx-green standings SSR rendering", () => {
     const html = renderToStaticMarkup(standings("onyx-green", "FINAL RESULTS", 16, { matchCount: 6 }));
     expect(html).not.toContain("SCRIM");
     expect(html).not.toContain("FINAL RESULTS");
-    expect(html).toContain("left:984px");
+    expect(html).toContain("left:986px");
     expect(html).toContain("color:#42F57E");
     expect(html).toContain(">6<");
   });
@@ -543,7 +543,7 @@ describe("P8 — pmgc-crimson standings SSR rendering", () => {
     const html = renderToStaticMarkup(standings("pmgc-crimson", "FINAL RESULTS", 16, { matchCount: 6 }));
     expect(html).not.toContain("SCRIM");
     expect(html).not.toContain("FINAL RESULTS");
-    expect(html).toContain("left:1006px");
+    expect(html).toContain("left:1012px");
     expect(html).toContain("color:#140A00");
     expect(html).toContain(">6<");
   });
@@ -717,7 +717,7 @@ describe("P8(6) — pmgc-aqua standings SSR rendering", () => {
 
   it("renders mid-session (AFTER MATCH 3) into the baked MATCH # slot", () => {
     const html = render("AFTER MATCH 3", 24, 3);
-    expect(html).toContain("left:912px");
+    expect(html).toContain("left:920px");
     expect(html).toContain("color:#00F5E1");
     expect(html).toContain(">3<");
     expect(html).not.toContain("SCRIM");
@@ -728,7 +728,7 @@ describe("P8(6) — pmgc-aqua standings SSR rendering", () => {
 
   it("renders completed (FINAL RESULTS) state with the final match number", () => {
     const html = render("FINAL RESULTS", 16, 6);
-    expect(html).toContain("left:912px");
+    expect(html).toContain("left:920px");
     expect(html).toContain(">6<");
     expect((html.match(/left:117px/g) ?? []).length).toBe(12);
     expect((html.match(/left:612px/g) ?? []).length).toBe(4);

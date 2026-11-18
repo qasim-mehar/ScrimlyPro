@@ -248,6 +248,14 @@ const PMPL_LIGHT: TemplateConfig = {
       title: { x: 140, y: 36, w: 800, align: "center" },
       titleFont: `600 28px ${FONTS}`,
     },
+    standings: {
+      // Standings-only: baked "MATCH #" ink ends x622; digits start at x632
+      // (10px gap) inside the pink ribbon. The shared header.subtitle stays
+      // unchanged for the gradient MVP/announcement fallbacks.
+      subtitle: { x: 632, y: 54, w: 72, align: "left" },
+      subtitleFont: `800 48px ${FONTS}`,
+      subtitleColor: "#0e7ac4",
+    },
   },
   standings: {
     columns: [
@@ -285,7 +293,8 @@ const PMPL_LIGHT: TemplateConfig = {
     rowPitch: 80,
     rowHeight: 64,
     maxRowsLeft: 13,
-    nameFont: `700 28px ${FONTS}`,
+    // 22px fits the 158px team cells far better than the old 28px.
+    nameFont: `700 22px ${FONTS}`,
     statFont: `700 30px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
@@ -363,6 +372,15 @@ const NEON_GREEN: TemplateConfig = {
     subtitleFont: `700 44px ${FONTS}`,
     organizerFont: `500 22px ${FONTS}`,
   },
+  variantHeaders: {
+    standings: {
+      // Re-measured: baked "MATCH #" ink ends x617; digits start x628 (11px
+      // gap), inside the chip's right edge x677. Shared header untouched.
+      subtitle: { x: 628, y: 262, w: 48, align: "left" },
+      subtitleFont: `800 48px ${FONTS}`,
+      subtitleColor: "#00e66a",
+    },
+  },
   standings: {
     columns: [
       {
@@ -400,7 +418,7 @@ const NEON_GREEN: TemplateConfig = {
     rowHeight: 40,
     maxRowsLeft: 25,
     singleColumn: true,
-    nameFont: `700 28px ${FONTS}`,
+    nameFont: `700 26px ${FONTS}`,
     statFont: `700 28px ${FONTS}`,
     labelFont: `700 24px ${FONTS}`,
   },
@@ -467,9 +485,11 @@ const CHALLENGERS_RED: TemplateConfig = {
   },
   variantHeaders: {
     standings: {
-      subtitle: { x: 966, y: 230, w: 46, align: "center" },
+      // Re-measured: baked "MATCH #" ink ends x965; digits are centred from
+      // x970 in the open cyan slot, clear of the baked cross at x1015+.
+      subtitle: { x: 970, y: 228, w: 42, align: "center" },
       subtitleColor: "#061014",
-      subtitleFont: `800 36px ${FONTS}`,
+      subtitleFont: `800 40px ${FONTS}`,
     },
   },
   variantHideScrimName: {
@@ -519,7 +539,9 @@ const CHALLENGERS_RED: TemplateConfig = {
     fixedRowPitch: true,
     ranksBakedIn: true,
     statBoxW: 38,
-    nameFont: `800 24px ${FONTS}`,
+    // 21px keeps Zero Degree / Shadow Syndicate / Rawalpindi inside the
+    // 198/206px name boxes without premature ellipsis.
+    nameFont: `800 21px ${FONTS}`,
     statFont: `800 26px ${FONTS}`,
     labelFont: `700 20px ${FONTS}`,
   },
@@ -610,12 +632,13 @@ const EWC_YELLOW: TemplateConfig = {
     standings: {
       // Clear orange band above the baked "OVERALL RANKINGS" block.
       title: { x: 140, y: 130, w: 800, align: "center" },
-      // Match number sits immediately right of the baked "Match #" ink
-      // (ends x1013.8) inside the slanted ribbon.
-      subtitle: { x: 1018, y: 232, w: 52, align: "left" },
+      // Re-measured on the current 4096px art (canvas ×1080/4096): the baked
+      // "Match #" ink ends x1016. The digits start at x1028 (12px gap) inside
+      // the ribbon and stay clear of its right edge (x1080).
+      subtitle: { x: 1028, y: 228, w: 50, align: "left" },
       organizer: { x: 140, y: 130, w: 800, align: "center" },
       titleFont: `700 28px ${FONTS}`,
-      subtitleFont: `800 34px ${FONTS}`,
+      subtitleFont: `800 38px ${FONTS}`,
       subtitleColor: "#2B0F00", // deep espresso inside the orange ribbon
       organizerFont: `500 22px ${FONTS}`,
     },
@@ -658,14 +681,18 @@ const EWC_YELLOW: TemplateConfig = {
       },
     ],
     headerLabelsY: 353,
+    // Re-measured bar 1 art y1491–1741 → canvas 393.1–459.0 (height 65.9);
+    // bar pitch art ~300 → 79.1 canvas. Box centre 393+33 = 426 lands on the
+    // painted bar centre (426.0) once line-height is applied AFTER `font`.
     rowY0: 393,
     rowPitch: 79,
-    rowHeight: 67,
+    rowHeight: 66,
     maxRowsLeft: 12,
     statBoxW: 46,
     logoPlate: 34,
     logoNameGap: 38,
-    nameFont: `800 24px ${FONTS}`,
+    // 20px keeps TRB Gaming / 4NM Esports / Nova Legends inside the 132px box.
+    nameFont: `800 20px ${FONTS}`,
     statFont: `800 26px ${FONTS}`,
     labelFont: `700 20px ${FONTS}`,
   },
@@ -714,8 +741,12 @@ const ONYX_GREEN_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
  *   rowY0 400 (63px text box center 431.5, dead-on the painted rank ink) and
  *   ZERO cumulative drift through row 12. ranksBakedIn + rowsPerColumn 12
  *   split 24 teams into [12,12]; the 25th overflows below the painted table.
- * - MVP + announcement have no art → deep cyber-charcoal / matrix-green
- *   gradient fallback (never a broken render). Watermark stays hardcoded. */
+ * - The ANNOUNCEMENT art (`announcement.png`) is a separate 4096×6144 JPEG
+ *   payload with 25 baked white divider lines at canvas y618.7625…1436.7114
+ *   (uniform pitch 34.0812). Its 24 row bands are measured into
+ *   `announcementLayout` below — a template-level override so NONE of the
+ *   standings numbers above move. MVP keeps the matrix-green fallback.
+ *   Watermark stays hardcoded. */
 const ONYX_GREEN: TemplateConfig = {
   ...GEOMETRY,
   id: "onyx-green",
@@ -723,7 +754,7 @@ const ONYX_GREEN: TemplateConfig = {
   backgrounds: {
     standings: { type: "image", src: "/templates/onyx-green/overall.png" },
     mvp: ONYX_GREEN_FALLBACK_BG,
-    announcement: ONYX_GREEN_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/onyx-green/announcement.png" },
   },
   labelsBakedIn: true,
   subtitleMode: "matchNumber",
@@ -740,15 +771,25 @@ const ONYX_GREEN: TemplateConfig = {
   },
   variantHeaders: {
     standings: {
-      // Match digits sit directly above the baked neon underline (x980–1064
-      // at y294), right of the baked "MATCH #" ink (ends x968).
-      subtitle: { x: 984, y: 250, w: 76, align: "center" },
-      subtitleFont: `800 34px ${FONTS}`,
+      // Re-measured: baked "MATCH #" ink ends x975; digits start at x986
+      // (11px gap) and sit above the neon underline (x980–1064 at y294).
+      subtitle: { x: 986, y: 246, w: 72, align: "center" },
+      subtitleFont: `800 38px ${FONTS}`,
       subtitleColor: "#42F57E", // neon matrix green on the measured dark slot
+    },
+    announcement: {
+      // HeaderSpec slots are coordinate objects (not strings): park every
+      // dynamic slot off-canvas at zero width. The art already bakes the
+      // PUBG MOBILE logo and "TEAM PARTICIPATION" headline at y0..570, so no
+      // dynamic title/subtitle/organizer may touch it.
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
     },
   },
   variantHideScrimName: {
     standings: true, // the art already prints "STANDING" in giant white stencil
+    announcement: true, // the art already prints "TEAM PARTICIPATION"
   },
   standings: {
     columns: [
@@ -899,9 +940,10 @@ const PMGC_CRIMSON: TemplateConfig = {
   },
   variantHeaders: {
     standings: {
-      // Match digits sit inside the gold parallelogram, right of the baked "#".
-      subtitle: { x: 1006, y: 260, w: 36, align: "center" },
-      subtitleFont: `800 30px ${FONTS}`,
+      // Re-measured: baked "#" ink ends x1005; digits sit inside the gold slot
+      // from x1012 (7px gap) to x1056, clear of the parallelogram's right edge.
+      subtitle: { x: 1012, y: 254, w: 44, align: "center" },
+      subtitleFont: `800 36px ${FONTS}`,
       subtitleColor: "#140A00",
       // The generic organizer slot (y236) would land on the baked title; park
       // it in the clear dark band above "OVERALL RANKINGS" if ever supplied.
@@ -959,7 +1001,9 @@ const PMGC_CRIMSON: TemplateConfig = {
     logoNameGap: 40,
     uniformStatInk: true, // every stat numeral white — the baked gold badge
     // already marks rank 1; no code-drawn accent TOTAL over the broadcast art
-    nameFont: `800 23px ${FONTS}`,
+    // 20px keeps TRB Gaming / 4NM Esports inside the 152px name box; genuinely
+    // long names (Straight Forward) still ellipsize.
+    nameFont: `800 20px ${FONTS}`,
     statFont: `800 25px ${FONTS}`,
     labelFont: `700 20px ${FONTS}`,
   },
@@ -989,27 +1033,26 @@ const PMWI_VIOLET_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
 };
 
 /** PMWI Violet — the 2023 PUBG Mobile World Invitational electric violet/cyan
- *  leaderboard. The delivered art is a TRUE PNG at 941×1672 (not a 4096×6144
- *  JPEG-in-.png like the other broadcast arts), i.e. taller than the 2:3
- *  canvas. It is uniformly fitted by WIDTH to 1080 (×1.1477151966 →
- *  1080×1918.979809) and offset top -130.25 = (1672 − 1620/1.1477151966)/2,
- *  the exact centred `object-fit: cover` crop. The bottom KRAFTON/LIGHTSPEED
- *  footer (art y1605+) is cropped out, leaving the dark violet gradient the
- *  brand-law watermark sits on. Every number below was measured off those art
- *  pixels through that mapping:
+ *  leaderboard. The art on disk is now a JPEG payload at 1882×3344 — exactly 2×
+ *  the 941×1672 file this config was first measured against. The uniform
+ *  WIDTH fit to 1080 (×1080/1882 → 1080×1918.979809) and top -130.25 are
+ *  therefore STILL the exact centred `object-fit: cover` crop (the art is an
+ *  integer upscale, not a new composition). Every number below was re-measured
+ *  on the current 1882px art through that mapping:
  *  - Cyan baked header bands art x46–454 / x486–897, y410–443 → canvas
  *    x52.8–521.1 / x557.8–1029.5, y321.1–358.9. Dark ink centres: left
  *    ELIMS 287.5 / WWCD 353 / TOTAL 419 → canvas 330 / 405.1 / 480.9; right
  *    ELIMS 743.5 / WWCD 801.5 / TOTAL 863 → canvas 853.3 / 919.9 / 990.5
  *    (the right shift is NOT uniform — measured, not assumed). ELIMS maps to
  *    the kill-points stat (`kp`), then WWCD, then TOTAL.
- *  - 12 painted dark bars per column: art tops 457…1199 (canvas 375.0…
- *    1226.6), bottoms 507…1251 (canvas 432.4…1286.3). A fixed 77.42px pitch
- *    with a 52px row box keeps all 12 rows strictly inside their bars;
- *    ranksBakedIn skips code numerals (white #1–#24 boxes are baked at art
- *    x46–99 / x486–539 → canvas 52.8–113.6 / 557.8–618.6).
+ *  - 12 painted dark bars per column: re-measured bar 1 art y914–1015 →
+ *    canvas 394.3–452.2 (height ~58), last bar top art 2397 → canvas 1245.3.
+ *    A fixed 77.42px pitch with a 54px row box centred at 423 (rowY0 396)
+ *    lands every row dead-centre in its bar; ranksBakedIn skips code numerals
+ *    (white #1–#24 boxes bake at art x92–198 / x972–1080 → canvas 52.8–113.6
+ *    / 557.8–618.6).
  *  - Baked "OVERALL RANKINGS" (art y216–317 → canvas 98–214) and "MATCH #"
- *    (art y339–367 → canvas 240–272, white ink ends x456 → canvas 523.4).
+ *    (art y339–367 → canvas 258.8–290.9, white ink ends x456 → canvas 523.4).
  *    The scrim name is hidden for standings; only the match digits render in
  *    the open slot at x526 y236. The organizer is parked in the narrow dark
  *    band below "MATCH #" (y282), clear of both baked blocks and the header.
@@ -1045,12 +1088,13 @@ const PMWI_VIOLET: TemplateConfig = {
   },
   variantHeaders: {
     standings: {
-      // Open slot immediately right of the baked "MATCH #" ink (ends x523.4).
-      subtitle: { x: 526, y: 236, w: 60, align: "left" },
-      subtitleFont: `800 32px ${FONTS}`,
+      // Re-measured: baked "MATCH #" ink ends x523.4; digits start x534
+      // (11px gap) in the open dark slot above the cyan header band.
+      subtitle: { x: 534, y: 252, w: 64, align: "left" },
+      subtitleFont: `800 38px ${FONTS}`,
       subtitleColor: "#FFFFFF", // white digits on the measured dark violet slot
       // Park the optional organizer in the dark band below "MATCH #" (ends
-      // canvas y271.7) and above the cyan header (starts y321.1) — zero text
+      // canvas y290.9) and above the cyan header (starts y321.1) — zero text
       // collides with the baked title/subtitle art.
       organizer: { x: 140, y: 282, w: 800, align: "center" },
       organizerFont: `600 18px ${FONTS}`,
@@ -1072,7 +1116,7 @@ const PMWI_VIOLET: TemplateConfig = {
         ],
         stripX: 116, // starts at the baked white rank box's right edge
         stripW: 405, // right edge 521 — clears the cyan header/bar rim
-        rowsBottom: 1286, // art row 12 bottom 1251 → canvas 1286.3
+        rowsBottom: 1305, // re-measured art row 12 bottom 1251 → canvas 1305.3
         ranksBakedIn: true,
         rowsPerColumn: 12,
         fixedRowPitch: true,
@@ -1088,16 +1132,16 @@ const PMWI_VIOLET: TemplateConfig = {
         ],
         stripX: 620, // starts just past the baked white rank box (ends 619.8)
         stripW: 409, // right edge 1029 — clears the cyan header/bar rim
-        rowsBottom: 1286, // art row 12 bottom 1251 → canvas 1286.3
+        rowsBottom: 1305, // re-measured art row 12 bottom 1251 → canvas 1305.3
         ranksBakedIn: true,
         rowsPerColumn: 12,
         fixedRowPitch: true,
       },
     ],
     headerLabelsY: 321, // cyan baked label band top — code draws no labels
-    rowY0: 375.1, // art bar 1 top 457 → canvas 375.016
-    rowPitch: 77.42, // measured 12-bar span (1226.62 − 375.02)/11
-    rowHeight: 52, // art bar interior ≈57px; every row box stays inside
+    rowY0: 396, // re-measured bar 1 top canvas 394.4; box centre 423 = bar centre
+    rowPitch: 77.42, // measured 12-bar span (1245.6 − 394.4)/11
+    rowHeight: 54, // bar interior 54–58px across the 12 rows (no bottom overflow)
     maxRowsLeft: 12,
     rowsPerColumn: 12,
     fixedRowPitch: true,
@@ -1106,7 +1150,7 @@ const PMWI_VIOLET: TemplateConfig = {
     logoPlate: 34,
     logoNameGap: 38,
     uniformStatInk: true, // baked #1 badge carries rank-1 emphasis
-    nameFont: `800 24px ${FONTS}`,
+    nameFont: `800 21px ${FONTS}`, // keeps Zero Degree / Shadow Syndicate inside 180/197px
     statFont: `800 26px ${FONTS}`,
     labelFont: `700 18px ${FONTS}`,
   },
@@ -1138,18 +1182,20 @@ const PMGC_AQUA_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
   decor: [],
 };
 
-/** PMGC Aqua — the 2022 PMGC aqua/mint/cyan broadcast leaderboard. The art is
- *  a TRUE PNG at 968×1625 (not a 4096×6144 JPEG-in-.png like the other
- *  broadcast arts), ratio 0.5957 — taller/narrower than the 2:3 canvas. It is
- *  uniformly fitted by WIDTH to 1080 (×1080/968 = 1.1157024793 →
- *  1080×1813.016529) and centred with top −96.508264, i.e. the exact
- *  `object-fit: cover` crop (art y0–86.5 and y1538.5–1625 are trimmed). No
- *  stretch. All canvas coordinates below were measured on those art pixels
- *  and converted with canvasX = artX × S, canvasY = (artY − 86.5) × S:
- *  - 12 light ice-grey bars per column. Native bright-divider tops 415, 477,
- *    541, …, 1112, 1176 → canvas rowY0 366.5, uniform pitch 70.7, bar height
- *    ≈69 (68px text box centred on the painted bar). 24 teams → [12,12];
- *    the 25th overflows below the last painted bar, never dropped.
+/** PMGC Aqua — the 2022 PMGC aqua/mint/cyan broadcast leaderboard. The art on
+ *  disk is now a JPEG payload at 3872×6500 — exactly 4× the 968×1625 file this
+ *  config was first measured against. The uniform WIDTH fit to 1080
+ *  (×1080/3872 → 1080×1813.016529) and top −96.508264 remain the exact
+ *  centred `object-fit: cover` crop (art y0–346 and y6154–6500 trimmed): the
+ *  art is an integer upscale, not a new composition. All canvas coordinates
+ *  below were re-measured on the current art and converted with
+ *  canvasX = artX × S, canvasY = artY × S − 96.508264:
+ *  - 12 light ice-grey bars per column. Re-measured bright-divider tops art
+ *    1656, 1909, … → canvas 365.4, 436.1, …, 1220.6: uniform pitch 70.7, bar
+ *    height ≈69 (68px text box centred on the painted bar). 24 teams → [12,12];
+ *    the 25th overflows below the last painted bar, never dropped. Both columns
+ *    share the same painted geometry — the stale result PNG's "PLACE-only /
+ *    right-column" lift came from the line-height reset, not per-column art.
  *  - Baked bright-cyan rank squares (#1–#24) end at art x104 / x548 → canvas
  *    x116 / x611.4; the team/logo compartment starts there, cleanly inside
  *    the ice-grey bar. Team width stops before the first stat divider.
@@ -1201,10 +1247,10 @@ const PMGC_AQUA: TemplateConfig = {
   },
   variantHeaders: {
     standings: {
-      // Open dark area right of the baked "#" (ends canvas x908) and above
-      // the baked cyan underline (canvas y247) — digits sit cleanly inside.
-      subtitle: { x: 912, y: 186, w: 108, align: "center" },
-      subtitleFont: `800 34px ${FONTS}`,
+      // Re-measured: baked "#" ink ends canvas x910; digits are centred from
+      // x920 (10px gap) in the dark slot above the cyan underline (y247).
+      subtitle: { x: 920, y: 184, w: 96, align: "center" },
+      subtitleFont: `800 40px ${FONTS}`,
       subtitleColor: "#00F5E1", // electric cyan on the measured near-black slot
       // Park the optional organizer between the badge (ends y272) and the
       // baked header band (starts y316) so it collides with neither.
@@ -1263,7 +1309,8 @@ const PMGC_AQUA: TemplateConfig = {
     logoNameGap: 40,
     uniformStatInk: true, // every numeral the same dark ink — the baked cyan
     // rank square already supplies rank-1 emphasis; no accent TOTAL here
-    nameFont: `800 24px ${FONTS}`,
+    // 21px keeps Karachi Snipers / Shadow Syndicate inside the 170/172px slots.
+    nameFont: `800 21px ${FONTS}`,
     statFont: `800 26px ${FONTS}`,
     labelFont: `700 20px ${FONTS}`,
   },
@@ -1346,7 +1393,7 @@ const GRUNGE_RED: TemplateConfig = {
     killsX: 496,
     killsW: 290,
     rankFont: `700 64px ${FONTS}`,
-    playerFont: `800 68px ${FONTS_FULL}`,
+    playerFont: `800 56px ${FONTS_FULL}`,
     statFont: `400 56px ${BRUSH_FONTS}`,
     subtitleBakedIn: true,
     brush: {
@@ -1365,8 +1412,11 @@ const GRUNGE_RED: TemplateConfig = {
       },
       name: {
         x: 482,
-        w: 340,
-        maxFontSize: 68,
+        // Widened from 340 → 400 (still inside the painted bar, which ends
+        // x≈911) and capped at 56px: the old 68px/340px pair ellipsized
+        // "4NM | BROKEN_X" and "TRB HANAN OP".
+        w: 400,
+        maxFontSize: 56,
         minFontSize: 24,
         fontFamily: FONTS_FULL,
         fontWeight: 800,
@@ -2008,6 +2058,500 @@ const COURT_ORANGE: TemplateConfig = {
   },
 };
 
+const DUSK_AMBER_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Dusk violet → warm amber-black. Every stop stays dark so the warm-white
+  // palette ink clears 4.5:1 on the artless standings/announcement variants.
+  css: "linear-gradient(165deg, #1E1A22 0%, #2A1F33 55%, #3A2A24 100%)",
+  decor: [],
+};
+
+/** Dusk Amber — the "draft parchment bars" MVP art. The delivered file is a
+ *  3764×6688 JPEG payload inside a .png name (9:16, like esports-clash) →
+ *  fitted by HEIGHT to the 2:3 canvas (uniform ×0.2422248804, drawn 911.73×1620
+ *  at x84.13); the ~84px side bars are filled with a dark dusk-charcoal token
+ *  (#1E1A22) so exports never expose transparency. The
+ *  PUBG MOBILE logo, poster frame, vertical copy and five character portraits
+ *  are all baked in, so the MVP variant paints ONLY the five locked entries.
+ *
+ *  Measured tan-bar bands (native y, row-threshold scan x700–1500; stable
+ *  across thresholds 200–600):
+ *    tops 1413 / 2257 / 3098 / 3933 / 4768
+ *    bottoms 2081 / 2932 / 3769 / 4604 / 5447
+ *  → canvas centres 423.17 / 628.45 / 831.68 / 1033.94 / 1237.16. The uneven
+ *  pitch (±2px cumulative drift) is why `barCenterYs` pins the exact centres
+ *  instead of a single rowPitch. Each text block is centred on its own bar
+ *  centre, so its midpoint equals the bar's painted midpoint for every rank.
+ *
+ *  Horizontal: tan ink starts at canvas x≈214; the open parchment zone ends
+ *  before the earliest portrait/scope ink (bar 5's sniper objective starts
+ *  ≈488, the other four ≥532). The shared right-aligned text axis ends at
+ *  x470 — 18px clear of the worst case — so no helmet, hood or rifle scope
+ *  can obscure an IGN. Standings + announcement have no art → dusk gradient. */
+const DUSK_AMBER: TemplateConfig = {
+  ...GEOMETRY,
+  id: "dusk-amber",
+  name: "Dusk Amber",
+  backgrounds: {
+    standings: DUSK_AMBER_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/dusk-amber/mvp.png",
+      fit: { width: 911.7344497607655, height: 1620, left: 84.13277511961724, top: 0 },
+    },
+    announcement: DUSK_AMBER_FALLBACK_BG,
+  },
+  canvasBackground: "#1E1A22",
+  uniformMvpRows: true,
+  mvpLayoutStyle: "draft-parchment-bars",
+  mvpShowTeam: false,
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  header: {
+    // Fallback variants (standings/announcement gradient) keep the normal header.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  mvp: {
+    rowY0: 345.17, // nominal first bar top (centre 423.17 − rowHeight/2)
+    rowPitch: 203.5, // nominal average — exact per-row centres are in parchment.barCenterYs
+    rowHeight: 156,
+    rankX: 224, // never rendered (mvpShowTeam: false)
+    playerX: 224,
+    playerW: 246,
+    teamX: 470,
+    teamW: 0,
+    killsX: 470,
+    killsW: 0,
+    rankFont: `800 20px ${FONTS_FULL}`,
+    playerFont: `900 46px ${FONTS_FULL}`,
+    statFont: `800 24px ${FONTS_FULL}`,
+    subtitleBakedIn: true,
+    parchment: {
+      rowHeight: 156,
+      barCenterYs: [423.17, 628.45, 831.68, 1033.94, 1237.16],
+      textLeft: 224,
+      textWidth: 246, // right edge 470 — clears the bar-5 scope (≥488)
+      name: {
+        fontFamily: FONTS_FULL,
+        fontWeight: 900,
+        maxFontSize: 46,
+        minFontSize: 14,
+        color: "#221D1A",
+        letterSpacing: "0.12em",
+        lineHeight: 1,
+        textShadow: "2px 2px 0 rgba(34, 29, 26, 0.20)",
+      },
+      subline: {
+        fontFamily: FONTS_FULL,
+        fontWeight: 800,
+        ratio: 0.53,
+        color: "#221D1A",
+        letterSpacing: "0.16em",
+        lineHeight: 1,
+        gap: 8,
+      },
+    },
+  },
+  palette: {
+    accent: "#E6B87A", // the painted warm-amber bar ink (swatch)
+    text: "#FFF3E2", // warm white — high-contrast on the dusk gradient fallback
+    textMuted: "#D8C3A8",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(230,184,122,0.16)",
+    wwcdText: "#E6B87A",
+    watermarkColor: "rgba(255,255,255,0.82)",
+    plateBg: "rgba(230,184,122,0.10)",
+    plateRing: "rgba(230,184,122,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#1E1A22",
+  },
+};
+
+
+const CARDINAL_GOLD_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  // Hardwood charcoal → cardinal crimson → charcoal. Both text inks clear
+  // every stop: #FFFFFF ≥7:1, varsity gold #F5C451 ≥4.5:1.
+  css: "linear-gradient(165deg, #141210 0%, #9E1B24 55%, #141210 100%)",
+  decor: [],
+};
+
+/** Cardinal Gold — the vertical hardwood-black "STARTING FIVE" PUBGM art
+ *  (3764×6688 JPEG payload inside a .png name, i.e. 9:16 like esports-clash).
+ *  The art is height-fitted to the 1080×1620 canvas by ×1620/6688 =
+ *  0.2422248804 → 911.734×1620 at x84.132775, so the baked STARTING top edge,
+ *  all five crimson bars, the FIVE | SC lockup and the PUBG MOBILE | KRAFTON
+ *  footer stay 100% unclipped; the ~84px side bars are filled with #141210.
+ *
+ *  Every coordinate below was measured off those pixels through the fit above:
+ *  - five flat crimson bars (#9D2234-ish) at art y1081..1730, 1809..2441,
+ *    2516..3149, 3224..3841, 3918..4541 → canvas barTops/barBottoms below.
+ *    `barTops`/`barBottoms` are authoritative: row i's text block is centred
+ *    on the exact midpoint, so the five bars carry ZERO cumulative pitch drift.
+ *  - the character portraits occupy canvas x≤615 in bars 1–4; bar 5's ghillie
+ *    sniper barrel reaches canvas x≈731 near its lower edge. The open right
+ *    zone therefore starts at x748 and ends at x968 (27.6px inside the art's
+ *    crimson right edge at x995.6) — the weapon is never touched.
+ *  - the art bakes STARTING / FIVE | SC / PUBG MOBILE | KRAFTON, so the MVP
+ *    variant hides every synthetic header slot and paints no team data.
+ *  - standings + announcement have no art → charcoal/cardinal/gold gradient. */
+const CARDINAL_GOLD: TemplateConfig = {
+  ...GEOMETRY,
+  id: "cardinal-gold",
+  name: "Cardinal Gold",
+  backgrounds: {
+    standings: CARDINAL_GOLD_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/cardinal-gold/mvp.png",
+      fit: { width: 911.73445, height: 1620, left: 84.132775, top: 0 },
+    },
+    announcement: CARDINAL_GOLD_FALLBACK_BG,
+  },
+  canvasBackground: "#141210",
+  uniformMvpRows: true,
+  mvpLayoutStyle: "starting-five-crimson",
+  mvpShowTeam: false,
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  header: {
+    // Fallback variants (standings/announcement gradient) keep a normal header.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS_FULL}`,
+    subtitleFont: `700 40px ${FONTS_FULL}`,
+    organizerFont: `500 24px ${FONTS_FULL}`,
+  },
+  mvp: {
+    rowY0: 261.8451,
+    rowPitch: 171.7979,
+    rowHeight: 152.7954,
+    rankX: 748,
+    playerX: 748,
+    playerW: 220,
+    teamX: 748, // never rendered (mvpShowTeam: false)
+    teamW: 0,
+    killsX: 748,
+    killsW: 220,
+    rankFont: `800 21px ${FONTS_FULL}`,
+    playerFont: `800 30px ${FONTS_FULL}`,
+    statFont: `800 21px ${FONTS_FULL}`,
+    subtitleBakedIn: true,
+    startingFive: {
+      rowY0: 261.8451,
+      rowPitch: 171.7979,
+      rowHeight: 152.7954,
+      barTops: [261.8451, 438.1848, 609.4378, 780.933, 949.0371],
+      barBottoms: [419.049, 591.2709, 762.7661, 930.3858, 1099.9432],
+      textLeft: 748,
+      textWidth: 220,
+      kills: {
+        fontFamily: FONTS_FULL,
+        fontSize: 21,
+        fontWeight: 800,
+        letterSpacing: "0.08em",
+        lineHeight: "1.1",
+        color: "#FFFFFF",
+      },
+      name: {
+        fontFamily: FONTS_FULL,
+        maxFontSize: 30,
+        minFontSize: 14,
+        fontWeight: 800,
+        letterSpacing: "0.05em",
+        lineHeight: "1.08",
+        color: "#F5C451",
+      },
+    },
+  },
+  palette: {
+    accent: "#F5C451", // varsity gold — the baked name ink + fallback accent
+    text: "#FFFFFF", // crisp white kills line + row text
+    textMuted: "#F5C451", // varsity gold stays ≥4.5:1 on every fallback stop
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(245,196,81,0.14)",
+    wwcdText: "#F5C451",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(245,196,81,0.5)",
+    medalGold: "#F5C451",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#141210",
+  },
+};
+
+
+const APEX_BLAZE_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #141212 0%, #1F1714 55%, #2A1208 100%)",
+  decor: [
+    // Blaze-orange hairlines at the frame edges — the #EA4400 accent lives in
+    // the decor + palette (never as a light gradient stop that would break
+    // white text contrast against the gradient).
+    { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#EA4400" },
+    { kind: "bar", x: 0, y: 1612, w: 1080, h: 8, color: "#EA4400" },
+  ],
+};
+
+/** Apex Blaze — "TOP 5 /// FINISHES" Supercross / AUSX Open art.
+ *
+ *  Art: `public/templates/apex-blaze/mvp.jpeg`, a 3072×5440 portrait JPEG. It is
+ *  uniformly height-fitted to the 2:3 canvas: scale = 1620/5440 =
+ *  0.2977941176 → drawn 914.823529×1620 at x82.588235, y0. The whole poster is
+ *  therefore visible (PUBG MOBILE logo at top, white textured card, /// SX1 +
+ *  PUBG MOBILE | KRAFTON footer) with only dark side bars, filled by
+ *  `canvasBackground: "#121010"`.
+ *
+ *  Measured through that fit (art px × scale + offset):
+ *   - Orange P# / glyph-ink bands (canvas Y): 901.1–939.5, 968.1–1006.2,
+ *     1036.6–1075.3, 1106.0–1143.5, 1175.4–1214.4. Their exact midpoints are
+ *     `rowCenterYs` — the art's pitch is NOT uniform (66.9/68.8/68.8/70.1),
+ *     so the array (not a single rowPitch) is authoritative for Y centering.
+ *   - Black divider rules (canvas Y): 954.9, 1022.9, 1091.7, 1159.6, 1228.3 —
+ *     ~34px below each glyph centre, i.e. the row band's bottom edge.
+ *   - Baked slash right edges (canvas X): 394.1/393.5/393.2/392.9/385.1 →
+ *     `textLeft` 404 clears every row. Rule right edges: 778–821 →
+ *     `textRight` 818 seats the kills readout on the rule without reaching the
+ *     orange brush accents at x≥946.
+ *
+ *  The art bakes "PUBG MOBILE", "TOP 5 /// FINISHES" and the P1/..P5/ prefixes,
+ *  so the synthetic header, ranks and team slots are all suppressed. Type follows
+ *  `refrence-image.jpeg`: Exo 2 uppercase, medium (500) first name + heavy (800)
+ *  surname, KILLS readout in 800 + 500 on the same centreline. Standings and
+ *  announcement fall back to a dark track-asphalt / blaze-orange gradient. */
+const APEX_BLAZE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "apex-blaze",
+  name: "Apex Blaze",
+  backgrounds: {
+    standings: APEX_BLAZE_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/apex-blaze/mvp.jpeg",
+      fit: { width: 914.823529, height: 1620, left: 82.588235, top: 0 },
+    },
+    announcement: APEX_BLAZE_FALLBACK_BG,
+  },
+  canvasBackground: "#121010",
+  uniformMvpRows: true,
+  mvpLayoutStyle: "supercross-row-list",
+  mvpShowTeam: false,
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS_FULL}`,
+    subtitleFont: `700 40px ${FONTS_FULL}`,
+    organizerFont: `500 24px ${FONTS_FULL}`,
+  },
+  mvp: {
+    rowY0: 885.833,
+    rowPitch: 68.642,
+    rowHeight: 69,
+    rankX: 0, // never rendered — P1/..P5/ are baked into the art
+    playerX: 404,
+    playerW: 266,
+    teamX: 404, // never rendered (mvpShowTeam: false)
+    teamW: 0,
+    killsX: 694,
+    killsW: 124,
+    rankFont: `700 24px ${FONTS_FULL}`,
+    playerFont: `800 34px ${FONTS_FULL}`,
+    statFont: `800 30px ${FONTS_FULL}`,
+    subtitleBakedIn: true,
+    supercross: {
+      rowHeight: 69,
+      rowCenterYs: [920.333, 987.188, 1055.978, 1124.768, 1194.899],
+      rowPitch: 68.642,
+      textLeft: 404,
+      textRight: 818,
+      textWidth: 414,
+      nameGap: 8,
+      name: {
+        maxFontSize: 34,
+        minFontSize: 16,
+        fontFamily: FONTS_FULL,
+        fontWeight: 800,
+        softWeight: 500,
+        color: "#0E0E0E",
+        tracking: "0.04em",
+      },
+      kills: {
+        fontFamily: FONTS_FULL,
+        numberFontSize: 30,
+        unitFontSize: 20,
+        numberFontWeight: 800,
+        unitFontWeight: 500,
+        color: "#0E0E0E",
+        tracking: "0.05em",
+        reserveWidth: 124,
+        singular: "KILL",
+        plural: "KILLS",
+      },
+    },
+  },
+  palette: {
+    accent: "#EA4400", // the baked slash / /// brush ink
+    text: "#FFFFFF", // crisp white ink on the dark fallback gradients
+    textMuted: "rgba(255,255,255,0.82)",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(234,68,0,0.16)",
+    wwcdText: "#FFFFFF",
+    // The brand-law watermark slot ends at x1040 while the height-fitted art
+    // ends at x997.4 — its trailing glyphs sit on the #121010 side bar, the
+    // leading ones on the art's white card. Track-grey ink clears 4:1 on BOTH
+    // surfaces (4.17 on #FFF, 4.54 on #121010); pure black would vanish on the
+    // bar, pure white would vanish on the card.
+    watermarkColor: "#7C7C7C",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(234,68,0,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#141212",
+  },
+};
+
+
+const URBAN_SLATE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #141619 0%, #2B2D30 55%, #141619 100%)",
+  decor: [],
+};
+
+// Urban Slate follows the Providence "STARTING Five" reference poster: a tall
+// flat-sided condensed block face (Rajdhani first) for the player IGN and a
+// wide-tracked geometric face (Exo 2 first) for the KILLS subline. Both keep
+// the full glyph-safe fallback chain demanded by the shared font stack.
+const SLATE_NAME_FONTS = '"Rajdhani", "Exo 2", "Noto Sans Symbols 2", system-ui, sans-serif';
+const SLATE_KILLS_FONTS = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif';
+
+/** Urban Slate — the dark street-map "STARTING Five" PUBGM poster framed over
+ *  a hardwood border. The 3712×6656 PNG is a 9:16-style portrait (not 2:3): a
+ *  uniform height fit (scale 1620/6656 = 0.2433894) draws the art 903.46px wide
+ *  at x88.27, with the ~88px side bars filled by the art's #141414 edge ink.
+ *  Nothing is cropped: the baked STARTING Five headline and the PUBG MOBILE |
+ *  KRAFTON footer stay intact. Five rounded off-white bars were measured off
+ *  those pixels (native tops 2715/3275/3835/4401/4967, bottoms
+ *  3206/3768/4334/4900/5465); their canvas midlines are 808.70 / 945.24 /
+ *  1082.27 / 1220.03 / 1357.67. Each bar carries a monochrome PUBGM character
+ *  on the left (the Bar-5 ghillie sniper scope reaches native x1701) and an
+ *  open white zone on the right (canvas x515.90–818.92). Only the two-line
+ *  IGN + KILLS stack is painted, centred on each measured bar midline; no team
+ *  names, logos or synthetic headers (mvpShowTeam: false, header baked).
+ *  Standings/announcement have no art → dark urban charcoal/slate gradient. */
+const URBAN_SLATE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "urban-slate",
+  name: "Urban Slate (MVP)",
+  backgrounds: {
+    standings: URBAN_SLATE_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/urban-slate/mvp.png",
+      fit: { width: 903.461538, height: 1620, left: 88.269231, top: 0 },
+    },
+    announcement: URBAN_SLATE_FALLBACK_BG,
+  },
+  canvasBackground: "#141414",
+  uniformMvpRows: true,
+  mvpLayoutStyle: "starting-five-slate-pills",
+  mvpShowTeam: false,
+  // The art bakes the STARTING Five headline, the hardwood frame and the
+  // PUBG MOBILE | KRAFTON lockup: no code-drawn header text may cover them.
+  subtitleBakedIn: { mvp: true },
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  variantHeaders: {
+    mvp: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  header: {
+    ...GEOMETRY.header,
+    titleFont: `800 44px ${SLATE_NAME_FONTS}`,
+    subtitleFont: `800 38px ${SLATE_NAME_FONTS}`,
+    organizerFont: `600 22px ${SLATE_NAME_FONTS}`,
+  },
+  mvp: {
+    // Nominal geometry (the slate-pill renderer seats rows from the exact
+    // measured boxes in `slatePills.bars` instead).
+    rowY0: 749.0715,
+    rowPitch: 137.0282,
+    rowHeight: 120.9645,
+    rankX: 0,
+    playerX: 515.9044, // open white zone's left edge (never rendered as a plate)
+    playerW: 303.0198,
+    teamX: 515.9044, // never rendered (mvpShowTeam: false)
+    teamW: 0,
+    killsX: 515.9044,
+    killsW: 303.0198,
+    rankFont: `800 44px ${SLATE_NAME_FONTS}`,
+    playerFont: `800 40px ${SLATE_NAME_FONTS}`,
+    statFont: `800 15px ${SLATE_KILLS_FONTS}`,
+    subtitleBakedIn: true,
+    slatePills: {
+      bars: [
+        { top: 749.0715, height: 119.2608, centerY: 808.7019 },
+        { top: 885.3696, height: 119.7476, centerY: 945.2434 },
+        { top: 1021.6677, height: 121.2079, centerY: 1082.27165 },
+        { top: 1159.4261, height: 121.2079, centerY: 1220.03005 },
+        { top: 1297.1845, height: 120.9645, centerY: 1357.66675 },
+      ],
+      textLeft: 515.9044,
+      textWidth: 303.0198,
+      name: {
+        fontFamily: SLATE_NAME_FONTS,
+        maxFontSize: 40,
+        minFontSize: 26,
+        lightWeight: 500,
+        boldWeight: 800,
+        color: "#181818",
+      },
+      kills: {
+        fontFamily: SLATE_KILLS_FONTS,
+        fontSize: 15,
+        fontWeight: 800,
+        color: "#181818",
+        letterSpacing: "0.10em",
+      },
+    },
+  },
+  palette: {
+    accent: "#2B2D30", // slate chrome on the fallback variants
+    text: "#F2F2F0", // crisp chalk-white ink (WCAG AA on every gradient stop)
+    textMuted: "#C9CDD2",
+    rowAlt: "#F2F2F0",
+    rowAltOpacity: 0.06,
+    wwcdBg: "rgba(242,242,240,0.10)",
+    wwcdText: "#F2F2F0",
+    watermarkColor: "rgba(242,242,240,0.88)",
+    plateBg: "rgba(242,242,240,0.10)",
+    plateRing: "rgba(242,242,240,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#141619",
+  },
+};
+
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -2026,6 +2570,10 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "royal-blue": ROYAL_BLUE,
   "varsity-yellow": VARSITY_YELLOW,
   "court-orange": COURT_ORANGE,
+  "dusk-amber": DUSK_AMBER,
+  "cardinal-gold": CARDINAL_GOLD,
+  "apex-blaze": APEX_BLAZE,
+  "urban-slate": URBAN_SLATE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
