@@ -142,7 +142,9 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
   });
 
   it("announcement rows render slot numbers, rounded logo plates and names", () => {
-    for (const id of IDS) {
+    // onyx-green's announcement is art-backed (24-row single-column table);
+    // it is pinned in tests/onyx-announcement.test.ts, not here.
+    for (const id of IDS.filter((x) => x !== "onyx-green")) {
       const p = getTemplate(id).palette;
       const spec = getTemplate(id).announcement;
       const html = renderToStaticMarkup(
@@ -486,7 +488,7 @@ describe("P8 — onyx-green standings SSR rendering", () => {
     expect(html).toContain(">6<");
   });
 
-  it("renders the MVP and announcement variants on the gradient fallback", () => {
+  it("renders the MVP on the gradient fallback and the announcement on its art", () => {
     const mvp = renderToStaticMarkup(
       h(MvpGraphic, {
         aestheticId: "onyx-green",
@@ -509,9 +511,11 @@ describe("P8 — onyx-green standings SSR rendering", () => {
         teams: announceTeams(16),
       }),
     );
-    expect(ann).toContain("SCRIM");
-    expect(ann).toContain("PARTICIPATING TEAMS");
+    // The art bakes "TEAM PARTICIPATION"; the 24-row table is line-locked.
+    expect(ann).not.toContain("SCRIM");
+    expect(ann).not.toContain("PARTICIPATING TEAMS");
     expect(ann).toContain("SQUAD 16");
+    expect(ann).toContain("left:214px");
   });
 });
 

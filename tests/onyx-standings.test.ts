@@ -301,14 +301,18 @@ describe("onyx-green fallback + SSR rendering", () => {
   });
 
   it("renders the MVP variant on the dark matrix-green gradient fallback", () => {
-    for (const bg of [CONFIG.backgrounds.mvp, CONFIG.backgrounds.announcement]) {
-      expect(bg.type).toBe("gradient");
-      if (bg.type !== "gradient") continue;
-      expect(bg.css).toContain("#070D09");
-      expect(bg.css).toContain("#0F1F15");
-      expect(bg.decor).toEqual([]);
+    const mvpBg = CONFIG.backgrounds.mvp;
+    expect(mvpBg.type).toBe("gradient");
+    if (mvpBg.type === "gradient") {
+      expect(mvpBg.css).toContain("#070D09");
+      expect(mvpBg.css).toContain("#0F1F15");
+      expect(mvpBg.decor).toEqual([]);
     }
-    expect(CONFIG.backgrounds.mvp).toEqual(CONFIG.backgrounds.announcement);
+    // Announcement is art-backed now (pinned in tests/onyx-announcement.test.ts).
+    expect(CONFIG.backgrounds.announcement).toEqual({
+      type: "image",
+      src: "/templates/onyx-green/announcement.png",
+    });
     const html = renderToStaticMarkup(
       h(MvpGraphic, {
         aestheticId: "onyx-green",
@@ -326,7 +330,7 @@ describe("onyx-green fallback + SSR rendering", () => {
     expect(html).toContain("ALPHA");
   });
 
-  it("renders the announcement variant on the gradient fallback", () => {
+  it("renders the announcement variant on the 24-row single-column art", () => {
     const html = renderToStaticMarkup(
       h(AnnouncementGraphic, {
         aestheticId: "onyx-green",
@@ -340,9 +344,11 @@ describe("onyx-green fallback + SSR rendering", () => {
         })),
       }),
     );
-    expect(html).toContain("SCRIM");
-    expect(html).toContain("PARTICIPATING TEAMS");
+    // The art bakes PUBG MOBILE + "TEAM PARTICIPATION"; no dynamic header text.
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain("PARTICIPATING TEAMS");
     expect(html).toContain(">01<");
     expect(html).toContain("SQUAD 16");
+    expect((html.match(/left:214px/g) ?? []).length).toBe(16);
   });
 });
