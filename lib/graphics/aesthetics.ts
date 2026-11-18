@@ -1878,6 +1878,136 @@ const VARSITY_YELLOW: TemplateConfig = {
   },
 };
 
+const COURT_ORANGE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  css: "linear-gradient(165deg, #B44110 0%, #28232E 60%, #9A3412 100%)",
+  decor: [],
+};
+
+// Court Orange uses the tall squared condensed athletic face from the OUNCE
+// reference poster first (Rajdhani), with Exo 2 / Noto Symbols / system-ui as
+// the glyph-safe fallbacks demanded by the shared font stack.
+const PAPER_FONTS = '"Rajdhani", "Exo 2", "Noto Sans Symbols 2", system-ui, sans-serif';
+
+/** Court Orange — the "TOP MVP LIST" paper-cutout art. The delivered file is
+ *  a 3764×6688 JPEG payload inside a .png name (9:16, not the 2:3 canvas): the
+ *  same height-fit as esports-clash → scale 1620/6688 = 0.2422248804, drawn
+ *  911.734×1620 at x84.13, with the ~84px side bars filled by the art's own
+ *  charcoal edge ink (`canvasBackground`). Nothing is cropped: the baked
+ *  PUBG MOBILE / TOP MVP LIST header and the PUBG MOBILE | KRAFTON footer stay
+ *  intact. The five painted banners were measured off those pixels (canvas
+ *  midlines 399.11 / 587.08 / 767.34 / 954.03 / 1138.31); each row box is
+ *  156px tall and centred on its measured midline, so the rank badge and the
+ *  name/kills flex rows land dead-on the paper strip's Y-axis. Alternating
+ *  strips are Cream #FDF5E6 (ranks 1/3/5) and Marigold #FFA800 (2/4) in the
+ *  art; crimson #9E0B22 names + KILLS label and charcoal #1E2229 numerals are
+ *  the matching reference inks (see refrence-image.jpeg). Standings +
+ *  announcement have no art → burnt-orange/charcoal gradient fallback. */
+const COURT_ORANGE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "court-orange",
+  name: "Court Orange (MVP)",
+  backgrounds: {
+    standings: COURT_ORANGE_FALLBACK_BG,
+    mvp: {
+      type: "image",
+      src: "/templates/court-orange/mvp.png",
+      fit: { width: 911.73445, height: 1620, left: 84.132775, top: 0 },
+    },
+    announcement: COURT_ORANGE_FALLBACK_BG,
+  },
+  canvasBackground: "#28232E",
+  uniformMvpRows: true,
+  mvpLayoutStyle: "paper-banner",
+  mvpShowTeam: false,
+  // The art already bakes the PUBG MOBILE logo, "TOP MVP LIST" brush headline
+  // and the KRAFTON footer: no dynamic header/team text may cover them.
+  subtitleBakedIn: { mvp: true },
+  variantLabelsBakedIn: { mvp: true },
+  variantHideScrimName: { mvp: true },
+  variantHeaders: {
+    mvp: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  header: {
+    ...GEOMETRY.header,
+    titleFont: `800 44px ${PAPER_FONTS}`,
+    subtitleFont: `800 38px ${PAPER_FONTS}`,
+    organizerFont: `600 22px ${PAPER_FONTS}`,
+  },
+  mvp: {
+    // Nominal uniform geometry (paper-banner renderer seats rows from the
+    // exact measured midlines in `paperBanner.bannerCenterYs` instead).
+    rowY0: 321.11,
+    rowPitch: 184.8,
+    rowHeight: 156,
+    rankX: 213, // orange badge left edge
+    playerX: 368, // paper strip left edge
+    playerW: 486,
+    teamX: 368, // never rendered (mvpShowTeam: false)
+    teamW: 0,
+    killsX: 696,
+    killsW: 158,
+    rankFont: `800 44px ${PAPER_FONTS}`,
+    playerFont: `800 38px ${PAPER_FONTS}`,
+    statFont: `800 44px ${PAPER_FONTS}`,
+    subtitleBakedIn: true,
+    paperBanner: {
+      rowHeight: 156,
+      bannerCenterYs: [399.11, 587.08, 767.34, 954.03, 1138.31],
+      paddingX: 28,
+      killsGap: 10,
+      badge: {
+        x: 213,
+        w: 150,
+        fontFamily: PAPER_FONTS,
+        fontSize: 44,
+        fontWeight: 800,
+        color: "#FFFFFF", // crisp white rank numerals on burnt orange
+      },
+      name: {
+        x: 368,
+        w: 486,
+        maxFontSize: 38,
+        minFontSize: 18,
+        fontFamily: PAPER_FONTS,
+        fontWeight: 800,
+        color: "#9E0B22", // deep crimson poster headline ink
+      },
+      kills: {
+        fontFamily: PAPER_FONTS,
+        fontSize: 44,
+        fontWeight: 800,
+        color: "#1E2229", // dark charcoal numeral ink
+        labelFontFamily: PAPER_FONTS,
+        labelFontSize: 22,
+        labelFontWeight: 800,
+        labelColor: "#9E0B22", // deep crimson KILLS label
+        labelText: "KILLS",
+      },
+    },
+  },
+  palette: {
+    accent: "#9E0B22", // deep crimson (player IGN + KILLS label)
+    text: "#FDF5E6", // cream fallback ink (passes the art on every gradient stop)
+    textMuted: "#FFE8CC",
+    rowAlt: "#FDF5E6",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(158,11,34,0.14)",
+    wwcdText: "#9E0B22",
+    watermarkColor: "rgba(255,255,255,0.88)",
+    plateBg: "rgba(253,245,230,0.1)",
+    plateRing: "rgba(158,11,34,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#D19A5B",
+    medalText: "#1E2229",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -1895,6 +2025,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "rundown-orange": RUNDOWN_ORANGE,
   "royal-blue": ROYAL_BLUE,
   "varsity-yellow": VARSITY_YELLOW,
+  "court-orange": COURT_ORANGE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

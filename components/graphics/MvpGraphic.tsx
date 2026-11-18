@@ -11,6 +11,7 @@ import {
   type AestheticId,
   type MvpBrushSpec,
   type MvpEsportsSpec,
+  type MvpPaperBannerSpec,
 } from "@/lib/graphics";
 import {
   esportsMvpRowSlots,
@@ -335,9 +336,131 @@ function EsportsRows({
   );
 }
 
+/**
+ * Paper-cutout banner lockup (court-orange). The art bakes five cream /
+ * marigold strips, their burnt-orange rank squares, the header and the footer.
+ * DUMB renderer: every coordinate, ink and font comes from `lib/graphics`;
+ * each box is a flex row of height `rowHeight` whose centre is pinned to the
+ * painted banner's measured midline. No team data, logos or avatars render.
+ * `lineHeight: 1` is ALWAYS declared after the `font` shorthand — otherwise
+ * `font` resets line-height to `normal` and shifts text off the Y-axis.
+ */
+function PaperBannerRows({ entries, spec }: { entries: MvpDisplayEntry[]; spec: MvpPaperBannerSpec }) {
+  return (
+    <>
+      {entries.slice(0, 5).map((entry, i) => {
+        const y = (spec.bannerCenterYs[i] ?? 0) - spec.rowHeight / 2;
+        const nameFont = `${spec.name.fontWeight} ${spec.name.maxFontSize}px ${spec.name.fontFamily}`;
+        const killsFont = `${spec.kills.fontWeight} ${spec.kills.fontSize}px ${spec.kills.fontFamily}`;
+        const labelFont = `${spec.kills.labelFontWeight} ${spec.kills.labelFontSize}px ${spec.kills.labelFontFamily}`;
+        return (
+          <div
+            key={`${entry.rank}-${entry.name}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: y,
+              width: 1080,
+              height: spec.rowHeight,
+            }}
+          >
+            {/* 1. Rank 01..05 — crisp white, centred in the burnt-orange square. */}
+            <div
+              style={{
+                position: "absolute",
+                left: spec.badge.x,
+                top: 0,
+                width: spec.badge.w,
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: `${spec.badge.fontWeight} ${spec.badge.fontSize}px ${spec.badge.fontFamily}`,
+                lineHeight: 1,
+                color: spec.badge.color,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {String(entry.rank).padStart(2, "0")}
+            </div>
+            {/* 2. Paper strip: crimson IGN left, charcoal kills + crimson label right. */}
+            <div
+              style={{
+                position: "absolute",
+                left: spec.name.x,
+                top: 0,
+                width: spec.name.w,
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingLeft: spec.paddingX,
+                paddingRight: spec.paddingX,
+                boxSizing: "border-box",
+              }}
+            >
+              <div
+                style={{
+                  flex: "1 1 auto",
+                  minWidth: 0,
+                  font: nameFont,
+                  lineHeight: 1,
+                  color: spec.name.color,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.02em",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {entry.name}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spec.killsGap,
+                  height: "100%",
+                  flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    font: killsFont,
+                    lineHeight: 1,
+                    color: spec.kills.color,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {entry.kills}
+                </div>
+                <div
+                  style={{
+                    font: labelFont,
+                    lineHeight: 1,
+                    color: spec.kills.labelColor,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {spec.kills.labelText}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export function MvpGraphic({ aestheticId, title, subtitle, organizer, entries }: MvpGraphicProps) {
   const config = getTemplate(aestheticId);
   const { mvp, palette } = config;
+  // court-orange: the art bakes the PUBG MOBILE / TOP MVP LIST header, the
+  // KRAFTON footer and all five paper banners. Only rank + IGN + kills render.
+  if (config.mvpLayoutStyle === "paper-banner" && mvp.paperBanner) {
+    return <PaperBannerRows entries={entries} spec={mvp.paperBanner} />;
+  }
   // esports-clash: the art bakes "TOP MVP LIST", so no title, subtitle or
   // organizer text renders. Only the five English card lockups are painted.
   if (config.mvpLayoutStyle === "esports-card" && mvp.esports) {

@@ -14,7 +14,8 @@ export type AestheticId =
   | "esports-clash"
   | "rundown-orange"
   | "royal-blue"
-  | "varsity-yellow";
+  | "varsity-yellow"
+  | "court-orange";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -196,6 +197,47 @@ export type MvpSpec = {
   // "TOP 5 FRAGGERS"): MvpGraphic draws no subtitle line.
   brush?: MvpBrushSpec; // grunge-red starting-five brush typography
   esports?: MvpEsportsSpec; // esports-clash English-only card lockup
+  paperBanner?: MvpPaperBannerSpec; // court-orange paper-cutout banner lockup
+};
+
+/** Court Orange — five stacked paper-cutout banners (cream / marigold strips
+ *  with burnt-orange rank squares) baked into mvp.png. Pure data: the exact
+ *  painted midlines come from `bannerCenterYs`, and `MvpGraphic` centres every
+ *  rank badge + player-name/kills box on them with flex + `line-height: 1`.
+ *  No team data, logos or avatars are ever rendered (mvpShowTeam: false). */
+export type MvpPaperBannerSpec = {
+  rowHeight: number; // flex box height — one per painted banner strip
+  bannerCenterYs: readonly [number, number, number, number, number]; // measured canvas midlines
+  paddingX: number; // inner padding of the paper strip (~28px)
+  killsGap: number; // gap between the kill numeral and the KILLS label
+  badge: {
+    x: number; // left edge of the painted orange square
+    w: number; // width of the painted orange square
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+  };
+  name: {
+    x: number; // left edge of the painted paper strip
+    w: number; // width of the painted paper strip
+    maxFontSize: number;
+    minFontSize: number;
+    fontFamily: string;
+    fontWeight: number;
+    color: string;
+  };
+  kills: {
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string; // dark charcoal kill numeral
+    labelFontFamily: string;
+    labelFontSize: number;
+    labelFontWeight: number;
+    labelColor: string; // deep crimson "KILLS" label
+    labelText: string;
+  };
 };
 
 export type AnnouncementSpec = {
@@ -319,11 +361,13 @@ export type TemplateConfig = {
   // own title, but the MVP art still wants the session name)
   uniformMvpRows?: boolean; // true → MvpGraphic renders all 5 rows identically:
   // neutral plates, text ink, no rank-1 accent, no metal medallions (P7)
-  mvpLayoutStyle?: "standard" | "starting-five-brush" | "esports-card"; // starting-five-brush
+  mvpLayoutStyle?: "standard" | "starting-five-brush" | "esports-card" | "paper-banner"; // starting-five-brush
   // → framed rank badge + block-white name + overlapping crimson brush kills
   // + giant ghost numeral; the PUBGM characters are baked into the art.
   // esports-clash → italic rank + heavy slanted white name + English kills
   // block in the left safe zone of each painted red/blue card.
+  // court-orange → five cream/marigold paper banners with burnt-orange rank
+  // squares; tall condensed Rajdhani ink centred on each painted midline.
   mvpShowTeam?: boolean; // false → never render teamName/logo on the MVP art
   canvasBackground?: string; // fill behind a uniformly fitted portrait art when
   // its native ratio differs from the 2:3 canvas (letterbox bars, no distortion)
