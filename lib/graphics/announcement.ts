@@ -3,7 +3,7 @@ import type { AnnouncementSpec } from "./types";
 
 export const PARTICIPATING_TEAMS = "PARTICIPATING TEAMS";
 
-export type AnnounceRow = { y: number; pitch: number };
+export type AnnounceRow = { y: number; pitch: number; x?: number; rowH?: number };
 
 /**
  * Row-major list rows for n teams: wraps P6's announcementRowLayout

@@ -27,6 +27,115 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
   const slotLabels = announcementSlotLabels(teams);
   const plateD = announcement.logoSize + PLATE_PAD;
 
+  // Art-backed TWO-column announcement (royal-blue). The art bakes the PUBG
+  // MOBILE logo, "TEAM PARTICIPATION" title and the HOME|AWAY|NEUTRAL sub-bar
+  // at y0..380, and the soldier/bridge/parachutes at y1180..1620; every row is
+  // locked inside the safe window y425..1145. `announcementRowLayout` fills
+  // the left column (12 rows at x110) before the right (x560) with a fixed
+  // 58px pitch / 44px row box, so text never stretches or drifts off centre.
+  // The row wrapper and BOTH cells are flex containers with height:100%, so
+  // the slot '#' and the team name share the exact row midline
+  // (rowTop + rowH/2). `lineHeight: 1` is ALWAYS declared AFTER `font` — the
+  // font shorthand resets line-height to `normal`, which would push glyphs
+  // off that midline. No header, strip or plate renders on this art path:
+  // the baked title/typography stays unobstructed and the royal-blue field
+  // shows through (cardBg transparent).
+  if (
+    announcement.fixedRowPitch &&
+    !announcement.singleColumn &&
+    announcement.leftX !== undefined &&
+    announcement.rightX !== undefined
+  ) {
+    const colW = announcement.colWidth ?? announcement.teamX + announcement.teamW - announcement.leftX;
+    return (
+      <>
+        {rows.map((row, i) => {
+          const team = teams[i];
+          const colX = row.x ?? announcement.leftX!;
+          const rowH = row.rowH ?? announcement.rowHeight;
+          return (
+            <div
+              key={team.id}
+              style={{
+                position: "absolute",
+                left: colX,
+                top: row.y,
+                width: colW,
+                height: rowH,
+                display: "flex",
+                alignItems: "center",
+                font: announcement.nameFont,
+                lineHeight: 1,
+              }}
+            >
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  width: announcement.slotW,
+                  flex: "0 0 auto",
+                  font: announcement.rankFont ?? announcement.slotFont,
+                  lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                  color: announcement.accentColor ?? palette.accent,
+                }}
+              >
+                {slotLabels[i]}
+              </span>
+              {team.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- data URLs: raw <img> required for html-to-image capture
+                <img
+                  src={team.logoUrl}
+                  alt=""
+                  style={{
+                    width: announcement.logoSize,
+                    height: announcement.logoSize,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    flex: "0 0 auto",
+                    marginLeft: 8,
+                  }}
+                />
+              ) : null}
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: "100%",
+                  flex: "1 1 auto",
+                  minWidth: 0, // let the flex item shrink so the inner block can ellipsize
+                  font: announcement.nameFont,
+                  lineHeight: 1,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  color: announcement.inkColor ?? palette.text,
+                }}
+              >
+                {/* text-overflow needs a BLOCK container — a bare flex text
+                    node would hard-clip long names instead of showing '…'. */}
+                <div
+                  style={{
+                    width: "100%",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {team.name}
+                </div>
+              </span>
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
   // Art-backed single-column announcement (rundown-orange). The art bakes the
   // header ("team participation") and the horizontal divider lines, so no
   // dynamic header, logo plate or row strip renders here. One flex row per

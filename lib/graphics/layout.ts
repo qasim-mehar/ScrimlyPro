@@ -44,8 +44,46 @@ export function splitRowsAt(n: number, rowsPerColumn: number): [number, number] 
 export function announcementRowLayout(
   n: number,
   spec: AnnouncementSpec,
-): Array<{ y: number; pitch: number }> {
+): Array<{ y: number; pitch: number; x?: number; rowH?: number }> {
   if (n <= 0) return [];
+
+  // Art-backed TWO-column announcement (royal-blue): the left column fills
+  // first up to `rowsPerColumn` (12), then the overflow goes right via
+  // `splitRowsAt`. Every row keeps the art's fixed `rowPitch`/`rowHeight`
+  // regardless of team count — rows never stretch down into the baked
+  // soldier/parachute art when fewer than 24 teams are present. The returned
+  // `x` is the column origin so the renderer can offset slot/name cells.
+  // Beyond two painted columns the pitch auto-fits inside `rowsBottom`.
+  if (
+    spec.fixedRowPitch &&
+    !spec.singleColumn &&
+    spec.rowY0 !== undefined &&
+    spec.rowPitch !== undefined &&
+    spec.rowsPerColumn !== undefined &&
+    spec.rowsPerColumn > 0 &&
+    spec.leftX !== undefined &&
+    spec.rightX !== undefined
+  ) {
+    const [leftCount, rightCount] = splitRowsAt(n, spec.rowsPerColumn);
+    const pitchFor = (count: number): number =>
+      Math.min(
+        spec.rowPitch!,
+        (spec.rowsBottom - spec.rowHeight - spec.rowY0!) / Math.max(1, count - 1),
+      );
+    const rows: Array<{ y: number; pitch: number; x?: number; rowH?: number }> = [];
+    for (const [x, count] of [
+      [spec.leftX, leftCount],
+      [spec.rightX, rightCount],
+    ] as const) {
+      if (count <= 0) continue;
+      const pitch = pitchFor(count);
+      for (let j = 0; j < count; j++) {
+        rows.push({ x, y: spec.rowY0 + j * pitch, pitch, rowH: spec.rowHeight });
+      }
+    }
+    return rows;
+  }
+
   const lines = spec.lineYs;
   if (spec.fixedRowPitch && lines && lines.length >= n + 1) {
     return Array.from({ length: n }, (_, i) => ({

@@ -1613,6 +1613,109 @@ const RUNDOWN_ORANGE: TemplateConfig = {
   },
 };
 
+const ROYAL_BLUE_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  css: "linear-gradient(180deg, #002B7F 0%, #003DA5 55%, #001E5A 100%)",
+  decor: [],
+};
+
+/** Royal Blue — the PUBG MOBILE "TEAM PARTICIPATION" announcement art (ref:
+ *  public/templates/royal-blue/refrence-image.jpeg, the condensed athletic
+ *  schedule typography in varsity gold + pure white).
+ *
+ *  The baked art (`announcement.png`, 1080×1620) owns everything at
+ *  y0..380 (PUBG MOBILE logo, "TEAM PARTICIPATION" title,
+ *  HOME | AWAY | NEUTRAL sub-bar) and y1180..1620 (soldier, bridge,
+ *  parachutes). All data is confined to the safe window y425..1145:
+ *  two columns of 12 rows, left x110 / right x560, each column 410 wide.
+ *
+ *  Geometry: rowY0 425, rowHeight 44, rowPitch 58, fixedRowPitch true.
+ *  Row 12 bottom = 425 + 11*58 + 44 = 1107 <= 1145, so rows NEVER stretch
+ *  into the bottom art when fewer than 24 teams are present; beyond 24 the
+ *  overflow column auto-fits inside rowsBottom (announcementRowLayout).
+ *
+ *  Ink hierarchy (WCAG ≥ 4.5:1 against the measured #00338D royal field):
+ *  slot '#' in Varsity Gold #FFB81C (the baked logo/HOME ink) at Exo 2 800,
+ *  tabular-nums so #05..#28 align to the pixel; team name in pure #FFFFFF
+ *  at Exo 2 700, uppercase with 0.04em athletic tracking. No code strips,
+ *  plates or dynamic header text obscure the baked artwork (cardBg
+ *  transparent, announcement scrim name/title/subtitle all suppressed).
+ *  Standings + MVP have no art → clean royal-blue gradient fallback.
+ */
+const ROYAL_BLUE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "royal-blue",
+  name: "Royal Blue (Participation)",
+  backgrounds: {
+    standings: ROYAL_BLUE_FALLBACK_BG,
+    mvp: ROYAL_BLUE_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/royal-blue/announcement.png" },
+  },
+  header: {
+    title: { x: -9999, y: -9999, w: 0 },
+    subtitle: { x: -9999, y: -9999, w: 0 },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `500 1px ${FONTS}`,
+    subtitleFont: `500 1px ${FONTS}`,
+    organizerFont: `500 1px ${FONTS}`,
+  },
+  variantHideScrimName: { announcement: true },
+  variantHeaders: {
+    // HeaderSpec slots are coordinate objects (not strings): park every
+    // dynamic slot off-canvas at zero width. The two-column announcement path
+    // skips the header entirely, so the baked "TEAM PARTICIPATION" lockup and
+    // the HOME|AWAY|NEUTRAL sub-bar stay unobstructed.
+    announcement: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  announcement: {
+    rowsTop: 425, // rowY0 — clears the baked top title + sub-bar band (y0..380)
+    rowsBottom: 1145, // clears the baked soldier/bridge/parachute art (y1180+)
+    slotX: 110, // left column origin (= leftX)
+    slotW: 56, // "05".."28" at 800 22px tabular-nums
+    logoX: 172, // optional logo plate, left column
+    teamX: 202, // team name follows the slot/logo compartment
+    teamW: 310, // ends at x512, inside the 410px column (110..520)
+    logoSize: 22,
+    rowHeight: 44,
+    slotFont: `800 22px ${FONTS}`,
+    nameFont: `700 22px ${FONTS}`,
+    subtitleBakedIn: true, // the art bakes "TEAM PARTICIPATION"
+    // --- Two-column, fixed-pitch geometry (1–24 teams) ---
+    fixedRowPitch: true,
+    rowY0: 425,
+    rowPitch: 58,
+    rowsPerColumn: 12,
+    leftX: 110,
+    rightX: 560,
+    colWidth: 410,
+    rankFont: `800 22px ${FONTS}`,
+    inkColor: "#FFFFFF",
+    accentColor: "#FFB81C",
+    mutedColor: "#93C5FD",
+    cardBg: "transparent",
+  },
+  palette: {
+    accent: "#FFB81C", // Varsity Gold — baked PUBG MOBILE/HOME ink
+    text: "#FFFFFF", // pure white team names
+    textMuted: "#93C5FD",
+    rowAlt: "transparent",
+    rowAltOpacity: 0, // no code stripes — the clean royal field shows through
+    wwcdBg: "transparent",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,184,28,0.10)",
+    plateRing: "rgba(255,184,28,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0B1533",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -1628,6 +1731,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "grunge-red": GRUNGE_RED,
   "esports-clash": ESPORTS_CLASH,
   "rundown-orange": RUNDOWN_ORANGE,
+  "royal-blue": ROYAL_BLUE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

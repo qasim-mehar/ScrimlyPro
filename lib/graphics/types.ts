@@ -12,7 +12,8 @@ export type AestheticId =
   | "pmwi-violet"
   | "grunge-red"
   | "esports-clash"
-  | "rundown-orange";
+  | "rundown-orange"
+  | "royal-blue";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
