@@ -19,7 +19,8 @@ export type AestheticId =
   | "rundown-orange"
   | "royal-blue"
   | "varsity-yellow"
-  | "court-orange";
+  | "court-orange"
+  | "varsity-purple";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -94,6 +95,10 @@ export type StandingsTableSpec = {
   nameFont: string;
   statFont: string;
   labelFont: string;
+  nameLetterSpacing?: string; // art-backed wide-tracked names (varsity-purple
+  // 0.16em); the renderer keeps its legacy -0.01em when absent
+  nameUppercase?: boolean; // true → uppercase team names on the art-backed
+  // broadcast table (varsity-purple's reference schedule typography)
 };
 
 /** Starting-five brush lockup (grunge-red): measured slot geometry plus the
@@ -430,6 +435,50 @@ export type AnnouncementSpec = {
   uppercaseNames?: boolean; // true → uppercase names on bar-backed art that
   // has no alternating `rowColors` (varsity-yellow); onyx-green keeps its
   // rowColors-driven uppercase unchanged.
+
+  // --- Two-column art-backed badge/bar treatment (cardinal-gold) ---
+  // Additive: absent on every existing template so their markup is unchanged.
+  // The slot badge is a high-contrast matte-black cell; the name bar is a dark
+  // cardinal plate that keeps white 800 glyphs legible over bright art ink.
+  slotBadgeBg?: string;
+  teamBarBg?: string;
+  nameTextShadow?: string; // subtle legibility shadow for white names over art
+
+  // --- varsity-purple painted-bar geometry (additive) ---
+  // Exact measured vertical midpoints of the painted bars. When present with
+  // fixedRowPitch, `announcementRowLayout` seats row i so its box midpoint IS
+  // barCenters[i] — zero cumulative pitch drift, even when the art's spacing
+  // is not perfectly uniform.
+  barCenterYs?: readonly number[];
+  barCells?: readonly [AnnouncementBarCell, AnnouncementBarCell, AnnouncementBarCell];
+};
+
+/** One compartment of a painted 3-cell announcement bar (canvas px). */
+export type AnnouncementBarCell = { x: number; w: number };
+
+/** varsity-purple — the measured 13 painted 3-cell bars of announcement.png.
+ *  Pure data: `lib/graphics/layout.ts` turns it into row slots and the renderer
+ *  only paints them. `barCenterYs` is authoritative for Y centring; `rowY0` /
+ *  `rowPitch` / `rowHeight` are the nominal values kept for config consumers.
+ *  Teams 1..13 use the left slot cell + centre name cell; teams 14..25 reuse
+ *  those same painted bars in the narrow right cell so EVERY team sits on a
+ *  painted bar at any valid session count (4–25). */
+export type AnnouncementBarLayout = {
+  barCenterYs: readonly number[]; // exact measured bar midlines (canvas px)
+  rowY0: number; // nominal first bar top (canvas px)
+  rowPitch: number; // nominal bar pitch (canvas px)
+  rowHeight: number; // painted bar interior height (canvas px)
+  rowsBottom: number; // last painted bar bottom (canvas px)
+  cells: readonly [AnnouncementBarCell, AnnouncementBarCell, AnnouncementBarCell];
+};
+
+/** One row slot derived from an AnnouncementBarLayout (pure data). */
+export type AnnouncementBarRow = {
+  bar: number; // zero-based painted bar index (0..12)
+  kind: "primary" | "overflow"; // primary = left+centre cells, overflow = right cell
+  y: number; // exact row-box top = barCenters[bar] − rowHeight / 2
+  rowH: number;
+  pitch: number;
 };
 
 /** Art-backed ANNOUNCEMENT-only geometry override. This lives at the
@@ -485,6 +534,13 @@ export type HeaderSpec = {
   subtitleColor?: string; // optional per-variant ink override for the subtitle
   // (challengers-red standings: black digits inside the baked cyan MATCH chip)
   organizerFont: string;
+  // Typographic ink tokens for art-backed athletic headers (varsity-purple).
+  // Additive: every existing template keeps the renderer's previous defaults.
+  titleLetterSpacing?: string;
+  subtitleLetterSpacing?: string;
+  titleTextShadow?: string;
+  titleTextTransform?: "uppercase"; // athletic display lockups (cardinal-gold)
+  subtitleTextTransform?: "uppercase";
 };
 
 export type TemplateConfig = {
@@ -533,5 +589,7 @@ export type TemplateConfig = {
   announcement: AnnouncementSpec;
   announcementLayout?: AnnouncementLayout; // art-backed announcement override
   // (onyx-green's 24-row single-column participation art); Standings is untouched.
+  announcementBarLayout?: AnnouncementBarLayout; // varsity-purple's measured
+  // 13 painted 3-cell bars; pure geometry consumed by announcementBarRows().
   palette: Palette;
 };

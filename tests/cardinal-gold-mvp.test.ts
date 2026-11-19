@@ -140,16 +140,20 @@ describe("cardinal-gold — registry + baked-header suppression", () => {
     expect(html).not.toContain("ORGANIZER NAME");
   });
 
-  it("falls back to a charcoal/cardinal/gold gradient on standings + announcement", () => {
-    for (const variant of ["standings", "announcement"] as const) {
-      const bg = config.backgrounds[variant];
-      expect(bg.type).toBe("gradient");
-      if (bg.type !== "gradient") continue;
-      expect(bg.css).toContain("linear-gradient");
-      expect(bg.css).toContain("#141210"); // hardwood charcoal
-      expect(bg.css).toContain("#9E1B24"); // cardinal crimson swatch
-      expect(bg.decor).toEqual([]);
+  it("keeps the charcoal/cardinal/gold gradient on standings and art on announcement", () => {
+    const standingsBg = config.backgrounds.standings;
+    expect(standingsBg.type).toBe("gradient");
+    if (standingsBg.type === "gradient") {
+      expect(standingsBg.css).toContain("linear-gradient");
+      expect(standingsBg.css).toContain("#141210"); // hardwood charcoal
+      expect(standingsBg.css).toContain("#9E1B24"); // cardinal crimson swatch
+      expect(standingsBg.decor).toEqual([]);
     }
+    // The announcement now renders on the baked 2-column participation art.
+    expect(config.backgrounds.announcement).toEqual({
+      type: "image",
+      src: "/templates/cardinal-gold/announcement.png",
+    });
     // WCAG: white ≥7:1 and varsity gold ≥4.5:1 against every gradient stop.
     const text = parseHexColor(config.palette.text);
     const gold = parseHexColor(config.palette.textMuted);
@@ -167,7 +171,7 @@ describe("cardinal-gold — registry + baked-header suppression", () => {
     }
   });
 
-  it("renders the standings + announcement gradient fallbacks with normal labels", () => {
+  it("renders the standings gradient fallback normally and the announcement on its 2-column art", () => {
     const standingsHtml = renderToStaticMarkup(
       h(OverallStandingsGraphic, {
         aestheticId: "cardinal-gold",
@@ -191,9 +195,11 @@ describe("cardinal-gold — registry + baked-header suppression", () => {
         teams: [{ id: "t0", name: "SQUAD 1", logoUrl: null }],
       }),
     );
-    expect(annHtml).toContain("SCRIM");
+    // Baked "TEAM PARTICIPATION" hero must never be overdrawn by a title.
+    expect(annHtml).not.toContain("SCRIM");
     expect(annHtml).toContain(">01<");
     expect(annHtml).toContain("SQUAD 1");
+    expect(annHtml).toContain("left:88px");
   });
 
   it("keeps the brand-law watermark hardcoded bottom-right", () => {

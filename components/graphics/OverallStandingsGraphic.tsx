@@ -52,13 +52,41 @@ function StandingsHeader({
   return (
     <>
       {hideScrimNameFor(config, "standings") ? null : (
-        <div style={{ ...slotToStyle(header.title), font: header.titleFont, color: palette.text }}>{title}</div>
+        <div
+          style={{
+            ...slotToStyle(header.title),
+            font: header.titleFont,
+            lineHeight: 1, // always AFTER `font` — the shorthand resets line-height
+            letterSpacing: header.titleLetterSpacing,
+            textShadow: header.titleTextShadow,
+            textTransform: header.titleTextTransform,
+            color: palette.text,
+          }}
+        >
+          {title}
+        </div>
       )}
-      <div style={{ ...slotToStyle(header.subtitle), font: header.subtitleFont, color: header.subtitleColor ?? palette.accent }}>
+      <div
+        style={{
+          ...slotToStyle(header.subtitle),
+          font: header.subtitleFont,
+          lineHeight: 1,
+          letterSpacing: header.subtitleLetterSpacing,
+          textTransform: header.subtitleTextTransform,
+          color: header.subtitleColor ?? palette.accent,
+        }}
+      >
         {subtitleText}
       </div>
       {organizer ? (
-        <div style={{ ...slotToStyle(header.organizer), font: header.organizerFont, color: palette.textMuted }}>
+        <div
+          style={{
+            ...slotToStyle(header.organizer),
+            font: header.organizerFont,
+            lineHeight: 1,
+            color: palette.textMuted,
+          }}
+        >
           {organizer}
         </div>
       ) : null}
@@ -99,7 +127,8 @@ function StandingsRow({
     // so the glyphs are truly centered in the painted row box.
     lineHeight: `${st.rowHeight}px`,
     color: isRankOne ? palette.wwcdText : palette.text,
-    letterSpacing: "-0.01em",
+    letterSpacing: st.nameLetterSpacing ?? "-0.01em",
+    textTransform: st.nameUppercase ? "uppercase" : undefined,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
     overflow: "hidden",

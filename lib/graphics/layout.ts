@@ -1,5 +1,13 @@
 import type { CSSProperties } from "react";
-import type { AnnouncementSpec, Background, GraphicVariant, Slot, TemplateConfig } from "./types";
+import type {
+  AnnouncementBarLayout,
+  AnnouncementBarRow,
+  AnnouncementSpec,
+  Background,
+  GraphicVariant,
+  Slot,
+  TemplateConfig,
+} from "./types";
 
 /**
  * Two-column split for n teams: [left, right].
@@ -85,6 +93,26 @@ export function announcementRowLayout(
     return rows;
   }
 
+  // Painted-bar art (varsity-purple): `barCenterYs` holds the exact measured
+  // midlines of the painted bars. Row i's box TOP is centre − rowHeight/2, so
+  // its midpoint is dead-on bar i — zero drift even where the art's pitch is
+  // not perfectly uniform (the last two varsity-purple bars are wider).
+  if (spec.fixedRowPitch && spec.barCenterYs && spec.barCenterYs.length > 0) {
+    const bars = spec.barCenterYs.length;
+    return Array.from({ length: n }, (_, i) => {
+      // Overflow teams reuse the same painted bars (bar 0, 1, …) exactly as
+      // announcementBarRows does, so rows never drift below the last bar.
+      const bar = i < bars ? i : Math.min(i - bars, bars - 1);
+      const center = spec.barCenterYs![bar]!;
+      const next = spec.barCenterYs![bar + 1];
+      return {
+        y: center - spec.rowHeight / 2,
+        pitch: next !== undefined ? next - center : (spec.rowPitch ?? spec.rowHeight),
+        rowH: spec.rowHeight,
+      };
+    });
+  }
+
   const lines = spec.lineYs;
   if (spec.fixedRowPitch && lines && lines.length >= n + 1) {
     return Array.from({ length: n }, (_, i) => ({
@@ -110,6 +138,50 @@ export function announcementRowLayout(
 }
 
 /**
+ * Painted 3-cell bar rows for varsity-purple. The first `barCenterYs.length`
+ * teams occupy the painted bars top-down using the left slot cell + centre
+ * name cell; any remaining teams (14–25) reuse those SAME painted bars in the
+ * narrow right cell. Because every row's box is exactly `rowHeight` tall and
+ * starts at `barCenters[bar] − rowHeight/2`, its text midpoint lands on the
+ * measured painted-bar centre — no team ever floats between bars, at any
+ * valid session count. `n ≤ 0` → [].
+ */
+export function announcementBarRows(
+  n: number,
+  layout: AnnouncementBarLayout,
+): AnnouncementBarRow[] {
+  if (n <= 0) return [];
+  const bars = layout.barCenterYs.length;
+  if (bars === 0) return [];
+  const primary = Math.min(n, bars);
+  const rows: AnnouncementBarRow[] = [];
+  for (let i = 0; i < primary; i++) {
+    const center = layout.barCenterYs[i]!;
+    const next = layout.barCenterYs[i + 1];
+    rows.push({
+      bar: i,
+      kind: "primary",
+      y: center - layout.rowHeight / 2,
+      rowH: layout.rowHeight,
+      pitch: next !== undefined ? next - center : layout.rowPitch,
+    });
+  }
+  for (let i = primary; i < n; i++) {
+    const bar = Math.min(i - primary, bars - 1);
+    const center = layout.barCenterYs[bar]!;
+    const next = layout.barCenterYs[bar + 1];
+    rows.push({
+      bar,
+      kind: "overflow",
+      y: center - layout.rowHeight / 2,
+      rowH: layout.rowHeight,
+      pitch: next !== undefined ? next - center : layout.rowPitch,
+    });
+  }
+  return rows;
+}
+
+/**
  * Effective announcement geometry for one template. When `announcementLayout`
  * is present (onyx-green's 24-row single-column participation art) it overrides
  * the shared announcement spec's art-backed fields; otherwise the spec is
@@ -123,9 +195,25 @@ export function announcementRowLayout(
  */
 export function effectiveAnnouncementSpec(config: TemplateConfig): AnnouncementSpec {
   const layout = config.announcementLayout;
-  if (!layout) return config.announcement;
+  const bar = config.announcementBarLayout;
+  if (!layout && !bar) return config.announcement;
+  // A `announcementBarLayout` (varsity-purple's painted bars) is folded in the
+  // same way so the pure helper and the 3-cell renderer share one source of
+  // truth.
+  const barFields = bar
+    ? {
+        barCenterYs: bar.barCenterYs,
+        barCells: bar.cells,
+        rowY0: bar.rowY0,
+        rowPitch: bar.rowPitch,
+        rowHeight: bar.rowHeight,
+        rowsBottom: bar.rowsBottom,
+      }
+    : {};
+  if (!layout) return { ...config.announcement, ...barFields };
   return {
     ...config.announcement,
+    ...barFields,
     singleColumn: layout.singleColumn ?? config.announcement.singleColumn,
     fixedRowPitch: layout.fixedRowPitch ?? config.announcement.fixedRowPitch,
     rowsPerColumn: layout.rowsPerColumn ?? config.announcement.rowsPerColumn,

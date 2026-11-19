@@ -1,4 +1,4 @@
-import type { AestheticId, TemplateConfig } from "./types";
+import type { AestheticId, AnnouncementBarLayout, TemplateConfig } from "./types";
 import { BRUSH_FONTS, FONTS, FONTS_EDITORIAL, FONTS_FULL } from "./fonts";
 
 /** Geometry shared by the three gradient aesthetics — identical until real
@@ -1803,6 +1803,11 @@ const ROYAL_BLUE: TemplateConfig = {
  *  2025-26 schedule reference: Rajdhani leads, Exo 2 keeps the established
  *  metric fallback, Noto Sans Symbols 2 guards the PUBG glyph set. */
 const FONTS_ATHLETIC = '"Rajdhani", "Exo 2", "Noto Sans Symbols 2", sans-serif';
+// NOTE: the loaded cuts are Rajdhani 500/600/700 and Exo 2 500/600/700/800.
+// The 900/800 weights in cardinal-gold's athletic lockup are therefore the
+// browser's real synthesis of those loaded faces (no unloaded font is named),
+// matching the heavy block ink of the refrence-image without touching the
+// app-level font imports.
 
 const VARSITY_YELLOW_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
   type: "gradient",
@@ -2202,7 +2207,15 @@ const CARDINAL_GOLD_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
  *    crimson right edge at x995.6) — the weapon is never touched.
  *  - the art bakes STARTING / FIVE | SC / PUBG MOBILE | KRAFTON, so the MVP
  *    variant hides every synthetic header slot and paints no team data.
- *  - standings + announcement have no art → charcoal/cardinal/gold gradient. */
+ *  - standings has no art → charcoal/cardinal/gold gradient carrying the same
+ *    Exo 2 / Rajdhani 800–900 athletic typography as the baked announcement.
+ *
+ *  ANNOUNCEMENT art (`announcement.png`, 1664×2496, exactly 2:3): the baked
+ *  "TEAM PARTICIPATION" hero owns y0..~405 and the PUBG MOBILE | KRAFTON
+ *  footer y~1465..1575. The 24-team grid lives in y425..1375 as two 12-row
+ *  columns (x88..512 / x568..992) at a fixed 76px pitch with 54px row boxes.
+ *  Matte-black #141414 56×54 slot badges and translucent cardinal name bars
+ *  seat pure-white Exo 2 800 / Rajdhani 800 ink dead-centre on every row. */
 const CARDINAL_GOLD: TemplateConfig = {
   ...GEOMETRY,
   id: "cardinal-gold",
@@ -2214,22 +2227,54 @@ const CARDINAL_GOLD: TemplateConfig = {
       src: "/templates/cardinal-gold/mvp.png",
       fit: { width: 911.73445, height: 1620, left: 84.132775, top: 0 },
     },
-    announcement: CARDINAL_GOLD_FALLBACK_BG,
+    // announcement.png is a TRUE 1664×2496 art — exactly the 2:3 canvas
+    // ratio. `object-fit: cover` maps art pixels onto 1080×1620 uniformly
+    // (×0.6490385, zero crop), so every coordinate below is already measured
+    // in canvas space. The baked PUBG MOBILE / "TEAM PARTICIPATION" hero owns
+    // y0..~405 and the KRAFTON footer y~1500+, leaving the 24-team grid clear.
+    announcement: { type: "image", src: "/templates/cardinal-gold/announcement.png" },
   },
   canvasBackground: "#141210",
   uniformMvpRows: true,
   mvpLayoutStyle: "starting-five-crimson",
   mvpShowTeam: false,
   variantLabelsBakedIn: { mvp: true },
-  variantHideScrimName: { mvp: true },
+  variantHideScrimName: { mvp: true, announcement: true },
+  variantHeaders: {
+    // The two-column announcement path skips the header entirely; park every
+    // synthetic slot off-canvas anyway so the baked hero lockup is untouchable.
+    announcement: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
   header: {
-    // Fallback variants (standings/announcement gradient) keep a normal header.
-    title: { x: 140, y: 84, w: 800, align: "center" },
-    subtitle: { x: 190, y: 168, w: 700, align: "center" },
-    organizer: { x: 340, y: 236, w: 400, align: "center" },
-    titleFont: `700 54px ${FONTS_FULL}`,
-    subtitleFont: `700 40px ${FONTS_FULL}`,
-    organizerFont: `500 24px ${FONTS_FULL}`,
+    // Standings uses the charcoal/cardinal gradient fallback, so it wears the
+    // measured display ink from refrence-image: heavy 900 block title with a
+    // crisp dark shadow, gold 800 wide-tracked uppercase subtitle.
+    title: { x: 90, y: 84, w: 900, align: "center" },
+    subtitle: { x: 140, y: 176, w: 800, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `900 64px ${FONTS_ATHLETIC}`,
+    subtitleFont: `800 30px ${FONTS_ATHLETIC}`,
+    organizerFont: `600 22px ${FONTS_FULL}`,
+    titleLetterSpacing: "0.03em",
+    subtitleLetterSpacing: "0.14em",
+    titleTextShadow: "0 4px 12px rgba(0, 0, 0, 0.65)",
+    titleTextTransform: "uppercase",
+    subtitleTextTransform: "uppercase",
+  },
+  standings: {
+    ...GEOMETRY.standings,
+    nameFont: `800 21px ${FONTS_FULL}`,
+    nameUppercase: true,
+    nameLetterSpacing: "0.04em",
+    statFont: `800 23px ${FONTS_ATHLETIC}`,
+    labelFont: `800 18px ${FONTS_ATHLETIC}`,
+    statBoxW: 52,
+    // 24 teams → 12/12; 25 → 12/13 (splitRowsAt fills the left column first).
+    rowsPerColumn: 12,
   },
   mvp: {
     rowY0: 261.8451,
@@ -2272,6 +2317,43 @@ const CARDINAL_GOLD: TemplateConfig = {
         color: "#F5C451",
       },
     },
+  },
+  announcement: {
+    // Safe grid: y425..1375, x88..512 (left) and x568..992 (right). The baked
+    // "TEAM PARTICIPATION" headline ends near y~405; the KRAFTON footer and
+    // bottom-left crimson shards sit below y~1460. 12 rows/column at a FIXED
+    // 76px pitch (54px row box) → row 12 bottom = 425 + 11*76 + 54 = 1315,
+    // and a 25th team (right column row 13) auto-fits to 74.7px → 1375.
+    rowsTop: 425,
+    rowsBottom: 1375,
+    slotX: 88,
+    slotW: 56, // matte-black "01".."24" badge
+    logoX: 154,
+    teamX: 190,
+    teamW: 322, // ends at x512, inside the 424px left column
+    logoSize: 28,
+    rowHeight: 54,
+    slotFont: `800 26px ${FONTS_ATHLETIC}`, // heavy condensed Rajdhani numerals
+    nameFont: `800 21px ${FONTS_FULL}`, // Exo 2 800 uppercase, glyph-safe
+    subtitleBakedIn: true, // "TEAM PARTICIPATION" is baked into the art
+    // --- Two-column, fixed-pitch geometry (4–25 teams) ---
+    fixedRowPitch: true,
+    rowY0: 425,
+    rowPitch: 76,
+    rowsPerColumn: 12,
+    leftX: 88,
+    rightX: 568,
+    colWidth: 424,
+    rankFont: `800 26px ${FONTS_ATHLETIC}`,
+    inkColor: "#FFFFFF",
+    accentColor: "#F5C451", // cardinal gold badge numerals
+    mutedColor: "#F5C451",
+    cardBg: "transparent", // no code stripes over the broadcast art
+    tracking: "0.04em",
+    uppercaseNames: true,
+    slotBadgeBg: "#141414",
+    teamBarBg: "rgba(20, 3, 7, 0.78)",
+    nameTextShadow: "0 2px 4px rgba(0, 0, 0, 0.5)",
   },
   palette: {
     accent: "#F5C451", // varsity gold — the baked name ink + fallback accent
@@ -2552,6 +2634,196 @@ const URBAN_SLATE: TemplateConfig = {
 };
 
 
+const VARSITY_PURPLE_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  // Deep varsity purple → royal violet → near-black. White/ivory ink clears
+  // 14:1 on every stop (measured by tests/graphics-contrast.test.ts).
+  css: "linear-gradient(165deg, #1A0633 0%, #3B1266 55%, #120424 100%)",
+  decor: [
+    { kind: "bar", x: 0, y: 0, w: 1080, h: 8, color: "#C4B5FD", opacity: 0.55 },
+    { kind: "bar", x: 0, y: 1508, w: 1080, h: 2, color: "#C4B5FD", opacity: 0.3 },
+  ],
+};
+
+// Exo 2 leads the geometric/athletic display + name faces; Rajdhani leads the
+// tall condensed stat numerals. Both keep the full glyph-safe fallback chain
+// (Noto Sans Symbols 2 + system-ui) so Arabic/CJK/katakana/clan glyphs never
+// tofu (Graphics Engine law §11).
+const VARSITY_CONDENSED_FONTS =
+  '"Rajdhani", "Exo 2", "Noto Sans Symbols 2", system-ui, sans-serif';
+
+/**
+ * Varsity Purple — the "TEAM ANNOUNCEMENT" painted-bar poster.
+ *
+ * Art: `announcement.png`, a 4096×6144 JPEG payload inside a .png name (canvas
+ * ×1080/4096 = 0.263671875, no crop). Sharp pixel scans of the delivered art:
+ * - top white ribbon x244..836, y0..~158; the baked metallic "TEAM
+ *   ANNOUNCEMENT" headline occupies y≈188..409 (never re-rendered).
+ * - 13 painted translucent dark-purple bars, span x233..847, two baked
+ *   dividers at x401/x688 → 3 cells (left slot x233..401, centre team name
+ *   x401..688, right overflow x688..847).
+ * - bar 1 top canvas y732.2, mean interior height 41.7, mean pitch ~52.4;
+ *   the last two bars are wider, so `barCenterYs` pins all 13 EXACT midlines
+ *   (753.18 … 1386.39) — a single pitch cannot land every row within ±1px.
+ *   `announcementBarRows` seats every row box on those midlines, so the text
+ *   midpoint is always dead-on a painted bar for 4–25 teams: teams 1–13 use
+ *   left slot + centre name, teams 14–25 reuse the same bars in the right cell.
+ * - Typography follows refrence-image.jpeg: Exo 2 900 tracked ribbon display,
+ *   Exo 2 700 0.32em wide-tracked kicker, Rajdhani 800 condensed outer/slot
+ *   ink, Exo 2 700 0.17em wide-tracked team names. Standing-only fallback uses
+ *   the same fonts with white ink + a deep-purple drop-shadow headline.
+ */
+const VARSITY_PURPLE_BAR_CENTERS = [
+  753.18, 804.99, 857.46, 909.67, 962.14, 1014.08, 1066.29, 1118.5, 1170.7,
+  1223.97, 1276.57, 1331.81, 1386.39,
+] as const;
+
+const VARSITY_PURPLE_BAR_LAYOUT: AnnouncementBarLayout = {
+  barCenterYs: VARSITY_PURPLE_BAR_CENTERS,
+  rowY0: 732,
+  rowPitch: 52.4,
+  rowHeight: 41.7,
+  rowsBottom: 1408,
+  cells: [
+    { x: 233, w: 168 }, // left slot cell
+    { x: 401, w: 287 }, // centre team-name cell
+    { x: 688, w: 159 }, // right overflow cell
+  ],
+};
+
+const VARSITY_PURPLE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "varsity-purple",
+  name: "Varsity Purple (Participation)",
+  backgrounds: {
+    standings: VARSITY_PURPLE_FALLBACK_BG,
+    mvp: VARSITY_PURPLE_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/varsity-purple/announcement.png" },
+  },
+  uniformMvpRows: true,
+  header: {
+    // Announcement: the session name sits in the art's empty top white ribbon
+    // (the "2021-22" slot of the reference); the subtitle is the wide-tracked
+    // conference kicker just below it and above the baked metallic headline.
+    title: { x: 244, y: 44, w: 592, align: "center" },
+    subtitle: { x: 244, y: 158, w: 592, align: "center" },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `900 44px ${FONTS_FULL}`,
+    subtitleFont: `700 16px ${FONTS_FULL}`,
+    organizerFont: `500 1px ${FONTS_FULL}`,
+    titleLetterSpacing: "0.08em",
+    subtitleLetterSpacing: "0.32em",
+  },
+  variantHeaders: {
+    announcement: {
+      // The baked art owns the "TEAM ANNOUNCEMENT" headline + footer lockup;
+      // no dynamic organizer text may be painted anywhere on it.
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+    standings: {
+      // Top Overall Ranking on the artless gradient: metallic white display
+      // headline + 0.32em kicker; every data box keeps line-height AFTER font.
+      title: { x: 140, y: 84, w: 800, align: "center" },
+      subtitle: { x: 140, y: 196, w: 800, align: "center" },
+      organizer: { x: 140, y: 260, w: 800, align: "center" },
+      titleFont: `900 64px ${FONTS_FULL}`,
+      subtitleFont: `700 24px ${FONTS_FULL}`,
+      organizerFont: `600 18px ${FONTS_FULL}`,
+      subtitleColor: "#FFFFFF",
+      titleLetterSpacing: "0.08em",
+      subtitleLetterSpacing: "0.32em",
+      titleTextShadow: "0 4px 0 #2D0C4E, 0 10px 22px rgba(18,4,36,0.85)",
+    },
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 62,
+        teamX: 116,
+        teamW: 170,
+        statColumns: [
+          { key: "wwcd", x: 300 },
+          { key: "pp", x: 365 },
+          { key: "kp", x: 430 },
+          { key: "total", x: 495 },
+        ],
+        stripX: 58,
+        stripW: 500,
+      },
+      {
+        rankX: 572,
+        teamX: 626,
+        teamW: 170,
+        statColumns: [
+          { key: "wwcd", x: 800 },
+          { key: "pp", x: 865 },
+          { key: "kp", x: 930 },
+          { key: "total", x: 995 },
+        ],
+        stripX: 568,
+        stripW: 500,
+      },
+    ],
+    headerLabelsY: 372,
+    rowY0: 415,
+    rowPitch: 66,
+    rowHeight: 56,
+    maxRowsLeft: 13,
+    nameFont: `700 17px ${FONTS_FULL}`,
+    statFont: `800 24px ${VARSITY_CONDENSED_FONTS}`,
+    labelFont: `700 18px ${FONTS_FULL}`,
+    nameLetterSpacing: "0.16em",
+    nameUppercase: true,
+  },
+  announcement: {
+    rowsTop: 732,
+    rowsBottom: 1408,
+    slotX: 233,
+    slotW: 168,
+    logoX: 401,
+    teamX: 401,
+    teamW: 287,
+    logoSize: 22,
+    rowHeight: 41.7,
+    slotFont: `800 22px ${VARSITY_CONDENSED_FONTS}`,
+    nameFont: `700 17px ${FONTS_FULL}`,
+    subtitleBakedIn: false,
+    singleColumn: true,
+    fixedRowPitch: true,
+    rowY0: 732,
+    rowPitch: 52.4,
+    rowsPerColumn: 13,
+    leftX: 233,
+    rightX: 847,
+    colWidth: 614,
+    barCenterYs: VARSITY_PURPLE_BAR_CENTERS,
+    barCells: VARSITY_PURPLE_BAR_LAYOUT.cells,
+    inkColor: "#FFFFFF",
+    accentColor: "#FFFFFF",
+    mutedColor: "#E9D5FF",
+    cardBg: "transparent",
+    tracking: "0.17em",
+    uppercaseNames: true,
+  },
+  announcementBarLayout: VARSITY_PURPLE_BAR_LAYOUT,
+  palette: {
+    accent: "#C4B5FD",
+    text: "#FFFFFF",
+    textMuted: "#E9D5FF",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.06,
+    wwcdBg: "rgba(196,181,253,0.16)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.88)",
+    plateBg: "rgba(196,181,253,0.12)",
+    plateRing: "rgba(196,181,253,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#2D0C4E",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -2574,6 +2846,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "cardinal-gold": CARDINAL_GOLD,
   "apex-blaze": APEX_BLAZE,
   "urban-slate": URBAN_SLATE,
+  "varsity-purple": VARSITY_PURPLE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

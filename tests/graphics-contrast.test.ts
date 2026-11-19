@@ -75,6 +75,8 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
+    "cardinal-gold",
+    "varsity-purple",
   ];
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {

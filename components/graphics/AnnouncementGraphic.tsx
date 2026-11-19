@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 
 import {
+  announcementBarRows,
   effectiveAnnouncementSpec,
   getTemplate,
   headerFor,
@@ -40,6 +41,176 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
   const rows = announcementRows(teams.length, announcement);
   const slotLabels = announcementSlotLabels(teams);
   const plateD = announcement.logoSize + PLATE_PAD;
+
+  // varsity-purple — painted 3-cell bar art. Every row box is EXACTLY the
+  // measured painted bar (top = barCenters[bar] − rowHeight/2, height =
+  // rowHeight) and every box/cell is a flex container with `lineHeight: 1`
+  // declared strictly AFTER its `font` shorthand (the shorthand resets
+  // line-height to `normal`, which would push the glyphs off the bar centre).
+  // Teams 1..13 sit in the left slot + centre name cells; teams 14..25 reuse
+  // the same painted bars in the narrow right cell, so no team ever floats
+  // between bars. The baked "TEAM ANNOUNCEMENT" headline is never re-drawn:
+  // the session name renders in the empty top white ribbon instead.
+  const barLayout = config.announcementBarLayout;
+  if (barLayout) {
+    const [slotCell, nameCell, overflowCell] = barLayout.cells;
+    const barRows = announcementBarRows(teams.length, barLayout);
+    const ribbonInk = "#2D0C4E"; // measured deep-varsity ink on the white ribbon
+    return (
+      <>
+        {hideScrimNameFor(config, "announcement") ? null : (
+          <div
+            style={{
+              ...slotToStyle(header.title),
+              height: 92,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              font: header.titleFont,
+              lineHeight: 1,
+              letterSpacing: header.titleLetterSpacing,
+              textTransform: "uppercase",
+              color: ribbonInk,
+            }}
+          >
+            {title}
+          </div>
+        )}
+        {announcement.subtitleBakedIn ? null : (
+          <div
+            style={{
+              ...slotToStyle(header.subtitle),
+              height: 30,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              font: header.subtitleFont,
+              lineHeight: 1,
+              letterSpacing: header.subtitleLetterSpacing,
+              textTransform: "uppercase",
+              color: "#FFFFFF",
+            }}
+          >
+            {subtitle}
+          </div>
+        )}
+        {barRows.map((row, i) => {
+          const team = teams[i]!;
+          if (row.kind === "primary") {
+            return (
+              <div
+                key={team.id}
+                style={{
+                  position: "absolute",
+                  left: slotCell.x,
+                  top: row.y,
+                  width: nameCell.x + nameCell.w - slotCell.x,
+                  height: row.rowH,
+                  display: "flex",
+                  alignItems: "center",
+                  font: announcement.nameFont,
+                  lineHeight: 1,
+                }}
+              >
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    width: slotCell.w,
+                    flex: "0 0 auto",
+                    font: announcement.slotFont,
+                    lineHeight: 1,
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: "0.03em",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {slotLabels[i]}
+                </span>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    height: "100%",
+                    flex: "1 1 auto",
+                    minWidth: 0,
+                    font: announcement.nameFont,
+                    lineHeight: 1,
+                    textTransform: "uppercase",
+                    letterSpacing: announcement.tracking ?? "0.16em",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {team.name}
+                  </div>
+                </span>
+              </div>
+            );
+          }
+          // Overflow teams 14..25 reuse the painted bar's right cell: slot
+          // above name, both on the bar's exact measured midline.
+          return (
+            <div
+              key={team.id}
+              style={{
+                position: "absolute",
+                left: overflowCell.x,
+                top: row.y,
+                width: overflowCell.w,
+                height: row.rowH,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                font: announcement.nameFont,
+                lineHeight: 1,
+              }}
+            >
+              <span
+                style={{
+                  font: announcement.slotFont,
+                  lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "0.03em",
+                  color: "#FFFFFF",
+                }}
+              >
+                {slotLabels[i]}
+              </span>
+              <span
+                style={{
+                  font: announcement.nameFont,
+                  lineHeight: 1,
+                  textTransform: "uppercase",
+                  letterSpacing: announcement.tracking ?? "0.16em",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  maxWidth: "100%",
+                  color: "#FFFFFF",
+                }}
+              >
+                {team.name}
+              </span>
+            </div>
+          );
+        })}
+      </>
+    );
+  }
 
   // Art-backed TWO-column announcement (royal-blue). The art bakes the PUBG
   // MOBILE logo, "TEAM PARTICIPATION" title and the HOME|AWAY|NEUTRAL sub-bar
@@ -90,8 +261,12 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                   height: "100%",
                   width: announcement.slotW,
                   flex: "0 0 auto",
+                  // cardinal-gold: matte-black badge so gold numerals stay
+                  // legible over the bright crimson / lens-flare art.
+                  background: announcement.slotBadgeBg,
+                  borderRadius: announcement.slotBadgeBg ? 8 : undefined,
                   font: announcement.rankFont ?? announcement.slotFont,
-                  lineHeight: 1,
+                  lineHeight: 1, // ALWAYS after `font`
                   fontVariantNumeric: "tabular-nums",
                   color: announcement.accentColor ?? palette.accent,
                 }}
@@ -120,10 +295,18 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
                   height: "100%",
                   flex: "1 1 auto",
                   minWidth: 0, // let the flex item shrink so the inner block can ellipsize
+                  // cardinal-gold: dark cardinal name bar + subtle print
+                  // shadow keeps 800-weight white names readable over the art.
+                  background: announcement.teamBarBg,
+                  borderRadius: announcement.teamBarBg ? 8 : undefined,
+                  marginLeft: announcement.teamBarBg ? 10 : undefined,
+                  paddingLeft: announcement.teamBarBg ? 14 : undefined,
+                  boxSizing: announcement.teamBarBg ? "border-box" : undefined,
                   font: announcement.nameFont,
-                  lineHeight: 1,
+                  lineHeight: 1, // ALWAYS after `font`
                   textTransform: "uppercase",
-                  letterSpacing: "0.04em",
+                  letterSpacing: announcement.tracking ?? "0.04em",
+                  textShadow: announcement.nameTextShadow,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",

@@ -116,6 +116,8 @@ describe("AESTHETICS registry", () => {
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
+    "varsity-purple",
+    "cardinal-gold",
   ];
 
   // Parallel-safe: another lane may register onyx-green/ewc-yellow while this
@@ -817,6 +819,7 @@ describe("palette plate + medal coverage (P5 Fix D)", () => {
     "pmwi-violet",
     "grunge-red",
     "esports-clash",
+    "varsity-purple",
   ];
 
   it.each(IDS)("%s defines non-empty plate/medal strings", (id) => {
