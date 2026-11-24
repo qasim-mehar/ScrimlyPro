@@ -34,7 +34,7 @@ const MEASURED_BAR_CENTERS = [
   753.18, 804.99, 857.46, 909.67, 962.14, 1014.08, 1066.29, 1118.5, 1170.7,
   1223.97, 1276.57, 1331.81, 1386.39,
 ];
-const BAR_SPAN = { left: 233, right: 847 };
+const BAR_SPAN = { left: 233, right: 900 }; // art bar ends x~903; right cell inset 3px
 const DIVIDERS = [401, 688];
 const ROW_H = 41.7;
 const ROW_Y0 = 732;
@@ -268,6 +268,9 @@ describe("varsity-purple SSR — painted-bar Y-axis centering", () => {
     expect(html).toContain("text-transform:uppercase");
     expect(html).toContain("letter-spacing:0.17em");
     expect(html).toContain("letter-spacing:0.03em");
+    // The stacked overflow column uses a smaller face and lighter tracking.
+    expect(html).toContain('font:700 15px &quot;Exo 2&quot;');
+    expect(html).toContain("letter-spacing:0.06em");
     // Ribbon display + wide-tracked conference kicker.
     expect(html).toContain('font:900 44px &quot;Exo 2&quot;');
     expect(html).toContain('font:700 16px &quot;Exo 2&quot;');
@@ -283,6 +286,10 @@ describe("varsity-purple SSR — painted-bar Y-axis centering", () => {
     expect(t.announcement.nameFont).toBe(
       '700 17px "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif',
     );
+    expect(t.announcement.overflowNameFont).toBe(
+      '700 15px "Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui, sans-serif',
+    );
+    expect(t.announcement.overflowTracking).toBe("0.06em");
   });
 
   it("derives slot labels via lib/sessions/slots (assigned first, then fallback)", () => {

@@ -241,7 +241,8 @@ describe("pmgc-aqua baked header + MATCH # digit slot", () => {
 
   it("drops the match digits in the open dark box right of # and above the underline", () => {
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 920, y: 184, w: 96, align: "center" });
+    expect(sub).toEqual({ x: 920, y: 178, w: 96, align: "center" });
+    expect(CONFIG.variantHeaders?.standings?.subtitleFont).toContain("800 64px");
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#00F5E1");
     // Badge dark fill: art x649–925, y245–330 → canvas x724–1032, y177–272.
     expect(sub!.x!).toBeGreaterThan(cx(649));
@@ -249,7 +250,7 @@ describe("pmgc-aqua baked header + MATCH # digit slot", () => {
     expect(sub!.y!).toBeGreaterThan(cy(245));
     // Baked "#" ink ends art x814 → canvas 908; cyan underline art y308 → 247.
     expect(sub!.x!).toBeGreaterThanOrEqual(cx(814));
-    expect(sub!.y! + 40).toBeLessThan(cy(308));
+    expect(sub!.y! + 64).toBeLessThan(cy(308));
   });
 });
 

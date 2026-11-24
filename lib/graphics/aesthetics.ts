@@ -485,17 +485,19 @@ const CHALLENGERS_RED: TemplateConfig = {
   },
   variantHeaders: {
     standings: {
-      // Re-measured: baked "MATCH #" ink ends x965; digits are centred from
-      // x970 in the open cyan slot, clear of the baked cross at x1015+.
-      subtitle: { x: 970, y: 228, w: 42, align: "center" },
+      // Baked "MATCH #" ink ends x964.3; the cyan chip ends x1012.3. Digits
+      // fill that whole 48px slot instead of floating small inside it.
+      subtitle: { x: 964, y: 224, w: 48, align: "center" },
       subtitleColor: "#061014",
-      subtitleFont: `800 40px ${FONTS}`,
+      subtitleFont: `800 48px ${FONTS}`,
     },
   },
   variantHideScrimName: {
     standings: true,
   },
   standings: {
+    // Rank 1 must not wear accent red ink, strip or plate ring on this art.
+    uniformRowInk: true,
     columns: [
       {
         rankX: 96,
@@ -942,8 +944,8 @@ const PMGC_CRIMSON: TemplateConfig = {
     standings: {
       // Re-measured: baked "#" ink ends x1005; digits sit inside the gold slot
       // from x1012 (7px gap) to x1056, clear of the parallelogram's right edge.
-      subtitle: { x: 1012, y: 254, w: 44, align: "center" },
-      subtitleFont: `800 36px ${FONTS}`,
+      subtitle: { x: 1012, y: 250, w: 44, align: "center" },
+      subtitleFont: `800 44px ${FONTS}`,
       subtitleColor: "#140A00",
       // The generic organizer slot (y236) would land on the baked title; park
       // it in the clear dark band above "OVERALL RANKINGS" if ever supplied.
@@ -1035,27 +1037,26 @@ const PMWI_VIOLET_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
 /** PMWI Violet — the 2023 PUBG Mobile World Invitational electric violet/cyan
  *  leaderboard. The art on disk is now a JPEG payload at 1882×3344 — exactly 2×
  *  the 941×1672 file this config was first measured against. The uniform
- *  WIDTH fit to 1080 (×1080/1882 → 1080×1918.979809) and top -130.25 are
- *  therefore STILL the exact centred `object-fit: cover` crop (the art is an
- *  integer upscale, not a new composition). Every number below was re-measured
- *  on the current 1882px art through that mapping:
- *  - Cyan baked header bands art x46–454 / x486–897, y410–443 → canvas
- *    x52.8–521.1 / x557.8–1029.5, y321.1–358.9. Dark ink centres: left
- *    ELIMS 287.5 / WWCD 353 / TOTAL 419 → canvas 330 / 405.1 / 480.9; right
- *    ELIMS 743.5 / WWCD 801.5 / TOTAL 863 → canvas 853.3 / 919.9 / 990.5
- *    (the right shift is NOT uniform — measured, not assumed). ELIMS maps to
- *    the kill-points stat (`kp`), then WWCD, then TOTAL.
- *  - 12 painted dark bars per column: re-measured bar 1 art y914–1015 →
- *    canvas 394.3–452.2 (height ~58), last bar top art 2397 → canvas 1245.3.
- *    A fixed 77.42px pitch with a 54px row box centred at 423 (rowY0 396)
- *    lands every row dead-centre in its bar; ranksBakedIn skips code numerals
- *    (white #1–#24 boxes bake at art x92–198 / x972–1080 → canvas 52.8–113.6
- *    / 557.8–618.6).
- *  - Baked "OVERALL RANKINGS" (art y216–317 → canvas 98–214) and "MATCH #"
- *    (art y339–367 → canvas 258.8–290.9, white ink ends x456 → canvas 523.4).
- *    The scrim name is hidden for standings; only the match digits render in
- *    the open slot at x526 y236. The organizer is parked in the narrow dark
- *    band below "MATCH #" (y282), clear of both baked blocks and the header.
+ *  WIDTH fit to 1080 (×1080/1882 → 1080×1918.979809) with top 0 shows the
+ *  COMPLETE art from its top edge, including the baked PUBG MOBILE logo at the
+ *  upper left. The art runs past the canvas bottom (y1620..1919 is cropped).
+ *  Every number below is measured on the current 1882px art through that
+ *  mapping (artY × 1080/1882, no vertical offset):
+ *  - Cyan baked header bands: canvas y451.4–489.2 (was 321.1–358.9 under the
+ *    old crop). Dark ink centres: left ELIMS 330 / WWCD 405.1 / TOTAL 480.9;
+ *    right ELIMS 853.3 / WWCD 919.9 / TOTAL 990.5 (the right shift is NOT
+ *    uniform — measured, not assumed). ELIMS maps to the kill-points stat
+ *    (`kp`), then WWCD, then TOTAL.
+ *  - 12 painted dark bars per column: bar 1 canvas 524.6–582.5 (height ~58),
+ *    last bar top canvas 1375.6. A fixed 77.42px pitch with a 54px row box
+ *    centred at 553.3 (rowY0 526.25) lands every row dead-centre in its bar;
+ *    ranksBakedIn skips code numerals (white #1–#24 boxes bake at canvas
+ *    x52.8–113.6 / x557.8–618.6).
+ *  - Baked "OVERALL RANKINGS" canvas y228.3–344.3 and "MATCH #" canvas
+ *    y389.1–421.2 (white ink ends x523.4). The scrim name is hidden for
+ *    standings; only the match digits render in the open slot at x534
+ *    y382.3. The organizer is parked in the dark band below "MATCH #"
+ *    (y412.3), clear of both baked blocks and the cyan header.
  *  - MVP + announcement have no art → deep violet/cyan gradient fallback.
  *    White Exo 2 800 row text reads >12:1 on the measured row bars (lum
  *    0.014) and the 90%-white watermark clears the violet footer. */
@@ -1067,9 +1068,9 @@ const PMWI_VIOLET: TemplateConfig = {
     standings: {
       type: "image",
       src: "/templates/pmwi-violet/overall.png",
-      // Uniform ×1080/941 cover crop: art ratio 0.5629 is taller than 2:3, so
-      // the centred crop removes art y0–130.25 and y1541.75–1672.
-      fit: { width: 1080, height: 1918.979809, left: 0, top: -130.25 },
+      // Uniform ×1080/1882 width fit, anchored at the top so the baked PUBG
+      // MOBILE logo is fully visible; the art's bottom y1620..1919 is cropped.
+      fit: { width: 1080, height: 1918.979809, left: 0, top: 0 },
     },
     mvp: PMWI_VIOLET_FALLBACK_BG,
     announcement: PMWI_VIOLET_FALLBACK_BG,
@@ -1089,14 +1090,15 @@ const PMWI_VIOLET: TemplateConfig = {
   variantHeaders: {
     standings: {
       // Re-measured: baked "MATCH #" ink ends x523.4; digits start x534
-      // (11px gap) in the open dark slot above the cyan header band.
-      subtitle: { x: 534, y: 252, w: 64, align: "left" },
-      subtitleFont: `800 38px ${FONTS}`,
+      // (11px gap) in the open dark slot above the cyan header band, shifted
+      // 130.25px down now that the art is anchored to its top edge.
+      subtitle: { x: 534, y: 382, w: 64, align: "left" },
+      subtitleFont: `800 56px ${FONTS}`,
       subtitleColor: "#FFFFFF", // white digits on the measured dark violet slot
       // Park the optional organizer in the dark band below "MATCH #" (ends
-      // canvas y290.9) and above the cyan header (starts y321.1) — zero text
+      // canvas y421.2) and above the cyan header (starts y451.4) — zero text
       // collides with the baked title/subtitle art.
-      organizer: { x: 140, y: 282, w: 800, align: "center" },
+      organizer: { x: 140, y: 412, w: 800, align: "center" },
       organizerFont: `600 18px ${FONTS}`,
     },
   },
@@ -1116,7 +1118,7 @@ const PMWI_VIOLET: TemplateConfig = {
         ],
         stripX: 116, // starts at the baked white rank box's right edge
         stripW: 405, // right edge 521 — clears the cyan header/bar rim
-        rowsBottom: 1305, // re-measured art row 12 bottom 1251 → canvas 1305.3
+        rowsBottom: 1435, // art row 12 bottom canvas 1435.6 (top-anchored fit)
         ranksBakedIn: true,
         rowsPerColumn: 12,
         fixedRowPitch: true,
@@ -1132,14 +1134,14 @@ const PMWI_VIOLET: TemplateConfig = {
         ],
         stripX: 620, // starts just past the baked white rank box (ends 619.8)
         stripW: 409, // right edge 1029 — clears the cyan header/bar rim
-        rowsBottom: 1305, // re-measured art row 12 bottom 1251 → canvas 1305.3
+        rowsBottom: 1435, // art row 12 bottom canvas 1435.6 (top-anchored fit)
         ranksBakedIn: true,
         rowsPerColumn: 12,
         fixedRowPitch: true,
       },
     ],
-    headerLabelsY: 321, // cyan baked label band top — code draws no labels
-    rowY0: 396, // re-measured bar 1 top canvas 394.4; box centre 423 = bar centre
+    headerLabelsY: 451, // cyan baked label band top — code draws no labels
+    rowY0: 526.25, // bar 1 top canvas 524.6; box centre 553.3 = bar centre
     rowPitch: 77.42, // measured 12-bar span (1245.6 − 394.4)/11
     rowHeight: 54, // bar interior 54–58px across the 12 rows (no bottom overflow)
     maxRowsLeft: 12,
@@ -1249,8 +1251,8 @@ const PMGC_AQUA: TemplateConfig = {
     standings: {
       // Re-measured: baked "#" ink ends canvas x910; digits are centred from
       // x920 (10px gap) in the dark slot above the cyan underline (y247).
-      subtitle: { x: 920, y: 184, w: 96, align: "center" },
-      subtitleFont: `800 40px ${FONTS}`,
+      subtitle: { x: 920, y: 178, w: 96, align: "center" },
+      subtitleFont: `800 64px ${FONTS}`,
       subtitleColor: "#00F5E1", // electric cyan on the measured near-black slot
       // Park the optional organizer between the badge (ends y272) and the
       // baked header band (starts y316) so it collides with neither.
@@ -1823,16 +1825,13 @@ const VARSITY_YELLOW_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
  *  white row bars, and the PUBG MOBILE | KRAFTON lockup at y1405..1485.
  *
  *  Measured white-bar pixels on the canvas (sharp scan, threshold >200):
- *  bar 1 top 444.8, mean height ≈28, bar 1 centre 458.8, last bar bottom
- *  1355.8. The campaign geometry locks the fixed-pitch single column to
- *  rowY0 444.8 / rowHeight 28 / rowPitch 39.7 / rowsBottom 1382, with 24
- *  painted row bands (rowsPerColumn 24). NOTE: the delivered art actually
- *  paints 22 bars at ~42.2px pitch; the campaign geometry above is used by
- *  deliberate decision (the prompt's 24-band spec), so rows beyond the first
- *  drift from those bars. `announcementRowLayout` therefore
- *  places row i at top = rowY0 + i*rowPitch with height = rowHeight; its
- *  vertical midpoint is the row's text centre. Fewer than 24 teams never
- *  stretch the pitch — the unused bars below team N stay clean and empty.
+ *  bar 1 top 445, mean height ≈28, bar 1 centre 459, last bar bottom 1355,
+ *  22 painted bars at a 42px pitch. The fixed-pitch single column is locked
+ *  to those measured bars: rowY0 445 / rowHeight 28 / rowPitch 42 /
+ *  rowsBottom 1356 / rowsPerColumn 22. `announcementRowLayout` places row i
+ *  at top = rowY0 + i*rowPitch with height = rowHeight; its vertical midpoint
+ *  is the row's text centre. Fewer than 22 teams never stretch the pitch —
+ *  the unused bars below team N stay clean and empty.
  *
  *  Content is confined to x296..784 inside the painted bars (canvas x281..799):
  *  left-aligned Slot '#' column at x296 (105 wide), team name at x401. Both
@@ -1869,8 +1868,8 @@ const VARSITY_YELLOW: TemplateConfig = {
     },
   },
   announcement: {
-    rowsTop: 444.8,
-    rowsBottom: 1382,
+    rowsTop: 445,
+    rowsBottom: 1356,
     slotX: 296,
     slotW: 105,
     logoX: 401,
@@ -1881,12 +1880,12 @@ const VARSITY_YELLOW: TemplateConfig = {
     slotFont: `700 19px ${FONTS_ATHLETIC}`,
     nameFont: `700 19px ${FONTS_ATHLETIC}`,
     subtitleBakedIn: true, // art bakes "TEAM PARTICIPATION"
-    // --- Single-column, fixed-pitch bar geometry (1–24 teams) ---
+    // --- Single-column, fixed-pitch bar geometry (1–22 teams) ---
     singleColumn: true,
     fixedRowPitch: true,
-    rowsPerColumn: 24,
-    rowY0: 444.8,
-    rowPitch: 39.7,
+    rowsPerColumn: 22,
+    rowY0: 445,
+    rowPitch: 42,
     leftX: 296,
     rightX: 784,
     colWidth: 488,
@@ -1903,14 +1902,14 @@ const VARSITY_YELLOW: TemplateConfig = {
   announcementLayout: {
     singleColumn: true,
     fixedRowPitch: true,
-    rowsPerColumn: 24,
+    rowsPerColumn: 22,
     leftX: 296,
     rightX: 784,
     colWidth: 488,
-    rowY0: 444.8,
-    rowPitch: 39.7,
+    rowY0: 445,
+    rowPitch: 42,
     rowHeight: 28,
-    rowsBottom: 1382,
+    rowsBottom: 1356,
     slotColWidth: 105,
     rankFont: `700 19px ${FONTS_ATHLETIC}`,
     nameFont: `700 19px ${FONTS_ATHLETIC}`,
@@ -2211,9 +2210,10 @@ const CARDINAL_GOLD_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
  *    Exo 2 / Rajdhani 800–900 athletic typography as the baked announcement.
  *
  *  ANNOUNCEMENT art (`announcement.png`, 1664×2496, exactly 2:3): the baked
- *  "TEAM PARTICIPATION" hero owns y0..~405 and the PUBG MOBILE | KRAFTON
- *  footer y~1465..1575. The 24-team grid lives in y425..1375 as two 12-row
- *  columns (x88..512 / x568..992) at a fixed 76px pitch with 54px row boxes.
+ *  "TEAM PARTICIPATION" hero owns y0..~408 and the PUBG MOBILE | KRAFTON
+ *  footer y~1465..1575. The 24-team grid lives in y455..1405 as two 12-row
+ *  columns (x88..512 / x568..992) at a fixed 76px pitch with 54px row boxes —
+ *  shifted 30px below the baked headline so it breathes before the table.
  *  Matte-black #141414 56×54 slot badges and translucent cardinal name bars
  *  seat pure-white Exo 2 800 / Rajdhani 800 ink dead-centre on every row. */
 const CARDINAL_GOLD: TemplateConfig = {
@@ -2319,13 +2319,14 @@ const CARDINAL_GOLD: TemplateConfig = {
     },
   },
   announcement: {
-    // Safe grid: y425..1375, x88..512 (left) and x568..992 (right). The baked
-    // "TEAM PARTICIPATION" headline ends near y~405; the KRAFTON footer and
-    // bottom-left crimson shards sit below y~1460. 12 rows/column at a FIXED
-    // 76px pitch (54px row box) → row 12 bottom = 425 + 11*76 + 54 = 1315,
-    // and a 25th team (right column row 13) auto-fits to 74.7px → 1375.
-    rowsTop: 425,
-    rowsBottom: 1375,
+    // Safe grid: y455..1405, x88..512 (left) and x568..992 (right). The baked
+    // "TEAM PARTICIPATION" headline ends near y~408; the grid starts 47px below
+    // it instead of 17px. The KRAFTON footer and bottom-left crimson shards sit
+    // below y~1460. 12 rows/column at a FIXED 76px pitch (54px row box) → row
+    // 12 bottom = 455 + 11*76 + 54 = 1345, and a 25th team (right column row
+    // 13) auto-fits to 74.7px → 1405.
+    rowsTop: 455,
+    rowsBottom: 1405,
     slotX: 88,
     slotW: 56, // matte-black "01".."24" badge
     logoX: 154,
@@ -2338,7 +2339,7 @@ const CARDINAL_GOLD: TemplateConfig = {
     subtitleBakedIn: true, // "TEAM PARTICIPATION" is baked into the art
     // --- Two-column, fixed-pitch geometry (4–25 teams) ---
     fixedRowPitch: true,
-    rowY0: 425,
+    rowY0: 455,
     rowPitch: 76,
     rowsPerColumn: 12,
     leftX: 88,
@@ -2535,6 +2536,9 @@ const SLATE_KILLS_FONTS = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", system-ui
  *  open white zone on the right (canvas x515.90–818.92). Only the two-line
  *  IGN + KILLS stack is painted, centred on each measured bar midline; no team
  *  names, logos or synthetic headers (mvpShowTeam: false, header baked).
+ *  Re-measured 2026-11-23: mapping native tops directly with the real 1620/6656
+ *  scale gives canvas bars 661–780, 797–917, 934–1054, 1071–1192, 1209–1330 —
+ *  the older bar array sat ~88px too low and left text on the bar edges.
  *  Standings/announcement have no art → dark urban charcoal/slate gradient. */
 const URBAN_SLATE: TemplateConfig = {
   ...GEOMETRY,
@@ -2574,9 +2578,9 @@ const URBAN_SLATE: TemplateConfig = {
   mvp: {
     // Nominal geometry (the slate-pill renderer seats rows from the exact
     // measured boxes in `slatePills.bars` instead).
-    rowY0: 749.0715,
+    rowY0: 661.0457,
     rowPitch: 137.0282,
-    rowHeight: 120.9645,
+    rowHeight: 120,
     rankX: 0,
     playerX: 515.9044, // open white zone's left edge (never rendered as a plate)
     playerW: 303.0198,
@@ -2590,11 +2594,11 @@ const URBAN_SLATE: TemplateConfig = {
     subtitleBakedIn: true,
     slatePills: {
       bars: [
-        { top: 749.0715, height: 119.2608, centerY: 808.7019 },
-        { top: 885.3696, height: 119.7476, centerY: 945.2434 },
-        { top: 1021.6677, height: 121.2079, centerY: 1082.27165 },
-        { top: 1159.4261, height: 121.2079, centerY: 1220.03005 },
-        { top: 1297.1845, height: 120.9645, centerY: 1357.66675 },
+        { top: 661.0457, height: 119.2608, centerY: 720.6761 },
+        { top: 797.1004, height: 119.9910, centerY: 857.0959 },
+        { top: 933.6418, height: 121.2079, centerY: 994.24575 },
+        { top: 1071.1569, height: 121.4513, centerY: 1131.88255 },
+        { top: 1209.1587, height: 120.9645, centerY: 1269.64095 },
       ],
       textLeft: 515.9044,
       textWidth: 303.0198,
@@ -2687,7 +2691,7 @@ const VARSITY_PURPLE_BAR_LAYOUT: AnnouncementBarLayout = {
   cells: [
     { x: 233, w: 168 }, // left slot cell
     { x: 401, w: 287 }, // centre team-name cell
-    { x: 688, w: 159 }, // right overflow cell
+    { x: 688, w: 212 }, // right overflow cell — art bar ends x~903; 900 leaves 3px inset
   ],
 };
 
@@ -2787,6 +2791,10 @@ const VARSITY_PURPLE: TemplateConfig = {
     rowHeight: 41.7,
     slotFont: `800 22px ${VARSITY_CONDENSED_FONTS}`,
     nameFont: `700 17px ${FONTS_FULL}`,
+    // The stacked overflow cell is narrower than the primary name cell: smaller
+    // ink + lighter tracking keeps long names readable beside their slot number.
+    overflowNameFont: `700 15px ${FONTS_FULL}`,
+    overflowTracking: "0.06em",
     subtitleBakedIn: false,
     singleColumn: true,
     fixedRowPitch: true,
@@ -2794,8 +2802,8 @@ const VARSITY_PURPLE: TemplateConfig = {
     rowPitch: 52.4,
     rowsPerColumn: 13,
     leftX: 233,
-    rightX: 847,
-    colWidth: 614,
+    rightX: 900,
+    colWidth: 667,
     barCenterYs: VARSITY_PURPLE_BAR_CENTERS,
     barCells: VARSITY_PURPLE_BAR_LAYOUT.cells,
     inkColor: "#FFFFFF",
@@ -2824,6 +2832,125 @@ const VARSITY_PURPLE: TemplateConfig = {
   },
 };
 
+// Varsity Orange leads with the prompt's Rajdhani → Exo 2 athletic pair and
+// keeps the Noto Symbols / system-ui tail demanded by the glyph law (§11) for
+// Arabic / CJK / katakana team names.
+const FONTS_VARSITY_ORANGE =
+  '"Rajdhani", "Exo 2", "Noto Sans Symbols 2", system-ui, sans-serif';
+
+const VARSITY_ORANGE_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  // Dark orange → carbon. Both text inks on the artless standings/MVP variants
+  // are crisp white (≥7:1 on every stop); the charcoal #111111 / varsity
+  // #E85319 inks are the LIGHT announcement art's measured reference colors.
+  css: "linear-gradient(165deg, #1A0E08 0%, #2E1105 55%, #141210 100%)",
+  decor: [],
+};
+
+/**
+ * Varsity Orange — the "team Announcement" varsity-athletic participation art.
+ *
+ * Art: `announcement.png` is a TRUE 2048×3072 PNG (exactly the 2:3 canvas), so
+ * `object-fit: cover` maps it onto 1080×1620 at a uniform ×0.52734375 with no
+ * crop. Every coordinate below was measured off the art at canvas scale:
+ *
+ * - Two vertical DASHED ORANGE PIPES at canvas x461–466 (center 463.5 → 464)
+ *   and x832–836 (center 834). Each pipe paints exactly 12 dash segments in
+ *   the list band: tops 480, 545/546, 611, 676/677, 742, 808, 874, 939/940,
+ *   1005, 1071, 1137, 1204 and bottoms 522, 587, 652, 718, 783, 849, 915,
+ *   981, 1047, 1113, 1179, 1246 — a nominal 42px dash on a 65.8182px pitch.
+ *   `rowY0` 480 + `rowPitch` 65.8182 + `rowHeight` 42 therefore seats every
+ *   row's text midpoint DEAD-CENTER on its dash with ZERO cumulative drift
+ *   (row 12 top = 480 + 11×65.8182 = 1204, center = 1225 = dash 12's center).
+ * - The art bakes the "team Announcement" headline, the ghost "2026" and the
+ *   PUBG MOBILE | KRAFTON footer, so every dynamic header slot is parked
+ *   off-canvas and the scrim name is suppressed for the announcement variant.
+ * - Pipe-split ink (slotPosition "right"): the team name is RIGHT-aligned in
+ *   [pipe − 12 − 152, pipe − 12] and the slot number LEFT-aligned in
+ *   [pipe + 12, pipe + 132]. Content clears the left ball art (x ≤ 348) and
+ *   long names ellipsize before the pipe. Reference ink: charcoal #111111
+ *   names, varsity orange #E85319 slots, Rajdhani/Exo 2 800.
+ * - Standings + MVP have no art → dark orange/carbon gradient fallback.
+ */
+const VARSITY_ORANGE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "varsity-orange",
+  name: "Varsity Orange",
+  backgrounds: {
+    standings: VARSITY_ORANGE_FALLBACK_BG,
+    mvp: VARSITY_ORANGE_FALLBACK_BG,
+    announcement: { type: "image", src: "/templates/varsity-orange/announcement.png" },
+  },
+  uniformMvpRows: true,
+  header: {
+    title: { x: -9999, y: -9999, w: 0 },
+    subtitle: { x: -9999, y: -9999, w: 0 },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `800 1px ${FONTS_VARSITY_ORANGE}`,
+    subtitleFont: `800 1px ${FONTS_VARSITY_ORANGE}`,
+    organizerFont: `800 1px ${FONTS_VARSITY_ORANGE}`,
+  },
+  variantHideScrimName: { announcement: true },
+  variantHeaders: {
+    announcement: {
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: -9999, y: -9999, w: 0 },
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  announcement: {
+    rowsTop: 480, // dash 1 top — clears the baked "team Announcement" band
+    // Dash 12 bottom is 1246. The extra pitch (→1311.818) is RESERVED so a
+    // 25th team still keeps the fixed pitch: splitRowsAt(25,12) puts 13 in the
+    // right column, and without room here `announcementRowLayout` would shrink
+    // that column's pitch and drag all 13 rows off their painted dashes. The
+    // overflow row lands at y1269.8 (center 1290.8) — still on the cream card,
+    // clear of the PUBG MOBILE | KRAFTON footer (y1465+).
+    rowsBottom: 1311.8181818181819,
+    slotX: 476, // pipe 1 (464) + pipeGap 12
+    slotW: 120, // "01".."24" at 800 22px tabular-nums
+    logoX: 300, // no logo plate renders in pipe-split mode
+    teamX: 300,
+    teamW: 152, // right edge 452 = pipe 1 − pipeGap 12
+    logoSize: 0,
+    rowHeight: 42, // the painted dash height — the flex box IS the dash
+    slotFont: `800 22px ${FONTS_VARSITY_ORANGE}`,
+    nameFont: `800 22px ${FONTS_VARSITY_ORANGE}`,
+    subtitleBakedIn: true, // the art bakes "team Announcement"
+    // --- Two 12-row columns, fixed pitch locked to the baked dashes ---
+    fixedRowPitch: true,
+    rowY0: 480,
+    rowPitch: 65.81818181818181, // (dash 12 center 1225 − dash 1 center 501) / 11
+    rowsPerColumn: 12,
+    leftX: 464, // pipe 1 center (measured x461–466)
+    rightX: 834, // pipe 2 center (measured x832–836)
+    colWidth: 420,
+    slotPosition: "right",
+    pipeGap: 12,
+    rankFont: `800 22px ${FONTS_VARSITY_ORANGE}`,
+    inkColor: "#111111", // charcoal team names on the cream card
+    accentColor: "#E85319", // varsity-orange slot numerals
+    cardBg: "transparent", // the baked cream card shows through
+    tracking: "0.02em",
+  },
+  palette: {
+    accent: "#E85319", // varsity orange — the baked slot ink
+    text: "#FFFFFF", // crisp white on the dark standings/MVP fallback gradients
+    textMuted: "#F5D0BC",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.05,
+    wwcdBg: "rgba(232,83,25,0.16)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(232,83,25,0.10)",
+    plateRing: "rgba(232,83,25,0.50)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#1A120E",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -2847,6 +2974,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "apex-blaze": APEX_BLAZE,
   "urban-slate": URBAN_SLATE,
   "varsity-purple": VARSITY_PURPLE,
+  "varsity-orange": VARSITY_ORANGE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

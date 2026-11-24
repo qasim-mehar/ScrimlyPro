@@ -192,13 +192,12 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
               </span>
               <span
                 style={{
-                  font: announcement.nameFont,
-                  lineHeight: 1,
+                  font: announcement.overflowNameFont ?? announcement.nameFont,
+                  lineHeight: 1.05,
                   textTransform: "uppercase",
-                  letterSpacing: announcement.tracking ?? "0.16em",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                  letterSpacing: announcement.overflowTracking ?? announcement.tracking ?? "0.16em",
+                  textAlign: "center",
+                  whiteSpace: "normal",
                   maxWidth: "100%",
                   color: "#FFFFFF",
                 }}
@@ -232,6 +231,88 @@ export function AnnouncementGraphic({ aestheticId, title, subtitle, organizer, t
     announcement.rightX !== undefined
   ) {
     const colW = announcement.colWidth ?? announcement.teamX + announcement.teamW - announcement.leftX;
+
+    // Pipe-split art (varsity-orange): the baked dashed orange line divides
+    // each column into [TEAM NAME] | [SLOT #]. `leftX`/`rightX` ARE the measured
+    // pipe centers, so the name box is right-aligned just LEFT of the pipe and
+    // the slot box left-aligned just RIGHT of it. Both cells are flex boxes
+    // with height = the painted dash (rowH) and `lineHeight: 1` declared AFTER
+    // `font`, centering each glyph on the exact dash midpoint at every row.
+    // No logo plate, rank badge or name bar renders over the cream card; long
+    // names ellipsize inside their fixed-width box and never cross the pipe.
+    if (announcement.slotPosition === "right") {
+      const gap = announcement.pipeGap ?? 12;
+      const nameW = announcement.teamW;
+      const slotW = announcement.slotW;
+      const nameInk = announcement.inkColor ?? palette.text;
+      const slotInk = announcement.accentColor ?? palette.accent;
+      return (
+        <>
+          {rows.map((row, i) => {
+            const team = teams[i]!;
+            const pipeX = row.x ?? announcement.leftX!;
+            const rowH = row.rowH ?? announcement.rowHeight;
+            return (
+              <Fragment key={team.id}>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: pipeX - gap - nameW,
+                    top: row.y,
+                    width: nameW,
+                    height: rowH,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    font: announcement.nameFont,
+                    lineHeight: 1, // ALWAYS after `font`
+                    letterSpacing: announcement.tracking,
+                    textAlign: "right",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    color: nameInk,
+                  }}
+                >
+                  {/* text-overflow needs a BLOCK container — a bare flex text
+                      node would hard-clip long names instead of showing '…'. */}
+                  <div
+                    style={{
+                      width: "100%",
+                      textAlign: "right",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {team.name}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: pipeX + gap,
+                    top: row.y,
+                    width: slotW,
+                    height: rowH,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    font: announcement.rankFont ?? announcement.slotFont,
+                    lineHeight: 1, // ALWAYS after `font`
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: announcement.tracking,
+                    color: slotInk,
+                  }}
+                >
+                  {slotLabels[i]}
+                </div>
+              </Fragment>
+            );
+          })}
+        </>
+      );
+    }
+
     return (
       <>
         {rows.map((row, i) => {

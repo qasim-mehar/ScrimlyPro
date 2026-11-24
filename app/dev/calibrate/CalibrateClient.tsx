@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { GraphicCanvas } from "@/components/graphics/GraphicCanvas";
+import { AnnouncementGraphic } from "@/components/graphics/AnnouncementGraphic";
 import { OverallStandingsGraphic } from "@/components/graphics/OverallStandingsGraphic";
 import {
   AESTHETICS,
@@ -82,10 +83,19 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
   const counts = Object.keys(datasets).map(Number).sort((a, b) => a - b);
   const [count, setCount] = useState<number>(counts.includes(19) ? 19 : counts[0]);
   const [grid, setGrid] = useState(true);
+  const [variant, setVariant] = useState<"standings" | "announcement">("standings");
   const [id, setId] = useState<AestheticId>("pmpl-light");
   const config = getTemplate(id);
   const standingsHeader = headerFor(config, "standings");
   const rows = datasets[String(count)] ?? [];
+  // Announcement fixture: seats 1–12 assigned, 13+ NULL so the slot fallback
+  // labels are exercised alongside the baked pipe/row geometry.
+  const announceTeams = rows.map((r, i) => ({
+    id: r.teamId,
+    name: r.teamName,
+    logoUrl: r.logoUrl,
+    slotNumber: i < 12 ? i + 1 : null,
+  }));
   const singleColumn = config.standings.singleColumn === true;
   const splitAt = config.standings.columns[0].rowsPerColumn ?? config.standings.rowsPerColumn;
   const [leftCount, rightCount] =
@@ -119,6 +129,21 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {(["standings", "announcement"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setVariant(v)}
+            aria-pressed={variant === v}
+            className={`min-h-[44px] border border-line px-4 text-sm tracking-widest ${
+              variant === v ? "bg-surface-2 text-gold" : "bg-surface text-muted"
+            }`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
         {counts.map((n) => (
           <button
             key={n}
@@ -143,15 +168,25 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
       </div>
       <div className="flex flex-col gap-4 lg:flex-row">
         <div className="w-full max-w-xl flex-1">
-          <GraphicCanvas config={config} variant="standings">
-            <OverallStandingsGraphic
-              aestheticId={id}
-              title="CALIBRATION SCRIM"
-              subtitle="AFTER MATCH 6"
-              organizer={null}
-              standings={rows}
-              matchCount={6}
-            />
+          <GraphicCanvas config={config} variant={variant}>
+            {variant === "announcement" ? (
+              <AnnouncementGraphic
+                aestheticId={id}
+                title="CALIBRATION SCRIM"
+                subtitle="PARTICIPATING TEAMS"
+                organizer={null}
+                teams={announceTeams}
+              />
+            ) : (
+              <OverallStandingsGraphic
+                aestheticId={id}
+                title="CALIBRATION SCRIM"
+                subtitle="AFTER MATCH 6"
+                organizer={null}
+                standings={rows}
+                matchCount={6}
+              />
+            )}
             {grid ? <GridOverlay /> : null}
           </GraphicCanvas>
         </div>
@@ -200,6 +235,29 @@ export function CalibrateClient({ datasets }: { datasets: Record<string, Standin
               1,
             )}
           </pre>
+          {variant === "announcement" ? (
+            <pre className="mt-3 whitespace-pre-wrap">
+              {JSON.stringify(
+                {
+                  rowY0: config.announcement.rowY0,
+                  rowPitch: config.announcement.rowPitch,
+                  rowHeight: config.announcement.rowHeight,
+                  rowsPerColumn: config.announcement.rowsPerColumn,
+                  leftX: config.announcement.leftX,
+                  rightX: config.announcement.rightX,
+                  slotPosition: config.announcement.slotPosition ?? "left",
+                  pipeGap: config.announcement.pipeGap ?? null,
+                  teamX: config.announcement.teamX,
+                  teamW: config.announcement.teamW,
+                  slotX: config.announcement.slotX,
+                  slotW: config.announcement.slotW,
+                  split: { left: Math.min(count, 12), right: Math.max(0, count - 12) },
+                },
+                null,
+                1,
+              )}
+            </pre>
+          ) : null}
         </aside>
       </div>
     </div>

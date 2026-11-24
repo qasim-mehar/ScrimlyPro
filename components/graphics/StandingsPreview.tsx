@@ -2,7 +2,12 @@
 
 import { useRef, useState } from "react";
 
-import { getTemplate, type AestheticId } from "@/lib/graphics";
+import {
+  defaultAestheticId,
+  getTemplate,
+  selectableAestheticIds,
+  type AestheticId,
+} from "@/lib/graphics";
 import { resolveStandingsFilename } from "@/lib/graphics/standings";
 import type { StandingRow } from "@/lib/scoring";
 
@@ -31,7 +36,14 @@ export function StandingsPreview({
   matchCount,
   isFinal,
 }: StandingsPreviewProps) {
-  const [aestheticId, setAestheticId] = useState<AestheticId>("dark-gold");
+  const variant = "standings" as const;
+  const [aestheticId, setAestheticId] = useState<AestheticId>(() =>
+    defaultAestheticId(variant),
+  );
+  const available = selectableAestheticIds(variant);
+  const effectiveId = available.includes(aestheticId)
+    ? aestheticId
+    : available[0]!;
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
@@ -40,15 +52,19 @@ export function StandingsPreview({
 
   return (
     <section className="flex flex-col gap-3">
-      <AestheticChips activeId={aestheticId} onSelect={setAestheticId} />
+      <AestheticChips
+        variant={variant}
+        activeId={effectiveId}
+        onSelect={setAestheticId}
+      />
       <div className="overflow-hidden rounded-dash bg-dash-bg p-2 sm:p-3">
         <GraphicCanvas
-          config={getTemplate(aestheticId)}
-          variant="standings"
+          config={getTemplate(effectiveId)}
+          variant={variant}
           stageRef={stageRef}
         >
           <OverallStandingsGraphic
-            aestheticId={aestheticId}
+            aestheticId={effectiveId}
             title={title}
             subtitle={subtitle}
             organizer={organizer}

@@ -21,17 +21,15 @@ const TABLE = CONFIG.standings;
 const [LEFT, RIGHT] = TABLE.columns;
 
 /** Logical measurement grid is the original 941×1672 art; the file on disk
- *  is now 1882×3344 (exactly 2×). It stays uniformly width-fitted and
- *  centre-cropped with top −130.25 CANVAS px (the fit's top is not in art px),
- *  so canvasY = artY × S − OFF. */
+ *  is now 1882×3344 (exactly 2×). It is uniformly width-fitted and anchored to
+ *  the top of the canvas, so canvasY = artY × S with no crop offset. */
 const ART = { w: 941, h: 1672 };
 const S = 1080 / ART.w;
-const OFF = (ART.h - 1620 / S) / 2; // 130.25
 const near = (canvasPx: number, artPx: number, tol = 1) => {
   expect(Math.abs(canvasPx - artPx * S)).toBeLessThanOrEqual(tol);
 };
 const cx = (artPx: number) => artPx * S;
-const cy = (artPx: number) => artPx * S - OFF;
+const cy = (artPx: number) => artPx * S;
 
 /** Native scan of the 12 painted dark bars (art px) — rank boxes are baked
  *  into their left edge, so every rendered row box must sit INSIDE them. */
@@ -83,7 +81,7 @@ describe("pmwi-violet registration + measured art", () => {
     expect(CONFIG.backgrounds.standings).toEqual({
       type: "image",
       src: "/templates/pmwi-violet/overall.png",
-      fit: { width: 1080, height: 1918.979809, left: 0, top: -130.25 },
+      fit: { width: 1080, height: 1918.979809, left: 0, top: 0 },
     });
     const bytes = readFileSync("public/templates/pmwi-violet/overall.png");
     // The delivered file is now a 2× JPEG payload inside a .png name.
@@ -107,7 +105,7 @@ describe("pmwi-violet registration + measured art", () => {
     expect(CONFIG.backgrounds.mvp).toEqual(CONFIG.backgrounds.announcement);
   });
 
-  it("fits the (2× upscaled) art uniformly to a centred 1080-wide cover crop (no distortion)", () => {
+  it("fits the (2× upscaled) art uniformly to a top-anchored 1080-wide box (no distortion)", () => {
     const bg = CONFIG.backgrounds.standings;
     expect(bg.type).toBe("image");
     if (bg.type !== "image" || !bg.fit) throw new Error("expected a fitted image background");
@@ -115,7 +113,7 @@ describe("pmwi-violet registration + measured art", () => {
     expect(width).toBe(1080);
     expect(Math.abs(height - ART.h * S)).toBeLessThan(0.001); // same ×S as the width
     expect(left).toBe(0);
-    expect(top).toBe(-OFF);
+    expect(top).toBe(0); // complete art from the top; PUBG logo is visible
     // The fitted box fully covers the canvas (no letterbox strip to fill).
     expect(height + top).toBeGreaterThan(1620);
   });
@@ -148,8 +146,8 @@ describe("pmwi-violet registration + measured art", () => {
 });
 
 describe("pmwi-violet measured 12/12 bar geometry", () => {
-  it("lays all 12 rows strictly inside the painted bars (rowY0 396, pitch 77.42, height 54)", () => {
-    expect(TABLE.rowY0).toBe(396);
+  it("lays all 12 rows strictly inside the painted bars (rowY0 526.25, pitch 77.42, height 54)", () => {
+    expect(TABLE.rowY0).toBe(526.25);
     expect(TABLE.rowPitch).toBe(77.42);
     expect(TABLE.rowHeight).toBe(54);
     expect(TABLE.fixedRowPitch).toBe(true);
@@ -233,13 +231,15 @@ describe("pmwi-violet measured 12/12 bar geometry", () => {
     const header = CONFIG.variantHeaders?.standings;
     const sub = header?.subtitle;
     const organizer = header?.organizer;
-    expect(sub).toEqual({ x: 534, y: 252, w: 64, align: "left" });
+    expect(sub).toEqual({ x: 534, y: 382, w: 64, align: "left" });
+    expect(header?.subtitleFont).toContain("800 56px");
     // "MATCH #" white ink ends at art x456 → canvas 523.4; digits start after it.
     expect(sub!.x!).toBeGreaterThan(cx(456));
     expect(sub!.x!).toBeLessThan(cx(456) + 14);
-    // Digit box sits inside the baked "MATCH #" ink band (art y339–367).
+    // Digit box sits in the dark slot BELOW the baked "MATCH #" band and
+    // above the cyan label band (art y410), clear of both.
     expect(sub!.y!).toBeGreaterThanOrEqual(cy(339) - 10);
-    expect(sub!.y! + 38).toBeLessThanOrEqual(cy(367) + 6);
+    expect(sub!.y! + 56).toBeLessThanOrEqual(cy(410));
     // Baked title ink ends at canvas y214; the digits start well below it.
     expect(sub!.y!).toBeGreaterThan(cy(317));
     // Organizer (if ever supplied) is parked between MATCH # and the cyan header.

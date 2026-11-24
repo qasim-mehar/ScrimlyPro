@@ -20,7 +20,12 @@ import {
   StatusChip,
 } from "@/components/app/ui";
 import { CameraIcon, PlusIcon, SparklesIcon } from "@/components/dashboard/icons";
-import { AESTHETICS, type AestheticId } from "@/lib/graphics";
+import {
+  AESTHETICS,
+  defaultAestheticId,
+  selectableAestheticIds,
+  type AestheticId,
+} from "@/lib/graphics";
 import { SUPER_RULES } from "@/lib/scoring";
 import {
   parseTeamInput,
@@ -74,7 +79,9 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
   const [nameTouched, setNameTouched] = useState(false);
   const [plannedMatches, setPlannedMatches] = useState("4");
   const [teamCount, setTeamCount] = useState("16");
-  const [templateId, setTemplateId] = useState<AestheticId>("dark-gold");
+  const [templateId, setTemplateId] = useState<AestheticId>(() =>
+    defaultAestheticId(),
+  );
   // Default to the user's first org (oldest membership); server re-verifies.
   const [orgId, setOrgId] = useState(orgs[0]?.id ?? "");
   const [rawTeams, setRawTeams] = useState("");
@@ -428,15 +435,15 @@ export default function CreateSessionWizard({ orgs }: { orgs: ActiveOrg[] }) {
               <fieldset>
                 <legend className={fieldStyles.label}>Graphic aesthetic</legend>
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {(Object.keys(AESTHETICS) as AestheticId[]).map((id) => {
+                  {selectableAestheticIds().map((id) => {
                     const config = AESTHETICS[id];
                     const selected = templateId === id;
                     const backgrounds = Object.values(config.backgrounds);
-                    const tag = backgrounds.every((bg) => bg.type === "gradient")
-                      ? "Placeholder"
-                      : backgrounds.some((bg) => bg.type === "gradient")
-                        ? "Partial art"
-                        : null;
+                    // Every option has at least one real template image; the
+                    // remaining gradient variants are internal fallbacks only.
+                    const tag = backgrounds.some((bg) => bg.type === "gradient")
+                      ? "Partial art"
+                      : null;
                     const standingBackground = config.backgrounds.standings;
                     return (
                       <button

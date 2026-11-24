@@ -17,7 +17,7 @@ const FONT_STACK = '"Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif';
 // brand law — position + text fixed (PRD §4: watermark always rendered; it is
 // the growth engine). Only the INK is per-theme (palette.watermarkColor) and
 // the announcement variant may drop it lower (config.watermarkYOffset, P7).
-const WATERMARK_SLOT: Slot = { x: 760, y: 1570, w: 280, align: "right" };
+const WATERMARK_SLOT: Slot = { x: 730, y: 1570, w: 280, align: "right" };
 const WATERMARK_FONT = `600 26px ${FONT_STACK}`;
 
 function DecorShapeView({ shape }: { shape: DecorShape }) {

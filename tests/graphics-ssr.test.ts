@@ -106,11 +106,17 @@ describe("Fix D — palette-driven polish (SSR presence)", () => {
 
   it("standings logo plates use plateBg/plateRing; rank-1 ring uses accent", () => {
     for (const id of IDS) {
-      const p = getTemplate(id).palette;
+      const config = getTemplate(id);
+      const p = config.palette;
       const html = renderToStaticMarkup(standings(id, "AFTER MATCH 1", 4, { logos: true, matchCount: 1 }));
       expect(html).toContain(p.plateBg);
       expect(html).toContain(p.plateRing);
-      expect(html).toContain(`2px solid ${p.accent}`);
+      if (config.standings.uniformRowInk) {
+        // challengers-red bakes its own rank-1 emphasis: no accent ring on art.
+        expect(html).not.toContain(`2px solid ${p.accent}`);
+      } else {
+        expect(html).toContain(`2px solid ${p.accent}`);
+      }
       expect(html).toContain("border-radius:50%");
     }
   });
@@ -775,5 +781,70 @@ describe("P8(6) — pmgc-aqua standings SSR rendering", () => {
     expect(hideScrimNameFor(config, "standings")).toBe(true);
     expect(hideScrimNameFor(config, "mvp")).not.toBe(true);
     expect(hideScrimNameFor(config, "announcement")).not.toBe(true);
+  });
+});
+
+describe("varsity-orange — pipe-split announcement SSR safety", () => {
+  const announce = (n: number) =>
+    renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "varsity-orange",
+        title: "MY SCRIM NAME",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: "MY ORGANIZER",
+        teams: announceTeams(n),
+      }),
+    );
+
+  it("renders 1/12/24 teams without hydration hazards, NaN or undefined", () => {
+    for (const n of [1, 12, 24]) {
+      const html = announce(n);
+      expect(html).toContain(`SQUAD ${n}`);
+      expect(html).not.toContain("NaN");
+      expect(html).not.toContain("undefined");
+      // Every data cell is a real style attribute — no missing font crash.
+      expect(html).toContain("font:800 22px");
+      expect(html).toContain("color:#111111");
+      expect(html).toContain("color:#E85319");
+    }
+  });
+
+  it("suppresses the baked headline and renders the pipe split, not a logo/badge path", () => {
+    const html = announce(24);
+    expect(html).not.toContain("MY SCRIM NAME");
+    expect(html).not.toContain("PARTICIPATING TEAMS");
+    expect(html).not.toContain("MY ORGANIZER");
+    expect(html).toContain("text-overflow:ellipsis");
+    // No rank badge/name bar is painted on the cream art.
+    expect(html).not.toContain("border-radius:8px");
+  });
+
+  it("renders standings + MVP on the gradient fallback without crashing", () => {
+    for (const variant of ["standings", "mvp"] as const) {
+      const html =
+        variant === "standings"
+          ? renderToStaticMarkup(standings("varsity-orange", "AFTER MATCH 1", 16, { matchCount: 1 }))
+          : renderToStaticMarkup(
+              h(MvpGraphic, {
+                aestheticId: "varsity-orange",
+                title: "SCRIM",
+                subtitle: "TOP 5 FRAGGERS",
+                organizer: null,
+                entries: mvpEntries(),
+              }),
+            );
+      expect(html).toContain("SCRIM");
+      expect(html).not.toContain("NaN");
+      expect(html).not.toContain("undefined");
+    }
+  });
+
+  it("keeps the hardcoded brand watermark at y1570 on all three variants", () => {
+    const config = getTemplate("varsity-orange");
+    for (const variant of ["standings", "mvp", "announcement"] as const) {
+      const html = renderToStaticMarkup(h(GraphicCanvas, { config, variant }));
+      expect(html).toContain("top:1570px");
+      expect(html).toContain("scrimlypro.com");
+    }
   });
 });

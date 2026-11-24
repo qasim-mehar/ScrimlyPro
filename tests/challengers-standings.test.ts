@@ -156,13 +156,18 @@ describe("challengers-red standings config (measured 24-slot art)", () => {
   });
 
   it("drops the match number into the open cyan slot right of the baked #", () => {
-    // "MATCH #" ink ends art x3657 → 964.3; chip ends art x3839 → 1012.3.
+    // "MATCH #" ink ends x964.3; chip ends x1012.3. Digits fill that 48px slot.
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 970, y: 228, w: 42, align: "center" });
+    expect(sub).toEqual({ x: 964, y: 224, w: 48, align: "center" });
+    expect(CONFIG.variantHeaders?.standings?.subtitleFont).toBe(
+      '800 48px "Exo 2", "Rajdhani", "Noto Sans Symbols 2", sans-serif',
+    );
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#061014");
   });
 
   it("uses pure white bold row text and a muted MVP ink on the measured bands", () => {
+    // Rank 1 gets no red accent on this art — the baked badge supplies emphasis.
+    expect(CONFIG.standings.uniformRowInk).toBe(true);
     expect(CONFIG.palette.text).toBe("#ffffff");
     expect(CONFIG.palette.textMuted).toBe("#b9c6d2");
     expect(standings.nameFont.startsWith("800 ")).toBe(true);
@@ -216,9 +221,17 @@ describe("challengers-red standings render (SSR)", () => {
 
   it("renders the match number in the cyan chip and tabular stats", () => {
     const html = render(24);
-    expect(html).toContain("left:970px");
+    expect(html).toContain("left:964px");
+    expect(html).toContain("font:800 48px");
     expect(html).toContain("color:#061014");
     expect(html).toContain(">6<");
     expect(html).toContain("font-variant-numeric:tabular-nums");
+  });
+
+  it("never paints the rank-1 row in red", () => {
+    const html = render(24);
+    expect(html).not.toContain("color:#ff4655");
+    expect(html).not.toContain("background:rgba(255,70,85,0.14)");
+    expect(html).not.toContain("2px solid #ff4655");
   });
 });

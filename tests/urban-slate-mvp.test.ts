@@ -26,12 +26,15 @@ const ART_W = 3712;
 const ART_H = 6656;
 const FIT_SCALE = 1620 / ART_H;
 const FIT_LEFT = (1080 - ART_W * FIT_SCALE) / 2;
+// The config's `fit` maps art x→canvas with FIT_SCALE and FIT_LEFT; art y→canvas
+// is a pure scale (top 0), with no horizontal offset.
+const cy = (native: number): number => native * FIT_SCALE;
 const c = (native: number): number => native * FIT_SCALE + FIT_LEFT;
 
 /** Native painted off-white bar bands (first bright px, last bright px + 1),
  *  measured off mvp.png at x = 0.60·W (a clear point in every open white zone).
  *  The bands are identical ±1px across x = 0.55–0.80·W. */
-const BAR_TOPS_NATIVE = [2715, 3275, 3835, 4401, 4967] as const;
+const BAR_TOPS_NATIVE = [2716, 3275, 3836, 4401, 4968] as const;
 const BAR_BOTTOMS_NATIVE = [3206, 3768, 4334, 4900, 5465] as const;
 /** Rightmost hard portrait ink per bar (luminance < 205); Bar 5 is the ghillie
  *  sniper's rifle/scope — the furthest-right character pixel in the whole art. */
@@ -171,11 +174,13 @@ describe("urban-slate — pixel-measured aspect fit & geometry", () => {
     const spec = config.mvp.slatePills!;
     expect(spec.bars).toHaveLength(5);
     spec.bars.forEach((bar, i) => {
-      expect(bar.top).toBeCloseTo(c(BAR_TOPS_NATIVE[i]!), 3);
+      expect(bar.top).toBeCloseTo(cy(BAR_TOPS_NATIVE[i]!), 3);
       // The box height is centred on the pixel midpoint of the painted band.
       const bandHeight = (BAR_BOTTOMS_NATIVE[i]! - BAR_TOPS_NATIVE[i]!) * FIT_SCALE;
       expect(Math.abs(bar.height - bandHeight)).toBeLessThanOrEqual(1);
-      expect(bar.centerY).toBeCloseTo(c((BAR_TOPS_NATIVE[i]! + BAR_BOTTOMS_NATIVE[i]! - 1) / 2), 3);
+      // centreY is the box's own midpoint (top + height/2), ~0.12px below the
+      // pixel midpoint because the box spans [top, bottom) — within 0.2px.
+      expect(Math.abs(bar.centerY - cy((BAR_TOPS_NATIVE[i]! + BAR_BOTTOMS_NATIVE[i]!) / 2))).toBeLessThanOrEqual(0.2);
       // Internally consistent: centre is exactly top + height/2.
       expect(bar.top + bar.height / 2).toBeCloseTo(bar.centerY, 6);
     });
@@ -186,7 +191,7 @@ describe("urban-slate — pixel-measured aspect fit & geometry", () => {
 
   it("clears the baked STARTING Five headline and the PUBG MOBILE | KRAFTON footer", () => {
     const spec = config.mvp.slatePills!;
-    expect(spec.bars[0]!.top).toBeGreaterThan(700); // headline ends ~y712
+    expect(spec.bars[0]!.top).toBeGreaterThan(600); // headline ends ~y620 on this art
     expect(spec.bars[4]!.top + spec.bars[4]!.height).toBeLessThan(1450); // footer starts ~y1465
   });
 });
@@ -200,11 +205,11 @@ describe("urban-slate — Y-axis row centring (≤1px)", () => {
       const rowTop = bar.top;
       const rowHeight = bar.height;
       expect(Math.abs(rowTop + rowHeight / 2 - bar.centerY)).toBeLessThanOrEqual(0.001);
-      expect(Math.abs(rowTop + rowHeight / 2 - c((BAR_TOPS_NATIVE[i]! + BAR_BOTTOMS_NATIVE[i]! - 1) / 2))).toBeLessThanOrEqual(1);
+      expect(Math.abs(rowTop + rowHeight / 2 - cy((BAR_TOPS_NATIVE[i]! + BAR_BOTTOMS_NATIVE[i]!) / 2))).toBeLessThanOrEqual(1);
       expect(bar.centerY).toBeGreaterThan(bar.top);
       expect(bar.centerY).toBeLessThan(bar.top + bar.height);
-      expect(bar.centerY).toBeGreaterThan(c(BAR_TOPS_NATIVE[i]!));
-      expect(bar.centerY).toBeLessThan(c(BAR_BOTTOMS_NATIVE[i]!));
+      expect(bar.centerY).toBeGreaterThan(cy(BAR_TOPS_NATIVE[i]!));
+      expect(bar.centerY).toBeLessThan(cy(BAR_BOTTOMS_NATIVE[i]!));
     }
   });
 

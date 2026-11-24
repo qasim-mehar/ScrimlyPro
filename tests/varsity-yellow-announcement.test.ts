@@ -22,17 +22,17 @@ const ASSET = resolve(process.cwd(), "public/templates/varsity-yellow/announceme
 const INK = "#074725";
 const WHITE = "#FFFFFF";
 
-// Campaign single-column bar geometry (canvas px). The art's first painted
-// white bar was measured at top 444.8 with a ~28px interior; the fixed-pitch
-// ladder below is the geometry every row is pinned to.
-const ROW_Y0 = 444.8;
+// Measured single-column bar geometry (canvas px): 22 white bars at a 42px
+// pitch, first top 445 with a ~28px interior. Every row is pinned to a bar.
+const ROW_Y0 = 445;
 const ROW_H = 28;
-const ROW_PITCH = 39.7;
-const ROWS_BOTTOM = 1382;
+const ROW_PITCH = 42;
+const ROWS = 22;
+const ROWS_BOTTOM = 1356;
 const LEFT_X = 296;
 const COL_W = 488;
 // Sharp-measured centre of the first painted white bar on announcement.png.
-const MEASURED_BAR0_CENTER = 458.8;
+const MEASURED_BAR0_CENTER = 459;
 
 type AnnounceTeam = Pick<TeamRow, "id" | "name" | "logoUrl" | "slotNumber">;
 
@@ -77,7 +77,7 @@ describe("varsity-yellow registration + baked header suppression", () => {
     });
     expect(t.announcement.singleColumn).toBe(true);
     expect(t.announcement.fixedRowPitch).toBe(true);
-    expect(t.announcement.rowsPerColumn).toBe(24);
+    expect(t.announcement.rowsPerColumn).toBe(ROWS);
     // The template-level announcementLayout (onyx-green's path) resolves to
     // the exact same coordinates as the canonical spec.
     const effective = effectiveAnnouncementSpec(t);
@@ -113,10 +113,10 @@ describe("varsity-yellow registration + baked header suppression", () => {
   });
 });
 
-describe("varsity-yellow 1–24 team white-bar Y-axis centering", () => {
+describe("varsity-yellow 1–22 team white-bar Y-axis centering", () => {
   const spec = effectiveAnnouncementSpec(getTemplate("varsity-yellow"));
 
-  it.each([1, 4, 8, 12, 16, 20, 24])("pins all %i rows in the single column", (n) => {
+  it.each([1, 4, 8, 12, 16, 20, 22])("pins all %i rows in the single column", (n) => {
     const rows = announcementRowLayout(n, spec);
     expect(rows).toHaveLength(n);
     expect(spec.leftX).toBe(LEFT_X);
@@ -144,17 +144,17 @@ describe("varsity-yellow 1–24 team white-bar Y-axis centering", () => {
   });
 
   it("centres row 1 on the measured first bar and clears both baked lockups", () => {
-    const rows = announcementRowLayout(24, spec);
+    const rows = announcementRowLayout(ROWS, spec);
     const firstMid = rows[0]!.y + rows[0]!.rowH! / 2;
     expect(firstMid).toBeCloseTo(MEASURED_BAR0_CENTER, 1); // ±0.75px tolerance
     expect(rows[0]!.y).toBeGreaterThanOrEqual(440); // clears "TEAM PARTICIPATION"
-    const lastBottom = rows[23]!.y + rows[23]!.rowH!;
+    const lastBottom = rows[ROWS - 1]!.y + rows[ROWS - 1]!.rowH!;
     expect(lastBottom).toBeLessThanOrEqual(1390); // clears PUBG | KRAFTON footer
     expect(lastBottom).toBeLessThanOrEqual(ROWS_BOTTOM + 5);
   });
 
-  it("never stretches the pitch when fewer than 24 teams exist", () => {
-    for (const n of [1, 7, 16, 23]) {
+  it("never stretches the pitch when fewer than 22 teams exist", () => {
+    for (const n of [1, 7, 16, 21]) {
       const rows = announcementRowLayout(n, spec);
       expect(new Set(rows.map((r) => r.pitch))).toEqual(new Set([ROW_PITCH]));
       expect(new Set(rows.map((r) => r.rowH))).toEqual(new Set([ROW_H]));
@@ -172,27 +172,27 @@ describe("varsity-yellow SSR — Y-axis centering, font style and forest-green i
       title: "SCRIM",
       subtitle: "PARTICIPATING TEAMS",
       organizer: null,
-      teams: teams(24),
+      teams: teams(ROWS),
     }),
   );
   const styles = [...html.matchAll(/style="([^"]*)"/g)].map((m) => m[1]!);
   const exactLineHeight = /(?:^|;)line-height:1(?:;|$)/;
 
-  it("renders all 24 zero-padded slot labels 05..28 and team names", () => {
-    for (let slot = 5; slot <= 28; slot++) {
+  it("renders all 22 zero-padded slot labels 05..26 and team names", () => {
+    for (let slot = 5; slot <= 26; slot++) {
       expect(html).toContain(`>${String(slot).padStart(2, "0")}<`);
     }
-    for (let i = 1; i <= 24; i++) {
+    for (let i = 1; i <= ROWS; i++) {
       expect(html).toContain(`team ${String(i).padStart(2, "0")}`);
     }
   });
 
   it("pins flex centering and line-height AFTER the font shorthand on every cell", () => {
-    // 24 row wrappers: single-column bars at x296 / width 488 / height 28.
+    // 22 row wrappers: single-column bars at x296 / width 488 / height 28.
     const wrappers = styles.filter(
       (s) => s.startsWith("position:absolute") && s.includes("height:28px"),
     );
-    expect(wrappers).toHaveLength(24);
+    expect(wrappers).toHaveLength(ROWS);
     for (const s of wrappers) {
       expect(s).toContain("left:296px");
       expect(s).toContain("width:488px");
@@ -202,9 +202,9 @@ describe("varsity-yellow SSR — Y-axis centering, font style and forest-green i
       expect(s.indexOf("font:")).toBeLessThan(s.search(exactLineHeight));
     }
 
-    // 48 cells (slot + name): flex/center, height:100%, font then line-height:1.
+    // 44 cells (slot + name): flex/center, height:100%, font then line-height:1.
     const cells = styles.filter((s) => s.includes("height:100%"));
-    expect(cells).toHaveLength(48);
+    expect(cells).toHaveLength(ROWS * 2);
     for (const s of cells) {
       expect(s).toContain("display:flex");
       expect(s).toContain("align-items:center");
@@ -232,7 +232,7 @@ describe("varsity-yellow SSR — Y-axis centering, font style and forest-green i
   });
 
   it("renders every row for the edge counts without NaN/undefined", () => {
-    for (const n of [1, 4, 12, 24]) {
+    for (const n of [1, 4, 12, ROWS]) {
       const markup = renderToStaticMarkup(
         h(AnnouncementGraphic, {
           aestheticId: "varsity-yellow",

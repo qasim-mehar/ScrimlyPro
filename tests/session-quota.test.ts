@@ -54,7 +54,7 @@ function draft(orgId: string, name: string): SessionDraft {
     orgId,
     plannedMatches: 2,
     teamCount: 4,
-    templateId: "dark-gold",
+    templateId: "pmpl-light",
     teams: [
       { name: "Alpha", logoUrl: null, slotNumber: null },
       { name: "Bravo", logoUrl: null, slotNumber: null },

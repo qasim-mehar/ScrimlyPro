@@ -166,10 +166,10 @@ describe("cardinal-gold — pure two-column geometry (1080×1620)", () => {
     expect(spec.leftX).toBe(88);
     expect(spec.rightX).toBe(568);
     expect(spec.colWidth).toBe(424);
-    expect(spec.rowY0).toBe(425);
+    expect(spec.rowY0).toBe(455);
     expect(spec.rowPitch).toBe(76);
     expect(spec.rowHeight).toBe(54);
-    expect(spec.rowsBottom).toBe(1375);
+    expect(spec.rowsBottom).toBe(1405);
 
     expect(splitRowsAt(24, 12)).toEqual([12, 12]);
     expect(splitRowsAt(25, 12)).toEqual([12, 13]);
@@ -181,15 +181,15 @@ describe("cardinal-gold — pure two-column geometry (1080×1620)", () => {
     expect(rows.slice(0, 12).every((r) => r.x === 88)).toBe(true);
     expect(rows.slice(12).every((r) => r.x === 568)).toBe(true);
     for (const row of rows) {
-      // Measured baked hero ink ends at canvas y≈412.1 (art y≈635 at ×0.649);
-      // 415 leaves a real 12.9px clearance below the "TEAM PARTICIPATION".
-      expect(row.y).toBeGreaterThanOrEqual(415);
+      // Baked hero ink ends near canvas y408; the grid starts at 455 so the
+      // "TEAM PARTICIPATION" headline has a 47px breathing gap above the table.
+      expect(row.y).toBeGreaterThanOrEqual(455);
       expect(row.y + 54).toBeLessThanOrEqual(1420); // clears the KRAFTON footer
       expect(row.rowH).toBe(54);
       expect(row.pitch).toBeCloseTo(76, 6);
     }
-    expect(rows[11]!.y + 54).toBeCloseTo(1315, 6);
-    expect(rows[23]!.y + 54).toBeCloseTo(1315, 6);
+    expect(rows[11]!.y + 54).toBeCloseTo(1345, 6);
+    expect(rows[23]!.y + 54).toBeCloseTo(1345, 6);
   });
 
   it.each([4, 16, 24, 25])("keeps %i teams inside the safe zone", (n) => {
@@ -199,7 +199,7 @@ describe("cardinal-gold — pure two-column geometry (1080×1620)", () => {
     expect(rows.filter((r) => r.x === 88)).toHaveLength(left);
     expect(rows.filter((r) => r.x === 568)).toHaveLength(right);
     for (const row of rows) {
-      expect(row.y).toBeGreaterThanOrEqual(425);
+      expect(row.y).toBeGreaterThanOrEqual(455);
       expect(row.y + 54).toBeLessThanOrEqual(1420);
       expect(Number.isFinite(row.y)).toBe(true);
     }

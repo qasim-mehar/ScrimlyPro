@@ -2,7 +2,12 @@
 
 import { useRef, useState } from "react";
 
-import { getTemplate, type AestheticId } from "@/lib/graphics";
+import {
+  defaultAestheticId,
+  getTemplate,
+  selectableAestheticIds,
+  type AestheticId,
+} from "@/lib/graphics";
 import type { MvpDisplayEntry } from "@/lib/graphics/mvp";
 
 import { AestheticChips } from "./AestheticChips";
@@ -23,7 +28,14 @@ export function MvpPreview({
   organizer,
   entries,
 }: MvpPreviewProps) {
-  const [aestheticId, setAestheticId] = useState<AestheticId>("dark-gold");
+  const variant = "mvp" as const;
+  const [aestheticId, setAestheticId] = useState<AestheticId>(() =>
+    defaultAestheticId(variant),
+  );
+  const available = selectableAestheticIds(variant);
+  const effectiveId = available.includes(aestheticId)
+    ? aestheticId
+    : available[0]!;
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
@@ -31,15 +43,19 @@ export function MvpPreview({
 
   return (
     <section className="flex flex-col gap-3">
-      <AestheticChips activeId={aestheticId} onSelect={setAestheticId} />
+      <AestheticChips
+        variant={variant}
+        activeId={effectiveId}
+        onSelect={setAestheticId}
+      />
       <div className="overflow-hidden rounded-dash bg-dash-bg p-2 sm:p-3">
         <GraphicCanvas
-          config={getTemplate(aestheticId)}
-          variant="mvp"
+          config={getTemplate(effectiveId)}
+          variant={variant}
           stageRef={stageRef}
         >
           <MvpGraphic
-            aestheticId={aestheticId}
+            aestheticId={effectiveId}
             title={title}
             subtitle={subtitle}
             organizer={organizer}

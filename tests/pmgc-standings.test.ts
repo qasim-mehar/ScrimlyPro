@@ -189,7 +189,8 @@ describe("pmgc-crimson standings config (measured 24-slot art)", () => {
   it("drops the match number into the open gold slot right of the baked #", () => {
     // "#" ink ends art x3798 → 1001.8; gold badge ends art x4000 → 1054.7.
     const sub = CONFIG.variantHeaders?.standings?.subtitle;
-    expect(sub).toEqual({ x: 1012, y: 254, w: 44, align: "center" });
+    expect(sub).toEqual({ x: 1012, y: 250, w: 44, align: "center" });
+    expect(CONFIG.variantHeaders?.standings?.subtitleFont).toContain("800 44px");
     expect(CONFIG.variantHeaders?.standings?.subtitleColor).toBe("#140A00");
     expect(sub!.x!).toBeGreaterThan(1005);
     expect(sub!.x! + sub!.w!).toBeLessThanOrEqual(1056);

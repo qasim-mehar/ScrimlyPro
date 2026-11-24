@@ -118,6 +118,9 @@ function StandingsRow({
   const logoNameGap = st.logoNameGap ?? DEFAULT_LOGO_NAME_GAP;
   const y = st.rowY0 + rowIdx * pitch;
   const isRankOne = row.rank === 1;
+  // Art-backed tables (challengers-red) bake their own rank-1 emphasis: force
+  // every row to identical ink so no red text appears anywhere in the table.
+  const plainRow = st.uniformRowInk === true;
   const teamStyle: CSSProperties = {
     position: "absolute",
     top: y,
@@ -126,7 +129,7 @@ function StandingsRow({
     // `font` shorthand resets line-height to `normal`; set it AFTER `font`
     // so the glyphs are truly centered in the painted row box.
     lineHeight: `${st.rowHeight}px`,
-    color: isRankOne ? palette.wwcdText : palette.text,
+    color: isRankOne && !plainRow ? palette.wwcdText : palette.text,
     letterSpacing: st.nameLetterSpacing ?? "-0.01em",
     textTransform: st.nameUppercase ? "uppercase" : undefined,
     fontVariantNumeric: "tabular-nums",
@@ -136,7 +139,7 @@ function StandingsRow({
   };
   return (
     <>
-      {isRankOne ? (
+      {isRankOne && !plainRow ? (
         <div
           style={{
             position: "absolute",
@@ -172,7 +175,7 @@ function StandingsRow({
             font: st.statFont,
             lineHeight: `${st.rowHeight}px`,
             fontVariantNumeric: "tabular-nums",
-            color: isRankOne ? palette.accent : palette.textMuted,
+            color: isRankOne && !plainRow ? palette.accent : palette.textMuted,
           }}
         >
           {row.rank}
@@ -191,7 +194,7 @@ function StandingsRow({
               height: logoPlate,
               borderRadius: "50%",
               background: palette.plateBg,
-              border: isRankOne ? `2px solid ${palette.accent}` : `1px solid ${palette.plateRing}`,
+              border: isRankOne && !plainRow ? `2px solid ${palette.accent}` : `1px solid ${palette.plateRing}`,
               boxSizing: "border-box",
             }}
           />
@@ -234,7 +237,7 @@ function StandingsRow({
             letterSpacing: "-0.02em",
             // Art tables (pmgc-crimson) keep every numeral in white — their
             // baked gold rank-1 badge already carries the emphasis.
-            color: st.uniformStatInk !== true && key === "total" && isRankOne ? palette.accent : palette.text,
+            color: !plainRow && st.uniformStatInk !== true && key === "total" && isRankOne ? palette.accent : palette.text,
           }}
         >
           {statColumnValue(row, key, matchCount)}

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { SAMPLE_TEAM_NAMES as FIXTURE_SAMPLE_TEAM_NAMES } from "@/lib/fixtures/sampleMatches";
-import { AESTHETICS } from "@/lib/graphics";
 import {
   parseTeamInput,
   validateSessionDraft,
@@ -17,7 +16,7 @@ function validDraft(overrides: Partial<SessionDraft> = {}): SessionDraft {
     orgId: "aaaaaaaa-0000-4000-8000-000000000001",
     plannedMatches: 4,
     teamCount: 16,
-    templateId: "dark-gold",
+    templateId: VALID_TEMPLATE_IDS[0]!,
     teams: SAMPLE_TEAM_NAMES.map((name): TeamDraft => ({
       name,
       logoUrl: null,
@@ -77,7 +76,7 @@ describe("validateSessionDraft", () => {
   it("rejects a bogus templateId", () => {
     const issues = validateSessionDraft(validDraft({ templateId: "bogus" }));
     expect(issues).toEqual([
-      { field: "templateId", message: "Pick one of the seven aesthetics." },
+      { field: "templateId", message: "Pick one of the available aesthetics." },
     ]);
   });
 
@@ -295,8 +294,29 @@ describe("validateSessionDraft", () => {
 });
 
 describe("sync guards", () => {
-  it("VALID_TEMPLATE_IDS deep-equals Object.keys(AESTHETICS)", () => {
-    expect([...VALID_TEMPLATE_IDS]).toEqual(Object.keys(AESTHETICS));
+  it("VALID_TEMPLATE_IDS is exactly the art-backed aesthetics", () => {
+    expect([...VALID_TEMPLATE_IDS]).toEqual([
+      "pmpl-light",
+      "neon-green",
+      "challengers-red",
+      "ewc-yellow",
+      "onyx-green",
+      "pmgc-crimson",
+      "pmgc-aqua",
+      "pmwi-violet",
+      "grunge-red",
+      "esports-clash",
+      "rundown-orange",
+      "royal-blue",
+      "varsity-yellow",
+      "court-orange",
+      "dusk-amber",
+      "cardinal-gold",
+      "apex-blaze",
+      "urban-slate",
+      "varsity-purple",
+      "varsity-orange",
+    ]);
   });
 
   it("SAMPLE_TEAM_NAMES deep-equals the fixtures' list", () => {

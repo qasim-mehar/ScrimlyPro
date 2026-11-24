@@ -77,6 +77,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "esports-clash",
     "cardinal-gold",
     "varsity-purple",
+    "varsity-orange",
   ];
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
@@ -615,5 +616,33 @@ describe("pmgc-aqua light-bar / dark-badge contrast (measured from the art)", ()
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe("varsity-orange announcement art contrast (live PNG decode)", () => {
+  it("charcoal names ≥4.5:1 and varsity-orange slots ≥3:1 on the measured cream card", () => {
+    // The art is a TRUE 2048×3072 PNG (exact 2:3) → width-fit to 1080 with no
+    // crop. Sample the clean card between the two dashed pipes: canvas
+    // x300..1000, y480..1246 (the 12 baked row dashes).
+    const { w: artW, px } = decodePngToRgb("public/templates/varsity-orange/announcement.png");
+    const scale = artW / 1080;
+    const cardLum = averageLuminance(px, artW, {
+      x: Math.round(300 * scale),
+      y: Math.round(480 * scale),
+      w: Math.round(700 * scale),
+      h: Math.round(766 * scale),
+    });
+    const over = (fg: string) => {
+      const fgLum = relativeLuminance(parseHexColor(fg));
+      return (Math.max(cardLum, fgLum) + 0.05) / (Math.min(cardLum, fgLum) + 0.05);
+    };
+    const spec = getTemplate("varsity-orange").announcement;
+    expect(cardLum).toBeGreaterThan(0.8); // guard against a dark art swap
+    // #111111 names: WCAG AA normal-text floor.
+    expect(spec.inkColor).toBe("#111111");
+    expect(over(spec.inkColor!)).toBeGreaterThanOrEqual(4.5);
+    // #E85319 slots at 800-weight 22px: WCAG AA LARGE-text floor (≥18.66px bold).
+    expect(spec.accentColor).toBe("#E85319");
+    expect(over(spec.accentColor!)).toBeGreaterThanOrEqual(3);
   });
 });

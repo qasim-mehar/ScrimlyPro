@@ -70,10 +70,12 @@ export default async function CalibratePage() {
   await requireUser();
   return (
     <main className="mx-auto max-w-6xl p-4">
-      <h1 className="text-xl font-bold tracking-widest text-gold">STANDINGS CALIBRATION</h1>
+      <h1 className="text-xl font-bold tracking-widest text-gold">GRAPHICS CALIBRATION</h1>
       <p className="mt-1 text-sm text-muted">
-        Dev route. Dummy standings at 16 / 19 / 24 / 25 teams over each template&apos;s art, 100px grid above it,
-        live config readout beside it.
+        Dev route. Dummy standings AND announcement teams at 16 / 19 / 24 / 25 teams over each
+        template&apos;s art, 100px grid above it, live config readout beside it. Select
+        <strong> Varsity Orange</strong> + <strong>announcement</strong> + <strong>24 teams</strong>{" "}
+        to check the two 12-row dashed-pipe columns against the art.
       </p>
       <div className="mt-4">
         <CalibrateClient

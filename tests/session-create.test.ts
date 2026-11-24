@@ -23,7 +23,7 @@ function validDraft(): SessionDraft {
     orgId: "aaaaaaaa-0000-4000-8000-0000000000m1".replace("m1", "01"),
     plannedMatches: 4,
     teamCount: 16,
-    templateId: "dark-gold",
+    templateId: "pmpl-light",
     teams: SAMPLE_TEAM_NAMES.map((name, i) => ({
       // index 0 carries surrounding whitespace to prove trimming;
       // index 3 carries the one logo.
@@ -60,7 +60,7 @@ describe("createSessionWithTeams", () => {
     expect(session.status).toBe("active");
     // The verified owner becomes the tenant owner (WP6).
     expect(session.userId).toBe(OWNER);
-    expect(session.templateId).toBe("dark-gold");
+    expect(session.templateId).toBe("pmpl-light");
     expect(session.plannedMatches).toBe(4);
     expect(session.teamCount).toBe(16);
     expect(session.scoringRules).toEqual(SUPER_RULES);
@@ -149,7 +149,7 @@ describe("createSessionWithTeams", () => {
       orgId,
       plannedMatches: 1,
       teamCount: 4,
-      templateId: "dark-gold",
+      templateId: "pmpl-light",
       scoringRules: SUPER_RULES,
       status: "active" as const,
       createdAt: new Date().toISOString(),

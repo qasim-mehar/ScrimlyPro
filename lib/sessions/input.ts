@@ -1,26 +1,8 @@
-export const VALID_TEMPLATE_IDS = [
-  "dark-gold",
-  "purple-butterfly",
-  "pink-blossom",
-  "pmpl-light",
-  "neon-green",
-  "challengers-red",
-  "ewc-yellow",
-  "onyx-green",
-  "pmgc-crimson",
-  "pmgc-aqua",
-  "pmwi-violet",
-  "grunge-red",
-  "esports-clash",
-  "rundown-orange",
-  "royal-blue",
-  "varsity-yellow",
-  "court-orange",
-  "dusk-amber",
-  "cardinal-gold",
-  "apex-blaze",
-  "urban-slate",
-] as const;
+import { selectableAestheticIds } from "@/lib/graphics";
+
+/** Only aesthetics backed by a real template image may be picked for a new
+ *  session. Derived from the registry so this list cannot drift again. */
+export const VALID_TEMPLATE_IDS: readonly string[] = selectableAestheticIds();
 
 export type TeamDraft = {
   name: string;
@@ -97,10 +79,10 @@ export function validateSessionDraft(draft: SessionDraft): ValidationIssue[] {
     });
   }
 
-  // Cast to string[] so this check stays correct as new aesthetics are
-  // registered in parallel (AestheticId and the tuple may diverge mid-flight).
-  if (!(VALID_TEMPLATE_IDS as readonly string[]).includes(draft.templateId)) {
-    issues.push({ field: "templateId", message: "Pick one of the seven aesthetics." });
+  // Derived from the registered art-backed aesthetics, so no second list to
+  // keep in sync (and gradient-only skins are rejected on new sessions).
+  if (!VALID_TEMPLATE_IDS.includes(draft.templateId)) {
+    issues.push({ field: "templateId", message: "Pick one of the available aesthetics." });
   }
 
   // Org context: format-checked here; MEMBERSHIP is verified inside the

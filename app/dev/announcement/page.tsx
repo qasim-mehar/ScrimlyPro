@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db/client";
 import { sessions, teams } from "@/lib/db/schema";
 import { PARTICIPATING_TEAMS } from "@/lib/graphics/announcement";
 import { getTemplate } from "@/lib/graphics";
+import type { TeamRow } from "@/lib/scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +29,80 @@ function placeholderLogo(): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export default async function DevAnnouncementPage() {
+/**
+ * Varsity-orange 24-team calibration fixture (`?fixture=varsity-orange-24`).
+ * Seats 1–12 are explicitly assigned; 13–24 are NULL so the announcement
+ * fallback labels (13–24) render with zero collisions. Includes a 25-char name
+ * to pin ellipsis handling against the right-hand slot pipe.
+ */
+const VARSITY_ORANGE_FIXTURE: ReadonlyArray<Pick<TeamRow, "id" | "name" | "logoUrl" | "slotNumber">> =
+  [
+    "TF Squad",
+    "Straight Forward",
+    "Bawa Qadra",
+    "TRB HANAN",
+    "4NM BROKEN X",
+    "ROX Gaming",
+    "CRUSH Esports",
+    "AKM Dasim",
+    "Zero Degree Esports",
+    "Voltage Esports",
+    "NMS TITANIUM",
+    "VORTEX ESPORTS",
+    "HYDRA OPS PAK",
+    "KARACHI KINGS",
+    "GODLIKE PAK",
+    "NX GAMING",
+    "SCARYMONSTA XR",
+    "DRAGO KNIGHTS",
+    "SRT SHADOW",
+    "RAWALPINDI RHINOS",
+    "THE LAST RIDERZ",
+    "OFFICIAL AGENT 47",
+    "TEAM SANSATIONAL",
+    "AN EXTREMELY LONG TWENTY FIVE CHAR NAME",
+  ].map((name, i) => ({
+    id: `vo-fixture-${i + 1}`,
+    name,
+    logoUrl: null,
+    slotNumber: i < 12 ? i + 1 : null,
+  }));
+
+export default async function DevAnnouncementPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ fixture?: string }>;
+}) {
   if (process.env.NODE_ENV === "production") notFound();
   // WP6: authenticated users only (dev pages render fixtures; no tenant reads).
   await requireUser();
+
+  const { fixture } = await searchParams;
+  if (fixture === "varsity-orange-24") {
+    return (
+      <main className="mx-auto max-w-2xl p-4">
+        <h1 className="text-lg font-bold tracking-widest text-gold">
+          VARSITY ORANGE — 24-TEAM PIPE CALIBRATION
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          Two 12-row columns locked to the baked dashed pipes (x464 / x834). Names are
+          right-aligned LEFT of each pipe, slot numerals left-aligned RIGHT of it.
+          <a className="ml-2 underline" href="/dev/announcement">
+            ← seed session
+          </a>
+        </p>
+        <div className="mt-4">
+          <AnnouncementPreview
+            title="SCRIMLYPRO CALIBRATION"
+            subtitle={PARTICIPATING_TEAMS}
+            organizer={null}
+            teams={VARSITY_ORANGE_FIXTURE}
+            initialAestheticId="varsity-orange"
+          />
+        </div>
+      </main>
+    );
+  }
 
   const db = getDb();
   const session =
@@ -70,6 +141,11 @@ export default async function DevAnnouncementPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-4">
+      <p className="mb-2 text-sm text-muted">
+        <a className="underline" href="/dev/announcement?fixture=varsity-orange-24">
+          Varsity-orange 24-team pipe calibration →
+        </a>
+      </p>
       <AnnouncementPreview title={session.name} subtitle={PARTICIPATING_TEAMS} organizer={null} teams={teamRows} />
     </main>
   );

@@ -20,7 +20,8 @@ export type AestheticId =
   | "royal-blue"
   | "varsity-yellow"
   | "court-orange"
-  | "varsity-purple";
+  | "varsity-purple"
+  | "varsity-orange";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -92,6 +93,9 @@ export type StandingsTableSpec = {
   uniformStatInk?: boolean; // true → every stat value (including rank-1 TOTAL)
   // uses palette.text; art tables whose baked rank badge already supplies the
   // rank-1 emphasis keep all numerals in pure white (pmgc-crimson)
+  uniformRowInk?: boolean; // true → rank 1 is rendered exactly like every
+  // other row (no accent ink, strip or plate ring) — challengers-red's art
+  // bakes its own emphasis and wants no red text anywhere in the table
   nameFont: string;
   statFont: string;
   labelFont: string;
@@ -451,6 +455,19 @@ export type AnnouncementSpec = {
   // is not perfectly uniform.
   barCenterYs?: readonly number[];
   barCells?: readonly [AnnouncementBarCell, AnnouncementBarCell, AnnouncementBarCell];
+  overflowNameFont?: string; // narrower stacked right cell (varsity-purple)
+  overflowTracking?: string; // lighter tracking there so names fit beside slots
+
+  // --- Pipe-split two-column geometry (varsity-orange) ---------------------
+  // On the baked "team Announcement" art each column is divided by a dashed
+  // orange pipe: the TEAM NAME sits LEFT of it, the SLOT NUMBER RIGHT of it.
+  // Additive — absent on every existing template so their markup is unchanged.
+  slotPosition?: "left" | "right"; // default "left" (legacy: slot then name)
+  // When "right", `leftX`/`rightX` are the measured PIPE x positions. The name
+  // box is [pipe − pipeGap − teamW, pipe − pipeGap] (right-aligned) and the slot
+  // box is [pipe + pipeGap, pipe + pipeGap + slotW] (left-aligned), so both ink
+  // columns snug the pipe and long names ellipsize without crossing it.
+  pipeGap?: number; // px between the pipe and each ink column (default 12)
 };
 
 /** One compartment of a painted 3-cell announcement bar (canvas px). */

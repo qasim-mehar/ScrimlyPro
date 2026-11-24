@@ -2,7 +2,12 @@
 
 import { useRef, useState } from "react";
 
-import { getTemplate, type AestheticId } from "@/lib/graphics";
+import {
+  defaultAestheticId,
+  getTemplate,
+  selectableAestheticIds,
+  type AestheticId,
+} from "@/lib/graphics";
 import type { TeamRow } from "@/lib/scoring";
 
 import { AestheticChips } from "./AestheticChips";
@@ -15,6 +20,8 @@ type AnnouncementPreviewProps = {
   subtitle: string;
   organizer?: string | null;
   teams: ReadonlyArray<Pick<TeamRow, "id" | "name" | "logoUrl" | "slotNumber">>;
+  /** Dev-fixture preset: boot the picker on a specific art-backed template. */
+  initialAestheticId?: AestheticId;
 };
 
 export function AnnouncementPreview({
@@ -22,8 +29,16 @@ export function AnnouncementPreview({
   subtitle,
   organizer,
   teams,
+  initialAestheticId,
 }: AnnouncementPreviewProps) {
-  const [aestheticId, setAestheticId] = useState<AestheticId>("dark-gold");
+  const variant = "announcement" as const;
+  const [aestheticId, setAestheticId] = useState<AestheticId>(() =>
+    initialAestheticId ?? defaultAestheticId(variant),
+  );
+  const available = selectableAestheticIds(variant);
+  const effectiveId = available.includes(aestheticId)
+    ? aestheticId
+    : available[0]!;
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
@@ -31,15 +46,19 @@ export function AnnouncementPreview({
 
   return (
     <section className="flex flex-col gap-3">
-      <AestheticChips activeId={aestheticId} onSelect={setAestheticId} />
+      <AestheticChips
+        variant={variant}
+        activeId={effectiveId}
+        onSelect={setAestheticId}
+      />
       <div className="overflow-hidden rounded-dash bg-dash-bg p-2 sm:p-3">
         <GraphicCanvas
-          config={getTemplate(aestheticId)}
-          variant="announcement"
+          config={getTemplate(effectiveId)}
+          variant={variant}
           stageRef={stageRef}
         >
           <AnnouncementGraphic
-            aestheticId={aestheticId}
+            aestheticId={effectiveId}
             title={title}
             subtitle={subtitle}
             organizer={organizer}
