@@ -3,7 +3,7 @@
 //   npm run db:backup
 //
 // Dumps the Postgres database at SUPABASE_DB_URL (env or .env.local) with
-// pg_dump --format=custom into backups/<yyyymmdd-hhmmss>/db.dump, next to a
+// pg_dump --format=custom into ${BACKUP_DIR:-backups}/<yyyymmdd-hhmmss>/db.dump, next to a
 // manifest.json (timestamp, table row counts, pg_dump version) that
 // restore-test.mjs reconciles against.
 //
@@ -12,9 +12,11 @@
 // - NEVER prints the connection string: the password is passed via the
 //   PGPASSWORD environment variable, and host/port/user/dbname via separate
 //   argv fields — no DSN ever appears in output, logs, or errors.
-// - pg_dump/pg_restore/psql binaries resolve from PG_BIN_DIR
-//   (default: C:/Users/mianq/Projects/pg-embedded/pgsql/bin) — zero new npm
-//   dependencies.
+// - pg_dump/pg_restore binaries resolve from PG_BIN_DIR when set; on Windows
+//   the default is the local embedded cluster, on Linux/macOS they are found
+//   on PATH (install `postgresql-client` on the VM). Zero new npm deps.
+// - Output root is BACKUP_DIR (default: ./backups) so the VM cron can write
+//   straight to /home/ubuntu/backups. The directory is created if missing.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -58,11 +60,17 @@ function dsnParts(raw) {
 }
 
 function pgBinary(name) {
-  const binDir = process.env.PG_BIN_DIR || "C:/Users/mianq/Projects/pg-embedded/pgsql/bin";
-  const full = path.join(binDir, name);
+  // Windows needs the .exe suffix; Linux/macOS do not. When PG_BIN_DIR is not
+  // set on Unix, let spawnSync resolve the binary on PATH.
+  const exe = process.platform === "win32" ? `${name}.exe` : name;
+  const localDefault = "C:/Users/mianq/Projects/pg-embedded/pgsql/bin";
+  const binDir = process.env.PG_BIN_DIR ||
+    (process.platform === "win32" ? localDefault : "");
+  if (!binDir) return exe;
+  const full = path.join(binDir, exe);
   if (!existsSync(full)) {
     console.error(
-      `ABORT: ${name} not found at ${full} — set PG_BIN_DIR to the folder containing the PostgreSQL binaries`,
+      `ABORT: ${exe} not found at ${full} — set PG_BIN_DIR to the folder containing the PostgreSQL binaries`,
     );
     process.exit(1);
   }
@@ -77,19 +85,25 @@ function run(binary, args, extraEnv = {}) {
   });
   if (res.error) {
     console.error(`ABORT: failed to run ${path.basename(binary)}: ${res.error.message}`);
+    if (res.error.code === "ENOENT") {
+      console.error(
+        "Hint: install the PostgreSQL client (postgresql-client on Ubuntu) or set PG_BIN_DIR to the folder containing pg_dump/pg_restore.",
+      );
+    }
     process.exit(1);
   }
   return res;
 }
 
 const dsn = dsnParts(dbUrl());
-const pgDump = pgBinary("pg_dump.exe");
+const pgDump = pgBinary("pg_dump");
 const stamp = new Date()
   .toISOString()
   .replace(/[-:]/g, "")
   .replace("T", "-")
   .slice(0, 15); // yyyymmdd-hhmmss
-const outDir = path.join("backups", stamp);
+const backupRoot = process.env.BACKUP_DIR || "backups";
+const outDir = path.join(backupRoot, stamp);
 if (existsSync(outDir)) {
   // Same-second re-run would silently overwrite a good dump — abort instead.
   console.error(`ABORT: ${outDir} already exists — not overwriting an existing backup`);

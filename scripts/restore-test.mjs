@@ -2,8 +2,8 @@
 //
 //   npm run db:restore-test
 //
-// Takes the NEWEST backup under backups/ (db.dump + manifest.json written by
-// backup-db.mjs), restores it into a THROWAWAY database named
+// Takes the NEWEST backup under BACKUP_DIR (default: ./backups; db.dump +
+// manifest.json written by backup-db.mjs), restores it into a THROWAWAY database named
 // ops_restore_test_<yyyymmdd_hhmmss> on the same server, reconciles per-table
 // row counts against the manifest, prints a PASS/FAIL table, then drops the
 // throwaway database. Exits 1 on any count delta or structural problem.
@@ -14,6 +14,8 @@
 //   /^ops_restore_test_[0-9_]+$/ — a real database can never be addressed.
 // - The throwaway is dropped in a finally block, even on failure.
 // - Never prints the connection string (same contract as backup-db.mjs).
+// - pg_restore resolves from PG_BIN_DIR when set, otherwise from PATH on
+//   Linux/macOS (install `postgresql-client`) or the local default on Windows.
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -56,11 +58,15 @@ function dsnParts(raw) {
 }
 
 function pgBinary(name) {
-  const binDir = process.env.PG_BIN_DIR || "C:/Users/mianq/Projects/pg-embedded/pgsql/bin";
-  const full = path.join(binDir, name);
+  const exe = process.platform === "win32" ? `${name}.exe` : name;
+  const localDefault = "C:/Users/mianq/Projects/pg-embedded/pgsql/bin";
+  const binDir = process.env.PG_BIN_DIR ||
+    (process.platform === "win32" ? localDefault : "");
+  if (!binDir) return exe;
+  const full = path.join(binDir, exe);
   if (!existsSync(full)) {
     console.error(
-      `ABORT: ${name} not found at ${full} — set PG_BIN_DIR to the folder containing the PostgreSQL binaries`,
+      `ABORT: ${exe} not found at ${full} — set PG_BIN_DIR to the folder containing the PostgreSQL binaries`,
     );
     process.exit(1);
   }
@@ -75,32 +81,38 @@ function run(binary, args, extraEnv = {}) {
   });
   if (res.error) {
     console.error(`ABORT: failed to run ${path.basename(binary)}: ${res.error.message}`);
+    if (res.error.code === "ENOENT") {
+      console.error(
+        "Hint: install the PostgreSQL client (postgresql-client on Ubuntu) or set PG_BIN_DIR to the folder containing pg_dump/pg_restore.",
+      );
+    }
     process.exit(1);
   }
   return res;
 }
 
 const dsn = dsnParts(dbUrl());
-const pgRestore = pgBinary("pg_restore.exe");
+const pgRestore = pgBinary("pg_restore");
 
 // --- locate the newest backup ------------------------------------------------
-if (!existsSync("backups")) {
-  console.error("ABORT: no backups/ directory — run npm run db:backup first");
+const backupRoot = process.env.BACKUP_DIR || "backups";
+if (!existsSync(backupRoot)) {
+  console.error(`ABORT: no ${backupRoot}/ directory — run npm run db:backup first`);
   process.exit(1);
 }
-const stamps = readdirSync("backups").filter((d) =>
-  existsSync(path.join("backups", d, "db.dump")) &&
-  existsSync(path.join("backups", d, "manifest.json")),
+const stamps = readdirSync(backupRoot).filter((d) =>
+  existsSync(path.join(backupRoot, d, "db.dump")) &&
+  existsSync(path.join(backupRoot, d, "manifest.json")),
 );
 if (stamps.length === 0) {
-  console.error("ABORT: backups/ has no complete backup (db.dump + manifest.json) — run npm run db:backup first");
+  console.error(`ABORT: ${backupRoot}/ has no complete backup (db.dump + manifest.json) — run npm run db:backup first`);
   process.exit(1);
 }
 stamps.sort(); // yyyymmdd-hhmmss sorts lexicographically = chronologically
 const newest = stamps[stamps.length - 1];
-const dumpFile = path.join("backups", newest, "db.dump");
+const dumpFile = path.join(backupRoot, newest, "db.dump");
 const manifest = JSON.parse(
-  readFileSync(path.join("backups", newest, "manifest.json"), "utf8"),
+  readFileSync(path.join(backupRoot, newest, "manifest.json"), "utf8"),
 );
 
 // --- throwaway database, naming-guarded ---------------------------------------

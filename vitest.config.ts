@@ -17,6 +17,12 @@ export default defineConfig({
     // below are the proven-green combination (full pass, exit 0); same lever
     // as the maxWorkers cap — reliability, not correctness.
     hookTimeout: 180_000,
+    // 2026-11-24: at full-suite scale one impersonation test (which dynamically
+    // imports a route plus its DB helpers) exceeded the 5s default under load
+    // while 1225 others passed; it passes 18/18 in isolation. Raise the per-test
+    // budget so CI load cannot produce false reds. Same rationale as the hook
+    // timeout above — reliability, not correctness.
+    testTimeout: 30_000,
     // M2 (Lane B): every DB-backed test file applies the full migration set
     // (0010's policy suite roughly doubles the per-file statement count), so
     // the default worker count saturated the portable cluster's I/O and made

@@ -16,6 +16,15 @@ npm run dev     # http://localhost:3000
 npm run build / npm test / npm run lint
 ```
 
+## Deploy
+
+- Oracle A1 VM + Supabase Free + Caddy: see `ScrimlyPro-Oracle-Deploy-Runbook.md`
+  (commit it first — it was previously untracked).
+- Redeploy on the VM with `scripts/deploy.sh` (includes `npm run db:migrate`).
+- CI: `.github/workflows/ci.yml` runs typecheck, lint, the full test suite
+  (Node 22 + a Postgres 16 service), build and `verify:secrets` on every push/PR
+  to `main`. Dependabot checks npm and Actions weekly.
+
 Env: copy `.env.example` → `.env.local`. `SUPABASE_DB_URL` (+ the Supabase URL/anon key) is required for anything beyond static pages; `GEMINI_API_KEY` only for OCR.
 
 ## Database (M1: Postgres via Supabase-compatible schema)
