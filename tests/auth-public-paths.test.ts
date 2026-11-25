@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest";
 import { PUBLIC_PAGES, isPublicPath } from "@/lib/auth/public-paths";
 
 describe("public path classifier", () => {
-  it("exposes exactly the brief's public page list (M2 adds /invite + /share; landing-page adds the root)", () => {
+  it("exposes exactly the brief's public page list (M2 adds /invite + /share; root is gated)", () => {
     expect([...PUBLIC_PAGES].sort()).toEqual(
       [
-        "/",
         "/login",
         "/signup",
         "/forgot-password",
@@ -19,8 +18,8 @@ describe("public path classifier", () => {
   });
 
   it("classifies public pages and sub-paths", () => {
-    // "/" is the public marketing landing (landing-page branch).
-    expect(isPublicPath("/")).toBe(true);
+    // "/" is deliberately gated: anonymous visitors bounce to /login.
+    expect(isPublicPath("/")).toBe(false);
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
     expect(isPublicPath("/auth/error")).toBe(true);
