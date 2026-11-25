@@ -65,18 +65,22 @@ jobs:
       - name: Verify migration chain
         run: npm run db:migrate
 
-      - name: Test
-        run: npm test
-
-      # Materialise fake, secret-shaped values so verify:secrets checks for
-      # real canary strings instead of only the variable-name literal.
-      # Shell env vars above still take precedence during build.
-      - name: Seed canary env for bundle scan
+      # Two jobs in one file:
+      #  1. Several test files delete process.env.SUPABASE_DB_URL in afterAll;
+      #     later tests then fall back to .env.local, so the file must exist
+      #     BEFORE npm test (the DSN points at the service container).
+      #  2. Fake, secret-shaped values let verify:secrets check for real canary
+      #     strings instead of only the variable-name literal after build.
+      # Shell env vars above still take precedence while tests/build run.
+      - name: Seed CI env file
         run: |
           printf '%s\n' \
             'SUPABASE_SERVICE_ROLE_KEY=ci-canary-service-role-key-not-real' \
-            'SUPABASE_DB_URL=postgresql://ci:ci@127.0.0.1:5432/ci' \
+            'SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:5432/postgres' \
             'GEMINI_API_KEY=ci-canary-gemini-key-not-real' > .env.local
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
