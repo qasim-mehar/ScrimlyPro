@@ -6,7 +6,7 @@ Truth: PRD.md (what) · ERD.md (data) · PLAN.md (build order).
 
 ## Prerequisites
 
-Node 22 LTS (dev/CI has also run on Node 25 with the documented better-sqlite3 `--ignore-scripts` workaround).
+Node 22 LTS (dev/CI has also run on Node 25 with the documented better-sqlite3 `--ignore-scripts` workaround). **Keep `package-lock.json` compatible with npm 10** (the npm shipped with Node 22): lockfiles regenerated with npm 11 can pass local `npm ci` but fail CI/VM with `EUSAGE ... Missing: esbuild@0.28.2 from lock file`. If you change dependencies on npm 11, finish with `npx npm@10 install --package-lock-only`.
 
 ## Run
 
