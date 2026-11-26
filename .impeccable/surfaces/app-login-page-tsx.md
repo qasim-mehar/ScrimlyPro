@@ -9,7 +9,7 @@ Scope: `/login` and `/signup` (two related surfaces, one shared world). Mode: Op
 
 Audience/job: solo PUBG Mobile scrim organizer on a phone or laptop, often right after a match; they need to get in or get started in seconds. Action: submit email + password (signup also confirms it). Proof/content: the product's own standings output, not invented claims. Constraints: keep `/api/auth/*`, `sanitizeNextOr`, existing error copy, `?disabled=1` notice, and all secondary auth screens untouched; backend accepts email + password only.
 
-Unresolved: none. Remember-me is intentionally absent — the existing flow has no session-duration control.
+Unresolved: none. Remember-me is intentionally absent — the existing flow has no session-duration control. Google is restored as a visible "SOON" control because the user asked for it; it stays disabled because no OAuth endpoint exists — it must never fake a sign-in.
 
 ## Direction contract
 
@@ -19,7 +19,7 @@ OWN-WORLD: ground `#0b0d12` with a subtle 26px dot grid; surfaces `#12151c`/`#1a
 
 STORY: a returning organizer sees the standings board, knows they are in the right place, and signs in without reading; a new organizer sees the same proof before creating an account. Errors name the problem and the recovery in the product's own language.
 
-FIRST VIEWPORT: at 1440×900, the left 46% is a dark grid field with a brand lockup and a schematic SVG standings board (rank/team/kill bars, gold rank-1 row), with one slow scan sweep as the authored moment; the right 54% holds a warm off-white column capped near 420px — heading, email, password with visibility control, submit pill, and a quiet account-switch row. At 390px the board becomes a compact banner above the form.
+FIRST VIEWPORT: at 1440×900, the left 46% is a dark grid field with a brand lockup and a schematic SVG standings board (rank/team/kill bars, gold rank-1 row), with one slow scan sweep as the authored moment; the right 54% holds a warm off-white column capped near 420px — heading, a Google "SOON" option and email divider, email, password with visibility control, submit pill, and a quiet account-switch row, with a hairline-separated three-step flow rail at ≥1280px so the right half carries real product information. At 390px the credential panel leads with a compact brand lockup — heading and every field plus the submit button inside the first viewport — and the standings board follows as proof below.
 
 FORM: split control room — position 1 of the ordered compositions; user-confirmed. seed: none (unavailable).
 

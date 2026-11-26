@@ -38,16 +38,21 @@
 
 .stage {
   position: relative;
+  order: 2;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   min-width: 0;
-  padding: 20px 18px 26px;
+  padding: 28px 20px 36px;
   overflow: hidden;
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
   background:
     radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.3px) 0 0 / 26px 26px,
     linear-gradient(158deg, var(--surface) 0%, var(--ground) 74%);
+}
+
+.stage .brand {
+  display: none;
 }
 
 .brand {
@@ -55,6 +60,20 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+
+/* The credentials half leads on a phone; the stage becomes proof below it. */
+.panelBrand {
+  margin-bottom: 26px;
+}
+
+.panelBrand .brandName {
+  color: var(--ink);
+}
+
+.panelBrand .brandTag {
+  border-left-color: var(--paper-line);
+  color: #0e4b3b;
 }
 
 .brandMark {
@@ -91,10 +110,8 @@
 
 .boardWrap {
   width: 100%;
-  max-width: 300px;
-  max-height: 202px;
+  max-width: 340px;
   margin: 0 auto;
-  overflow: hidden;
 }
 
 .boardSvg {
@@ -223,7 +240,7 @@
 }
 
 .stageCopy {
-  margin-top: auto;
+  margin-top: 6px;
   text-align: center;
 }
 
@@ -248,12 +265,13 @@
 /* ---------- Credential panel ---------- */
 
 .panel {
+  order: 1;
   min-width: 0;
-  padding: 28px 20px 44px;
-  border-radius: 24px 24px 0 0;
+  padding: 22px 20px 36px;
+  border-radius: 0 0 24px 24px;
   background: var(--paper);
   color: var(--paper-ink);
-  box-shadow: 0 -18px 50px -38px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 18px 50px -38px rgba(0, 0, 0, 0.65);
   scrollbar-color: #cbd2c4 transparent;
   scrollbar-width: thin;
 }
@@ -308,11 +326,82 @@
   box-shadow: 0 8px 18px -14px rgba(10, 61, 48, 0.5);
 }
 
+/* Google is restored as a visible option, but honestly marked: the backend
+   has no OAuth endpoint, so it must never pretend to sign someone in. */
+.social {
+  margin-top: 26px;
+}
+
+.google {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--paper-line);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: not-allowed;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    border-color 180ms var(--ease),
+    background 180ms var(--ease);
+}
+
+.google:hover {
+  border-color: #b8bdb5;
+  background: #fbfcfa;
+}
+
+.google:disabled {
+  opacity: 1;
+}
+
+.soon {
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eaf3d6;
+  color: #0e4b3b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  color: var(--paper-muted);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.or::before,
+.or::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--paper-line);
+}
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-top: 28px;
+  margin-top: 22px;
+}
+
+.rail {
+  display: none;
 }
 
 .field {
@@ -650,6 +739,63 @@
   color: var(--ink);
 }
 
+/* Right-side flow rail — real product sequence, not decoration. */
+.railIntro {
+  margin: 0;
+  font-family: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.railSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.railSteps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--paper-muted);
+}
+
+.railDot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  margin-top: 4px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+}
+
+.dotBlue {
+  background: var(--blue);
+}
+.dotGreen {
+  background: var(--green);
+}
+.dotYellow {
+  background: var(--yellow);
+}
+
+.railFoot {
+  margin: 24px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--paper-line);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--paper-muted);
+}
+
 /* ---------- Desktop: the split control room ---------- */
 
 @media (min-width: 1000px) {
@@ -658,19 +804,27 @@
   }
 
   .stage {
+    order: 0;
     min-height: 100svh;
     padding: clamp(32px, 3.6vw, 56px);
-    border-bottom: 0;
+    border-top: 0;
+  }
+
+  .stage .brand {
+    display: flex;
+  }
+
+  .panelBrand {
+    display: none;
   }
 
   .boardWrap {
     max-width: 520px;
-    max-height: none;
     margin: auto;
-    overflow: visible;
   }
 
   .stageCopy {
+    margin-top: auto;
     text-align: left;
   }
 
@@ -679,15 +833,30 @@
   }
 
   .panel {
-    display: grid;
+    order: 0;
+    display: flex;
     min-height: 100svh;
     align-items: center;
-    padding: 48px clamp(40px, 5vw, 88px);
+    justify-content: center;
+    gap: clamp(32px, 4vw, 56px);
+    padding: 48px clamp(32px, 3.5vw, 64px);
     border-radius: 28px 0 0 28px;
+    box-shadow: 0 -18px 50px -38px rgba(0, 0, 0, 0.65);
   }
 
   .formWrap {
+    flex: 0 1 420px;
     margin: 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .rail {
+    display: block;
+    width: 180px;
+    flex: none;
+    padding-left: 24px;
+    border-left: 1px solid var(--paper-line);
   }
 }
 

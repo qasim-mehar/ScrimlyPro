@@ -68,6 +68,43 @@ function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Google's mark is a brand asset, not a generic icon — four brand-colour paths. */
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.77-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"
+      />
+    </svg>
+  );
+}
+
+/** One lockup, reused on the dark stage and in the mobile credential header. */
+function BrandLockup() {
+  return (
+    <div className={s.brand}>
+      <span className={s.brandMark}>
+        <LogoMark width="18" height="18" />
+      </span>
+      <span className={s.brandName}>ScrimlyPro</span>
+      <span className={s.brandTag}>SCRIM CONTROL</span>
+    </div>
+  );
+}
+
 function friendlyEmailError(raw: string | null): string | null {
   if (!raw) return null;
   if (raw === "email is required") return "Enter your email address.";
@@ -210,13 +247,7 @@ export function AuthConsole({ mode }: { mode: Mode }) {
   return (
     <main className={s.root}>
       <section className={s.stage} aria-label="ScrimlyPro standings preview">
-        <div className={s.brand}>
-          <span className={s.brandMark}>
-            <LogoMark width="18" height="18" />
-          </span>
-          <span className={s.brandName}>ScrimlyPro</span>
-          <span className={s.brandTag}>SCRIM CONTROL</span>
-        </div>
+        <BrandLockup />
 
         <div className={s.boardWrap}>
           <AuthBoard />
@@ -232,6 +263,10 @@ export function AuthConsole({ mode }: { mode: Mode }) {
 
       <section className={s.panel} aria-label={signup ? "Create an account" : "Sign in"}>
         <div className={s.formWrap}>
+          <div className={s.panelBrand}>
+            <BrandLockup />
+          </div>
+
           <h1 className={s.title}>
             {signup ? "Start your next scrim." : "Back in the lobby."}
           </h1>
@@ -241,6 +276,23 @@ export function AuthConsole({ mode }: { mode: Mode }) {
               : "Sign in to pick up where your last match left off."}
           </p>
           {disabledNotice}
+
+          <div className={s.social}>
+            <button
+              type="button"
+              className={s.google}
+              disabled
+              title="Google sign-in is not enabled yet"
+              aria-label={`Sign ${signup ? "up" : "in"} with Google — coming soon`}
+            >
+              <GoogleMark />
+              <span>Google</span>
+              <span className={s.soon}>Soon</span>
+            </button>
+            <div className={s.or}>
+              <span>or continue with email</span>
+            </div>
+          </div>
 
           <form className={s.form} onSubmit={onSubmit} noValidate>
             <div className={s.field}>
@@ -431,6 +483,25 @@ export function AuthConsole({ mode }: { mode: Mode }) {
             Back to the site
           </Link>
         </div>
+
+        <aside className={s.rail} aria-hidden="true">
+          <p className={s.railIntro}>The whole run, in three moves.</p>
+          <ol className={s.railSteps}>
+            <li>
+              <span className={`${s.railDot} ${s.dotBlue}`} />
+              Upload the result screens
+            </li>
+            <li>
+              <span className={`${s.railDot} ${s.dotGreen}`} />
+              Confirm every mapping
+            </li>
+            <li>
+              <span className={`${s.railDot} ${s.dotYellow}`} />
+              Download the standings
+            </li>
+          </ol>
+          <p className={s.railFoot}>~90 seconds per match, on a phone.</p>
+        </aside>
       </section>
     </main>
   );

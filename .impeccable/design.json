@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-26T00:00:00Z",
+  "generatedAt": "2026-11-26T12:00:00Z",
   "title": "Design System: ScrimlyPro Auth Console",
   "extensions": {
     "colorMeta": {
@@ -21,21 +21,49 @@
       "red": { "role": "tertiary", "displayName": "Signal Red", "canonical": "#e5473b", "tonalRamp": ["#2b0000", "#5a0000", "#8b0000", "#b20006", "#d93b31", "#ff6253", "#ff8a78", "#ffd3c6"] },
       "yellow": { "role": "tertiary", "displayName": "Signal Yellow", "canonical": "#f5b62e", "tonalRamp": ["#1c0300", "#411600", "#672f00", "#894f00", "#ab7000", "#cf9200", "#f7b831", "#ffe9ac"] },
       "green": { "role": "tertiary", "displayName": "Signal Green", "canonical": "#3ea55c", "tonalRamp": ["#001300", "#003100", "#005208", "#00732c", "#29944c", "#52b76d", "#79de91", "#c9fed3"] },
-      "satisfied": { "role": "tertiary", "displayName": "Satisfied", "canonical": "#1f6f38", "tonalRamp": ["#001200", "#002f06", "#004f1a", "#1f6f38", "#449057", "#66b377", "#8cd99c", "#d1fbd8"] }
+      "satisfied": { "role": "tertiary", "displayName": "Satisfied", "canonical": "#1f6f38", "tonalRamp": ["#001200", "#002f06", "#004f1a", "#1f6f38", "#449057", "#66b377", "#8cd99c", "#d1fbd8"] },
+      "grid-dot": { "role": "neutral", "displayName": "Grid Dot", "canonical": "rgba(255, 255, 255, 0.13)", "tonalRamp": ["#0b0b0b", "#242424", "#404040", "#5d5d5d", "#7d7d7d", "#9e9e9e", "#c4c4c4", "#eeeeee"] },
+      "board-rule": { "role": "neutral", "displayName": "Board Rule", "canonical": "rgba(255, 255, 255, 0.12)", "tonalRamp": ["#0b0b0b", "#242424", "#404040", "#5d5d5d", "#7d7d7d", "#9e9e9e", "#c4c4c4", "#eeeeee"] },
+      "spinner-track": { "role": "neutral", "displayName": "Spinner Track", "canonical": "rgba(255, 255, 255, 0.35)", "tonalRamp": ["#0b0b0b", "#242424", "#404040", "#5d5d5d", "#7d7d7d", "#9e9e9e", "#c4c4c4", "#eeeeee"] },
+      "board-muted": { "role": "tertiary", "displayName": "Board Slate", "canonical": "#8b93a7", "tonalRamp": ["#080b12", "#1f2430", "#393f51", "#565d70", "#757d90", "#969eb2", "#bbc4d9", "#e9eefa"] },
+      "board-value": { "role": "tertiary", "displayName": "Board Value", "canonical": "#aeb6c8", "tonalRamp": ["#080b12", "#1f242f", "#39404e", "#575e6d", "#767d8e", "#979eb0", "#bcc4d6", "#eaeef9"] },
+      "stage-muted": { "role": "neutral", "displayName": "Stage Muted", "canonical": "#a7aebd", "tonalRamp": ["#090b11", "#20242d", "#3a404c", "#575e6b", "#777d8b", "#989ead", "#bdc4d4", "#eaeef7"] },
+      "stage-ink": { "role": "neutral", "displayName": "Stage Ink", "canonical": "#edf0f5", "tonalRamp": ["#0a0b0d", "#222427", "#3d4044", "#5b5e62", "#7b7d82", "#9c9ea3", "#c1c4c9", "#edeef1"] },
+      "forest-ink": { "role": "tertiary", "displayName": "Deep Forest", "canonical": "#0e4b3b", "tonalRamp": ["#001009", "#002c20", "#0e4b3b", "#326a58", "#528a78", "#74ac99", "#99d3be", "#d7f7eb"] },
+      "forest-line": { "role": "neutral", "displayName": "Forest Hairline", "canonical": "rgba(14, 75, 59, 0.2)", "tonalRamp": ["#001009", "#002c20", "#0e4b3b", "#326a58", "#528a78", "#74ac99", "#99d3be", "#d7f7eb"] },
+      "forest-line-soft": { "role": "neutral", "displayName": "Forest Hairline Soft", "canonical": "rgba(14, 75, 59, 0.18)", "tonalRamp": ["#001009", "#002c20", "#0e4b3b", "#326a58", "#528a78", "#74ac99", "#99d3be", "#d7f7eb"] },
+      "forest-shadow": { "role": "neutral", "displayName": "Forest Shadow", "canonical": "rgba(10, 61, 48, 0.5)", "tonalRamp": ["#000f09", "#052b21", "#1a493c", "#3a685a", "#598979", "#7aaa9a", "#9fd1bf", "#dbf6ec"] },
+      "success-bg": { "role": "neutral", "displayName": "Success Wash", "canonical": "#eaf3d6", "tonalRamp": ["#0a0d04", "#222615", "#3c432b", "#5a6148", "#798167", "#9aa388", "#c0c8ac", "#ecf1e1"] },
+      "success-ink": { "role": "neutral", "displayName": "Success Ink", "canonical": "#0a3d30", "tonalRamp": ["#000f09", "#052b21", "#1a493c", "#3a685a", "#598979", "#7aaa9a", "#9fd1bf", "#dbf6ec"] },
+      "white": { "role": "neutral", "displayName": "Field White", "canonical": "#ffffff", "tonalRamp": ["#0b0b0b", "#242424", "#404040", "#5d5d5d", "#7d7d7d", "#9e9e9e", "#c4c4c4", "#eeeeee"] },
+      "strength-weak": { "role": "tertiary", "displayName": "Strength Weak", "canonical": "#c2352c", "tonalRamp": ["#280000", "#560000", "#860000", "#ac1b17", "#d3453a", "#fa6a5b", "#ff9180", "#ffd6c9"] },
+      "strength-fair": { "role": "tertiary", "displayName": "Strength Fair", "canonical": "#9a6506", "tonalRamp": ["#1a0500", "#3e1900", "#633200", "#845100", "#a6711d", "#ca9245", "#f2b86b", "#ffe9c0"] },
+      "strength-good": { "role": "tertiary", "displayName": "Strength Good", "canonical": "#2d55c4", "tonalRamp": ["#010134", "#041468", "#102f9c", "#2b52c1", "#4875e6", "#6798ff", "#8bbfff", "#ceeeff"] },
+      "failure-line": { "role": "neutral", "displayName": "Failure Line", "canonical": "#f3cfca", "tonalRamp": ["#140706", "#321e1b", "#543734", "#735551", "#947470", "#b79591", "#debbb6", "#fee9e6"] },
+      "failure-bg": { "role": "neutral", "displayName": "Failure Wash", "canonical": "#fdecea", "tonalRamp": ["#0f0a09", "#2b2120", "#493c3b", "#685a58", "#887977", "#aa9a98", "#d0c0be", "#f5eceb"] },
+      "failure-ink": { "role": "neutral", "displayName": "Failure Ink", "canonical": "#8e1d17", "tonalRamp": ["#240000", "#4f0000", "#7c0304", "#a13128", "#c65447", "#ed7668", "#ff9c8c", "#ffdad0"] }
     },
     "typographyMeta": {
       "display": { "displayName": "Form Display", "purpose": "Form heading only; Lexend 700 with balanced wrapping." },
       "headline": { "displayName": "Stage Headline", "purpose": "Dark-stage tagline; Lexend 700." },
+      "brand": { "displayName": "Brand", "purpose": "Lockup name; Lexend 700 at 18px, switching to ink on paper." },
       "body": { "displayName": "Body", "purpose": "Lede and stage sub; Inter 14px/1.6, capped at 36ch." },
-      "input": { "displayName": "Field Text", "purpose": "Input and button text; Inter 15px." },
-      "label": { "displayName": "Label", "purpose": "Field labels; Inter 600 at 13px." }
+      "input": { "displayName": "Field Text", "purpose": "Input, button, and rail intro text; 15px." },
+      "label": { "displayName": "Label", "purpose": "Field labels; Inter 600 at 13px." },
+      "detail": { "displayName": "Detail", "purpose": "Field errors and the three rail steps; 12.5px/1.45." },
+      "small": { "displayName": "Small", "purpose": "Board KP values, strength caption, home link; 12px." },
+      "fine": { "displayName": "Fine", "purpose": "Requirements, social divider, rail foot; 11.5px/1.5." },
+      "caption": { "displayName": "Caption", "purpose": "Board captions and column heads, SOON badge; 10px." },
+      "micro": { "displayName": "Micro", "purpose": "Brand tag; 9.5px/700 at 0.16em." }
     },
     "shadows": [
       { "name": "submit-rest", "value": "0 12px 26px -10px rgba(11, 11, 13, 0.45), 0 2px 6px rgba(11, 11, 13, 0.14)", "purpose": "Primary pill at rest." },
       { "name": "submit-hover", "value": "0 16px 30px -10px rgba(11, 11, 13, 0.5), 0 3px 8px rgba(11, 11, 13, 0.16)", "purpose": "Pairs with translateY(-2px) on hover." },
-      { "name": "panel-lift", "value": "0 -18px 50px -38px rgba(0, 0, 0, 0.65)", "purpose": "Paper panel edge over the dark field." },
+      { "name": "panel-lift", "value": "0 -18px 50px -38px rgba(0, 0, 0, 0.65)", "purpose": "Paper panel edge over the dark field at desktop." },
+      { "name": "panel-lift-mobile", "value": "0 18px 50px -38px rgba(0, 0, 0, 0.65)", "purpose": "Same blur inverted for the panel-first phone order." },
       { "name": "focus-ring", "value": "0 0 0 3px rgba(217, 249, 157, 0.6)", "purpose": "Focused input shell." },
       { "name": "error-focus-ring", "value": "0 0 0 3px rgba(179, 38, 30, 0.16)", "purpose": "Focused input shell in error state." },
+      { "name": "notice-lift", "value": "0 8px 18px -14px rgba(10, 61, 48, 0.5)", "purpose": "The disabled-account notice." },
       { "name": "status-success", "value": "0 10px 22px -16px rgba(10, 61, 48, 0.55)", "purpose": "Success message card." },
       { "name": "status-failure", "value": "0 10px 22px -16px rgba(145, 29, 23, 0.5)", "purpose": "Failure message card." },
       { "name": "brand-inset", "value": "inset 0 1px 0 rgba(255, 255, 255, 0.07)", "purpose": "Top-edge light on the brand mark." }
@@ -43,13 +71,14 @@
     "motion": [
       { "name": "ease-standard", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default easing for state transitions." },
       { "name": "duration-fast", "value": "160ms", "purpose": "Reveal and link color transitions." },
-      { "name": "duration-standard", "value": "180ms", "purpose": "Input shell border and icon transitions." },
+      { "name": "duration-standard", "value": "180ms", "purpose": "Input shell, Google control, and icon transitions." },
       { "name": "duration-slow", "value": "200ms", "purpose": "Meter fill, submit transform and shadow transitions." },
       { "name": "scan-sweep", "value": "7s", "purpose": "One slow lime scan line across the standings board." },
       { "name": "spinner", "value": "700ms linear infinite", "purpose": "Pending state on the submit pill." }
     ],
     "breakpoints": [
-      { "name": "split-control-room", "value": "1000px" }
+      { "name": "split-control-room", "value": "1000px" },
+      { "name": "flow-rail", "value": "1280px" }
     ]
   },
   "components": [
@@ -59,14 +88,14 @@
       "refersTo": "button-primary",
       "description": "Full-pill submit action on the paper panel; dark ink fill with a soft blurred lift.",
       "html": "<button class=\"ds-btn-primary\" type=\"button\">Sign in <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 12h15M13 6l6 6-6 6\"/></svg></button>",
-      "css": ".ds-btn-primary { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; border: 0; border-radius: 999px; background: #0b0b0d; color: #ffffff; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 12px 26px -10px rgba(11, 11, 13, 0.45), 0 2px 6px rgba(11, 11, 13, 0.14); transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms; }\n.ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(11, 11, 13, 0.5), 0 3px 8px rgba(11, 11, 13, 0.16); }\n.ds-btn-primary:active { transform: translateY(0) scale(0.99); }\n.ds-btn-primary:focus-visible { outline: 2px solid #f5c542; outline-offset: 3px; }\n.ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
+      "css": ".ds-btn-primary { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; border: 0; border-radius: 999px; background: #0b0b0d; color: #ffffff; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 12px 26px -10px rgba(11, 11, 13, 0.45), 0 2px 6px rgba(11, 11, 13, 0.14); transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms; }\n.ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(11, 11, 13, 0.5), 0 3px 8px rgba(11, 11, 13, 0.16); }\n.ds-btn-primary:active { transform: translateY(0) scale(0.99); }\n.ds-btn-primary:focus-visible { outline: 2px solid #f5c542; outline-offset: 3px; border-radius: 6px; }\n.ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
     },
     {
       "name": "Password Reveal Button",
       "kind": "button",
       "description": "44px inline-eye control inside a password field; transparent until hovered.",
       "html": "<button class=\"ds-reveal\" type=\"button\" aria-label=\"Show password\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.5 12S6.5 6.5 12 6.5 21.5 12 21.5 12 17.5 17.5 12 17.5 2.5 12 2.5 12Z\"/><circle cx=\"12\" cy=\"12\" r=\"2.75\"/></svg></button>",
-      "css": ".ds-reveal { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #656a63; cursor: pointer; transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background 160ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-reveal:hover { background: #f0f2ec; color: #0b0b0d; }\n.ds-reveal:focus-visible { outline: 2px solid #0b0b0d; outline-offset: 3px; }\n.ds-reveal:disabled { cursor: not-allowed; opacity: 0.5; }"
+      "css": ".ds-reveal { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #656a63; cursor: pointer; transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background 160ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-reveal:hover { background: #f0f2ec; color: #0b0b0d; }\n.ds-reveal:focus-visible { outline: 2px solid #0b0b0d; outline-offset: 3px; border-radius: 6px; }\n.ds-reveal:disabled { cursor: not-allowed; opacity: 0.5; }"
     },
     {
       "name": "Text Field",
@@ -74,15 +103,23 @@
       "refersTo": "input-field",
       "description": "52px white shell with a leading icon and a lime focus halo on the paper material.",
       "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-email\">Email address</label><div class=\"ds-input-shell\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"3\"/><path d=\"m4 7 8 6 8-6\"/></svg><input class=\"ds-input\" id=\"ds-email\" type=\"email\" placeholder=\"you@example.com\"/></div></div>",
-      "css": ".ds-field { display: flex; flex-direction: column; }\n.ds-field-label { margin-bottom: 8px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #232723; }\n.ds-input-shell { position: relative; display: flex; align-items: center; height: 52px; border: 1px solid #dfe3dc; border-radius: 13px; background: #ffffff; transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-input-shell > svg { position: absolute; left: 15px; color: #656a63; pointer-events: none; transition: color 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-input-shell:focus-within { border-color: #0b0b0d; box-shadow: 0 0 0 3px rgba(217, 249, 157, 0.6); }\n.ds-input-shell:focus-within > svg { color: #0b0b0d; }\n.ds-input-shell--error { border-color: #b3261e; }\n.ds-input-shell--error:focus-within { border-color: #b3261e; box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.16); }\n.ds-input { width: 100%; height: 100%; padding: 0 52px 0 46px; border: 0; outline: none; background: transparent; color: #101212; caret-color: #0e4b3b; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; }\n.ds-input::placeholder { color: #656a63; }\n.ds-input:disabled { cursor: not-allowed; opacity: 0.6; }"
+      "css": ".ds-field { display: flex; flex-direction: column; }\n.ds-field-label { margin-bottom: 8px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #232723; }\n.ds-input-shell { position: relative; display: flex; align-items: center; height: 52px; border: 1px solid #dfe3dc; border-radius: 13px; background: #ffffff; transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-input-shell > svg { position: absolute; left: 15px; color: #656a63; pointer-events: none; transition: color 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-input-shell:focus-within { border-color: #0b0b0d; box-shadow: 0 0 0 3px rgba(217, 249, 157, 0.6); }\n.ds-input-shell:focus-within > svg { color: #0b0b0d; }\n.ds-input-shell--error { border-color: #b3261e; }\n.ds-input-shell--error:focus-within { border-color: #b3261e; box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.16); }\n.ds-input { width: 100%; height: 100%; padding: 0 52px 0 46px; border: 0; outline: none; background: transparent; color: #101212; caret-color: #0e4b3b; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; border-radius: 6px; }\n.ds-input::placeholder { color: #656a63; }\n.ds-input:disabled { cursor: not-allowed; opacity: 0.6; }"
+    },
+    {
+      "name": "Google Soon Button",
+      "kind": "button",
+      "refersTo": "button-google-soon",
+      "description": "Visible but honestly disabled Google option with a SOON badge and a hairline email divider; no OAuth endpoint exists.",
+      "html": "<div class=\"ds-social\"><button class=\"ds-google\" type=\"button\" disabled title=\"Google sign-in is not enabled yet\" aria-label=\"Sign in with Google — coming soon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"#EA4335\" d=\"M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z\"/><path fill=\"#4285F4\" d=\"M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65Z\"/><path fill=\"#FBBC05\" d=\"M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.77-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z\"/><path fill=\"#34A853\" d=\"M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z\"/></svg><span>Google</span><span class=\"ds-soon\">Soon</span></button><div class=\"ds-or\"><span>or continue with email</span></div></div>",
+      "css": ".ds-social { margin-top: 26px; }\n.ds-google { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 10px; padding: 0 14px; border: 1px solid #dfe3dc; border-radius: 12px; background: #ffffff; color: #0b0b0d; cursor: not-allowed; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), background 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-google:hover { border-color: #b8bdb5; background: #fbfcfa; }\n.ds-google:disabled { opacity: 1; }\n.ds-google:focus-visible { outline: 2px solid #0b0b0d; outline-offset: 3px; border-radius: 6px; }\n.ds-soon { margin-left: auto; padding: 4px 8px; border-radius: 999px; background: #eaf3d6; color: #0e4b3b; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }\n.ds-or { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: #5f645f; font-size: 11.5px; letter-spacing: 0.04em; white-space: nowrap; }\n.ds-or::before, .ds-or::after { content: \"\"; height: 1px; flex: 1; background: #dfe3dc; }"
     },
     {
       "name": "Credential Panel",
       "kind": "card",
       "refersTo": "card-panel",
-      "description": "Warm paper half of the split, capped to a 420px form column.",
-      "html": "<section class=\"ds-panel\"><div class=\"ds-form-wrap\"><h1 class=\"ds-panel-title\">Back in the lobby.</h1><p class=\"ds-panel-lede\">Sign in to pick up where your last match left off.</p></div></section>",
-      "css": ".ds-panel { max-width: 420px; margin: 0 auto; padding: 28px 20px 44px; border-radius: 24px 24px 0 0; background: #f7f8f4; color: #101212; box-shadow: 0 -18px 50px -38px rgba(0, 0, 0, 0.65); }\n.ds-form-wrap { width: 100%; max-width: 420px; }\n.ds-panel-title { margin: 0; font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: clamp(30px, 7vw, 38px); font-weight: 700; line-height: 1.06; letter-spacing: -0.03em; color: #0b0b0d; text-wrap: balance; }\n.ds-panel-lede { max-width: 36ch; margin: 12px 0 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #5f645f; }"
+      "description": "Warm paper half of the split; leads on phones with bottom corners and a downward shadow, then joins the 46/54 row at desktop.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-form-wrap\"><div class=\"ds-panel-brand\"><span class=\"ds-brand-name\">ScrimlyPro</span><span class=\"ds-brand-tag\">SCRIM CONTROL</span></div><h1 class=\"ds-panel-title\">Back in the lobby.</h1><p class=\"ds-panel-lede\">Sign in to pick up where your last match left off.</p></div></section>",
+      "css": ".ds-panel { max-width: 420px; margin: 0 auto; padding: 22px 20px 36px; border-radius: 0 0 24px 24px; background: #f7f8f4; color: #101212; box-shadow: 0 18px 50px -38px rgba(0, 0, 0, 0.65); }\n.ds-panel-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }\n.ds-brand-name { font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #0b0b0d; }\n.ds-brand-tag { padding-left: 10px; border-left: 1px solid #dfe3dc; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em; color: #0e4b3b; }\n.ds-form-wrap { width: 100%; max-width: 420px; }\n.ds-panel-title { margin: 0; font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: clamp(30px, 7vw, 38px); font-weight: 700; line-height: 1.06; letter-spacing: -0.03em; color: #0b0b0d; text-wrap: balance; }\n.ds-panel-lede { max-width: 36ch; margin: 12px 0 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #5f645f; }"
     },
     {
       "name": "Status Message",
@@ -100,45 +137,61 @@
       "css": ".ds-strength { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }\n.ds-strength-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; color: #5f645f; }\n.ds-strength-label { font-weight: 700; color: #656a63; }\n.ds-strength-label[data-score=\"1\"] { color: #c2352c; }\n.ds-strength-label[data-score=\"2\"] { color: #9a6506; }\n.ds-strength-label[data-score=\"3\"] { color: #2d55c4; }\n.ds-strength-label[data-score=\"4\"] { color: #1f6f38; }\n.ds-meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }\n.ds-meter-step { height: 5px; border-radius: 999px; background: #e4e7df; transition: background 200ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-meter-active[data-score=\"1\"] { background: #e5473b; }\n.ds-meter-active[data-score=\"2\"] { background: #f5b62e; }\n.ds-meter-active[data-score=\"3\"] { background: #3e6ff0; }\n.ds-meter-active[data-score=\"4\"] { background: #3ea55c; }\n.ds-requirements { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 10px 0 0; padding: 0; list-style: none; }\n.ds-requirement, .ds-requirement-met { display: flex; align-items: center; gap: 5px; font-size: 11.5px; line-height: 1.35; color: #656a63; }\n.ds-requirement-met { color: #1f6f38; }"
     },
     {
+      "name": "Flow Rail",
+      "kind": "custom",
+      "description": "Hairline-separated three-step product sequence that fills the panel's right half at 1280px; visual only.",
+      "html": "<aside class=\"ds-rail\" aria-hidden=\"true\"><p class=\"ds-rail-intro\">The whole run, in three moves.</p><ol class=\"ds-rail-steps\"><li><span class=\"ds-rail-dot ds-dot-blue\"></span>Upload the result screens</li><li><span class=\"ds-rail-dot ds-dot-green\"></span>Confirm every mapping</li><li><span class=\"ds-rail-dot ds-dot-yellow\"></span>Download the standings</li></ol><p class=\"ds-rail-foot\">~90 seconds per match, on a phone.</p></aside>",
+      "css": ".ds-rail { width: 180px; flex: none; padding-left: 24px; border-left: 1px solid #dfe3dc; }\n.ds-rail-intro { margin: 0; font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; color: #0b0b0d; }\n.ds-rail-steps { display: flex; flex-direction: column; gap: 16px; margin: 22px 0 0; padding: 0; list-style: none; }\n.ds-rail-steps li { display: flex; align-items: flex-start; gap: 10px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 12.5px; line-height: 1.45; color: #5f645f; }\n.ds-rail-dot { width: 9px; height: 9px; flex: none; margin-top: 4px; border-radius: 3px; transform: rotate(45deg); }\n.ds-dot-blue { background: #3e6ff0; }\n.ds-dot-green { background: #3ea55c; }\n.ds-dot-yellow { background: #f5b62e; }\n.ds-rail-foot { margin: 24px 0 0; padding-top: 16px; border-top: 1px solid #dfe3dc; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 11.5px; line-height: 1.5; color: #5f645f; }"
+    },
+    {
       "name": "Standings Board",
       "kind": "custom",
-      "description": "Schematic of the product's own standings output on the dark field; decorative and hidden from assistive tech.",
+      "description": "Schematic of the product's own standings output on the dark field; decorative, hidden from assistive tech, and follows the credentials on a phone.",
       "html": "<svg class=\"ds-board\" viewBox=\"0 0 520 560\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><rect class=\"ds-board-frame\" x=\"1\" y=\"1\" width=\"518\" height=\"558\" rx=\"22\"/><text class=\"ds-board-brand\" x=\"32\" y=\"50\">SCRIMLYPRO</text><text class=\"ds-board-caption\" x=\"488\" y=\"50\" text-anchor=\"end\">SAMPLE STANDINGS</text><path class=\"ds-board-rule\" d=\"M32 76h456\"/><text class=\"ds-board-head\" x=\"32\" y=\"108\">RANK</text><text class=\"ds-board-head\" x=\"96\" y=\"108\">TEAM</text><text class=\"ds-board-head\" x=\"488\" y=\"108\" text-anchor=\"end\">TOTAL</text><g class=\"ds-board-row-win\"><rect class=\"ds-board-plate\" x=\"24\" y=\"120\" width=\"472\" height=\"58\" rx=\"10\"/><text class=\"ds-board-rank\" x=\"32\" y=\"152\">01</text><text class=\"ds-board-team\" x=\"96\" y=\"152\">TF SQUAD</text><text class=\"ds-board-total\" x=\"488\" y=\"152\" text-anchor=\"end\">43</text></g><path class=\"ds-board-scan\" d=\"M32 90h456\"/></svg>",
       "css": ".ds-board { display: block; width: 100%; height: auto; background: linear-gradient(158deg, #12151c 0%, #0b0d12 74%); }\n.ds-board-frame { stroke: rgba(245, 197, 66, 0.22); stroke-width: 1; }\n.ds-board-brand { fill: #f7f8f4; font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.14em; }\n.ds-board-caption, .ds-board-head { fill: #8b93a7; font-family: Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.14em; }\n.ds-board-caption { font-size: 10px; font-weight: 600; }\n.ds-board-head { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; }\n.ds-board-rule { stroke: rgba(255, 255, 255, 0.12); stroke-width: 1; }\n.ds-board-plate { fill: rgba(245, 197, 66, 0.12); }\n.ds-board-rank, .ds-board-total { fill: #f5c542; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }\n.ds-board-team { fill: #f2f4f8; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }\n.ds-board-scan { stroke: rgba(217, 249, 157, 0.32); stroke-width: 2; animation: ds-board-scan 7s cubic-bezier(0.22, 1, 0.36, 1) infinite; }\n@keyframes ds-board-scan { 0%, 8% { opacity: 0; transform: translateY(0); } 14% { opacity: 1; } 72% { opacity: 0.8; } 88%, 100% { opacity: 0; transform: translateY(330px); } }\n@media (prefers-reduced-motion: reduce) { .ds-board-scan { animation: none; opacity: 0.3; } }"
     }
   ],
   "narrative": {
     "northStar": "The Standings Control Room",
-    "overview": "Authentication here is an instrument, not a pitch. A dark field carries the product's own standings output as a schematic SVG board; beside it, a warm off-white credential panel does one job — get an organizer into their session. The split is the identity: remove every word and the 46/54 grid, dot field, gold rank-one row, and 999px pill still read as ScrimlyPro. It deliberately refuses the generic centered auth card and the marketing hero.\n\nThe two halves use different materials and never blend. The field is ground `#0b0d12` with `#12151c`/`#1a1e28` surfaces, `#272d3b` hairlines, and a 26px dot grid; the panel is paper `#f7f8f4` with near-black ink and `#dfe3dc` 1px rules. Colour is information, not decoration: gold marks rank one, lime drives the scan sweep, and the four strength steps borrow red, yellow, blue, and green. Mobile keeps the desktop order — board first as a compact banner, form second — because organizers arrive from a match on a phone.\n\nMotion is quiet and authored: one 7-second scan sweep across the board, 160–200ms state transitions on controls, and a reduced-motion path that stops the sweep and drops transitions. Feedback is advisory — password strength never gates submission — and every status message is a soft, blurred, tinted card rather than a modal.",
+    "overview": "Authentication here is an instrument, not a pitch. A dark field carries the product's own standings output as a schematic SVG board; beside it, a warm off-white credential panel does one job — get an organizer into their session. The split is the identity: remove every word and the dot field, gold rank-one row, and 999px pill still read as ScrimlyPro. It deliberately refuses the generic centered auth card and the marketing hero.\n\nThe two halves use different materials and never blend. The field is ground `#0b0d12` with `#12151c`/`#1a1e28` surfaces, `#272d3b` hairlines, and a 26px dot grid; the panel is paper `#f7f8f4` with near-black ink and `#dfe3dc` 1px rules. Colour is information, not decoration: gold marks rank one, lime drives the scan sweep, the four strength steps borrow red, yellow, blue, and green, and blue/green/yellow diamonds mark the three product moves in the rail. On a phone the credential panel leads — compact brand lockup, heading, a visibly disabled Google option with a SOON badge, every field and the submit pill inside the first 844px viewport — and the board follows below as proof, because organizers arrive from a match on a phone.\n\nMotion is quiet and authored: one 7-second scan sweep across the board, 160–200ms state transitions on controls, and a reduced-motion path that stops the sweep and drops transitions. Feedback is advisory — password strength never gates submission — and every status message is a soft, blurred, tinted card rather than a modal. At 1280px and up a hairline-separated three-step rail turns the otherwise empty right half into a real product sequence: upload, confirm, download, in about 90 seconds per match.",
     "keyCharacteristics": [
-      "Two-material 46/54 split with a 420px form cap",
+      "Credentials first on phones; 46/54 split at desktop with a 420px form cap",
       "Schematic standings board as proof, never invented claims",
       "999px primary pill, 1px hairlines, soft blurred depth",
       "Contrast-compliant muted ink (`#656a63`, 5.19:1) and satisfied green (`#1f6f38`, 5.81:1)",
-      "Lexend headlines over Inter body and tabular data"
+      "Lexend headlines over Inter body and tabular data",
+      "Disabled Google option marked SOON, never a faked sign-in",
+      "Three-step flow rail with blue/green/yellow rotated-square bullets at ≥1280px"
     ],
     "rules": [
       { "name": "The Two Materials Rule", "body": "The dark instrument field and the warm paper panel are separate materials meeting at one edge; never blend, tint, or merge them into a single surface.", "section": "colors" },
-      { "name": "The Signal-Only Accent Rule", "body": "Gold, lime, red, yellow, blue, and green are instrument signals — rank one, scan sweep, strength steps — and never become buttons, links, or page chrome.", "section": "colors" },
+      { "name": "The Signal-Only Accent Rule", "body": "Gold, lime, red, yellow, blue, and green are instrument signals — rank one, scan sweep, strength steps, and the three rail bullets — and never become buttons or links.", "section": "colors" },
       { "name": "The Legible Mute Rule", "body": "Muted text on paper never goes lighter than `#656a63` on `#f7f8f4` (5.19:1); satisfied state uses `#1f6f38` (5.81:1). Legibility earns the value, not the other way around.", "section": "colors" },
-      { "name": "The Two-Face Rule", "body": "Lexend owns every headline; Inter owns every body string, label, and data value. Never introduce a third face or fall back to a system display face.", "section": "typography" },
-      { "name": "The Split Control-Room Rule", "body": "At 1000px and up the field is 46% and the panel 54%, with the form capped at 420px; below that, the board becomes a compact banner above the form rather than a second column.", "section": "layout" },
+      { "name": "The Two-Face Rule", "body": "Lexend owns every headline, including the rail intro; Inter owns every body string, label, and data value. Never introduce a third face or fall back to a system display face.", "section": "typography" },
+      { "name": "The Split Control-Room Rule", "body": "On phones the credential panel leads and the board follows as proof; at 1000px the field and panel take 46% / 54% with a 420px form cap, and at 1280px a hairline-separated rail joins the panel.", "section": "layout" },
       { "name": "The Soft-Depth Rule", "body": "Depth is diffuse and blurred with generous negative spread; hard offset shadows are not part of this world.", "section": "elevation" },
-      { "name": "The Pill and Hairline Rule", "body": "Calls to action are 999px pills; everything structural is a 1px rule with a modest radius, never a heavy border.", "section": "shapes" }
+      { "name": "The Pill and Hairline Rule", "body": "The primary submit is a 999px pill; secondary controls and status cards use 12px and structure is drawn with 1px hairlines — never heavy borders.", "section": "shapes" },
+      { "name": "The Rotated-Diamond Rule", "body": "The three rail steps are marked by 9px squares with a 3px radius turned 45°, not circles or glyphs.", "section": "shapes" },
+      { "name": "The Honest-Disabled Rule", "body": "A control without a backend stays fully opaque and is marked SOON; never dim it into invisibility or fake a sign-in.", "section": "components" }
     ],
     "dos": [
       "Do keep the 46% / 54% split at ≥1000px and cap the form at 420px.",
       "Do hold muted text on paper at `#656a63` or darker and satisfied text at `#1f6f38`.",
-      "Do reserve gold, lime, red, yellow, blue, and green for board and meter signals.",
+      "Do reserve gold, lime, red, yellow, blue, and green for board, meter, and rail signals.",
       "Do keep password strength advisory so a valid weak password can still submit.",
-      "Do stop the scan sweep and drop transitions under `prefers-reduced-motion: reduce`."
+      "Do stop the scan sweep and drop transitions under `prefers-reduced-motion: reduce`.",
+      "Do lead with credentials on phones and place the board below as proof.",
+      "Do mark the disabled Google control with a SOON badge instead of dimming or faking a sign-in.",
+      "Do show the three-step rail with blue/green/yellow rotated-square bullets at ≥1280px."
     ],
     "donts": [
       "Don't use hard offset shadows; this world's depth is soft and blurred.",
       "Don't centre the form in a floating card; the panel is a full-height material half of the split.",
       "Don't swap the Lexend/Inter pairing or substitute a system display face.",
       "Don't use icon fonts or glyphs; icons are inline 20px SVG strokes at 1.75px.",
-      "Don't blend the dark field and paper panel into one tinted surface."
+      "Don't blend the dark field and paper panel into one tinted surface.",
+      "Don't put the board above the form on a phone.",
+      "Don't remove the SOON badge from the Google control or treat it as a live OAuth path."
     ]
   }
 }
