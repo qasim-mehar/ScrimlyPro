@@ -27,7 +27,11 @@ export function ShareStandingsPreview({
   confirmedCount: number;
 }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const [artLoading, setArtLoading] = useState(false);
+  // The first paint already needs art — never show an enabled download while
+  // GraphicCanvas is still decoding it (its report arrives via an effect).
+  const [artLoading, setArtLoading] = useState(
+    () => config.backgrounds.standings.type === "image",
+  );
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
