@@ -1,7 +1,13 @@
-import { LoginPanel } from "@/components/auth/login-panel";
+import { Suspense } from "react";
+
+import { AuthConsole } from "@/components/auth/auth-console";
 
 export const metadata = { title: "Sign up — ScrimlyPro" };
 
 export default function SignupPage() {
-  return <LoginPanel mode="signup" />;
+  return (
+    <Suspense>
+      <AuthConsole mode="signup" />
+    </Suspense>
+  );
 }

@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T00:00:00Z",
+  "title": "Design System: ScrimlyPro Auth Console",
+  "extensions": {
+    "colorMeta": {
+      "ground": { "role": "primary", "displayName": "Instrument Ground", "canonical": "#0b0d12", "tonalRamp": ["#0a0b0e", "#222428", "#3d4046", "#5b5d64", "#7a7d84", "#9b9ea6", "#c1c4cc", "#edeef3"] },
+      "surface": { "role": "primary", "displayName": "Raised Surface", "canonical": "#12151c", "tonalRamp": ["#0a0b0f", "#21242a", "#3c4048", "#5a5e66", "#797d86", "#9a9ea8", "#c0c4ce", "#eceef4"] },
+      "surface-2": { "role": "primary", "displayName": "Surface Two", "canonical": "#1a1e28", "tonalRamp": ["#090b10", "#21242c", "#3b404b", "#595d69", "#787d8a", "#999eab", "#bec4d2", "#ebeef6"] },
+      "line": { "role": "neutral", "displayName": "Hairline Dark", "canonical": "#272d3b", "tonalRamp": ["#080b12", "#1f242f", "#39404e", "#575e6d", "#767d8e", "#979eb0", "#bcc4d6", "#eaeef9"] },
+      "ink": { "role": "neutral", "displayName": "Panel Ink", "canonical": "#0b0b0d", "tonalRamp": ["#0b0b0c", "#242426", "#3f3f42", "#5d5d60", "#7d7d80", "#9e9ea1", "#c4c4c7", "#eeeef0"] },
+      "paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "#f7f8f4", "tonalRamp": ["#0b0b0a", "#242422", "#3f403d", "#5d5e5b", "#7d7e7a", "#9e9f9b", "#c4c4c1", "#eeefec"] },
+      "paper-ink": { "role": "neutral", "displayName": "Paper Ink", "canonical": "#101212", "tonalRamp": ["#0a0b0b", "#232424", "#3e4040", "#5c5e5e", "#7b7e7e", "#9c9f9f", "#c2c5c5", "#edefef"] },
+      "paper-muted": { "role": "neutral", "displayName": "Paper Muted", "canonical": "#5f645f", "tonalRamp": ["#0a0c0a", "#222522", "#3d413d", "#5a5f5a", "#7a7f7a", "#9ba09b", "#c0c6c0", "#ecefec"] },
+      "paper-line": { "role": "neutral", "displayName": "Hairline Paper", "canonical": "#dfe3dc", "tonalRamp": ["#0a0c09", "#232521", "#3e413b", "#5b5f59", "#7b7f78", "#9ca099", "#c2c6bf", "#edefeb"] },
+      "muted-ink": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#656a63", "tonalRamp": ["#0a0c09", "#222520", "#3d413b", "#5a5f58", "#7a7f78", "#9ba099", "#c0c6be", "#ecf0eb"] },
+      "danger": { "role": "neutral", "displayName": "Error Red", "canonical": "#b3261e", "tonalRamp": ["#280000", "#560000", "#860000", "#ac1d17", "#d2463a", "#f96a5b", "#ff927f", "#ffd6c9"] },
+      "gold": { "role": "tertiary", "displayName": "Rank Gold", "canonical": "#f5c542", "tonalRamp": ["#190600", "#3c1b00", "#603500", "#815400", "#a37500", "#c69700", "#edbd38", "#ffecae"] },
+      "lime": { "role": "tertiary", "displayName": "Scan Lime", "canonical": "#d9f99d", "tonalRamp": ["#060f00", "#1a2a00", "#324900", "#4f6800", "#6e892e", "#8eab52", "#b3d277", "#e5f7c6"] },
+      "blue": { "role": "tertiary", "displayName": "Signal Blue", "canonical": "#3e6ff0", "tonalRamp": ["#010039", "#020c70", "#0a28a7", "#234ecd", "#4072f3", "#5f95ff", "#83bdff", "#caeeff"] },
+      "red": { "role": "tertiary", "displayName": "Signal Red", "canonical": "#e5473b", "tonalRamp": ["#2b0000", "#5a0000", "#8b0000", "#b20006", "#d93b31", "#ff6253", "#ff8a78", "#ffd3c6"] },
+      "yellow": { "role": "tertiary", "displayName": "Signal Yellow", "canonical": "#f5b62e", "tonalRamp": ["#1c0300", "#411600", "#672f00", "#894f00", "#ab7000", "#cf9200", "#f7b831", "#ffe9ac"] },
+      "green": { "role": "tertiary", "displayName": "Signal Green", "canonical": "#3ea55c", "tonalRamp": ["#001300", "#003100", "#005208", "#00732c", "#29944c", "#52b76d", "#79de91", "#c9fed3"] },
+      "satisfied": { "role": "tertiary", "displayName": "Satisfied", "canonical": "#1f6f38", "tonalRamp": ["#001200", "#002f06", "#004f1a", "#1f6f38", "#449057", "#66b377", "#8cd99c", "#d1fbd8"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Form Display", "purpose": "Form heading only; Lexend 700 with balanced wrapping." },
+      "headline": { "displayName": "Stage Headline", "purpose": "Dark-stage tagline; Lexend 700." },
+      "body": { "displayName": "Body", "purpose": "Lede and stage sub; Inter 14px/1.6, capped at 36ch." },
+      "input": { "displayName": "Field Text", "purpose": "Input and button text; Inter 15px." },
+      "label": { "displayName": "Label", "purpose": "Field labels; Inter 600 at 13px." }
+    },
+    "shadows": [
+      { "name": "submit-rest", "value": "0 12px 26px -10px rgba(11, 11, 13, 0.45), 0 2px 6px rgba(11, 11, 13, 0.14)", "purpose": "Primary pill at rest." },
+      { "name": "submit-hover", "value": "0 16px 30px -10px rgba(11, 11, 13, 0.5), 0 3px 8px rgba(11, 11, 13, 0.16)", "purpose": "Pairs with translateY(-2px) on hover." },
+      { "name": "panel-lift", "value": "0 -18px 50px -38px rgba(0, 0, 0, 0.65)", "purpose": "Paper panel edge over the dark field." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(217, 249, 157, 0.6)", "purpose": "Focused input shell." },
+      { "name": "error-focus-ring", "value": "0 0 0 3px rgba(179, 38, 30, 0.16)", "purpose": "Focused input shell in error state." },
+      { "name": "status-success", "value": "0 10px 22px -16px rgba(10, 61, 48, 0.55)", "purpose": "Success message card." },
+      { "name": "status-failure", "value": "0 10px 22px -16px rgba(145, 29, 23, 0.5)", "purpose": "Failure message card." },
+      { "name": "brand-inset", "value": "inset 0 1px 0 rgba(255, 255, 255, 0.07)", "purpose": "Top-edge light on the brand mark." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default easing for state transitions." },
+      { "name": "duration-fast", "value": "160ms", "purpose": "Reveal and link color transitions." },
+      { "name": "duration-standard", "value": "180ms", "purpose": "Input shell border and icon transitions." },
+      { "name": "duration-slow", "value": "200ms", "purpose": "Meter fill, submit transform and shadow transitions." },
+      { "name": "scan-sweep", "value": "7s", "purpose": "One slow lime scan line across the standings board." },
+      { "name": "spinner", "value": "700ms linear infinite", "purpose": "Pending state on the submit pill." }
+    ],
+    "breakpoints": [
+      { "name": "split-control-room", "value": "1000px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Full-pill submit action on the paper panel; dark ink fill with a soft blurred lift.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Sign in <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 12h15M13 6l6 6-6 6\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; padding: 0 20px; border: 0; border-radius: 999px; background: #0b0b0d; color: #ffffff; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 12px 26px -10px rgba(11, 11, 13, 0.45), 0 2px 6px rgba(11, 11, 13, 0.14); transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms; }\n.ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(11, 11, 13, 0.5), 0 3px 8px rgba(11, 11, 13, 0.16); }\n.ds-btn-primary:active { transform: translateY(0) scale(0.99); }\n.ds-btn-primary:focus-visible { outline: 2px solid #f5c542; outline-offset: 3px; }\n.ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Password Reveal Button",
+      "kind": "button",
+      "description": "44px inline-eye control inside a password field; transparent until hovered.",
+      "html": "<button class=\"ds-reveal\" type=\"button\" aria-label=\"Show password\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.5 12S6.5 6.5 12 6.5 21.5 12 21.5 12 17.5 17.5 12 17.5 2.5 12 2.5 12Z\"/><circle cx=\"12\" cy=\"12\" r=\"2.75\"/></svg></button>",
+      "css": ".ds-reveal { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #656a63; cursor: pointer; transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1), background 160ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-reveal:hover { background: #f0f2ec; color: #0b0b0d; }\n.ds-reveal:focus-visible { outline: 2px solid #0b0b0d; outline-offset: 3px; }\n.ds-reveal:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "52px white shell with a leading icon and a lime focus halo on the paper material.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-email\">Email address</label><div class=\"ds-input-shell\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"3\"/><path d=\"m4 7 8 6 8-6\"/></svg><input class=\"ds-input\" id=\"ds-email\" type=\"email\" placeholder=\"you@example.com\"/></div></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; }\n.ds-field-label { margin-bottom: 8px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #232723; }\n.ds-input-shell { position: relative; display: flex; align-items: center; height: 52px; border: 1px solid #dfe3dc; border-radius: 13px; background: #ffffff; transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-input-shell > svg { position: absolute; left: 15px; color: #656a63; pointer-events: none; transition: color 180ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-input-shell:focus-within { border-color: #0b0b0d; box-shadow: 0 0 0 3px rgba(217, 249, 157, 0.6); }\n.ds-input-shell:focus-within > svg { color: #0b0b0d; }\n.ds-input-shell--error { border-color: #b3261e; }\n.ds-input-shell--error:focus-within { border-color: #b3261e; box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.16); }\n.ds-input { width: 100%; height: 100%; padding: 0 52px 0 46px; border: 0; outline: none; background: transparent; color: #101212; caret-color: #0e4b3b; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; }\n.ds-input::placeholder { color: #656a63; }\n.ds-input:disabled { cursor: not-allowed; opacity: 0.6; }"
+    },
+    {
+      "name": "Credential Panel",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "Warm paper half of the split, capped to a 420px form column.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-form-wrap\"><h1 class=\"ds-panel-title\">Back in the lobby.</h1><p class=\"ds-panel-lede\">Sign in to pick up where your last match left off.</p></div></section>",
+      "css": ".ds-panel { max-width: 420px; margin: 0 auto; padding: 28px 20px 44px; border-radius: 24px 24px 0 0; background: #f7f8f4; color: #101212; box-shadow: 0 -18px 50px -38px rgba(0, 0, 0, 0.65); }\n.ds-form-wrap { width: 100%; max-width: 420px; }\n.ds-panel-title { margin: 0; font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: clamp(30px, 7vw, 38px); font-weight: 700; line-height: 1.06; letter-spacing: -0.03em; color: #0b0b0d; text-wrap: balance; }\n.ds-panel-lede { max-width: 36ch; margin: 12px 0 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: #5f645f; }"
+    },
+    {
+      "name": "Status Message",
+      "kind": "custom",
+      "refersTo": "message-success",
+      "description": "Tinted, softly lifted inline feedback card; success green or failure red.",
+      "html": "<div class=\"ds-message ds-message--success\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 4 4L19 6\"/></svg><span>Account created. Check your inbox.</span></div>",
+      "css": ".ds-message { display: flex; align-items: flex-start; gap: 9px; padding: 12px 14px; border-radius: 12px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.5; }\n.ds-message svg { flex: none; margin-top: 1px; }\n.ds-message--success { border: 1px solid rgba(14, 75, 59, 0.18); background: #eaf3d6; color: #0a3d30; box-shadow: 0 10px 22px -16px rgba(10, 61, 48, 0.55); }\n.ds-message--failure { border: 1px solid #f3cfca; background: #fdecea; color: #8e1d17; box-shadow: 0 10px 22px -16px rgba(145, 29, 23, 0.5); }"
+    },
+    {
+      "name": "Password Strength Meter",
+      "kind": "custom",
+      "description": "Advisory four-step meter with tabular requirement checklist; never a submission gate.",
+      "html": "<div class=\"ds-strength\"><div class=\"ds-strength-top\"><span>Password strength</span><span class=\"ds-strength-label\" data-score=\"4\">Strong</span></div><div class=\"ds-meter\" aria-hidden=\"true\"><span class=\"ds-meter-step ds-meter-active\" data-score=\"1\"></span><span class=\"ds-meter-step ds-meter-active\" data-score=\"2\"></span><span class=\"ds-meter-step ds-meter-active\" data-score=\"3\"></span><span class=\"ds-meter-step ds-meter-active\" data-score=\"4\"></span></div><ul class=\"ds-requirements\"><li class=\"ds-requirement-met\">8 characters or more</li><li class=\"ds-requirement-met\">A number</li></ul></div>",
+      "css": ".ds-strength { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }\n.ds-strength-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; color: #5f645f; }\n.ds-strength-label { font-weight: 700; color: #656a63; }\n.ds-strength-label[data-score=\"1\"] { color: #c2352c; }\n.ds-strength-label[data-score=\"2\"] { color: #9a6506; }\n.ds-strength-label[data-score=\"3\"] { color: #2d55c4; }\n.ds-strength-label[data-score=\"4\"] { color: #1f6f38; }\n.ds-meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }\n.ds-meter-step { height: 5px; border-radius: 999px; background: #e4e7df; transition: background 200ms cubic-bezier(0.22, 1, 0.36, 1); }\n.ds-meter-active[data-score=\"1\"] { background: #e5473b; }\n.ds-meter-active[data-score=\"2\"] { background: #f5b62e; }\n.ds-meter-active[data-score=\"3\"] { background: #3e6ff0; }\n.ds-meter-active[data-score=\"4\"] { background: #3ea55c; }\n.ds-requirements { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 10px 0 0; padding: 0; list-style: none; }\n.ds-requirement, .ds-requirement-met { display: flex; align-items: center; gap: 5px; font-size: 11.5px; line-height: 1.35; color: #656a63; }\n.ds-requirement-met { color: #1f6f38; }"
+    },
+    {
+      "name": "Standings Board",
+      "kind": "custom",
+      "description": "Schematic of the product's own standings output on the dark field; decorative and hidden from assistive tech.",
+      "html": "<svg class=\"ds-board\" viewBox=\"0 0 520 560\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><rect class=\"ds-board-frame\" x=\"1\" y=\"1\" width=\"518\" height=\"558\" rx=\"22\"/><text class=\"ds-board-brand\" x=\"32\" y=\"50\">SCRIMLYPRO</text><text class=\"ds-board-caption\" x=\"488\" y=\"50\" text-anchor=\"end\">SAMPLE STANDINGS</text><path class=\"ds-board-rule\" d=\"M32 76h456\"/><text class=\"ds-board-head\" x=\"32\" y=\"108\">RANK</text><text class=\"ds-board-head\" x=\"96\" y=\"108\">TEAM</text><text class=\"ds-board-head\" x=\"488\" y=\"108\" text-anchor=\"end\">TOTAL</text><g class=\"ds-board-row-win\"><rect class=\"ds-board-plate\" x=\"24\" y=\"120\" width=\"472\" height=\"58\" rx=\"10\"/><text class=\"ds-board-rank\" x=\"32\" y=\"152\">01</text><text class=\"ds-board-team\" x=\"96\" y=\"152\">TF SQUAD</text><text class=\"ds-board-total\" x=\"488\" y=\"152\" text-anchor=\"end\">43</text></g><path class=\"ds-board-scan\" d=\"M32 90h456\"/></svg>",
+      "css": ".ds-board { display: block; width: 100%; height: auto; background: linear-gradient(158deg, #12151c 0%, #0b0d12 74%); }\n.ds-board-frame { stroke: rgba(245, 197, 66, 0.22); stroke-width: 1; }\n.ds-board-brand { fill: #f7f8f4; font-family: Lexend, ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.14em; }\n.ds-board-caption, .ds-board-head { fill: #8b93a7; font-family: Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.14em; }\n.ds-board-caption { font-size: 10px; font-weight: 600; }\n.ds-board-head { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; }\n.ds-board-rule { stroke: rgba(255, 255, 255, 0.12); stroke-width: 1; }\n.ds-board-plate { fill: rgba(245, 197, 66, 0.12); }\n.ds-board-rank, .ds-board-total { fill: #f5c542; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }\n.ds-board-team { fill: #f2f4f8; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }\n.ds-board-scan { stroke: rgba(217, 249, 157, 0.32); stroke-width: 2; animation: ds-board-scan 7s cubic-bezier(0.22, 1, 0.36, 1) infinite; }\n@keyframes ds-board-scan { 0%, 8% { opacity: 0; transform: translateY(0); } 14% { opacity: 1; } 72% { opacity: 0.8; } 88%, 100% { opacity: 0; transform: translateY(330px); } }\n@media (prefers-reduced-motion: reduce) { .ds-board-scan { animation: none; opacity: 0.3; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Standings Control Room",
+    "overview": "Authentication here is an instrument, not a pitch. A dark field carries the product's own standings output as a schematic SVG board; beside it, a warm off-white credential panel does one job — get an organizer into their session. The split is the identity: remove every word and the 46/54 grid, dot field, gold rank-one row, and 999px pill still read as ScrimlyPro. It deliberately refuses the generic centered auth card and the marketing hero.\n\nThe two halves use different materials and never blend. The field is ground `#0b0d12` with `#12151c`/`#1a1e28` surfaces, `#272d3b` hairlines, and a 26px dot grid; the panel is paper `#f7f8f4` with near-black ink and `#dfe3dc` 1px rules. Colour is information, not decoration: gold marks rank one, lime drives the scan sweep, and the four strength steps borrow red, yellow, blue, and green. Mobile keeps the desktop order — board first as a compact banner, form second — because organizers arrive from a match on a phone.\n\nMotion is quiet and authored: one 7-second scan sweep across the board, 160–200ms state transitions on controls, and a reduced-motion path that stops the sweep and drops transitions. Feedback is advisory — password strength never gates submission — and every status message is a soft, blurred, tinted card rather than a modal.",
+    "keyCharacteristics": [
+      "Two-material 46/54 split with a 420px form cap",
+      "Schematic standings board as proof, never invented claims",
+      "999px primary pill, 1px hairlines, soft blurred depth",
+      "Contrast-compliant muted ink (`#656a63`, 5.19:1) and satisfied green (`#1f6f38`, 5.81:1)",
+      "Lexend headlines over Inter body and tabular data"
+    ],
+    "rules": [
+      { "name": "The Two Materials Rule", "body": "The dark instrument field and the warm paper panel are separate materials meeting at one edge; never blend, tint, or merge them into a single surface.", "section": "colors" },
+      { "name": "The Signal-Only Accent Rule", "body": "Gold, lime, red, yellow, blue, and green are instrument signals — rank one, scan sweep, strength steps — and never become buttons, links, or page chrome.", "section": "colors" },
+      { "name": "The Legible Mute Rule", "body": "Muted text on paper never goes lighter than `#656a63` on `#f7f8f4` (5.19:1); satisfied state uses `#1f6f38` (5.81:1). Legibility earns the value, not the other way around.", "section": "colors" },
+      { "name": "The Two-Face Rule", "body": "Lexend owns every headline; Inter owns every body string, label, and data value. Never introduce a third face or fall back to a system display face.", "section": "typography" },
+      { "name": "The Split Control-Room Rule", "body": "At 1000px and up the field is 46% and the panel 54%, with the form capped at 420px; below that, the board becomes a compact banner above the form rather than a second column.", "section": "layout" },
+      { "name": "The Soft-Depth Rule", "body": "Depth is diffuse and blurred with generous negative spread; hard offset shadows are not part of this world.", "section": "elevation" },
+      { "name": "The Pill and Hairline Rule", "body": "Calls to action are 999px pills; everything structural is a 1px rule with a modest radius, never a heavy border.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do keep the 46% / 54% split at ≥1000px and cap the form at 420px.",
+      "Do hold muted text on paper at `#656a63` or darker and satisfied text at `#1f6f38`.",
+      "Do reserve gold, lime, red, yellow, blue, and green for board and meter signals.",
+      "Do keep password strength advisory so a valid weak password can still submit.",
+      "Do stop the scan sweep and drop transitions under `prefers-reduced-motion: reduce`."
+    ],
+    "donts": [
+      "Don't use hard offset shadows; this world's depth is soft and blurred.",
+      "Don't centre the form in a floating card; the panel is a full-height material half of the split.",
+      "Don't swap the Lexend/Inter pairing or substitute a system display face.",
+      "Don't use icon fonts or glyphs; icons are inline 20px SVG strokes at 1.75px.",
+      "Don't blend the dark field and paper panel into one tinted surface."
+    ]
+  }
+}
