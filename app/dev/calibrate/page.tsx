@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "@/lib/auth/action-guard";
 
+import { EWC_TEAL_STANDINGS, ewcTealStandings } from "@/lib/fixtures/ewcTeal";
 import type { StandingRow } from "@/lib/scoring";
 import { CalibrateClient } from "./CalibrateClient";
 
@@ -80,6 +81,22 @@ export default async function CalibratePage() {
       <div className="mt-4">
         <CalibrateClient
           datasets={{ 16: dataset(16), 19: dataset(19), 24: dataset(24), 25: dataset(25) }}
+        />
+      </div>
+      <h2 className="mt-8 text-lg font-bold tracking-widest text-gold">EWC TEAL — 24-ROW LADDER</h2>
+      <p className="mt-1 text-sm text-muted">
+        Dedicated EWC fixture: select <strong>24 teams</strong> to check the single-column pitch,
+        five stat boxes and the MATCH# digit slot against the cyber-teal art.
+      </p>
+      <div className="mt-4">
+        <CalibrateClient
+          initialAestheticId="ewc-teal"
+          datasets={{
+            16: ewcTealStandings(16),
+            19: ewcTealStandings(19),
+            24: [...EWC_TEAL_STANDINGS],
+            25: dataset(25),
+          }}
         />
       </div>
     </main>

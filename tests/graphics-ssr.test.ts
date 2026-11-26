@@ -848,3 +848,53 @@ describe("varsity-orange — pipe-split announcement SSR safety", () => {
     }
   });
 });
+
+describe("P8(7) — ewc-teal 24-row single-column standings (SSR)", () => {
+  const config = getTemplate("ewc-teal");
+
+  it.each([16, 20, 24])("renders %i teams in one full-width ladder", (n) => {
+    const html = renderToStaticMarkup(standings("ewc-teal", "AFTER MATCH 6", n, { matchCount: 6 }));
+    expect(html).toContain(`SQUAD ${n}`);
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("undefined");
+    expect((html.match(/left:150px/g) ?? []).length).toBe(n);
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">TEAM<");
+    expect(html).not.toContain("left:80px"); // ranks baked into the yellow tabs
+  });
+
+  it("renders only the match digits into the baked MATCH# lockup", () => {
+    const html = renderToStaticMarkup(standings("ewc-teal", "FINAL RESULTS", 24, { matchCount: 6 }));
+    expect(html).toContain("left:954px");
+    expect(html).toContain("color:#062E20");
+    expect(html).toContain(">6<");
+    expect(html).not.toContain("SCRIM");
+    expect(html).not.toContain("FINAL RESULTS");
+  });
+
+  it("keeps the baked-label / baked-rank flags aligned with the five stat columns", () => {
+    expect(config.labelsBakedIn).toBe(true);
+    expect(config.standings.singleColumn).toBe(true);
+    expect(config.standings.fixedRowPitch).toBe(true);
+    expect(config.standings.ranksBakedIn).toBe(true);
+    expect(config.standings.columns[0].statColumns.map((c) => c.key)).toEqual([
+      "wwcd",
+      "matches",
+      "pp",
+      "kp",
+      "total",
+    ]);
+    const html = renderToStaticMarkup(standings("ewc-teal", "AFTER MATCH 1", 24, { matchCount: 1 }));
+    for (const x of [499, 609, 721, 814, 921]) expect(html).toContain(`left:${x}px`);
+    expect(html).toContain("font:800 28px");
+    expect(html).toContain("font-variant-numeric:tabular-nums");
+  });
+
+  it("keeps the hardcoded brand watermark at y1570 on all three variants", () => {
+    for (const variant of ["standings", "mvp", "announcement"] as const) {
+      const html = renderToStaticMarkup(h(GraphicCanvas, { config, variant }));
+      expect(html).toContain("top:1570px");
+      expect(html).toContain("scrimlypro.com");
+    }
+  });
+});

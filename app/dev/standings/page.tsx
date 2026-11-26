@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/action-guard";
 import { StandingsPreview } from "@/components/graphics/StandingsPreview";
 import { getDb } from "@/lib/db/client";
 import { matchResults, matches, sessions, teams } from "@/lib/db/schema";
+import { EWC_TEAL_STANDINGS } from "@/lib/fixtures/ewcTeal";
 import { standingsSubtitle } from "@/lib/graphics/standings";
 import { computeStandings } from "@/lib/scoring";
 
@@ -77,6 +78,24 @@ export default async function DevStandingsPage() {
         matchCount={confirmedIds.length}
         isFinal={session.status === "completed"}
       />
+      <section>
+        <h1 className="text-lg font-bold tracking-widest text-gold">
+          STANDINGS GRAPHIC — EWC TEAL (24 TEAMS)
+        </h1>
+        <p className="mb-2 text-sm text-muted">
+          The 2024 EWC cyber-teal board: one 24-row ladder, baked ranks/labels and five slanted
+          stat columns, with only the match number painted into the baked MATCH# lockup.
+        </p>
+        <StandingsPreview
+          title="EWC GROUP STAGE"
+          subtitle="AFTER MATCH 6"
+          organizer={null}
+          standings={[...EWC_TEAL_STANDINGS]}
+          matchCount={6}
+          isFinal={false}
+          initialAestheticId="ewc-teal"
+        />
+      </section>
     </main>
   );
 }

@@ -316,6 +316,7 @@ describe("sync guards", () => {
       "urban-slate",
       "varsity-purple",
       "varsity-orange",
+      "ewc-teal",
     ]);
   });
 

@@ -656,3 +656,33 @@ describe("varsity-orange announcement art contrast (live PNG decode)", () => {
     expect(over(spec.accentColor!)).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe("ewc-teal standings contrast (measured broadcast surfaces)", () => {
+  const over = (bgLum: number, fg: string) => {
+    const fgLum = relativeLuminance(parseHexColor(fg));
+    return (Math.max(bgLum, fgLum) + 0.05) / (Math.min(bgLum, fgLum) + 0.05);
+  };
+  // Zone means decoded from overall.png: navy name bar art(160,275,240,20),
+  // teal stat tile art(480,275,340,20), yellow MATCH# field art(950,150,60,30).
+  const NAVY = 0.0085;
+  const TEAL = 0.2412;
+  const YELLOW = 0.7169;
+
+  it("pure-white team + stat ink clears the dark slate and teal tiles (AA)", () => {
+    const config = getTemplate("ewc-teal");
+    expect(config.palette.text).toBe("#FFFFFF");
+    expect(contrastRatio(parseHexColor("#FFFFFF"), parseHexColor("#0D1B2A"))).toBeGreaterThan(4.5);
+    expect(contrastRatio(parseHexColor("#FFFFFF"), parseHexColor("#1D7874"))).toBeGreaterThan(4.5);
+    expect(over(NAVY, config.palette.text)).toBeGreaterThan(4.5);
+    // The bright stat tile (mean lum 0.241) is 3.6:1 — above the WCAG AA
+    // large-text floor for the 28px/800 numerals; #1D7874 above clears AA
+    // for normal text.
+    expect(over(TEAL, config.palette.text)).toBeGreaterThan(3);
+  });
+
+  it("deep-jungle MATCH# digits clear the yellow field (AA)", () => {
+    const config = getTemplate("ewc-teal");
+    expect(over(YELLOW, "#062E20")).toBeGreaterThan(4.5);
+    expect(config.variantHeaders?.standings?.subtitleColor).toBe("#062E20");
+  });
+});

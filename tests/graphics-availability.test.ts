@@ -21,6 +21,7 @@ const ART_IDS: Record<GraphicVariant, string[]> = {
     "pmgc-crimson",
     "pmgc-aqua",
     "pmwi-violet",
+    "ewc-teal",
   ],
   mvp: [
     "challengers-red",
@@ -62,7 +63,7 @@ describe("art-backed option lists", () => {
 
   it("hides gradient-only skins everywhere", () => {
     const all = selectableAestheticIds();
-    expect(all).toHaveLength(20);
+    expect(all).toHaveLength(21);
     for (const id of GRADIENT_ONLY) {
       expect(all).not.toContain(id);
       for (const variant of ["standings", "mvp", "announcement"] as const) {

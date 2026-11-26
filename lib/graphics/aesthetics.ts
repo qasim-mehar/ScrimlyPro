@@ -2951,6 +2951,170 @@ const VARSITY_ORANGE: TemplateConfig = {
   },
 };
 
+const EWC_TEAL_FONTS = '"Rajdhani", "Exo 2", sans-serif';
+
+const EWC_TEAL_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Deep jungle-teal → broadcast green: the artless MVP/announcement variants
+  // keep white row ink ≥ 10:1 on every stop.
+  css: "linear-gradient(165deg, #062E20 0%, #0B4228 100%)",
+  decor: [],
+};
+
+/**
+ * EWC Teal — the 2024 Esports World Cup cyber-teal broadcast standings art.
+ *
+ * Art: `overall.png` is a TRUE 1027×1532 PNG (ratio 0.6704, 0.6% wider than
+ * 2:3). A uniform HEIGHT fit to the canvas gives S = 1620/1532 =
+ * 1.0574412532637076, drawn 1085.992×1620 at left −2.996 (a 3px object-fit:
+ * cover crop on each side). Every coordinate below is measured on art pixels
+ * through canvasX = artX·S − 2.996, canvasY = artY·S — no stretch, no drift.
+ *
+ * - A SINGLE full-width ladder. 24 dark-slate bars (#09203A mean interior)
+ *   from art y263 to y1422; bar tops fit art 262.5 + i·48.48 → canvas rowY0
+ *   279, fixed pitch 51.27, painted height 46.5. The 24 yellow rank tabs
+ *   (numerals 1–24) are baked into the left of every bar → ranksBakedIn.
+ * - Baked header band (art y238–259 → canvas 252–274) prints WWCD | MATCHES |
+ *   PLACEMENT POINTS | ELIM. POINTS | TOTAL POINTS → labelsBakedIn. Measured
+ *   label-ink centres (art x517/620/726/815/916) land on canvas 543/653/765/
+ *   858/965; 88px value boxes at 499/609/721/814/921 centre on them without
+ *   overlapping (the tightest pair is 93px apart).
+ * - Baked "OVERALL RANKING" headline (ends art y98 → canvas 104) and the
+ *   cyber-teal "MATCH#" lockup (ink art x503–897, y114–214 → canvas x529–946,
+ *   y121–226). The digits slot starts at x954, 8px right of the "#" ink, and
+ *   sits in the clear yellow field above the header band. Scrim name hidden.
+ * - Team ink starts at art x145 → canvas 150 inside the navy bar and stops at
+ *   x490, nine pixels before the WWCD box, so long names ellipsize cleanly.
+ * - Pure-white Rajdhani-led 700 team / 800 stat ink reads >14:1 on the navy
+ *   bars; #062E20 digits read >9:1 on the yellow MATCH# field. The art bakes
+ *   its own rank-1 yellow tab, so uniformRowInk/uniformStatInk keep every
+ *   row's data ink identical. MVP + announcement fall back to jungle-teal.
+ */
+const EWC_TEAL: TemplateConfig = {
+  ...GEOMETRY,
+  id: "ewc-teal",
+  name: "EWC Teal",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/ewc-teal/overall.png",
+      // Uniform ×1620/1532 height fit; centred object-fit: cover crop (3px
+      // per side). No distortion, so every measured slot stays pixel-exact.
+      fit: {
+        width: 1085.9921671018278,
+        height: 1620,
+        left: -2.9960835509139088,
+        top: 0,
+      },
+    },
+    mvp: EWC_TEAL_FALLBACK_BG,
+    announcement: EWC_TEAL_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal header;
+    // standings overrides park the title/organizer and move the digit slot.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${EWC_TEAL_FONTS}`,
+    subtitleFont: `600 36px ${EWC_TEAL_FONTS}`,
+    organizerFont: `500 24px ${EWC_TEAL_FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL RANKING" + "MATCH#": hide the scrim name, park
+      // the optional organizer, and paint ONLY the confirmed-match digits in
+      // the open yellow field after the "#" (ink ends canvas x945.5).
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 954, y: 118, w: 118, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${EWC_TEAL_FONTS}`,
+      subtitleFont: `900 100px ${EWC_TEAL_FONTS}`,
+      subtitleColor: "#062E20",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${EWC_TEAL_FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKING" + "MATCH#"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 80, // baked yellow rank tab; no code-drawn numeral
+        teamX: 150, // first clear pixel inside the dark-slate bar
+        teamW: 340, // ends at 490, 9px before the WWCD value box
+        statColumns: [
+          { key: "wwcd", x: 499 }, // label ink centre 543
+          { key: "matches", x: 609 }, // 653
+          { key: "pp", x: 721 }, // 765
+          { key: "kp", x: 814 }, // 858
+          { key: "total", x: 921 }, // 965
+        ],
+        stripX: 146,
+        stripW: 344,
+        ranksBakedIn: true,
+        rowsPerColumn: 24,
+        fixedRowPitch: true,
+      },
+      {
+        // The single-column renderer skips this spec entirely; it mirrors
+        // column[0] so dev readouts stay honest if the flag is ever toggled.
+        rankX: 80,
+        teamX: 150,
+        teamW: 340,
+        statColumns: [
+          { key: "wwcd", x: 499 },
+          { key: "matches", x: 609 },
+          { key: "pp", x: 721 },
+          { key: "kp", x: 814 },
+          { key: "total", x: 921 },
+        ],
+        stripX: 146,
+        stripW: 344,
+        ranksBakedIn: true,
+        rowsPerColumn: 24,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 252, // baked label band top — code draws no labels
+    rowY0: 279, // painted bar 1 top (art 263)
+    rowPitch: 51.27, // least-squares fit of the 24 baked bar tops
+    rowHeight: 46.5,
+    maxRowsLeft: 24,
+    rowsPerColumn: 24,
+    singleColumn: true,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 88,
+    uniformRowInk: true, // the baked gold tab already marks rank 1
+    uniformStatInk: true,
+    // Rajdhani-led condensed display face: 700 names / 800 data numerals.
+    nameFont: `700 24px ${EWC_TEAL_FONTS}`,
+    statFont: `800 28px ${EWC_TEAL_FONTS}`,
+    labelFont: `700 18px ${EWC_TEAL_FONTS}`,
+  },
+  palette: {
+    accent: "#0B7A6E", // deep teal accent for the gradient fallback
+    text: "#FFFFFF", // crisp white team + stat ink on the dark-slate bars
+    textMuted: "#BEE3DE",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)", // no rank-1 pill over the baked yellow tab
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.88)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(255,255,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#062E20",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -2975,6 +3139,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "urban-slate": URBAN_SLATE,
   "varsity-purple": VARSITY_PURPLE,
   "varsity-orange": VARSITY_ORANGE,
+  "ewc-teal": EWC_TEAL,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

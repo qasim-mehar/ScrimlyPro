@@ -21,7 +21,8 @@ export type AestheticId =
   | "varsity-yellow"
   | "court-orange"
   | "varsity-purple"
-  | "varsity-orange";
+  | "varsity-orange"
+  | "ewc-teal";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
