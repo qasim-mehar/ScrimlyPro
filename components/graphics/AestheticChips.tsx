@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import clsx from "clsx";
 
 import {
@@ -9,6 +8,10 @@ import {
   type AestheticId,
   type GraphicVariant,
 } from "@/lib/graphics";
+
+/** Shared across previews on the same page: hovering one chip warms the art
+ *  for every other preview that offers the same skin. */
+const prefetchedSrcs = new Set<string>();
 
 /** Shared aesthetic switch for every graphic preview. Only templates with real
  *  art for the given variant are offered — gradient fallbacks are never a
@@ -23,15 +26,15 @@ export function AestheticChips({
   onSelect: (id: AestheticId) => void;
 }) {
   const ids = selectableAestheticIds(variant);
+
   // Hover/focus is a strong intent signal: warm the art cache before the click
   // so switching aesthetics usually has nothing left to download.
-  const prefetched = useRef<Set<AestheticId>>(new Set());
-
   function prefetch(id: AestheticId): void {
-    if (prefetched.current.has(id)) return;
+    if (id === activeId) return;
     const background = AESTHETICS[id]?.backgrounds[variant];
     if (!background || background.type !== "image") return;
-    prefetched.current.add(id);
+    if (prefetchedSrcs.has(background.src)) return;
+    prefetchedSrcs.add(background.src);
     const image = new Image();
     image.src = background.src;
   }

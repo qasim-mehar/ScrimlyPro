@@ -52,9 +52,17 @@ export function GraphicCanvas({ config, variant, stageRef, onLoadingChange, chil
   // Switching aesthetics swaps the config (text + palette) immediately, but
   // the new 2–8 MB art arrives later. Track the src that actually settled so
   // the skeleton covers the whole poster until art and text agree again.
-  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
-  const [errorSrc, setErrorSrc] = useState<string | null>(null);
-  const loading = imageSrc !== null && loadedSrc !== imageSrc && errorSrc !== imageSrc;
+  // Settled srcs stay settled: switching back to a skin already seen must not
+  // re-flash the skeleton. A failed art is settled too, so no infinite shimmer.
+  const [settledSrcs, setSettledSrcs] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+  function settle(src: string): void {
+    setSettledSrcs((prev) =>
+      prev.has(src) ? prev : new Set(prev).add(src),
+    );
+  }
+  const loading = imageSrc !== null && !settledSrcs.has(imageSrc);
 
   useEffect(() => {
     onLoadingChange?.(loading);
@@ -116,11 +124,11 @@ export function GraphicCanvas({ config, variant, stageRef, onLoadingChange, chil
               // `complete` in the commit-phase ref closes that gap.
               ref={(node) => {
                 if (node?.complete && node.naturalWidth > 0) {
-                  setLoadedSrc(background.src);
+                  settle(background.src);
                 }
               }}
-              onLoad={() => setLoadedSrc(background.src)}
-              onError={() => setErrorSrc(background.src)}
+              onLoad={() => settle(background.src)}
+              onError={() => settle(background.src)}
             />
           )}
           {children}
@@ -137,11 +145,10 @@ export function GraphicCanvas({ config, variant, stageRef, onLoadingChange, chil
         </div>
       </div>
       <GraphicLoadingOverlay loading={loading} />
-      {loading ? (
-        <span className="sr-only" role="status">
-          Loading graphic background…
-        </span>
-      ) : null}
+      {/* Live region stays mounted so assistive tech reliably announces it. */}
+      <span className="sr-only" role="status">
+        {loading ? "Loading graphic background…" : ""}
+      </span>
     </div>
   );
 }
