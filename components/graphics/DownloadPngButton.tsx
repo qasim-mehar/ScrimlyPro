@@ -22,10 +22,12 @@ export function DownloadPngButton({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Refs keep the async export aware of a mid-flight aesthetic switch.
+  // react-hooks/refs forbids writing .current during render; keep the mirror
+  // in the same effect that invalidates an in-flight export on a switch.
   const disabledRef = useRef(disabled);
-  disabledRef.current = disabled;
   const exportId = useRef(0);
   useEffect(() => {
+    disabledRef.current = disabled;
     if (disabled) exportId.current += 1;
   }, [disabled]);
 
