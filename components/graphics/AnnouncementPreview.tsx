@@ -40,6 +40,7 @@ export function AnnouncementPreview({
     ? aestheticId
     : available[0]!;
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const [artLoading, setArtLoading] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -56,6 +57,7 @@ export function AnnouncementPreview({
           config={getTemplate(effectiveId)}
           variant={variant}
           stageRef={stageRef}
+          onLoadingChange={setArtLoading}
         >
           <AnnouncementGraphic
             aestheticId={effectiveId}
@@ -70,6 +72,7 @@ export function AnnouncementPreview({
         <DownloadPngButton
           stageRef={stageRef}
           filename="scrimlypro-participating-teams.png"
+          disabled={artLoading}
           onExported={setSize}
         />
         <p className="text-[12px] text-dash-ink3">

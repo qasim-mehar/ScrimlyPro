@@ -18,6 +18,24 @@ const EXPORT_H = 1620;
 export async function exportPng(stage: HTMLElement): Promise<string> {
   await document.fonts.ready;
 
+  // Belt and braces: html-to-image clones the DOM synchronously, so a race
+  // with a slow art swap would otherwise bake a blank background into the PNG.
+  // The background art is the stage's first <img> (ahead of any team logos).
+  const art = stage.querySelector("img");
+  if (art && !art.complete) {
+    await new Promise<void>((resolve) => {
+      art.addEventListener("load", () => resolve(), { once: true });
+      art.addEventListener("error", () => resolve(), { once: true });
+    });
+  }
+  if (art?.decode) {
+    try {
+      await art.decode();
+    } catch {
+      // A failed decode must not block an otherwise valid export.
+    }
+  }
+
   const options = {
     width: EXPORT_W,
     height: EXPORT_H,

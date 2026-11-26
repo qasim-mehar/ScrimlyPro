@@ -8,12 +8,15 @@ import { downloadPng, exportPng } from "./export";
 type DownloadPngButtonProps = {
   stageRef: RefObject<HTMLDivElement | null>;
   filename: string;
+  /** True while the selected template art is still loading. */
+  disabled?: boolean;
   onExported?: (size: { width: number; height: number }) => void;
 };
 
 export function DownloadPngButton({
   stageRef,
   filename,
+  disabled = false,
   onExported,
 }: DownloadPngButtonProps) {
   const [busy, setBusy] = useState(false);
@@ -54,11 +57,11 @@ export function DownloadPngButton({
         onClick={() => {
           void handleClick();
         }}
-        disabled={busy}
+        disabled={busy || disabled}
         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-dash-line bg-dash-surface px-5 text-sm font-semibold text-dash-ink transition-colors hover:bg-dash-bg disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
         <DownloadIcon width="16" height="16" />
-        {busy ? "Rendering…" : "Download PNG"}
+        {disabled ? "Loading art…" : busy ? "Rendering…" : "Download PNG"}
       </button>
       {error ? (
         <p role="alert" className="mt-1 text-[13px] font-medium text-dash-danger-ink">
