@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import clsx from "clsx";
 
 import {
@@ -22,6 +23,18 @@ export function AestheticChips({
   onSelect: (id: AestheticId) => void;
 }) {
   const ids = selectableAestheticIds(variant);
+  // Hover/focus is a strong intent signal: warm the art cache before the click
+  // so switching aesthetics usually has nothing left to download.
+  const prefetched = useRef<Set<AestheticId>>(new Set());
+
+  function prefetch(id: AestheticId): void {
+    if (prefetched.current.has(id)) return;
+    const background = AESTHETICS[id]?.backgrounds[variant];
+    if (!background || background.type !== "image") return;
+    prefetched.current.add(id);
+    const image = new Image();
+    image.src = background.src;
+  }
 
   return (
     <div
@@ -36,6 +49,8 @@ export function AestheticChips({
             key={id}
             type="button"
             onClick={() => onSelect(id)}
+            onMouseEnter={() => prefetch(id)}
+            onFocus={() => prefetch(id)}
             aria-pressed={active}
             className={clsx(
               "min-h-9 rounded-full px-3.5 text-xs font-semibold transition-colors",
