@@ -45,6 +45,11 @@ export function StandingsPreview({
     ? aestheticId
     : available[0]!;
   const stageRef = useRef<HTMLDivElement | null>(null);
+  // Start disabled when the first paint already needs art: GraphicCanvas only
+  // reports loading from an effect, which would leave one enabled window.
+  const [artLoading, setArtLoading] = useState(
+    () => getTemplate(effectiveId).backgrounds[variant].type === "image",
+  );
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -62,6 +67,7 @@ export function StandingsPreview({
           config={getTemplate(effectiveId)}
           variant={variant}
           stageRef={stageRef}
+          onLoadingChange={setArtLoading}
         >
           <OverallStandingsGraphic
             aestheticId={effectiveId}
@@ -77,6 +83,7 @@ export function StandingsPreview({
         <DownloadPngButton
           stageRef={stageRef}
           filename={filename}
+          disabled={artLoading}
           onExported={setSize}
         />
         <p className="text-[12px] text-dash-ink3">

@@ -27,6 +27,8 @@ export default async function SessionPage({
   if (!data) notFound();
 
   // Share links for this session (member-visible; hashes never selected).
+  // Kept while the panel is parked in SessionView (SHOW_SHARE_PANEL) so the
+  // workflow can be restored without another data-layer change.
   const shareLinks = await withUserDb({ sub: user.id }, (userDb) =>
     listShareLinks(userDb, id),
   );

@@ -170,3 +170,90 @@ body {
     animation-duration: 0.01s;
   }
 }
+
+/* Graphic art loading skeleton. Lives in the same aspect-ratio box as the
+   poster (never inside stageRef, so PNG export cannot capture it). */
+.graphic-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  background: #0b0d12;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms ease-out, visibility 0s linear 220ms;
+}
+.graphic-skeleton[data-loading="true"] {
+  opacity: 1;
+  visibility: visible;
+  /* Cover INSTANTLY on an art swap: a fade-in would expose the new text over
+     the old/blank art — the exact flash this skeleton exists to hide. */
+  transition: none;
+}
+.graphic-skeleton__block {
+  position: absolute;
+  left: 8%;
+  height: 2.4%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+.graphic-skeleton__title {
+  top: 6%;
+  width: 52%;
+  height: 4%;
+  border-radius: 8px;
+}
+.graphic-skeleton__subtitle {
+  top: 11.2%;
+  width: 27%;
+  height: 2%;
+}
+.graphic-skeleton__rule {
+  position: absolute;
+  top: 18%;
+  left: 8%;
+  width: 84%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.graphic-skeleton__row {
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.graphic-skeleton__footer {
+  left: auto;
+  right: 8%;
+  bottom: 3%;
+  width: 20%;
+  height: 1.4%;
+}
+.graphic-skeleton__sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.05) 60%,
+    transparent 75%
+  );
+  transform: translateX(-100%);
+  animation: graphic-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes graphic-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .graphic-skeleton {
+    transition: none;
+  }
+  .graphic-skeleton__sheen {
+    animation: none;
+    transform: none;
+    opacity: 0.4;
+  }
+}
