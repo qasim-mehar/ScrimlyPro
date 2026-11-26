@@ -88,7 +88,7 @@ printf 'Production cut-over verifier — %s (POST Origin: %s)\n' "$BASE_URL" "$A
 printf 'Time: %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date)"
 
 # --- 1. Unauthenticated probes ---------------------------------------------
-row_code "GET / (unauth) redirects to login"            3xx "$(get_code /)"
+row_code "GET / (unauth) landing page 200"              200 "$(get_code /)"
 row_code "GET /sessions/verify-probe (unauth) 3xx"      3xx "$(get_code /sessions/verify-probe)"
 row_code "GET /globe.svg (public asset) 200"            200 "$(get_code /globe.svg)"
 

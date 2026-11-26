@@ -251,7 +251,7 @@ Quick smoke test (then Ctrl-C):
 ```bash
 node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/api/health  # expect 200
-curl -I http://127.0.0.1:3000/    # expect 307 → /login (anonymous visitors are redirected)
+curl -I http://127.0.0.1:3000/    # expect 200 — public marketing landing for anonymous visitors
 ```
 
 ---
@@ -287,7 +287,7 @@ systemctl status scrimlypro --no-pager
 
 `enable --now` = start now **and** auto-start on reboot.
 
-✅ Checkpoint: `curl -s http://127.0.0.1:3000/api/health` returns `{"status":"ok",...}` even after `sudo reboot` (`/` returns 307 → `/login` for anonymous visitors).
+✅ Checkpoint: `curl -s http://127.0.0.1:3000/api/health` returns `{"status":"ok",...}` even after `sudo reboot` (`/` returns 200 — the public landing page — for anonymous visitors).
 
 ---
 
