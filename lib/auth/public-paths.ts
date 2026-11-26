@@ -11,9 +11,10 @@
  * health check matters — so the proxy's fail-closed branch lets it through.
  */
 export const PUBLIC_PAGES = [
-  // "/" is deliberately NOT public: anonymous visitors bounce to /login
-  // (runbook checkpoint + verify-production G1). Authenticated users still
-  // render it; tenant pages and every /api/* route stay guarded as before.
+  // Public marketing landing: anonymous visitors see app/page.tsx;
+  // authenticated users are role-redirected by that page. Tenant pages and
+  // every /api/* route stay guarded exactly as before.
+  "/",
   "/login",
   "/signup",
   "/forgot-password",
