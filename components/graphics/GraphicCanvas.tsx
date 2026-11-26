@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import {
   imageFitStyle,
   slotToStyle,
@@ -9,6 +9,8 @@ import {
   type Slot,
   type TemplateConfig,
 } from "@/lib/graphics";
+
+import { GraphicLoadingOverlay } from "./GraphicLoadingOverlay";
 
 export type { GraphicVariant };
 
@@ -39,16 +41,31 @@ type GraphicCanvasProps = {
   config: TemplateConfig;
   variant: GraphicVariant;
   stageRef?: RefObject<HTMLDivElement | null>;
+  /** Notifies previews so they can hold PNG export until the art is ready. */
+  onLoadingChange?: (loading: boolean) => void;
   children?: ReactNode;
 };
 
-export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCanvasProps) {
+export function GraphicCanvas({ config, variant, stageRef, onLoadingChange, children }: GraphicCanvasProps) {
   const background = config.backgrounds[variant];
+  const imageSrc = background.type === "image" ? background.src : null;
+  // Switching aesthetics swaps the config (text + palette) immediately, but
+  // the new 2–8 MB art arrives later. Track the src that actually settled so
+  // the skeleton covers the whole poster until art and text agree again.
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const [errorSrc, setErrorSrc] = useState<string | null>(null);
+  const loading = imageSrc !== null && loadedSrc !== imageSrc && errorSrc !== imageSrc;
+
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
+
   // P7: only the announcement variant honors watermarkYOffset (pmpl-light's
   // footer strip); standings/mvp keep the brand-law y exactly.
   const watermarkY = WATERMARK_SLOT.y + (variant === "announcement" ? (config.watermarkYOffset ?? 0) : 0);
   return (
     <div
+      aria-busy={loading || undefined}
       style={{
         position: "relative",
         width: "100%",
@@ -91,9 +108,19 @@ export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCa
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
+              key={background.src}
               src={background.src}
               alt=""
               style={imageFitStyle(background)}
+              // A cached image can finish before React attaches onLoad —
+              // `complete` in the commit-phase ref closes that gap.
+              ref={(node) => {
+                if (node?.complete && node.naturalWidth > 0) {
+                  setLoadedSrc(background.src);
+                }
+              }}
+              onLoad={() => setLoadedSrc(background.src)}
+              onError={() => setErrorSrc(background.src)}
             />
           )}
           {children}
@@ -109,6 +136,12 @@ export function GraphicCanvas({ config, variant, stageRef, children }: GraphicCa
           </div>
         </div>
       </div>
+      <GraphicLoadingOverlay loading={loading} />
+      {loading ? (
+        <span className="sr-only" role="status">
+          Loading graphic background…
+        </span>
+      ) : null}
     </div>
   );
 }
