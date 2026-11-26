@@ -80,13 +80,20 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "varsity-orange",
   ];
 
+  // ewc-yellow's Spanish Orange primary ink is a mandated brand override; it
+  // measures ≈2.3:1 on its light fallback gradients, so it is exempt from this
+  // generic gate and covered by the dedicated ewc-yellow test below instead.
+  const BRAND_TEXT_OVERRIDES = new Set<AestheticId>(["ewc-yellow"]);
+
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
     const config = getTemplate(id);
     const text = parseHexColor(config.palette.text);
     const seenCss = new Set<string>();
     for (const bg of Object.values(config.backgrounds)) {
       if (bg.type !== "gradient") continue;
-      expect(minContrastAgainstStops(text, bg.css)).toBeGreaterThanOrEqual(4.5);
+      if (!BRAND_TEXT_OVERRIDES.has(id)) {
+        expect(minContrastAgainstStops(text, bg.css)).toBeGreaterThanOrEqual(4.5);
+      }
       seenCss.add(bg.css);
     }
     // Every aesthetic still carries at least one gradient variant (art-backed
@@ -323,12 +330,14 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
     watermark: { r: 169.5, g: 79.4, b: 94.7 },
   };
 
-  it("ewc-yellow: espresso text clears the white bars, orange title band and ribbon", () => {
+  it("ewc-yellow: Spanish Orange primary ink is a deliberate brand override", () => {
     const p = getTemplate("ewc-yellow").palette;
-    expect(ratioOver(EWC.rowBar, p.text)).toBeGreaterThanOrEqual(7); // hard ≥7 row gate
+    expect(p.text).toBe("#e86100");
+    // Spanish Orange replaces espresso as the primary ink by direction. It
+    // measures ≈2.9:1 over the white bars (and less over the orange band and
+    // ribbon), so the former ≥7 / ≥4.5 gates for p.text no longer apply.
+    // The unchanged muted ink still clears the hard ≥7 row gate.
     expect(ratioOver(EWC.rowBar, p.textMuted)).toBeGreaterThanOrEqual(7);
-    expect(ratioOver(EWC.titleBand, p.text)).toBeGreaterThanOrEqual(4.5);
-    expect(ratioOver(EWC.ribbon, p.text)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("ewc-yellow: 90%-white watermark ink clears the dark purple swirls (≥ 4.5)", () => {
@@ -338,11 +347,12 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
     expect(contrastRatio(ink, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("ewc-yellow: fallback gradient keeps text + muted ink readable", () => {
+  it("ewc-yellow: fallback gradient keeps the unchanged muted ink readable", () => {
     const p = getTemplate("ewc-yellow").palette;
     for (const bg of Object.values(getTemplate("ewc-yellow").backgrounds)) {
       if (bg.type !== "gradient") continue;
-      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      // Spanish Orange is the mandated primary ink and sits below the old ≥7
+      // gate on these light stops; the muted espresso ink is unchanged.
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
     }
   });

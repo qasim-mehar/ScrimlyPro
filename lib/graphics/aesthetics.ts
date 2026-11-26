@@ -608,8 +608,8 @@ const EWC_YELLOW_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
  * - bottom flame art starts below the table (last bar bottom 1329.2); the
  *   brand-law watermark at y1570 sits over the dark purple swirls (measured
  *   glyph-zone mean luminance 0.13 → white ink reads 5.8:1).
- * MVP + announcement have no art → warm light gradient fallback; dark espresso
- * text/medal ink keeps every fallback surface high-contrast. */
+ * MVP + announcement have no art → warm light gradient fallback; Spanish Orange
+ * primary text with dark espresso muted/medal ink. */
 const EWC_YELLOW: TemplateConfig = {
   ...GEOMETRY,
   id: "ewc-yellow",
@@ -700,7 +700,7 @@ const EWC_YELLOW: TemplateConfig = {
   },
   palette: {
     accent: "#5C2400",
-    text: "#2B0F00",
+    text: "#e86100", // Spanish Orange — primary ink for EWC Yellow text
     textMuted: "#4A1C00",
     rowAlt: "#FFFFFF",
     rowAltOpacity: 0.22,

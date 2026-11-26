@@ -694,8 +694,8 @@ describe("ewc-yellow config (measured 24-slot art)", () => {
     }
   });
 
-  it("uses the measured espresso palette and bold broadcast typography", () => {
-    expect(config.palette.text).toBe("#2B0F00");
+  it("uses the Spanish Orange primary ink with the measured palette and bold broadcast typography", () => {
+    expect(config.palette.text).toBe("#e86100");
     expect(config.palette.textMuted).toBe("#4A1C00");
     expect(config.palette.accent).toBe("#5C2400");
     expect(config.palette.wwcdText).toBe("#6E2B00");
