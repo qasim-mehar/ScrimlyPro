@@ -27,6 +27,11 @@ export function ShareStandingsPreview({
   confirmedCount: number;
 }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
+  // The first paint already needs art — never show an enabled download while
+  // GraphicCanvas is still decoding it (its report arrives via an effect).
+  const [artLoading, setArtLoading] = useState(
+    () => config.backgrounds.standings.type === "image",
+  );
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -50,6 +55,7 @@ export function ShareStandingsPreview({
           config={config}
           variant="standings"
           stageRef={stageRef}
+          onLoadingChange={setArtLoading}
         >
           <OverallStandingsGraphic
             aestheticId={config.id}
@@ -64,6 +70,7 @@ export function ShareStandingsPreview({
         <DownloadPngButton
           stageRef={stageRef}
           filename="scrimlypro-standings.png"
+          disabled={artLoading}
           onExported={setSize}
         />
         <p className="text-[12px] text-dash-ink3">

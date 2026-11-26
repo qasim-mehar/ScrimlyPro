@@ -49,6 +49,10 @@ type SessionViewProps = {
 
 type TabId = "matches" | "standings" | "graphics";
 
+// Share standings is parked until the workflow is ready. Flip this one flag
+// to bring back both the sidebar panel and the header anchor that targets it.
+const SHOW_SHARE_PANEL = false;
+
 const TABS: Array<{ id: TabId; label: string }> = [
   { id: "matches", label: "Matches" },
   { id: "standings", label: "Standings" },
@@ -174,10 +178,12 @@ export default function SessionView({
         }
         actions={
           <>
-            <a href="#share" className={buttonStyles.secondary}>
-              <ShareIcon width="16" height="16" />
-              Share
-            </a>
+            {SHOW_SHARE_PANEL ? (
+              <a href="#share" className={buttonStyles.secondary}>
+                <ShareIcon width="16" height="16" />
+                Share
+              </a>
+            ) : null}
             {!isCompleted && draftMatch && nextMatch !== null ? (
               <ButtonLink
                 href={`/sessions/${session.id}/matches/${nextMatch}`}
@@ -413,7 +419,9 @@ export default function SessionView({
         </div>
 
         <aside className="flex flex-col gap-4">
-          <SharePanel sessionId={session.id} links={shareLinks} />
+          {SHOW_SHARE_PANEL ? (
+            <SharePanel sessionId={session.id} links={shareLinks} />
+          ) : null}
 
           <section className="rounded-dash bg-dash-surface p-5">
             <div className="flex items-start gap-3">

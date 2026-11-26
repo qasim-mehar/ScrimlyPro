@@ -9,6 +9,10 @@ import {
   type GraphicVariant,
 } from "@/lib/graphics";
 
+/** Shared across previews on the same page: hovering one chip warms the art
+ *  for every other preview that offers the same skin. */
+const prefetchedSrcs = new Set<string>();
+
 /** Shared aesthetic switch for every graphic preview. Only templates with real
  *  art for the given variant are offered — gradient fallbacks are never a
  *  selectable option. */
@@ -23,6 +27,18 @@ export function AestheticChips({
 }) {
   const ids = selectableAestheticIds(variant);
 
+  // Hover/focus is a strong intent signal: warm the art cache before the click
+  // so switching aesthetics usually has nothing left to download.
+  function prefetch(id: AestheticId): void {
+    if (id === activeId) return;
+    const background = AESTHETICS[id]?.backgrounds[variant];
+    if (!background || background.type !== "image") return;
+    if (prefetchedSrcs.has(background.src)) return;
+    prefetchedSrcs.add(background.src);
+    const image = new Image();
+    image.src = background.src;
+  }
+
   return (
     <div
       role="group"
@@ -36,6 +52,8 @@ export function AestheticChips({
             key={id}
             type="button"
             onClick={() => onSelect(id)}
+            onMouseEnter={() => prefetch(id)}
+            onFocus={() => prefetch(id)}
             aria-pressed={active}
             className={clsx(
               "min-h-9 rounded-full px-3.5 text-xs font-semibold transition-colors",

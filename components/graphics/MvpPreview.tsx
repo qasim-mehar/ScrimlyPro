@@ -37,6 +37,11 @@ export function MvpPreview({
     ? aestheticId
     : available[0]!;
   const stageRef = useRef<HTMLDivElement | null>(null);
+  // Start disabled when the first paint already needs art: GraphicCanvas only
+  // reports loading from an effect, which would leave one enabled window.
+  const [artLoading, setArtLoading] = useState(
+    () => getTemplate(effectiveId).backgrounds[variant].type === "image",
+  );
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );
@@ -53,6 +58,7 @@ export function MvpPreview({
           config={getTemplate(effectiveId)}
           variant={variant}
           stageRef={stageRef}
+          onLoadingChange={setArtLoading}
         >
           <MvpGraphic
             aestheticId={effectiveId}
@@ -67,6 +73,7 @@ export function MvpPreview({
         <DownloadPngButton
           stageRef={stageRef}
           filename="scrimlypro-top-5-fraggers.png"
+          disabled={artLoading}
           onExported={setSize}
         />
         <p className="text-[12px] text-dash-ink3">
