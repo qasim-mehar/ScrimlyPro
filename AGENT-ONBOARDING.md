@@ -12,7 +12,7 @@
 ## 0. First five minutes (do these before anything else)
 
 1. Read `AGENTS.md` (and `CLAUDE.md`, which just points at it). It warns that
-   this repo runs **Next.js 16.4.3**, whose APIs/conventions differ from older
+   this repo runs **Next.js 16.4.6**, whose APIs/conventions differ from older
    Next you may know (e.g. `proxy.ts` replaces `middleware.ts`; the error
    boundary prop is `retry`, not only `reset`). Before writing Next-specific
    code, consult the bundled guides in `node_modules/next/dist/docs/`.
@@ -24,8 +24,10 @@
    something unusual, check whether it was already decided there.
 4. Skim `docs/reports/*.md` — one implementation report per milestone
    (M1–M6, P4–P7, wave-1 integration) with full decision records.
-5. Never fabricate product claims: nothing is deployed, there are no real
-   users/testimonials yet (see `PRODUCT.md` → Evidence on Hand).
+5. Never fabricate product claims (see `PRODUCT.md` → Evidence on Hand). The
+   app **is** deployed on Oracle A1 + Supabase Cloud at
+   `https://scrimlypro.duckdns.org` (`ScrimlyPro-Oracle-Deploy-Runbook.md`), but
+   there are still no real customers/testimonials — do not invent them.
 
 ---
 
@@ -819,6 +821,62 @@ generate — the diff must be empty).
    dashboards use honest fallbacks instead.
 10. When unsure how a Next 16 API behaves, read
     `node_modules/next/dist/docs/` — your training data is probably wrong.
+
+## 14. Post-deploy change workflow (`main` is protected)
+
+Production topology: Oracle Cloud Always-Free A1 VM (`ubuntu@proxy-vm`, repo
+`/home/ubuntu/scrimlypro`) runs `next start` under systemd; Caddy terminates TLS;
+Supabase Cloud hosts Postgres + Auth. The live origin is
+`https://scrimlypro.duckdns.org`. `deploy-scrimlypro` (`scripts/deploy.sh`) is
+the only deploy path.
+
+**Golden rule: never push directly to `main`.** Branch protection requires the
+`verify` status check on the exact commit, so a direct push is rejected. Every
+change goes through a branch + PR.
+
+1. Start from fresh `main`:
+   `git checkout main` → `git pull origin main` → `git checkout -b fix/short-name`.
+2. Keep PRs small and single-purpose.
+3. Run the green-gate set before committing:
+   `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`,
+   `npm run verify:secrets` (the secret scan only makes sense **after** build).
+   `npm test` needs the local Postgres at `127.0.0.1:54329` — never point it at
+   the cloud DSN (it creates/drops throwaway databases). CI has its own
+   Postgres service, so CI still validates when the local DB is down.
+   If dependencies changed, finish with `npx npm@10 install --package-lock-only`:
+   npm 11-generated lockfiles fail CI/VM `npm ci` with
+   `EUSAGE ... Missing: esbuild@0.28.2 from lock file`.
+4. Stage **specific files** (`git add <files>`, never `git add .`), commit with a
+   short imperative `fix:` / `feat:` / `ops:` summary, push the branch, and open
+   a PR.
+5. Wait for the CI job named **`verify`** to go green. If it fails, fix on the
+   same branch and re-push — the PR and its check re-run automatically.
+6. Merge (squash is fine), then on the VM:
+   `git -C /home/ubuntu/scrimlypro status --short` (no tracked edits expected),
+   then `deploy-scrimlypro`. The script runs `git pull --ff-only`, `npm ci`,
+   `db:migrate`, `build`, `verify:secrets`, restart and health-wait.
+7. Sanity check: `curl -s https://scrimlypro.duckdns.org/api/health` →
+   `{"status":"ok","version":"0.1.0"}`. For larger changes rerun
+   `bash scripts/verify-production.sh`.
+
+VM rules:
+
+- Do not edit code on the VM. The only legitimate local file is `.env.local`
+  (gitignored). If tracked files are modified before a deploy, discard with
+  `git -C /home/ubuntu/scrimlypro reset --hard origin/main` (re-apply
+  `chmod +x scripts/deploy.sh` if its mode reverted).
+- `.env.local` edits need only a service restart, **except** `NEXT_PUBLIC_*`
+  values (and the callback origin path), which are baked at build time →
+  rebuild with `deploy-scrimlypro`.
+- Never run `npm run db:seed`, `db:reset`, or `db:sweep-test` against the cloud
+  DSN.
+- Dependabot PRs: rebase onto current `main`, let CI pass, and review major
+  bumps before merging.
+
+Rollback: `git -C /home/ubuntu/scrimlypro reset --hard <previous-good-sha>` then
+`deploy-scrimlypro`; or revert on a branch, merge, redeploy.
+
+---
 
 *End of onboarding prompt. Welcome aboard — build fast, measure twice, and
 let the human confirm.*
