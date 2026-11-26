@@ -182,11 +182,14 @@ body {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 220ms ease-out, visibility 220ms ease-out;
+  transition: opacity 220ms ease-out, visibility 0s linear 220ms;
 }
 .graphic-skeleton[data-loading="true"] {
   opacity: 1;
   visibility: visible;
+  /* Cover INSTANTLY on an art swap: a fade-in would expose the new text over
+     the old/blank art — the exact flash this skeleton exists to hide. */
+  transition: none;
 }
 .graphic-skeleton__block {
   position: absolute;
@@ -245,6 +248,9 @@ body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .graphic-skeleton {
+    transition: none;
+  }
   .graphic-skeleton__sheen {
     animation: none;
     transform: none;
