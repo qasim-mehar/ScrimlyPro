@@ -23,7 +23,8 @@ export type AestheticId =
   | "varsity-purple"
   | "varsity-orange"
   | "pmsl-cobalt"
-  | "ewc-teal";
+  | "ewc-teal"
+  | "pmpl-sea-purple";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -80,6 +81,11 @@ export type StandingsTableSpec = {
   rowY0: number; // TOP edge of first data row
   rowPitch: number;
   rowHeight: number;
+  /** Exact measured vertical midpoints of the painted row cards (canvas px).
+   *  Art whose card pitch is not uniform (pmpl-sea-purple) uses these so row i's
+   *  text box centre IS card i's centre — zero cumulative drift. When absent,
+   *  renderers keep the rowY0 + i·rowPitch formula. Pure measured data. */
+  rowCenterYs?: readonly number[];
   maxRowsLeft: number;
   singleColumn?: boolean; // true → one full-width table (neon-green art):
   // OverallStandingsGraphic renders columns[0] with ALL rows and skips

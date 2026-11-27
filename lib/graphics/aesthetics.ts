@@ -3267,6 +3267,157 @@ const PMSL_COBALT: TemplateConfig = {
   },
 };
 
+const PMPL_SEA_PURPLE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // The standings art paints DARK charcoal ink on white cards, so the two
+  // artless (parked) variants use a light lavender→white fallback; the dark
+  // footer bar keeps the fixed white brand watermark legible there too.
+  css: "linear-gradient(165deg, #EDE9F6 0%, #FFFFFF 100%)",
+  decor: [{ kind: "bar", x: 0, y: 1520, w: 1080, h: 100, color: "#2A0B45" }],
+};
+
+/**
+ * PMPL SEA Purple — the 2022 PMPL SEA Championship "OVERALL RANKINGS" board.
+ *
+ * Art: the supplied blank is a 1696×2528 PNG (ratio 0.6709, 0.6% wider than
+ * 2:3). It is delivered as `standings.png` by a uniform ×1620/2528 height fit
+ * to 1087×1620, centre-cropped 3px to an EXACT 1080×1620 canvas — no stretch,
+ * no distortion. Every coordinate below was re-measured on that delivered
+ * canvas pixel-for-pixel (no reliance on stale art comments).
+ *
+ * - The art bakes the orange "OVERALL RANKINGS" headline, the neon-yellow
+ *   brush "MATCH #" lockup, BOTH label bands, every rank badge and every white
+ *   card row → labelsBakedIn + ranksBakedIn + hideScrimName. Fifteen-to-twenty-
+ *   four teams fill the left ladder first (12 slots) then the right one.
+ * - Row cards are NOT equally spaced: their measured midpoints (canvas) are
+ *   360, 449.5, 537, 621, 712.5, 806.5, 913, 1004.5, 1098.5, 1194, 1287, 1379
+ *   (nominal least-squares pitch 93.42). `rowCenterYs` seats each text box on
+ *   its own card centre; a single pitch would drift ~18px on rows 4–6.
+ * - Left white cards span x113–515, dividers at x331–332 / 380–381 / 443–444;
+ *   right cards x625–1027, dividers at x843–844 / 892–893 / 955–956. The art
+ *   prints exactly THREE stat compartments per side — ELIMS, RANK PTS, TOTAL
+ *   PTS — mapped to the domain's kp / pp / total stats (there is no baked
+ *   BONUS PTS column; ELIMS is the elimination-points stat). 46px value boxes
+ *   at 333/389/456 and 845/901/968 centre on those compartments without
+ *   crossing a divider; team cells are [113,331) and [625,843).
+ * - The baked '#' ink ends at canvas x986, y159–233. The 88px-wide match slot
+ *   starts at x992 (6px gap) and uses Permanent Marker (`--font-brush`) 76px
+ *   in #EAFF00, matching the brush lockup; only the confirmed digits render.
+ * - #111318 team ink reads ~17:1 on the white cards; #1a1c23 is the muted
+ *   secondary ink. Uniform row/stat ink keeps the baked rank badges in charge
+ *   of all rank-1 emphasis. Fixed pure-white watermark ink on the black footer.
+ */
+const PMPL_SEA_PURPLE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmpl-sea-purple",
+  name: "PMPL SEA Purple",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmpl-sea-purple/standings.png",
+    },
+    mvp: PMPL_SEA_PURPLE_FALLBACK_BG,
+    announcement: PMPL_SEA_PURPLE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 72px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 26px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      title: { x: -9999, y: -9999, w: 0 },
+      // Digits only: the art already prints the brush "MATCH #" words.
+      subtitle: { x: 992, y: 156, w: 88, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `900 76px ${BRUSH_FONTS}`,
+      subtitleColor: "#EAFF00",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  hideScrimName: true,
+  variantHideScrimName: { standings: true },
+  standings: {
+    columns: [
+      {
+        rankX: 73, // baked badge x35–112; no code-drawn numeral
+        teamX: 113, // first clear pixel inside the left white card
+        teamW: 218, // ends at the first divider (x331)
+        statColumns: [
+          { key: "kp", x: 333 }, // ELIMS cell [332,380], centre 356
+          { key: "pp", x: 389 }, // RANK PTS cell [381,443], centre 412
+          { key: "total", x: 456 }, // TOTAL PTS cell [444,515], centre 479.5
+        ],
+        stripX: 113,
+        stripW: 403,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 585, // baked right-column badge x548–623
+        teamX: 625,
+        teamW: 218, // ends at x843, the right table's first divider
+        statColumns: [
+          { key: "kp", x: 845 }, // ELIMS cell [844,892], centre 868
+          { key: "pp", x: 901 }, // RANK PTS cell [893,955], centre 924
+          { key: "total", x: 968 }, // TOTAL PTS cell [956,1027], centre 991.5
+        ],
+        stripX: 625,
+        stripW: 402,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 282, // baked label band — code draws no labels
+    rowY0: 321, // first painted card top
+    rowPitch: 93.42, // least-squares fit of the 12 baked card midlines
+    rowHeight: 72, // stays inside the narrowest painted card (73px)
+    rowCenterYs: [
+      360, 449.5, 537, 621, 712.5, 806.5, 913, 1004.5, 1098.5, 1194, 1287,
+      1379,
+    ],
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 46, // the tight ELIMS compartment is only 48px wide
+    logoPlate: 44,
+    logoNameGap: 52,
+    uniformRowInk: true, // baked rank-1 badge owns the emphasis
+    uniformStatInk: true,
+    nameUppercase: true,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#EAFF00", // neon-yellow brush lockup
+    text: "#111318", // dark charcoal on the white cards (~17:1)
+    textMuted: "#1a1c23", // secondary stats/supporting ink
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the cards — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#111318",
+    watermarkColor: "#ffffff", // fixed brand ink on the black footer
+    plateBg: "rgba(17,19,24,0.08)",
+    plateRing: "rgba(17,19,24,0.28)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#111318",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -3293,6 +3444,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "varsity-orange": VARSITY_ORANGE,
   "pmsl-cobalt": PMSL_COBALT,
   "ewc-teal": EWC_TEAL,
+  "pmpl-sea-purple": PMPL_SEA_PURPLE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

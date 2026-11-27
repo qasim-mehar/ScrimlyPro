@@ -152,7 +152,11 @@ function StandingsRow({
   const logoPlate = st.logoPlate ?? DEFAULT_LOGO_PLATE;
   const logoImg = Math.max(16, logoPlate - LOGO_INSET);
   const logoNameGap = st.logoNameGap ?? DEFAULT_LOGO_NAME_GAP;
-  const y = st.rowY0 + rowIdx * pitch;
+  // Art with non-uniform card pitch (pmpl-sea-purple) supplies exact measured
+  // midpoints; the row box is seated on them instead of the nominal ladder, so
+  // its text centre lands on the painted card centre with zero drift.
+  const measuredCenter = st.rowCenterYs?.[rowIdx];
+  const y = measuredCenter !== undefined ? measuredCenter - st.rowHeight / 2 : st.rowY0 + rowIdx * pitch;
   const isRankOne = row.rank === 1;
   // Art-backed tables (challengers-red) bake their own rank-1 emphasis: force
   // every row to identical ink so no red text appears anywhere in the table.
