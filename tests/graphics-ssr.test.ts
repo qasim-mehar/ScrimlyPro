@@ -849,6 +849,95 @@ describe("varsity-orange — pipe-split announcement SSR safety", () => {
   });
 });
 
+describe("P8(7) — pmsl-cobalt 24-team standings (SSR)", () => {
+  const st = getTemplate("pmsl-cobalt").standings;
+  const render = (subtitle: string, n: number, matchCount: number) =>
+    renderToStaticMarkup(standings("pmsl-cobalt", subtitle, n, { matchCount }));
+
+  it.each([16, 20, 24])("renders %i teams cleanly on the fixed 12-row pitch", (n) => {
+    const html = render("AFTER MATCH 3", n, 3);
+    expect(html).toContain(`SQUAD ${n}`);
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("undefined");
+    const left = Math.min(n, 12);
+    // Count TEAM-NAME cells (the team font precedes `left` in their inline
+    // style) — row strips share the same x but are not name slots.
+    expect((html.match(/font:700 21px[^"]*left:106px/g) ?? []).length).toBe(left);
+    expect((html.match(/font:700 21px[^"]*left:600px/g) ?? []).length).toBe(n - left);
+    const lastTop = st.rowY0 + (left - 1) * st.rowPitch;
+    expect(html).toContain(`top:${lastTop}px`);
+  });
+
+  it("seats the session name in the blue pill and the stage in the yellow pill", () => {
+    const html = render("GROUP STAGE", 24, 6);
+    expect(html).toContain("left:54px"); // blue pill
+    expect(html).toContain("top:304px");
+    expect(html).toContain("line-height:60px"); // AFTER font, not reset by it
+    expect(html).toContain("color:#FFFFFF");
+    expect(html).toContain(">SCRIM<");
+    expect(html).toContain("left:571px"); // yellow pill
+    expect(html).toContain("top:305px");
+    expect(html).toContain("line-height:59px");
+    expect(html).toContain("color:#1E2B7B");
+    expect(html).toContain(">GROUP STAGE<");
+    // Baked art owns the label row and rank numerals — no synthetic duplicates.
+    expect(html).not.toContain(">RANK<");
+    expect(html).not.toContain(">TEAM<");
+    expect(html).not.toContain("left:53px");
+    expect(html).not.toContain("left:547px");
+  });
+
+  it("renders all five stat boxes per side in baked-cell order", () => {
+    const html = render("FINAL RESULTS", 24, 6);
+    for (const x of [286, 336.5, 388, 447.5, 498.5, 778.5, 829.5, 880.5, 939.5, 992]) {
+      expect(html).toContain(`left:${x}px`);
+    }
+    expect(html).toContain("font:800 24px");
+    expect(html).toContain("font-variant-numeric:tabular-nums");
+    expect(html).toContain("font:700 21px"); // team names keep the Exo 2 700 face
+    expect(html).not.toContain("NaN");
+  });
+
+  it("keeps the 25th team below the painted table instead of dropping it", () => {
+    const html = render("AFTER MATCH 3", 25, 3);
+    expect(html).toContain("SQUAD 25");
+    expect(html).toContain(`top:${st.rowY0 + 12 * st.rowPitch}px`);
+  });
+
+  it("renders the artless MVP + announcement fallbacks on the cobalt gradient", () => {
+    const config = getTemplate("pmsl-cobalt");
+    expect(hideScrimNameFor(config, "standings")).toBe(false);
+    const mvp = renderToStaticMarkup(
+      h(MvpGraphic, {
+        aestheticId: "pmsl-cobalt",
+        title: "SCRIM",
+        subtitle: "TOP 5 FRAGGERS",
+        organizer: null,
+        entries: mvpEntries(),
+      }),
+    );
+    expect(mvp).toContain("SCRIM");
+    expect(mvp).toContain("ALPHA");
+    expect(mvp).not.toContain("NaN");
+    const ann = renderToStaticMarkup(
+      h(AnnouncementGraphic, {
+        aestheticId: "pmsl-cobalt",
+        title: "SCRIM",
+        subtitle: "PARTICIPATING TEAMS",
+        organizer: null,
+        teams: announceTeams(24),
+      }),
+    );
+    expect(ann).toContain("SCRIM");
+    expect(ann).toContain("SQUAD 24");
+    for (const variant of ["standings", "mvp", "announcement"] as const) {
+      const html = renderToStaticMarkup(h(GraphicCanvas, { config, variant }));
+      expect(html).toContain("top:1570px");
+      expect(html).toContain("scrimlypro.com");
+    }
+  });
+});
+
 describe("P8(7) — ewc-teal 24-row single-column standings (SSR)", () => {
   const config = getTemplate("ewc-teal");
 

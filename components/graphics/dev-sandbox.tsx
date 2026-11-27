@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import {
   AESTHETICS,
   effectivePitch,
+  fitPillFontSize,
   headerFor,
   hideScrimNameFor,
   slotToStyle,
@@ -50,6 +51,34 @@ function GraphicHeader({ config }: { config: TemplateConfig }) {
   const { palette, name } = config;
   const header = headerFor(config, "standings");
   const subtitle = config.subtitleMode === "matchNumber" ? subtitleMatchNumber("AFTER MATCH 2") : "AFTER MATCH 2";
+  // Mirror the production renderer's dual baked pills (pmsl-cobalt) so the
+  // dev graphics sandbox previews the same header the export will show.
+  const pills = config.standings.headerPills;
+  if (pills) {
+    return (
+      <>
+        {([pills.left, pills.right] as const).map((pill, i) => {
+          const text = pill.text === "title" ? name.toUpperCase() : subtitle;
+          return (
+            <div
+              key={i}
+              style={{
+                ...slotToStyle(pill.box),
+                height: pill.height,
+                font: pill.font,
+                fontSize: `${fitPillFontSize(text, pill.font, pill.box.w ?? pill.height)}px`,
+                whiteSpace: "nowrap",
+                lineHeight: `${pill.height}px`, // AFTER `font` — see StandingsRow
+                color: pill.color,
+              }}
+            >
+              {text}
+            </div>
+          );
+        })}
+      </>
+    );
+  }
   return (
     <>
       {hideScrimNameFor(config, "standings") ? null : (

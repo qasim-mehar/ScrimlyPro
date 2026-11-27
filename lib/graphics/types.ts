@@ -22,6 +22,7 @@ export type AestheticId =
   | "court-orange"
   | "varsity-purple"
   | "varsity-orange"
+  | "pmsl-cobalt"
   | "ewc-teal";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
@@ -104,6 +105,26 @@ export type StandingsTableSpec = {
   // 0.16em); the renderer keeps its legacy -0.01em when absent
   nameUppercase?: boolean; // true → uppercase team names on the art-backed
   // broadcast table (varsity-purple's reference schedule typography)
+
+  /** Dual baked header pills (pmsl-cobalt): the art prints two empty coloured
+   *  boxes above the table — the left blue one holds the session name, the
+   *  right yellow one the stage/subtitle. Pure coordinate + ink data; the
+   *  renderer seats each string dead-centre in its measured box. Absent on
+   *  every other template, so their header markup is unchanged. */
+  headerPills?: {
+    left: HeaderPillSpec;
+    right: HeaderPillSpec;
+  };
+};
+
+/** One header-pill ink slot. `box` is the pill's measured bounds (the renderer
+ *  centres its text); `height` drives the line-height declared AFTER `font`. */
+export type HeaderPillSpec = {
+  box: Slot;
+  height: number;
+  font: string;
+  color: string;
+  text: "title" | "subtitle"; // which header prop supplies the string
 };
 
 /** Starting-five brush lockup (grunge-red): measured slot geometry plus the

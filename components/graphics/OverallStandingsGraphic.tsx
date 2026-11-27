@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import {
   effectivePitch,
+  fitPillFontSize,
   getTemplate,
   headerFor,
   hideScrimNameFor,
@@ -49,6 +50,41 @@ function StandingsHeader({
     config.subtitleMode === "matchNumber"
       ? (matchCount !== undefined ? String(matchCount) : subtitleMatchNumber(subtitle))
       : subtitle;
+  // Dual baked header pills (pmsl-cobalt): the art paints an empty blue box
+  // for the session name/league info and a yellow box for the stage/subtitle.
+  // The template owns the measured geometry + ink; the renderer only seats
+  // the two strings dead-centre in their boxes. No other template supplies
+  // `headerPills`, so every existing header markup stays unchanged.
+  const pills = config.standings.headerPills;
+  if (pills) {
+    return (
+      <>
+        {([pills.left, pills.right] as const).map((pill, i) => {
+          const text = pill.text === "title" ? title : subtitleText;
+          return (
+            <div
+              key={i}
+              style={{
+                ...slotToStyle(pill.box),
+                height: pill.height,
+                font: pill.font,
+                // Long session names / stages shrink to fit the painted box —
+                // a pill never wraps or clips (pure sizing in lib/graphics).
+                fontSize: `${fitPillFontSize(text, pill.font, pill.box.w ?? pill.height)}px`,
+                whiteSpace: "nowrap",
+                // AFTER the `font` shorthand: the shorthand resets line-height
+                // to `normal`, which pushes ink off the painted pill's centre.
+                lineHeight: `${pill.height}px`,
+                color: pill.color,
+              }}
+            >
+              {text}
+            </div>
+          );
+        })}
+      </>
+    );
+  }
   return (
     <>
       {hideScrimNameFor(config, "standings") ? null : (

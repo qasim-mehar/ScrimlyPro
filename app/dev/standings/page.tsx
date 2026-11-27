@@ -7,6 +7,7 @@ import { StandingsPreview } from "@/components/graphics/StandingsPreview";
 import { getDb } from "@/lib/db/client";
 import { matchResults, matches, sessions, teams } from "@/lib/db/schema";
 import { EWC_TEAL_STANDINGS } from "@/lib/fixtures/ewcTeal";
+import { PMSL_COBALT_STANDINGS } from "@/lib/fixtures/pmslCobalt";
 import { standingsSubtitle } from "@/lib/graphics/standings";
 import { computeStandings } from "@/lib/scoring";
 
@@ -69,15 +70,36 @@ export default async function DevStandingsPage() {
   const subtitle = standingsSubtitle(confirmedIds.length, session.status === "completed");
 
   return (
-    <main className="mx-auto max-w-2xl p-4">
-      <StandingsPreview
-        title={session.name}
-        subtitle={subtitle}
-        organizer={null}
-        standings={standings}
-        matchCount={confirmedIds.length}
-        isFinal={session.status === "completed"}
-      />
+    <main className="mx-auto flex max-w-2xl flex-col gap-8 p-4">
+      <section>
+        <h1 className="text-lg font-bold tracking-widest text-gold">STANDINGS GRAPHIC — SEED SESSION</h1>
+        <StandingsPreview
+          title={session.name}
+          subtitle={subtitle}
+          organizer={null}
+          standings={standings}
+          matchCount={confirmedIds.length}
+          isFinal={session.status === "completed"}
+        />
+      </section>
+      <section>
+        <h1 className="text-lg font-bold tracking-widest text-gold">
+          STANDINGS GRAPHIC — PMSL COBALT (24 TEAMS)
+        </h1>
+        <p className="mb-2 text-sm text-muted">
+          Reference board from the 2024 PMSL SEA Spring art: session name in the blue pill,
+          stage in the yellow pill, 12 rows per column.
+        </p>
+        <StandingsPreview
+          title="PMSL LEAGUE W2D3"
+          subtitle="GROUP STAGE"
+          organizer={null}
+          standings={[...PMSL_COBALT_STANDINGS]}
+          matchCount={12}
+          isFinal={false}
+          initialAestheticId="pmsl-cobalt"
+        />
+      </section>
       <section>
         <h1 className="text-lg font-bold tracking-widest text-gold">
           STANDINGS GRAPHIC — EWC TEAL (24 TEAMS)

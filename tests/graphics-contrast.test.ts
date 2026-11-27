@@ -78,6 +78,7 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "cardinal-gold",
     "varsity-purple",
     "varsity-orange",
+    "pmsl-cobalt",
   ];
 
   // ewc-yellow's Spanish Orange primary ink is a mandated brand override; it
@@ -626,6 +627,69 @@ describe("pmgc-aqua light-bar / dark-badge contrast (measured from the art)", ()
       expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe("pmsl-cobalt standings contrast (live PNG decode)", () => {
+  /** The art is a true 1686×2528 PNG fitted by width (S = artW/1080) with a
+   *  0.32px centred letterbox — the exact mapping used by `imageFitStyle`. */
+  const zones = () => {
+    const { w: artW, h: artH, px } = decodePngToRgb("public/templates/pmsl-cobalt/overall.png");
+    const S = artW / 1080;
+    const TOP = (1620 - artH / S) / 2;
+    const zone = (x0: number, y0: number, x1: number, y1: number) =>
+      averageLuminance(px, artW, {
+        x: Math.round(x0 * S),
+        y: Math.round((y0 - TOP) * S),
+        w: Math.round((x1 - x0) * S),
+        h: Math.round((y1 - y0) * S),
+      });
+    return {
+      // canvas(150,465,350,20) — row-1 dark cobalt bar interior. Stays inside
+      // the LEFT table: x500 clears the right column's white rank badge (x547)
+      // and y485 clears the painted row separator (~y497).
+      rowBar: zone(150, 465, 500, 485),
+      // canvas(60,310,440,48) / (580,310,440,48) — the two empty header pills
+      bluePill: zone(60, 310, 500, 358),
+      yellowPill: zone(580, 310, 1020, 358),
+    };
+  };
+  const over = (bg: number, fg: string) => {
+    const fgLum = relativeLuminance(parseHexColor(fg));
+    return (Math.max(bg, fgLum) + 0.05) / (Math.min(bg, fgLum) + 0.05);
+  };
+
+  it("white row text clears the cobalt bars ≥ 12:1", () => {
+    const { rowBar } = zones();
+    const config = getTemplate("pmsl-cobalt");
+    expect(config.palette.text).toBe("#FFFFFF");
+    expect(config.standings.uniformRowInk).toBe(true);
+    expect(config.standings.uniformStatInk).toBe(true);
+    expect(rowBar).toBeLessThan(0.05); // guard against a light art swap
+    expect(over(rowBar, config.palette.text)).toBeGreaterThanOrEqual(12);
+    expect(over(rowBar, config.palette.textMuted)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("white ink clears the blue pill ≥ 4.5:1 and navy ink clears the yellow pill ≥ 4.5:1", () => {
+    const { bluePill, yellowPill } = zones();
+    const pills = getTemplate("pmsl-cobalt").standings.headerPills!;
+    expect(pills.left.color).toBe("#FFFFFF");
+    expect(pills.right.color).toBe("#1E2B7B");
+    expect(pills.left.font).toContain("900");
+    expect(pills.right.font).toContain("900");
+    expect(over(bluePill, pills.left.color)).toBeGreaterThanOrEqual(4.5);
+    expect(over(yellowPill, pills.right.color)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("85%-white watermark clears the deep-cobalt footer ≥ 4.5:1", () => {
+    const footer = { r: 44.9, g: 40.5, b: 138.2 }; // measured canvas(760,1560,280,30)
+    const ink = {
+      r: 255 * 0.85 + footer.r * 0.15,
+      g: 255 * 0.85 + footer.g * 0.15,
+      b: 255 * 0.85 + footer.b * 0.15,
+    };
+    expect(contrastRatio(ink, footer)).toBeGreaterThanOrEqual(4.5);
+    expect(getTemplate("pmsl-cobalt").palette.watermarkColor).toBe("rgba(255,255,255,0.85)");
   });
 });
 
