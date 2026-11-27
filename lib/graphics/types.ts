@@ -21,7 +21,8 @@ export type AestheticId =
   | "varsity-yellow"
   | "court-orange"
   | "varsity-purple"
-  | "varsity-orange";
+  | "varsity-orange"
+  | "pmrc-lime";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -573,6 +574,9 @@ export type TemplateConfig = {
   variantLabelsBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant
   // override (grunge-red: the MVP art bakes its own labels/header)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
+  // Additive prefix painted before the digits (pmrc-lime's "MATCH " + n brush
+  // lockup). Absent → existing templates render bare digits, unchanged.
+  subtitlePrefix?: string;
   subtitleBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant: the art already
   // prints the subtitle LABEL (pmgc-aqua's baked "MATCH #"); the slot renders
   // only the digits. Mirrors variantLabelsBakedIn / variantHideScrimName.
