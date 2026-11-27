@@ -4513,6 +4513,175 @@ const PMRC_LIME: TemplateConfig = {
   },
 };
 
+const PMSL_CSA_AMBER_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Espresso → burnt amber. White row ink clears every stop; used only by the
+  // artless MVP / announcement variants (parking lot for this template).
+  css: "linear-gradient(165deg, #3B1F17 0%, #7A3B0B 100%)",
+  decor: [],
+};
+
+/**
+ * PMSL CSA Amber — the PUBG Mobile South Asia "OVERALL STANDINGS" broadcast art.
+ *
+ * Art: `standings.png` is a TRUE 1696×2528 PNG (not a JPEG payload in a .png
+ * name). A uniform HEIGHT fit S = 1620/2528 = 0.6408227848 draws it 1086.8354
+ * wide at left −3.4177 (a 3.42px cover crop per side, zero top/bottom
+ * letterbox). Every coordinate below is measured on art pixels through
+ * canvasX = artX·S − 3.4177, canvasY = artY·S. Second review pass: re-sniffed
+ * the IHDR (1696×2528) and re-measured every row/ink centre against the file
+ * on disk; none of the pins below changed.
+ *
+ * - The art bakes the espresso "OVERALL STANDINGS" headline (title), the full
+ *   purple label band (RANK / TEAMS / chicken WWCD icon / PLACE PTS. / ELIMS /
+ *   TOTAL PTS.), all 24 rank numerals and all row bars → labelsBakedIn +
+ *   ranksBakedIn + `variantHideScrimName.standings`; no code-drawn title,
+ *   labels or ranks. 12 painted bars per column: bar 1 top art 841, bottom
+ *   art 922 (82px interior), rank-ink centres 881.5 … 1904.5 → rowY0 538.93,
+ *   fixed pitch 59.6 (93 art px), rowHeight 52.5 (text centre 565.18 =
+ *   bar-1 painted centre 565.21, 0.03px drift at rows 1/12/13/24). 24 → [12,12] via
+ *   splitRowsAt; 16 → [12,4] (left-first, so baked ranks still match); fewer
+ *   teams leave the remaining painted bars blank.
+ * - Baked stat-ink centres (art) left WWCD icon 523.5, PLACE 609, ELIMS 697,
+ *   TOTAL 783.5 → canvas 332.05 / 386.84 / 443.24 / 498.67. The right table
+ *   repeats at +819 art px (canvas +524.8), NOT a uniform rank/team shift.
+ *   44px value boxes centred on those midpoints never cross a divider.
+ * - The art bakes the amber "MATCH #" lockup (ink art x636–1061, y598–655 →
+ *   canvas x404.15–676.5, y383.21–419.74). `subtitleMode: "matchNumber"`
+ *   therefore paints ONLY the confirmed-match digits in the clear sky slot
+ *   after the "#": 900 Exo 2 #C26700, 48px, centred in x680..752 (centre
+ *   716) at y377.5 so the digit ink lands on the measured amber midline
+ *   y401.5. MATCH 1 and MATCH 10 share one slot → no horizontal drift.
+ * - Row interiors are dark bronze (mean WCAG luminance ≤0.09); pure-white
+ *   Exo 2 800 names/stats clear 7:1. The mandated #C26700 measures ~2.3:1 on
+ *   the bright amber sky (a brand-ink limitation of the supplied art, not a
+ *   layout bug); it is pinned at its measured ratio rather than faked.
+ *   Black canvasBackground backs the 3px side crop; the black footer gives
+ *   the fixed white watermark 21:1. MVP + announcement are gradient artless.
+ */
+const PMSL_CSA_AMBER: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmsl-csa-amber",
+  name: "PMSL CSA Amber",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmsl-csa-amber/standings.png",
+      // Uniform ×1620/2528 height fit; 3.42px cover crop per side, no
+      // distortion and no vertical letterbox (every painted slot stays exact).
+      fit: {
+        width: 1086.8354430379747,
+        height: 1620,
+        left: -3.4177215189873657,
+        top: 0,
+      },
+    },
+    mvp: PMSL_CSA_AMBER_FALLBACK_BG,
+    announcement: PMSL_CSA_AMBER_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: true }, // art bakes the words "MATCH #"
+  uniformMvpRows: true,
+  canvasBackground: "#000000", // behind the 3.42px uniform side crop
+  header: {
+    // Fallback MVP/announcement variants keep a normal header; the standings
+    // override parks title/organizer (baked art) and seats only the digits.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 72px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 26px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      title: { x: -9999, y: -9999, w: 0 },
+      // Digits slot: amber ink bbox y383.21..419.74 (centre 401.48); a 48px
+      // line box centred there starts at 377.48 → 377.5. Centred align keeps
+      // "1" and "10" on the same axis; the slot centre sits 39px right of the
+      // baked "#" ink end, leaving ~10px clearance for a two-digit glyph.
+      subtitle: { x: 680, y: 377.5, w: 72, align: "center" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `900 48px ${FONTS}`,
+      subtitleColor: "#C26700",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: { standings: true }, // "OVERALL STANDINGS" is baked
+  standings: {
+    columns: [
+      {
+        rankX: 35, // baked white "#1".."#12" ink, no code numeral
+        teamX: 104, // first clear pixel right of the baked rank divider
+        teamW: 204, // ends at 308, 2px before the WWCD value box
+        statColumns: [
+          { key: "wwcd", x: 310 }, // chicken icon centre 332
+          { key: "pp", x: 365 }, // PLACE PTS. ink centre 386.8
+          { key: "kp", x: 421 }, // ELIMS ink centre 443.2
+          { key: "total", x: 477 }, // TOTAL PTS. ink centre 498.7
+        ],
+        stripX: 104,
+        stripW: 204,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 568, // baked "#13".."#24" ink
+        teamX: 637,
+        teamW: 194, // ends at 831, 4px before the right WWCD box
+        statColumns: [
+          { key: "wwcd", x: 835 }, // chicken centre 857
+          { key: "pp", x: 890 }, // 912.1
+          { key: "kp", x: 946 }, // 968
+          { key: "total", x: 1001 }, // 1023.8
+        ],
+        stripX: 637,
+        stripW: 194,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 497, // baked purple label band top — code draws no labels
+    rowY0: 538.93, // painted bar 1 top (art 841)
+    rowPitch: 59.6, // least-squares fit of the baked rank-ink centres (93 art px)
+    rowHeight: 52.5, // bar interior 82 art px (centre = 565.18)
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 44,
+    rankBoxW: 54,
+    logoPlate: 32, // bounded inside the 52.55px painted bar
+    logoNameGap: 36,
+    uniformRowInk: true, // the art bakes rank-1 emphasis in white ink
+    uniformStatInk: true,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#C26700", // the measured amber MATCH lockup ink
+    text: "#FFFFFF", // pure white 800 team + stat ink on the dark bronze bars
+    textMuted: "#F7D9B4", // warm parchment for fallback supporting slots
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)", // no rank-1 strip over the baked white numerals
+    wwcdText: "#FFFFFF",
+    watermarkColor: "#FFFFFF", // 21:1 on the baked black footer
+    plateBg: "rgba(0,0,0,0.24)",
+    plateRing: "rgba(255,255,255,0.55)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#3B1F17", // the art's espresso title ink
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -4547,6 +4716,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "pmnc-pakistan-lime": PMNC_PAKISTAN_LIME,
   "pmpl-sea-purple": PMPL_SEA_PURPLE,
   "pmrc-lime": PMRC_LIME,
+  "pmsl-csa-amber": PMSL_CSA_AMBER,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
