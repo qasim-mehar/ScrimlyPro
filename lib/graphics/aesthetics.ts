@@ -3565,6 +3565,154 @@ const PMGC_LEAGUE_BLUE: TemplateConfig = {
   },
 };
 
+const PMGO_BRAZIL_GREEN_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Light lime-cream → white: the art's row ink is deep near-black, so the
+  // artless MVP/announcement fallbacks keep that same ink WCAG-legible. These
+  // variants have no art and are excluded from the picker.
+  css: "linear-gradient(165deg, #F7FBE8 0%, #E8F6C4 55%, #D6F836 100%)",
+  decor: [],
+};
+
+/**
+ * PMGO Brazil Green — the 2024 PMGO Brazil Main Event OVERALL leaderboard.
+ *
+ * Art: `overall.png` is a TRUE 1024×1536 PNG (exact 2:3 canvas ratio), so the
+ * uniform ×1080/1024 = 1.0546875 fit lands every painted slot on the canvas
+ * with zero crop and zero distortion:
+ *   canvasX = artX × 1.0546875, canvasY = artY × 1.0546875.
+ *
+ * Measured off those pixels (SECOND PASS, re-verified against the current art):
+ * - The art bakes the white "OVERALL RANKINGS" headline, the green→yellow
+ *   header bands, all RANK/TEAM/WWCD/PLACE PTS./ELIMS/TOTAL labels, every
+ *   "#1"–"#24" rank square and all 24 white row bars → labelsBakedIn +
+ *   ranksBakedIn + no dynamic scrim name anywhere (title ink is pure #FFFFFF).
+ * - 12 painted row bars per column: art tops 413, 477, 541, 606, 670, 734,
+ *   799, 863, 927, 991, 1056, 1120 and bottoms 466, 530, 595, 659, 723, 788,
+ *   852, 916, 980, 1045, 1109, 1173. Row-1 centre canvas 463.54, row-12 centre
+ *   1209.20 → pitch 67.7876 with a 56px box whose centre lands on both ends
+ *   (intermediate drift < 0.5px). 24 teams → [12,12]; the 25th overflows the
+ *   painted table, never dropped.
+ * - Header ink centres (art→canvas): WWCD 287→302.7, PLACE PTS. 351→370.2,
+ *   ELIMS 415→437.7, TOTAL 477.5→503.6 (left) and 770→812.1, 834→879.6,
+ *   898→947.1, 961→1013.6 (right). The stat boxes are 48px wide and centred
+ *   on the measured INK centres (303.2/371.8/439.8/503.6 and 812.6/880.7/
+ *   949.8/1013.0), never crossing the painted cell dividers.
+ * - Rank squares: art x35–81 (left), x518–564 (right); team cells art x82–253
+ *   and x566–736. Rank numerals are baked, so no code rank is drawn.
+ * - Yellow-green "MATCH #" badge fill: art x376–648, y252–322 → canvas
+ *   x396.56–683.44, y265.78–339.61 (centre y302.70). The baked "#" ink ends
+ *   art x607 → canvas x640.20. The dynamic confirmed-match digits therefore
+ *   render in the measured free slot x640.2–683.2 (centre x661.7), dead-centre on
+ *   the badge's Y axis, in Exo 2 900 black ink. Re-rendering the words would
+ *   duplicate the baked "MATCH #" lockup (see README Assumptions).
+ * - Deep near-black #0B0F1A row ink on the near-white bars reads >7:1;
+ *   black digits on the lime badge read >7:1; the hardcoded watermark uses
+ *   the brand lime #D6F836 over the art's dark footer.
+ */
+const PMGO_BRAZIL_GREEN: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgo-brazil-green",
+  name: "PMGO Brazil Green",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgo-brazil-green/overall.png",
+      // Uniform ×1080/1024 width fit: exact 2:3 art, so the image lands at
+      // 1080×1620 with no crop. The black edge ink fills behind it.
+      fit: { width: 1080, height: 1620, left: 0, top: 0 },
+    },
+    mvp: PMGO_BRAZIL_GREEN_FALLBACK_BG,
+    announcement: PMGO_BRAZIL_GREEN_FALLBACK_BG,
+  },
+  canvasBackground: "#000000",
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: true },
+  uniformMvpRows: true,
+  hideScrimName: true, // the art bakes "OVERALL RANKINGS"; fallback titles parked
+  header: {
+    title: { x: -9999, y: -9999, w: 0 },
+    // Painted only on standings: digits in the free slot right of the baked
+    // "#", vertically centred on the yellow-green badge's measured midpoint.
+    subtitle: { x: 640.2, y: 284.7, w: 43, align: "center" },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `500 1px ${FONTS}`,
+    subtitleFont: `900 36px ${FONTS}`,
+    subtitleColor: "#000000",
+    subtitleTextTransform: "uppercase",
+    organizerFont: `500 1px ${FONTS}`,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 37, // baked yellow/black rank square art x35–81
+        teamX: 88, // first clear pixel inside the white bar
+        teamW: 178, // ends at 266, before the WWCD divider at 270
+        statColumns: [
+          { key: "wwcd", x: 279.2 }, // baked ink centre 303.2
+          { key: "pp", x: 347.8 }, // 371.8
+          { key: "kp", x: 415.8 }, // 439.8
+          { key: "total", x: 479.6 }, // 503.6
+        ],
+        stripX: 88,
+        stripW: 178,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 546, // baked rank square art x518–564
+        teamX: 598,
+        teamW: 178, // ends at 776, before the right WWCD divider
+        statColumns: [
+          { key: "wwcd", x: 788.6 }, // baked ink centre 812.6
+          { key: "pp", x: 856.7 }, // 880.7
+          { key: "kp", x: 925.75 }, // 949.75
+          { key: "total", x: 989 }, // 1013.0
+        ],
+        stripX: 598,
+        stripW: 178,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 366, // baked green→yellow label band top
+    rowY0: 435.54, // box centre 463.54 = painted row-1 centre
+    rowPitch: 67.7876, // measured row-1 → row-12 centre distance / 11
+    rowHeight: 56, // inside the 56.95–58.01px painted bars
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48,
+    logoPlate: 34,
+    logoNameGap: 38,
+    uniformRowInk: true, // the baked yellow #1 badge is the rank-1 emphasis
+    uniformStatInk: true,
+    nameFont: `800 22px ${FONTS}`,
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#D6F836", // the badge / brand lime
+    text: "#0B0F1A", // deep near-black name + stat ink on the white bars
+    textMuted: "#0B0F1A",
+    rowAlt: "#0B0F1A",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#0B0F1A",
+    watermarkColor: "#D6F836", // lime on the art's dark footer
+    plateBg: "rgba(11,15,26,0.08)",
+    plateRing: "rgba(11,15,26,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0B0F1A",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -3593,6 +3741,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "pmsl-cobalt": PMSL_COBALT,
   "ewc-teal": EWC_TEAL,
   "pmgc-league-blue": PMGC_LEAGUE_BLUE,
+  "pmgo-brazil-green": PMGO_BRAZIL_GREEN,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
