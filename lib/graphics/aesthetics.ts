@@ -3267,6 +3267,175 @@ const PMSL_COBALT: TemplateConfig = {
   },
 };
 
+const PMNC_PAKISTAN_LIME_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Artless MVP/announcement fallbacks: light lime → fresh green. The dark
+  // #050505 row ink from the standings art clears 7:1 on every stop.
+  css: "linear-gradient(165deg, #F2F9D6 0%, #D9F09A 55%, #B9E050 100%)",
+  decor: [],
+};
+
+/**
+ * PMNC Pakistan Lime — the Pakistan National Championship broadcast leaderboard.
+ *
+ * Art: `public/templates/pmnc-pakistan-lime/overall.png`, a TRUE 1696×2528 PNG
+ * (ratio 0.6710, 0.6% wider than 2:3). Uniform HEIGHT fit S = 1620/2528 =
+ * 0.6408227848 draws 1086.835×1620 at left −3.4177 — a 3.4px cover crop per
+ * side, zero distortion. Every canvas number below was measured off those
+ * pixels through canvasX = artX·S − 3.4177, canvasY = artY·S.
+ *
+ * - The art bakes the two-line "OVERALL LEADERBOARD" headline (white ink art
+ *   x59–759 y23–299), the black label bands (art y364–420 → canvas 233.3–269.2)
+ *   printing TEAMS | PLACE | KILL | TOTAL twice, all rank numerals #1–#24 and
+ *   both 12-row tables → labelsBakedIn + ranksBakedIn + hideScrimName.
+ * - Baked rank-ink centres (art y500, 667, 837.5 … 2393) give canvas centres
+ *   320.41 … 1533.49: rowY0 272.4114 with a 96px box seats rows 1/13 at 320.41
+ *   and rows 12/24 at 1533.49 exactly. The art's pitch is mildly non-uniform
+ *   (167→174 art px), so mid-table rows drift ≤7px; a single fixed pitch is the
+ *   closest fit (per-row centre arrays exist only on the MVP/announcement
+ *   layouts, not on `StandingsTableSpec`).
+ * - Measured label-ink centres (canvas): left PLACE 387.5 / KILL 442.1 / TOTAL
+ *   495.9; right 906.0 / 959.7 / 1013.3 (uniform +518px shift). 46px value
+ *   boxes at 364.5/419/473 and 883/936.5/990.5 centre on them without overlap.
+ *   The chicken (WWCD) compartment is the open gap left of PLACE: centres 333 /
+ *   851 → boxes at 310 / 828. Team slots start at x106 / x634, 5px clear of
+ *   the FULL baked rank ink (right edges x101 / x629 for #12 / #24).
+ * - Baked "MATCH #" ink ends art x1246 → canvas x795.7, centred canvas y120.2
+ *   in the white banner. That banner is a parallelogram whose RIGHT edge
+ *   tapers from canvas x860 at y77 to x844 at y102 and x828 at y128 — the
+ *   white wedge after the baked "#" is only ~50px wide. The digits therefore
+ *   sit at x802 in italic 800 36px (with −0.04em tracking): two digits occupy
+ *   ≈41px and stay fully on white through their y78–106 ink band. A larger
+ *   face would spill onto the green field (#5C8A00 there is 2:1, illegible).
+ *   `subtitleMode: "matchNumber"` paints ONLY the confirmed-match number.
+ * - Row interiors are white/light-grey (row 1 lime #81BA15): #050505 Exo 2 800
+ *   ink reads ≥8:1. The brand-law watermark stays hardcoded at y1570; dark
+ *   #0F1115 ink clears the light row-12 band. MVP + announcement have no art →
+ *   light lime gradient fallback.
+ */
+const PMNC_PAKISTAN_LIME: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmnc-pakistan-lime",
+  name: "PMNC Pakistan Lime",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmnc-pakistan-lime/overall.png",
+      // Uniform ×1620/2528 height fit; centred cover crop (3.42px/side), no
+      // distortion, so every measured slot lands exactly on the config coords.
+      fit: {
+        width: 1086.8354430379747,
+        height: 1620,
+        left: -3.417721518987349,
+        top: 0,
+      },
+    },
+    mvp: PMNC_PAKISTAN_LIME_FALLBACK_BG,
+    announcement: PMNC_PAKISTAN_LIME_FALLBACK_BG,
+  },
+  canvasBackground: "#81BA15", // hidden by the cover crop; matches row-1 lime
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal header;
+    // standings parks the synthetic slots and seats the digits in the banner.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `800 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL LEADERBOARD" + "MATCH #": hide the scrim name,
+      // park the optional organizer, and paint ONLY the confirmed-match digits
+      // in the measured white slot after the "#" (ink ends canvas x795).
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 802, y: 72, w: 44, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `italic 800 36px ${FONTS}`,
+      subtitleLetterSpacing: "-0.04em",
+      subtitleColor: "#5C8A00",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL LEADERBOARD"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 50, // baked rank ink centre x74; no code numeral
+        teamX: 106, // 5px clear of the widest baked rank ink (#12 ends x101)
+        teamW: 198, // ends at 304, 6px before the WWCD box at 310
+        statColumns: [
+          { key: "wwcd", x: 310 }, // chicken compartment centre 333
+          { key: "pp", x: 364.5 }, // PLACE label ink centre 387.5
+          { key: "kp", x: 419 }, // KILL ink centre 442.1
+          { key: "total", x: 473 }, // TOTAL ink centre 495.9
+        ],
+        stripX: 106,
+        stripW: 420,
+        ranksBakedIn: true,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 568, // baked rank ink centre x592.5
+        teamX: 634, // 5px clear of the widest baked rank ink (#24 ends x629)
+        teamW: 188, // ends at 822, 6px before the WWCD box at 828
+        statColumns: [
+          { key: "wwcd", x: 828 }, // centre 851
+          { key: "pp", x: 883 }, // centre 906
+          { key: "kp", x: 936.5 }, // centre 959.5
+          { key: "total", x: 990.5 }, // centre 1013.5
+        ],
+        stripX: 634,
+        stripW: 420,
+        ranksBakedIn: true,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 233, // black baked label band top (art y364)
+    rowY0: 272.4113924050633, // row-1 box centre 320.41 = baked rank ink centre
+    rowPitch: 110.2797756041427, // baked rank ink centres 320.41 … 1533.49 / 11
+    rowHeight: 96, // ≤ pitch; painted bar interior 96–100px
+    maxRowsLeft: 12,
+    // `rowsPerColumn` is deliberately NOT set: the engine's default splitRows()
+    // yields 24 → [12,12] but 16 → [8,8] — exactly the reference image's 8+8
+    // layout with the remaining baked rows left blank.
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 46,
+    logoPlate: 30,
+    logoNameGap: 34,
+    uniformRowInk: true, // the art bakes its own rank-1 lime bar
+    uniformStatInk: true,
+    nameFont: `800 21px ${FONTS}`,
+    statFont: `800 25px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#5C8A00",
+    text: "#050505",
+    textMuted: "#050505",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 pill over the baked lime bar
+    wwcdText: "#050505",
+    watermarkColor: "#0F1115",
+    plateBg: "rgba(5,5,5,0.08)",
+    plateRing: "rgba(92,138,0,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#FFFFFF",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -3293,6 +3462,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "varsity-orange": VARSITY_ORANGE,
   "pmsl-cobalt": PMSL_COBALT,
   "ewc-teal": EWC_TEAL,
+  "pmnc-pakistan-lime": PMNC_PAKISTAN_LIME,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
