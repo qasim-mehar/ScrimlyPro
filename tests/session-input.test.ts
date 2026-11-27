@@ -321,6 +321,7 @@ describe("sync guards", () => {
       "ewc-teal",
       "pmgc-league-blue",
       "pmgo-brazil-green",
+      "pmgo-teal",
     ]);
   });
 

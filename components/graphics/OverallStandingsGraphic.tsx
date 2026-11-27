@@ -112,6 +112,10 @@ function StandingsHeader({
           lineHeight: 1,
           letterSpacing: header.subtitleLetterSpacing,
           textTransform: header.subtitleTextTransform,
+          // Baked "MATCH #" slots paint only the digits: proportional Exo 2
+          // advances would shift MATCH 1's ink ~6px left of MATCH 6's. Tabular
+          // figures keep every confirmed-match number on the same centre-x.
+          fontVariantNumeric: "tabular-nums",
           color: header.subtitleColor ?? palette.accent,
         }}
       >
