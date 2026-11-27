@@ -9,6 +9,7 @@ export type AestheticId =
   | "onyx-green"
   | "pmgc-crimson"
   | "pmgc-aqua"
+  | "pmgc-sapphire"
   | "pmwi-violet"
   | "grunge-red"
   | "esports-clash"
@@ -115,6 +116,15 @@ export type StandingsTableSpec = {
     left: HeaderPillSpec;
     right: HeaderPillSpec;
   };
+
+  // --- Additive per-row ink overrides for two-tone broadcast tables --------
+  // Absent on every existing template, so their row markup is unchanged.
+  // pmgc-sapphire paints ranks 1-3 in dark navy on peach/gold bars and ranks
+  // 4-16 in pure white on navy bars; its art bakes no rank numerals.
+  topRowsTextColor?: string; // name + stat ink for the first `topRowsCount` ranks
+  topRowsCount?: number; // how many leading ranks use that ink (default 3)
+  topRowsRankInk?: string; // rank-numeral ink on those rows
+  rankPrefix?: string; // e.g. "#" → the code-drawn badge reads "#1".."#16"
 };
 
 /** One header-pill ink slot. `box` is the pill's measured bounds (the renderer
@@ -595,6 +605,9 @@ export type TemplateConfig = {
   variantLabelsBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant
   // override (grunge-red: the MVP art bakes its own labels/header)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
+  // Additive prefix painted before those digits (pmgc-sapphire's right-aligned
+  // "M N" badge). Absent → existing templates render bare digits, unchanged.
+  subtitlePrefix?: string;
   subtitleBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant: the art already
   // prints the subtitle LABEL (pmgc-aqua's baked "MATCH #"); the slot renders
   // only the digits. Mirrors variantLabelsBakedIn / variantHideScrimName.

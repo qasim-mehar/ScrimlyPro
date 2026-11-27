@@ -2951,6 +2951,297 @@ const VARSITY_ORANGE: TemplateConfig = {
   },
 };
 
+const PMSL_COBALT_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Deep cobalt → navy → ink-blue. White + pale-lilac ink clear every stop;
+  // this is used only by the artless MVP/announcement variants (parking lot).
+  css: "linear-gradient(165deg, #0D1230 0%, #141B4A 55%, #1A2460 100%)",
+  decor: [],
+};
+
+/**
+ * PMSL Cobalt — the 2024 PMSL SEA Spring broadcast standings board.
+ *
+ * Art: `overall.png` is a TRUE 1686×2528 PNG (ratio 0.66693, within a pixel of
+ * 2:3). The uniform width fit S = 1080/1686 = 0.6405694 gives a 1080×1619.359
+ * box centred at top +0.3203 — no stretch, no crop of any painted slot. Every
+ * canvas number below was measured off those pixels with
+ * canvasX = artX × S, canvasY = artY × S + 0.3203.
+ *
+ * - The art bakes the "OVERALL RANKINGS" headline, the two empty header pills,
+ *   the label band, all rank squares and all row bars → labelsBakedIn +
+ *   ranksBakedIn + dual `headerPills` (blue = session name, yellow = stage).
+ * - Header pills measured by fill colour: blue x54–568 y304–363 (centre 311,
+ *   333.5), yellow x571–1027 y305–363 (centre 799, 334). White 900 ink in the
+ *   blue pill reads 4.7:1; deep navy #1E2B7B 900 ink in the yellow pill 9.9:1.
+ * - Header ink centres / painted cell dividers (canvas): RANK 53–108, TEAM
+ *   108–278, PLACE PTS 278–330 (ink 304.5), ELIMS 330–379 (ink 355),
+ *   TOTAL PTS 379–433 (ink 408), MATCHES 433–498 (ink 468), WWCD 498–~535
+ *   (chicken icon ink 520). Right table repeats at +492..+494, NOT a uniform
+ *   shift (rank divider 601, team 770, place 823, elims 872, total 925,
+ *   matches 990, wwcd 1030). Stat order is pp → kp → total → matches → wwcd.
+ * - 12 painted row bars/column: baked rank-square tops 447, 507, 566, …,
+ *   1105 and bottoms ~497, …, 1156 → rowY0 447, fixed pitch 59.82, box
+ *   height 51 (text centre 472.5 = row-1 badge centre, row 12 centre 1130.5).
+ *   24 teams → [12,12]; the 25th overflows below the painted table.
+ * - Row interior mean luminance 0.024 → pure-white Exo 2 700 names / 800 stats
+ *   read ≥14:1. Art bakes the rank-1 blue badge, so uniformRowInk/uniformStatInk
+ *   keep every numeral white with no synthetic rank-1 accent.
+ * - MVP + announcement have no art → deep cobalt/navy gradient fallback.
+ */
+const PMSL_COBALT: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmsl-cobalt",
+  name: "PMSL Cobalt",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmsl-cobalt/overall.png",
+      // Uniform width fit; centred 0.32px letterbox. No distortion.
+      fit: { width: 1080, height: 1619.3594306049824, left: 0, top: 0.3202846975088968 },
+    },
+    mvp: PMSL_COBALT_FALLBACK_BG,
+    announcement: PMSL_COBALT_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep the normal header.
+    // Standings seats title/subtitle in the two baked pills via headerPills.
+    title: { x: 54, y: 304, w: 515, align: "center" },
+    subtitle: { x: 571, y: 305, w: 457, align: "center" },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `900 30px ${FONTS}`,
+    subtitleFont: `900 30px ${FONTS}`,
+    organizerFont: `500 1px ${FONTS}`,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 53, // baked blue/white rank square x53–100; no code numeral
+        teamX: 106, // first clear pixel right of the rank square
+        teamW: 170, // ends at 276, 2px before the PLACE PTS divider (278)
+        statColumns: [
+          { key: "pp", x: 286 }, // PLACE PTS cell 278–330, centre 304
+          { key: "kp", x: 336.5 }, // ELIMS cell 330–379, centre 354.5
+          { key: "total", x: 388 }, // TOTAL PTS cell 379–433, centre 406
+          { key: "matches", x: 447.5 }, // MATCHES cell 433–498, centre 465.5
+          { key: "wwcd", x: 498.5 }, // chicken cell 498–535, centre 516.5
+        ],
+        stripX: 106,
+        stripW: 429, // right edge 535, inside the painted bar
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 547, // baked rank square x547–594
+        teamX: 600,
+        teamW: 170, // ends at 770, before the right PLACE PTS divider
+        statColumns: [
+          { key: "pp", x: 778.5 }, // cell 770–823, centre 796.5
+          { key: "kp", x: 829.5 }, // cell 823–872, centre 847.5
+          { key: "total", x: 880.5 }, // cell 872–925, centre 898.5
+          { key: "matches", x: 939.5 }, // cell 925–990, centre 957.5
+          { key: "wwcd", x: 992 }, // cell 990–1030, centre 1010
+        ],
+        stripX: 600,
+        stripW: 430, // right edge 1030
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 393, // baked label band top — code draws no labels
+    rowY0: 447,
+    rowPitch: 59.82, // baked rank-square ink centres / 11
+    rowHeight: 51,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 36, // fits the narrow 37px WWCD compartment without crossing dividers
+    logoPlate: 34,
+    logoNameGap: 40,
+    uniformRowInk: true, // the baked blue #1 badge carries rank-1 emphasis
+    uniformStatInk: true, // every stat numeral stays broadcast white
+    nameFont: `700 21px ${FONTS}`,
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+    headerPills: {
+      left: {
+        box: { x: 54, y: 304, w: 515, align: "center" },
+        height: 60,
+        font: `900 30px ${FONTS}`,
+        color: "#FFFFFF", // white on the measured blue fill (4.7:1)
+        text: "title",
+      },
+      right: {
+        box: { x: 571, y: 305, w: 457, align: "center" },
+        height: 59,
+        font: `900 30px ${FONTS}`,
+        color: "#1E2B7B", // deep navy on the measured yellow fill (9.9:1)
+        text: "subtitle",
+      },
+    },
+  },
+  palette: {
+    accent: "#5E5EFE", // the measured blue pill / rank-badge fill
+    text: "#FFFFFF", // pure white row ink on the dark cobalt bars (≥14:1)
+    textMuted: "#DCD9FF", // pale lilac for supporting slots
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 strip; badge is baked
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.85)", // clears the cobalt footer
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(94,94,254,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0D1230",
+  },
+};
+
+const PMGC_SAPPHIRE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Dark sapphire → royal blue. Pure white + electric-cyan ink clear every
+  // stop (≥ 4.5:1), so the artless MVP/announcement variants stay legible.
+  css: "linear-gradient(165deg, #0A1329 0%, #162E62 100%)",
+  decor: [],
+};
+
+/** PMGC Sapphire — the 2024 PMGC Group Stage broadcast leaderboard. The art is
+ *  a TRUE 1536×2730 PNG (taller than 2:3), uniformly width-fitted to 1080
+ *  (×0.703125 → 1080×1919.53125) and centre-cropped (top −149.765625): the
+ *  exact `object-fit: cover` mapping of art pixels onto the 1080×1620 canvas.
+ *  Every number below was measured off those pixels after that fit:
+ *  - Baked "OVERALL RANKINGS" ink ends canvas x814 and spans y79..168. The
+ *    empty slot immediately to its right (x824, y88, w180) carries the dynamic
+ *    "M N" badge in white Exo 2 900 — the reference art's "GROUP / DAY" block.
+ *    variantHideScrimName.standings hides the session name (title is baked).
+ *  - Baked header band y≈205..245 prints RANK | TEAM | WWCD | PLACE PTS |
+ *    ELIMS | TOTAL twice (labelsBakedIn). Measured ink centres: left 305.4 /
+ *    369 / 432.2 / 496.5, right 820 / 882 / 945 / 1009 (≈+512, uniform).
+ *    52px value boxes sit at 279 / 343 / 406 / 470 and 794 / 856 / 919 /
+ *    983 — centred on the baked labels, non-overlapping both sides.
+ *  - 14 painted bars per column; a fixed ≈78px pitch with a 66px box centred
+ *    at rowY0 253 lands ranks 1..8 dead-centre on the top eight bars (max
+ *    measured drift < 2px). The art bakes NO rank numerals, so the renderer
+ *    draws "#1".."#16" (rankPrefix). rowsPerColumn 8 splits 16 → [8,8].
+ *  - Ranks 1–3 (left column) sit on peach/gold bars → dark-navy #141A29 ink;
+ *    ranks 4–16 sit on navy bars → pure #FFFFFF ink. Rank numerals follow the
+ *    same rule, with electric-cyan #60CDFF from rank 4 down.
+ *  - MVP + announcement have no art → dark sapphire gradient fallback. The
+ *    brand-law watermark stays hardcoded. */
+const PMGC_SAPPHIRE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgc-sapphire",
+  name: "PMGC Sapphire",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgc-sapphire/overall.png",
+      fit: { width: 1080, height: 1919.53125, left: 0, top: -149.765625 },
+    },
+    mvp: PMGC_SAPPHIRE_FALLBACK_BG,
+    announcement: PMGC_SAPPHIRE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitlePrefix: "M ", // right-aligned badge reads "M 3" / "M" with no count
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep the normal header.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `700 40px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The baked title's right edge is x814; the badge starts 10px clear of
+      // it and sits on the title's own baseline band (ink y79..168).
+      subtitle: { x: 824, y: 88, w: 180, align: "left" },
+      subtitleFont: `900 56px ${FONTS}`,
+      subtitleColor: "#FFFFFF",
+      // No optional organizer text may touch the baked title or header band.
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 40, // centre 64 — under the baked "RANK" label (centre ~61)
+        teamX: 116, // first clear pixel right of the rank compartment
+        teamW: 150, // ends at 266, before the WWCD box at 279
+        statColumns: [
+          { key: "wwcd", x: 279 }, // WWCD ink centre 305.4
+          { key: "pp", x: 343 }, // PLACE PTS ink centre 369
+          { key: "kp", x: 406 }, // ELIMS ink centre 432.2
+          { key: "total", x: 470 }, // TOTAL ink centre 496.5
+        ],
+        stripX: 38,
+        stripW: 486,
+        rowsPerColumn: 8,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 548, // centre 572 — under the right baked "RANK" label
+        teamX: 628,
+        teamW: 150, // ends at 778, before the WWCD box at 794
+        statColumns: [
+          { key: "wwcd", x: 794 }, // ink centre 820
+          { key: "pp", x: 856 }, // ink centre 882
+          { key: "kp", x: 919 }, // ink centre 945
+          { key: "total", x: 983 }, // ink centre 1009
+        ],
+        stripX: 546,
+        stripW: 486,
+        rowsPerColumn: 8,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 205,
+    rowY0: 253, // bar 1 top canvas 250; 66px box centre 286 ≈ painted centre 284.5
+    rowPitch: 78, // least-squares fit of the 14 painted bar centres (~78.1)
+    rowHeight: 66,
+    maxRowsLeft: 8,
+    rowsPerColumn: 8,
+    fixedRowPitch: true,
+    ranksBakedIn: false, // table-wide default; art leaves the rank boxes empty
+    statBoxW: 52,
+    rankPrefix: "#", // unbaked rank badges: "#1".."#16"
+    topRowsCount: 3, // left-column ranks 1–3 ride the peach/gold bars
+    topRowsTextColor: "#141A29", // dark navy on peach (≈8.9:1 WCAG AA)
+    topRowsRankInk: "#141A29",
+    nameFont: `800 20px ${FONTS}`,
+    statFont: `800 22px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#60CDFF", // electric-cyan rank numeral from #4 down
+    text: "#FFFFFF", // pure white on the navy bars (≈14:1 WCAG AA)
+    textMuted: "#60CDFF",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // rank-1 ink is supplied by topRowsTextColor
+    wwcdText: "#141A29",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(96,205,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0A1329",
+  },
+};
+
 const EWC_TEAL_FONTS = '"Rajdhani", "Exo 2", sans-serif';
 
 const EWC_TEAL_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
@@ -3115,158 +3406,6 @@ const EWC_TEAL: TemplateConfig = {
   },
 };
 
-const PMSL_COBALT_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
-  type: "gradient",
-  // Deep cobalt → navy → ink-blue. White + pale-lilac ink clear every stop;
-  // this is used only by the artless MVP/announcement variants (parking lot).
-  css: "linear-gradient(165deg, #0D1230 0%, #141B4A 55%, #1A2460 100%)",
-  decor: [],
-};
-
-/**
- * PMSL Cobalt — the 2024 PMSL SEA Spring broadcast standings board.
- *
- * Art: `overall.png` is a TRUE 1686×2528 PNG (ratio 0.66693, within a pixel of
- * 2:3). The uniform width fit S = 1080/1686 = 0.6405694 gives a 1080×1619.359
- * box centred at top +0.3203 — no stretch, no crop of any painted slot. Every
- * canvas number below was measured off those pixels with
- * canvasX = artX × S, canvasY = artY × S + 0.3203.
- *
- * - The art bakes the "OVERALL RANKINGS" headline, the two empty header pills,
- *   the label band, all rank squares and all row bars → labelsBakedIn +
- *   ranksBakedIn + dual `headerPills` (blue = session name, yellow = stage).
- * - Header pills measured by fill colour: blue x54–568 y304–363 (centre 311,
- *   333.5), yellow x571–1027 y305–363 (centre 799, 334). White 900 ink in the
- *   blue pill reads 4.7:1; deep navy #1E2B7B 900 ink in the yellow pill 9.9:1.
- * - Header ink centres / painted cell dividers (canvas): RANK 53–108, TEAM
- *   108–278, PLACE PTS 278–330 (ink 304.5), ELIMS 330–379 (ink 355),
- *   TOTAL PTS 379–433 (ink 408), MATCHES 433–498 (ink 468), WWCD 498–~535
- *   (chicken icon ink 520). Right table repeats at +492..+494, NOT a uniform
- *   shift (rank divider 601, team 770, place 823, elims 872, total 925,
- *   matches 990, wwcd 1030). Stat order is pp → kp → total → matches → wwcd.
- * - 12 painted row bars/column: baked rank-square tops 447, 507, 566, …,
- *   1105 and bottoms ~497, …, 1156 → rowY0 447, fixed pitch 59.82, box
- *   height 51 (text centre 472.5 = row-1 badge centre, row 12 centre 1130.5).
- *   24 teams → [12,12]; the 25th overflows below the painted table.
- * - Row interior mean luminance 0.024 → pure-white Exo 2 700 names / 800 stats
- *   read ≥14:1. Art bakes the rank-1 blue badge, so uniformRowInk/uniformStatInk
- *   keep every numeral white with no synthetic rank-1 accent.
- * - MVP + announcement have no art → deep cobalt/navy gradient fallback.
- */
-const PMSL_COBALT: TemplateConfig = {
-  ...GEOMETRY,
-  id: "pmsl-cobalt",
-  name: "PMSL Cobalt",
-  backgrounds: {
-    standings: {
-      type: "image",
-      src: "/templates/pmsl-cobalt/overall.png",
-      // Uniform width fit; centred 0.32px letterbox. No distortion.
-      fit: { width: 1080, height: 1619.3594306049824, left: 0, top: 0.3202846975088968 },
-    },
-    mvp: PMSL_COBALT_FALLBACK_BG,
-    announcement: PMSL_COBALT_FALLBACK_BG,
-  },
-  labelsBakedIn: true,
-  uniformMvpRows: true,
-  header: {
-    // Fallback variants (MVP/announcement gradient) keep the normal header.
-    // Standings seats title/subtitle in the two baked pills via headerPills.
-    title: { x: 54, y: 304, w: 515, align: "center" },
-    subtitle: { x: 571, y: 305, w: 457, align: "center" },
-    organizer: { x: -9999, y: -9999, w: 0 },
-    titleFont: `900 30px ${FONTS}`,
-    subtitleFont: `900 30px ${FONTS}`,
-    organizerFont: `500 1px ${FONTS}`,
-  },
-  standings: {
-    columns: [
-      {
-        rankX: 53, // baked blue/white rank square x53–100; no code numeral
-        teamX: 106, // first clear pixel right of the rank square
-        teamW: 170, // ends at 276, 2px before the PLACE PTS divider (278)
-        statColumns: [
-          { key: "pp", x: 286 }, // PLACE PTS cell 278–330, centre 304
-          { key: "kp", x: 336.5 }, // ELIMS cell 330–379, centre 354.5
-          { key: "total", x: 388 }, // TOTAL PTS cell 379–433, centre 406
-          { key: "matches", x: 447.5 }, // MATCHES cell 433–498, centre 465.5
-          { key: "wwcd", x: 498.5 }, // chicken cell 498–535, centre 516.5
-        ],
-        stripX: 106,
-        stripW: 429, // right edge 535, inside the painted bar
-        ranksBakedIn: true,
-        rowsPerColumn: 12,
-        fixedRowPitch: true,
-      },
-      {
-        rankX: 547, // baked rank square x547–594
-        teamX: 600,
-        teamW: 170, // ends at 770, before the right PLACE PTS divider
-        statColumns: [
-          { key: "pp", x: 778.5 }, // cell 770–823, centre 796.5
-          { key: "kp", x: 829.5 }, // cell 823–872, centre 847.5
-          { key: "total", x: 880.5 }, // cell 872–925, centre 898.5
-          { key: "matches", x: 939.5 }, // cell 925–990, centre 957.5
-          { key: "wwcd", x: 992 }, // cell 990–1030, centre 1010
-        ],
-        stripX: 600,
-        stripW: 430, // right edge 1030
-        ranksBakedIn: true,
-        rowsPerColumn: 12,
-        fixedRowPitch: true,
-      },
-    ],
-    headerLabelsY: 393, // baked label band top — code draws no labels
-    rowY0: 447,
-    rowPitch: 59.82, // baked rank-square ink centres / 11
-    rowHeight: 51,
-    maxRowsLeft: 12,
-    rowsPerColumn: 12,
-    fixedRowPitch: true,
-    ranksBakedIn: true,
-    statBoxW: 36, // fits the narrow 37px WWCD compartment without crossing dividers
-    logoPlate: 34,
-    logoNameGap: 40,
-    uniformRowInk: true, // the baked blue #1 badge carries rank-1 emphasis
-    uniformStatInk: true, // every stat numeral stays broadcast white
-    nameFont: `700 21px ${FONTS}`,
-    statFont: `800 24px ${FONTS}`,
-    labelFont: `700 18px ${FONTS}`,
-    headerPills: {
-      left: {
-        box: { x: 54, y: 304, w: 515, align: "center" },
-        height: 60,
-        font: `900 30px ${FONTS}`,
-        color: "#FFFFFF", // white on the measured blue fill (4.7:1)
-        text: "title",
-      },
-      right: {
-        box: { x: 571, y: 305, w: 457, align: "center" },
-        height: 59,
-        font: `900 30px ${FONTS}`,
-        color: "#1E2B7B", // deep navy on the measured yellow fill (9.9:1)
-        text: "subtitle",
-      },
-    },
-  },
-  palette: {
-    accent: "#5E5EFE", // the measured blue pill / rank-badge fill
-    text: "#FFFFFF", // pure white row ink on the dark cobalt bars (≥14:1)
-    textMuted: "#DCD9FF", // pale lilac for supporting slots
-    rowAlt: "#FFFFFF",
-    rowAltOpacity: 0, // the art paints the bars — no code strips over them
-    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 strip; badge is baked
-    wwcdText: "#FFFFFF",
-    watermarkColor: "rgba(255,255,255,0.85)", // clears the cobalt footer
-    plateBg: "rgba(255,255,255,0.10)",
-    plateRing: "rgba(94,94,254,0.5)",
-    medalGold: "#F0C44C",
-    medalSilver: "#C9D1DD",
-    medalBronze: "#B4763F",
-    medalText: "#0D1230",
-  },
-};
-
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -3278,6 +3417,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "onyx-green": ONYX_GREEN,
   "pmgc-crimson": PMGC_CRIMSON,
   "pmgc-aqua": PMGC_AQUA,
+  "pmgc-sapphire": PMGC_SAPPHIRE,
   "pmwi-violet": PMWI_VIOLET,
   "grunge-red": GRUNGE_RED,
   "esports-clash": ESPORTS_CLASH,

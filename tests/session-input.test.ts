@@ -303,6 +303,7 @@ describe("sync guards", () => {
       "onyx-green",
       "pmgc-crimson",
       "pmgc-aqua",
+      "pmgc-sapphire",
       "pmwi-violet",
       "grunge-red",
       "esports-clash",
