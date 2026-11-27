@@ -303,6 +303,7 @@ describe("sync guards", () => {
       "onyx-green",
       "pmgc-crimson",
       "pmgc-aqua",
+      "pmgc-sapphire",
       "pmwi-violet",
       "grunge-red",
       "esports-clash",
@@ -316,6 +317,18 @@ describe("sync guards", () => {
       "urban-slate",
       "varsity-purple",
       "varsity-orange",
+      "pmsl-cobalt",
+      "ewc-teal",
+      "pmgc-league-blue",
+      "pmgo-brazil-green",
+      "pmgo-teal",
+      "pmhi-crimson",
+      "pmnc-pakistan-lime",
+      "pmpl-sea-purple",
+      "pmrc-lime",
+      "pmsl-csa-amber",
+      "pmwc-blue",
+      "pmwc-orange",
     ]);
   });
 

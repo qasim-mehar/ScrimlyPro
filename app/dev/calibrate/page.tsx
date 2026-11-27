@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "@/lib/auth/action-guard";
 
+import { EWC_TEAL_STANDINGS, ewcTealStandings } from "@/lib/fixtures/ewcTeal";
+import { PMSL_COBALT_STANDINGS } from "@/lib/fixtures/pmslCobalt";
 import type { StandingRow } from "@/lib/scoring";
 import { CalibrateClient } from "./CalibrateClient";
 
@@ -73,13 +75,35 @@ export default async function CalibratePage() {
       <h1 className="text-xl font-bold tracking-widest text-gold">GRAPHICS CALIBRATION</h1>
       <p className="mt-1 text-sm text-muted">
         Dev route. Dummy standings AND announcement teams at 16 / 19 / 24 / 25 teams over each
-        template&apos;s art, 100px grid above it, live config readout beside it. Select
-        <strong> Varsity Orange</strong> + <strong>announcement</strong> + <strong>24 teams</strong>{" "}
-        to check the two 12-row dashed-pipe columns against the art.
+        template&apos;s art, 100px grid above it, live config readout beside it. The 24-team
+        dataset is the transcribed <strong>PMSL Cobalt</strong> board — select
+        <strong> PMSL Cobalt</strong> + <strong>standings</strong> + <strong>24 teams</strong> to
+        check the two 12-row columns, five stat cells and dual header pills against the art.
       </p>
       <div className="mt-4">
         <CalibrateClient
-          datasets={{ 16: dataset(16), 19: dataset(19), 24: dataset(24), 25: dataset(25) }}
+          datasets={{
+            16: dataset(16),
+            19: dataset(19),
+            24: [...PMSL_COBALT_STANDINGS],
+            25: dataset(25),
+          }}
+        />
+      </div>
+      <h2 className="mt-8 text-lg font-bold tracking-widest text-gold">EWC TEAL — 24-ROW LADDER</h2>
+      <p className="mt-1 text-sm text-muted">
+        Dedicated EWC fixture: select <strong>24 teams</strong> to check the single-column pitch,
+        five stat boxes and the MATCH# digit slot against the cyber-teal art.
+      </p>
+      <div className="mt-4">
+        <CalibrateClient
+          initialAestheticId="ewc-teal"
+          datasets={{
+            16: ewcTealStandings(16),
+            19: ewcTealStandings(19),
+            24: [...EWC_TEAL_STANDINGS],
+            25: dataset(25),
+          }}
         />
       </div>
     </main>

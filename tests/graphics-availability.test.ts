@@ -21,6 +21,9 @@ const ART_IDS: Record<GraphicVariant, string[]> = {
     "pmgc-crimson",
     "pmgc-aqua",
     "pmwi-violet",
+    "pmsl-cobalt",
+    "ewc-teal",
+    "pmrc-lime",
   ],
   mvp: [
     "challengers-red",
@@ -48,9 +51,15 @@ const GRADIENT_ONLY = ["dark-gold", "purple-butterfly", "pink-blossom"];
 
 describe("art-backed option lists", () => {
   it.each(["standings", "mvp", "announcement"] as const)(
-    "%s offers exactly the skins with a template image",
+    "%s offers only the skins with a template image",
     (variant) => {
-      expect(selectableAestheticIds(variant)).toEqual(ART_IDS[variant]);
+      const actual = selectableAestheticIds(variant);
+      // Every pinned id keeps its art; parallel template waves may add more
+      // art-backed skins without needing to rewrite this list every time.
+      for (const id of ART_IDS[variant]) expect(actual).toContain(id);
+      for (const id of actual) {
+        expect(AESTHETICS[id]!.backgrounds[variant].type).toBe("image");
+      }
     },
   );
 
@@ -62,7 +71,10 @@ describe("art-backed option lists", () => {
 
   it("hides gradient-only skins everywhere", () => {
     const all = selectableAestheticIds();
-    expect(all).toHaveLength(20);
+    // Pin every art-backed skin as selectable without hard-coding the count —
+    // new P8 art templates keep growing the picker.
+    expect(all.length).toBeGreaterThanOrEqual(21);
+    expect(all).toHaveLength(AESTHETIC_IDS.length - GRADIENT_ONLY.length);
     for (const id of GRADIENT_ONLY) {
       expect(all).not.toContain(id);
       for (const variant of ["standings", "mvp", "announcement"] as const) {

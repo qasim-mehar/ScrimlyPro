@@ -231,6 +231,29 @@ export function effectiveAnnouncementSpec(config: TemplateConfig): AnnouncementS
   };
 }
 
+/**
+ * Single-line font size for a baked header pill (pmsl-cobalt). The art gives
+ * the pill a fixed box; a long session name or stage must shrink, never wrap
+ * or spill into the neighbouring pill. Pure arithmetic (no DOM measurement):
+ * Exo 2 900 uppercase averages ~0.62em per glyph, so the worst-case advance
+ * is `chars × 0.62 × fontSize`. 8px of inset per side keeps the ink clear of
+ * the pill's rounded corners. The result never exceeds the configured size
+ * and never falls below `minPx`.
+ */
+export function fitPillFontSize(
+  text: string,
+  font: string,
+  boxW: number,
+  minPx = 14,
+): number {
+  const size = /(\d+(?:\.\d+)?)px/.exec(font);
+  const maxPx = size ? Number(size[1]) : 30;
+  const chars = Math.max(1, Array.from(text).length);
+  const usable = Math.max(40, boxW - 16);
+  const fitted = Math.floor((usable / (chars * 0.62)) * 10) / 10;
+  return Math.max(minPx, Math.min(maxPx, fitted));
+}
+
 /** Slot → absolute-position style. width only when slot.w defined. */
 export function slotToStyle(slot: Slot): CSSProperties {
   const style: CSSProperties = { position: "absolute", left: slot.x, top: slot.y };
