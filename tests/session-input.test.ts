@@ -328,6 +328,7 @@ describe("sync guards", () => {
       "pmrc-lime",
       "pmsl-csa-amber",
       "pmwc-blue",
+      "pmwc-orange",
     ]);
   });
 
