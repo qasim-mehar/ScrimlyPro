@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { AuthConsole } from "@/components/auth/auth-console";
+import { RegistrationAuth } from "@/components/auth/registration-auth";
 
 export const metadata = { title: "Sign in — ScrimlyPro" };
 
@@ -17,7 +17,7 @@ export const metadata = { title: "Sign in — ScrimlyPro" };
 export default function LoginPage() {
   return (
     <Suspense>
-      <AuthConsole mode="login" />
+      <RegistrationAuth mode="login" />
     </Suspense>
   );
 }
