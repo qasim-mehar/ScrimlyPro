@@ -4682,6 +4682,170 @@ const PMSL_CSA_AMBER: TemplateConfig = {
   },
 };
 
+const PMWC_BLUE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Artless MVP/announcement variants: pale cyan → lavender → ice. Keeps the
+  // measured #0F172A row ink readable (≥7:1 at every stop); standings uses art.
+  css: "linear-gradient(160deg, #E6FBFF 0%, #C7D9F5 55%, #ADC3EC 100%)",
+  decor: [],
+};
+
+/**
+ * PMWC Blue — the 2022 PMWC broadcast OVERALL RANKINGS board.
+ *
+ * Art: `overall.png` is a TRUE 1027×1531 PNG (magic bytes verified; no JPEG
+ * payload). Uniform width fit S = 1080/1027 = 1.0516066212268744 gives a
+ * 1080×1610.0097 box centred with a 4.9951px top/bottom letterbox; the 10px of
+ * exposed canvas is filled by `canvasBackground` #1B1458 (the art's measured
+ * top/bottom edges are #171552 / #2B216C).
+ * canvasX = artX × S, canvasY = artY × S + 4.9951 — no distortion, no crop.
+ *
+ * - The art bakes the "OVERALL RANKINGS" headline AND the words "MATCH #",
+ *   with the digit slot AFTER the "#" left deliberately blank. We therefore
+ *   paint ONLY the confirmed-match digits (subtitleMode "matchNumber") and
+ *   park the code title/organizer off-canvas (hideScrimName) — never a second
+ *   "MATCH #". The digit slot is measured from the baked # ink: art x903 →
+ *   canvas x949.6, baseline art y333 → canvas y355.2.
+ * - The digits use the title's Exo 2 800 face and #E6FBFF ink at 66px, exactly
+ *   55% of the 120px header title size, and sit at x958 (8.4px clear of the #).
+ * - Baked label band (art y410 → canvas 436) and 12 baked rank squares per
+ *   column (#1–#12 left, #13–#24 right) → labelsBakedIn + ranksBakedIn.
+ * - 12 painted row bars/column: left art tops 453…1170, right 453…1169; row-1
+ *   centre art 481 (canvas 510.8), row-12 centre art 1197.5 (canvas 1264.3);
+ *   pitch ≈65.1 art px → 68.45 canvas px; a 57px text box keeps row 12's
+ *   bottom inside the last painted bar. Text-box centre rowY0 482.2 + 57/2 =
+ *   510.7 lands on the painted centre (rows 1/13 and 12/24 within 0.7px).
+ * - Stat label ink centres (art → canvas): PLACE PTS 344/835 → 361.8/878.4,
+ *   ELIMS 406/897 → 427.1/943.6, TOTAL 472/958 → 496.6/1007.6. Stat order is
+ *   pp → kp → total (no WWCD/MATCHES columns). 52px boxes centre on those
+ *   midpoints without crossing the ~66px baked cell spacing.
+ * - Row ink is #0F172A (measured 13.8:1 on the cyan bars, 16.8:1 on white);
+ *   rank-1 emphasis and zebra strips are baked, so uniformRowInk/uniformStatInk
+ *   keep every rendered numeral identical and rowAltOpacity is 0.
+ * - 16 teams fill 12 left + 4 right (splitRowsAt 12): the baked rank squares
+ *   are FIXED at #1–#12 / #13–#24, so an 8+8 fill would put rank 9 on the
+ *   painted #13 square. The unpainted remainder rows simply stay blank.
+ */
+const PMWC_BLUE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmwc-blue",
+  name: "PMWC Blue",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmwc-blue/overall.png",
+      // Uniform width fit; centred 4.9951px letterbox filled by canvasBackground.
+      fit: { width: 1080, height: 1610.0097370983447, left: 0, top: 4.995131450827671 },
+    },
+    mvp: PMWC_BLUE_FALLBACK_BG,
+    announcement: PMWC_BLUE_FALLBACK_BG,
+  },
+  canvasBackground: "#1B1458",
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // FALLBACK variants only (MVP/announcement gradient): keep the title/
+    // subtitle boxes apart and use dark Exo 2 800 ink on the pale gradient.
+    // The broadcast headline typography lives in variantHeaders.standings —
+    // the base 120px/66px + pale ink would overlap and vanish here.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `800 54px ${FONTS}`,
+    subtitleFont: `800 40px ${FONTS}`,
+    subtitleColor: "#0F172A",
+    organizerFont: `500 26px ${FONTS}`,
+    titleTextTransform: "uppercase",
+    subtitleTextTransform: "uppercase",
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes the title and "MATCH #" — park the scrim name and the
+      // optional organizer; paint only digits in the blank slot after the #.
+      // Exo 2 800 uppercase at 120px, with the digits at 55% (66px) in the
+      // title's #E6FBFF ink, baseline-aligned to the baked MATCH # bbox.
+      title: { x: -9999, y: -9999, w: 0 },
+      titleFont: `800 120px ${FONTS}`,
+      subtitle: { x: 958, y: 298, w: 100, align: "left" },
+      subtitleFont: `800 66px ${FONTS}`,
+      subtitleColor: "#E6FBFF",
+      subtitleTextTransform: "uppercase",
+      organizer: { x: -9999, y: -9999, w: 0 },
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // baked "OVERALL RANKINGS MATCH #"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 39, // baked rank square art x37–89; no code numeral
+        teamX: 100, // first clear pixel of the cyan bar (art x95)
+        teamW: 230, // ends at 330, clear of the PLACE PTS box (starts 335.8)
+        statColumns: [
+          { key: "pp", x: 335.8 }, // PLACE PTS ink centre 361.8
+          { key: "kp", x: 401.1 }, // ELIMS ink centre 427.1
+          { key: "total", x: 470.6 }, // TOTAL ink centre 496.6
+        ],
+        stripX: 100,
+        stripW: 430, // ends at 530 = painted bar right edge
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 552, // baked rank square art x525–582
+        teamX: 613, // first clear pixel of the white bar (art x583)
+        teamW: 235, // ends at 848, clear of the PLACE PTS box (starts 852.4)
+        statColumns: [
+          { key: "pp", x: 852.4 }, // PLACE PTS ink centre 878.4
+          { key: "kp", x: 917.6 }, // ELIMS ink centre 943.6
+          { key: "total", x: 981.6 }, // TOTAL ink centre 1007.6
+        ],
+        stripX: 613,
+        stripW: 427, // ends at 1040 = painted bar right edge
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 436, // baked label band top — code draws no labels
+    rowY0: 482.2,
+    rowPitch: 68.45,
+    rowHeight: 57,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 52,
+    logoPlate: 34,
+    logoNameGap: 42,
+    uniformRowInk: true, // the baked rank art carries all rank-1 emphasis
+    uniformStatInk: true,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#5B2BD9",
+    text: "#0F172A", // dark navy on the cyan/white bars (≥13:1)
+    textMuted: "#27405C",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 strip
+    wwcdText: "#0F172A",
+    watermarkColor: "#E0F7FF", // 13.6:1 on the measured dark-purple footer
+    plateBg: "rgba(255,255,255,0.12)",
+    plateRing: "rgba(15,23,42,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0F172A",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -4717,6 +4881,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "pmpl-sea-purple": PMPL_SEA_PURPLE,
   "pmrc-lime": PMRC_LIME,
   "pmsl-csa-amber": PMSL_CSA_AMBER,
+  "pmwc-blue": PMWC_BLUE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
