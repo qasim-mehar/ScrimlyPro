@@ -3267,6 +3267,164 @@ const PMSL_COBALT: TemplateConfig = {
   },
 };
 
+const PMHI_CRIMSON_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // The PMHI art only backs standings. MVP + announcement fall back to the
+  // same deep-crimson broadcast wash; pure-white ink clears every stop.
+  css: "linear-gradient(165deg, #2A0710 0%, #5C0D1E 55%, #1A0508 100%)",
+  decor: [],
+};
+
+/**
+ * PMHI Crimson — the 2023 PMHI Indonesia broadcast OVERALL standings board.
+ *
+ * Art: `standings.png` is a TRUE 1696×2528 PNG (byte-identical to the supplied
+ * `overall.png`). It is NOT exactly 2:3, so it is uniformly WIDTH-fitted:
+ * S = 1080/1696 = 0.6367924528 → 1080×1609.8113, centred with a 5.0943px
+ * letterbox top/bottom (filled by `canvasBackground`). No stretching; every
+ * number below is an art-pixel measurement converted by canvasY = artY×S + 5.0943.
+ *
+ * - Art bakes the teal "OVERALL RANKINGS" title, the cyan label band
+ *   (art y666–742 → canvas 429.2–477.6), all #1–#24 rank ink and all row
+ *   bars → labelsBakedIn + ranksBakedIn + hidden scrim name. No code labels,
+ *   no code numerals, no re-rendered title.
+ * - 12 painted bars per column: baked row-1 rank centre art y808 → canvas
+ *   519.7; separator tops 746, 872, 994, 1119, 1245, … → least-squares pitch
+ *   125.2 art = 79.73 canvas. Text box top art y747 → canvas 480.7, height
+ *   78 (≤ pitch), so row 1's centre lands on the baked rank ink and row 12's
+ *   centre is canvas 1396.7 (last bar bottom ≈1436). 24 → [12,12].
+ * - Header label ink centres (canvas): left WWCD 292.3 / PLACE PTS 369.3 /
+ *   ELIMS 441.9 / TOTAL 498.9; right +528.9 (821.1 / 898.5 / 970.2 / 1027.5).
+ *   The right shift is NOT uniform; each 48px stat box is centred on its own
+ *   measured ink. TEAM starts at art 205 / 1036 → canvas 136 / 665.
+ * - The red "MATCH #" pill occupies art x646–853 y522–598; the empty black
+ *   digit slot is art x854–1060 → canvas x548.9 w131.2 y337.5. Exo 2 800
+ *   uppercase pure-white digits are centred in that box (≤3 digits fit).
+ * - Row interiors are dark crimson (#6E0D1D mean): pure-white Exo 2 800
+ *   names/stats clear 7:1. The rank-1 emphasis is baked into the art, so no
+ *   synthetic strip/accent is drawn. MVP + announcement use the crimson wash.
+ */
+const PMHI_CRIMSON: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmhi-crimson",
+  name: "PMHI Crimson",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmhi-crimson/standings.png",
+      fit: {
+        width: 1080,
+        height: 1609.811320754717,
+        left: 0,
+        top: 5.094339622641509,
+      },
+    },
+    mvp: PMHI_CRIMSON_FALLBACK_BG,
+    announcement: PMHI_CRIMSON_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  // Neutral deep-crimson fill behind the 5.09px uniform-fit letterbox: no
+  // transparent strip in the exported PNG, no stretching. The supplied art's
+  // own top/bottom edges differ in brightness, so one colour cannot match both.
+  canvasBackground: "#2A0710",
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL RANKINGS" and the words "MATCH #"; park the
+      // title/organizer and paint ONLY the confirmed-match digits in the
+      // measured black slot to the right of the baked pill.
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 548.92, y: 337.5, w: 131.17, align: "center" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `800 36px ${FONTS}`,
+      subtitleColor: "#FFFFFF",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 43.3, // baked white rank ink x69–104 art; no code numeral
+        teamX: 136, // first clear pixel of the TEAM cell (art x205)
+        teamW: 130, // ends at 266, 2px before the WWCD box
+        statColumns: [
+          { key: "wwcd", x: 268.29 },
+          { key: "pp", x: 345.34 },
+          { key: "kp", x: 417.93 },
+          { key: "total", x: 474.93 },
+        ],
+        stripX: 38,
+        stripW: 490,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 565.47, // baked rank ink art x895–931
+        teamX: 665, // TEAM cell starts art x1036 (NOT +529 uniform)
+        teamW: 130,
+        statColumns: [
+          { key: "wwcd", x: 797.14 },
+          { key: "pp", x: 874.51 },
+          { key: "kp", x: 946.15 },
+          { key: "total", x: 1003.46 },
+        ],
+        stripX: 560,
+        stripW: 490,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 429.2, // cyan baked label band top (art y666)
+    rowY0: 480.72, // text box top art y747; row-1 centre = 519.7
+    rowPitch: 79.73, // least-squares fit of the 12 baked bar centres (125.2 art)
+    rowHeight: 78, // painted interior height, always ≤ rowPitch
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48,
+    logoPlate: 30,
+    logoNameGap: 36,
+    uniformRowInk: true, // rank-1 badge is baked; no synthetic highlight
+    uniformStatInk: true,
+    nameFont: `800 22px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 20px ${FONTS}`,
+  },
+  palette: {
+    accent: "#46D6D5", // the art's teal title ink
+    text: "#FFFFFF", // pure-white Exo 2 800 names + stats
+    textMuted: "#CFE9E8",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "#FFFFFF", // brand watermark ink; position stays hardcoded
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(255,255,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#1A0508",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -3293,6 +3451,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "varsity-orange": VARSITY_ORANGE,
   "pmsl-cobalt": PMSL_COBALT,
   "ewc-teal": EWC_TEAL,
+  "pmhi-crimson": PMHI_CRIMSON,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
