@@ -28,7 +28,8 @@ export type AestheticId =
   | "pmgc-league-blue"
   | "pmgo-brazil-green"
   | "pmgo-teal"
-  | "pmhi-crimson";
+  | "pmhi-crimson"
+  | "pmnc-pakistan-lime";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {

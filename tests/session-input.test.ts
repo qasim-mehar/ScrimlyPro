@@ -323,6 +323,7 @@ describe("sync guards", () => {
       "pmgo-brazil-green",
       "pmgo-teal",
       "pmhi-crimson",
+      "pmnc-pakistan-lime",
     ]);
   });
 
