@@ -3406,6 +3406,165 @@ const EWC_TEAL: TemplateConfig = {
   },
 };
 
+const PMGC_LEAGUE_BLUE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Royal blue → cobalt → navy. White watermark/text clears every stop;
+  // used only by the artless MVP + announcement variants (parking lot).
+  css: "linear-gradient(165deg, #0E3A9E 0%, #1565D8 55%, #0A1F6B 100%)",
+  decor: [],
+};
+
+/**
+ * PMGC League Blue — the 2021 PMGC League East broadcast standings board.
+ *
+ * Art: `overall.png` is a TRUE 1024×1536 PNG (exactly 2:3); the uniform width
+ * fit is S = 1080/1024 = 1.0546875 with zero crop, so every canvas number
+ * below is artX × S / artY × S. No distortion, no fit offsets.
+ *
+ * - The art bakes the "OVERALL RANKINGS" headline, the white "MATCH #" words,
+ *   both yellow label bands, every rank square (1–24) and all 24 white row
+ *   cards. The scrim name and the code label/rank rows are suppressed; the
+ *   subtitle slot paints ONLY the confirmed-match digits (subtitleMode:
+ *   "matchNumber") in the open blue field after the baked "#", seated on the
+ *   measured text ink centre. Nothing is re-rendered over baked art.
+ * - Baked label ink (canvas centres): left RANK 77.5 / TEAM 164 / ELIMS 253.8
+ *   / RANK(pp) 322.3 / MATCHES 403.5 / TOTAL 486.3; right +516.8 (the shift is
+ *   NOT uniform — each box is pinned to its own measured label). Stat order is
+ *   ELIMS(kp) → RANK(pp) → MATCHES → TOTAL; the first RANK label is the baked
+ *   placement numeral in the blue square, not a value column.
+ * - 12 painted cards/column: interiors art y445–493, 502–552, …, 1101–1153.
+ *   Painted centres row 1 = art 469 (canvas 494.65), row 12 = art 1127
+ *   (canvas 1188.63). Least-squares fit of ALL 12 centres (intercept 492.64):
+ *   rowY0 466.8 / pitch 63.19 / box height 51.68 — max residual 2px (the art's pitch is
+ *   not perfectly uniform: first gap 58 art px, middle gaps 60–60.5); the
+ *   endpoint-only fit drifted up to 4px in mid-table. rowHeight ≤ rowPitch.
+ *   24 teams fill [12,12] exactly; 16 fill 12 + 4 (the remaining slots stay
+ *   blank — an 8+8 split would print the wrong baked ranks 13–20 for teams
+ *   9–16). Fixed pitch never stretches rows off the painted cards.
+ * - Row interiors are near-white (luminance 0.987) → #0A1128 Exo 2 800 names
+ *   and stats read ≈18:1. The digit slot sits on royal-blue ink (luminance
+ *   0.145) → #FFFFFF reads ≈5.4:1. Art bakes the rank squares, so
+ *   uniformRowInk/uniformStatInk keep every numeral in the same navy ink.
+ * - MVP + announcement have no art → royal-blue gradient fallback.
+ */
+const PMGC_LEAGUE_BLUE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgc-league-blue",
+  name: "PMGC League Blue",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgc-league-blue/overall.png",
+      // Native 2:3 art: exact full-canvas fit, no letterbox, no distortion.
+      fit: { width: 1080, height: 1620, left: 0, top: 0 },
+    },
+    mvp: PMGC_LEAGUE_BLUE_FALLBACK_BG,
+    announcement: PMGC_LEAGUE_BLUE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal header.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 72px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 26px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL RANKINGS" and "MATCH #": hide the scrim name
+      // and paint only the digits in the clear blue field after the "#".
+      // Baked ink: art x438–586 → canvas x462–618.05, art y313–347 →
+      // canvas y330.1–366.0 (ink centre 348.05). Slot x628 starts 10px past
+      // the "#"; its 52px box is centred at x654 for both "MATCH 1" and
+      // "MATCH 10" with no horizontal drift (~14px visible gap for two
+      // digits). y326 + 44/2 = 348 (ink centre).
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 628, y: 326, w: 52, align: "center" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `800 44px ${FONTS}`,
+      subtitleColor: "#FFFFFF",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // baked "OVERALL RANKINGS" — never re-render the title
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 44, // baked blue rank square art x42–101; no code numeral
+        teamX: 112, // first clear pixel of the white card (art x106)
+        teamW: 116, // ends at 228, ~2px before the ELIMS value box
+        statColumns: [
+          { key: "kp", x: 229.76 }, // ELIMS cell centre canvas 253.76
+          { key: "pp", x: 298.25 }, // RANK cell centre 322.25
+          { key: "matches", x: 379.48 }, // MATCHES centre 403.48
+          { key: "total", x: 462.25 }, // TOTAL centre 486.25
+        ],
+        stripX: 112,
+        stripW: 415, // card right edge canvas 527.3 — no synthetic strip
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 550, // baked blue rank square art x522–582
+        teamX: 620, // first clear pixel of the right card (art x587)
+        teamW: 125, // ends at 745, ~1.5px before the ELIMS value box
+        statColumns: [
+          { key: "kp", x: 746.55 }, // ELIMS centre 770.55
+          { key: "pp", x: 813.97 }, // RANK centre 837.97
+          { key: "matches", x: 893.77 }, // MATCHES centre 917.77
+          { key: "total", x: 974.45 }, // TOTAL centre 998.45
+        ],
+        stripX: 620,
+        stripW: 415, // card right edge canvas 1034.7
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 405, // baked yellow label band top (art y384)
+    rowY0: 466.8, // least-squares seat (box centre 492.64; row-1 card 494.65)
+    rowPitch: 63.19, // least-squares fit of all 12 painted card centres
+    rowHeight: 51.68, // art interior height 49; ≤ rowPitch
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48, // four compartments per side; 69px minimum label-centre gap
+    logoPlate: 28,
+    logoNameGap: 32,
+    uniformRowInk: true, // baked squares already mark every rank
+    uniformStatInk: true,
+    nameFont: `800 19px ${FONTS}`, // reference-length names still fit beside a logo
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#1565D8", // the measured royal-blue rank-square fill
+    text: "#0A1128", // dark navy ink on the near-white cards (≈18:1)
+    textMuted: "#FFFFFF", // pale ink clears every royal-blue fallback stop
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the cards — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)", // the baked rank squares carry all emphasis
+    wwcdText: "#0A1128",
+    watermarkColor: "#FFFFFF", // brand law: text/position stay fixed
+    plateBg: "rgba(255,255,255,0.75)",
+    plateRing: "rgba(21,101,216,0.55)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0A1F6B",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -3433,6 +3592,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "varsity-orange": VARSITY_ORANGE,
   "pmsl-cobalt": PMSL_COBALT,
   "ewc-teal": EWC_TEAL,
+  "pmgc-league-blue": PMGC_LEAGUE_BLUE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors
