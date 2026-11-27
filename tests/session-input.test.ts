@@ -318,6 +318,7 @@ describe("sync guards", () => {
       "varsity-orange",
       "pmsl-cobalt",
       "ewc-teal",
+      "pmwc-orange",
     ]);
   });
 
