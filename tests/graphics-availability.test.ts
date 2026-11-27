@@ -23,6 +23,7 @@ const ART_IDS: Record<GraphicVariant, string[]> = {
     "pmwi-violet",
     "pmsl-cobalt",
     "ewc-teal",
+    "pmrc-lime",
   ],
   mvp: [
     "challengers-red",
@@ -70,7 +71,10 @@ describe("art-backed option lists", () => {
 
   it("hides gradient-only skins everywhere", () => {
     const all = selectableAestheticIds();
+    // Pin every art-backed skin as selectable without hard-coding the count —
+    // new P8 art templates keep growing the picker.
     expect(all.length).toBeGreaterThanOrEqual(21);
+    expect(all).toHaveLength(AESTHETIC_IDS.length - GRADIENT_ONLY.length);
     for (const id of GRADIENT_ONLY) {
       expect(all).not.toContain(id);
       for (const variant of ["standings", "mvp", "announcement"] as const) {

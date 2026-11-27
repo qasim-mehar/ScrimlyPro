@@ -4354,6 +4354,165 @@ const PMPL_SEA_PURPLE: TemplateConfig = {
   },
 };
 
+const PMRC_LIME_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  // The art is black (#0B0D12); the artless MVP/announcement fallbacks keep
+  // that same near-black field with a faint lime lift so pure-white ink stays
+  // WCAG AAA on every stop (≥ 14:1, pinned in the template suite).
+  css: "linear-gradient(165deg, #0B0D12 0%, #12151B 55%, #1A1E16 100%)",
+  decor: [],
+};
+
+/** PMRC Lime — the 2024 PMGC "OVERALL RANKINGS" broadcast poster.
+ *
+ *  Art: `overall.png` is a TRUE 1024×1536 PNG (exact 2:3), drawn full-cover
+ *  at the uniform canvas scale S = 1080/1024 = 1.0546875 with no crop. Every
+ *  coordinate below is measured on those pixels and converted by artPx × S.
+ *
+ *  - Baked header: "OVERALL" (mean ink #FB8903) over "RANKINGS" (#FFFFFF) in
+ *    the top band, then an orange→lime-gold bar at art y460–493 (canvas
+ *    485.1–520.1) printing TEAM | ELIMS | PLACEMENT | TOTAL PTS twice. Dark
+ *    label ink centres (canvas): left 210.3 / 310.4 / 383.4 / 481.2, right
+ *    682.4 / 782.3 / 855.1 / 952.8. `labelsBakedIn` draws no label row and
+ *    `variantHideScrimName.standings` hides the session title.
+ *  - Baked "MATCH #" lime brush lockup (measured mean #AFEE23) spans art
+ *    x387–599 / y336–392 → canvas x408.2–632.0 / y354.5–413.4, centred at
+ *    (520, 384) between the two lime rules at canvas x314–377 and x694–764.
+ *    The dynamic MATCH N slot is centred there. The art's own words stay in
+ *    place; `subtitlePrefix` supplies "MATCH " once the renderer applies it.
+ *  - 12 painted rank plates per column (art x67–121 / x516–570; white with
+ *    black #1..#24 baked in) at art tops 504, 563, …, 1174. Their measured
+ *    canvas centres are 557.4 … 1265.1; a single fixed pitch of 64.55 with a
+ *    53px text box seats every row within 2.3px of its painted centre (zero
+ *    cumulative drift), so `ranksBakedIn` draws no code numerals. A 25th team
+ *    falls below the last plate — never dropped.
+ *  - Charcoal row interiors (mean RGB 28/27/27) hold short white team names
+ *    and three stat values, in order ELIMS(kp) → PLACEMENT(pp) → TOTAL PTS.
+ *    Value boxes are 50px wide, centred on the baked header ink; the logo
+ *    plate sits in the narrow compartment just right of the rank plate and
+ *    the name shifts +52px past the first painted rule (art x172 → canvas
+ *    181.4), exactly as the filled reference's flag + logo + name lockup.
+ *  - Bottom-right watermark zone (canvas x730–1010 / y1570–1600) averages
+ *    RGB 20.5/20.5/20.4 — the gold arc ends before x660 — so the hardcoded
+ *    brand-law watermark uses 88% white ink (≈14:1).
+ *  - MVP + announcement have no art → near-black gradient fallback. */
+const PMRC_LIME: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmrc-lime",
+  name: "PMRC Lime",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmrc-lime/overall.png",
+      // The 1024×1536 source is uniformly upscaled to the exact canvas —
+      // zero crop, zero distortion (art px × 1080/1024 = every coordinate).
+      fit: { width: 1080, height: 1620, left: 0, top: 0 },
+    },
+    mvp: PMRC_LIME_FALLBACK_BG,
+    announcement: PMRC_LIME_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: false }, // the dynamic text supplies "MATCH " + digits
+  subtitlePrefix: "MATCH ",
+  uniformMvpRows: true,
+  variantHideScrimName: {
+    standings: true, // art bakes "OVERALL RANKINGS" in the top band
+  },
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal title; the
+    // standings override below moves the only dynamic ink into the brush slot.
+    title: { x: 90, y: 84, w: 900, align: "center" },
+    subtitle: { x: 390, y: 357, w: 260, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `800 46px ${FONTS}`,
+    subtitleFont: `400 48px ${BRUSH_FONTS}`,
+    organizerFont: `500 22px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Box centred on the measured baked "MATCH #" ink (canvas 520, 384).
+      // 48px marker ink stays inside the 260px slot between the baked rules.
+      subtitle: { x: 390, y: 357, w: 260, align: "center" },
+      subtitleFont: `400 48px ${BRUSH_FONTS}`,
+      subtitleColor: "#AFEE23",
+      // Park the optional organizer in the clear dark band below the brush
+      // slot (ends y413) and above the baked header bar (starts y485).
+      organizer: { x: 140, y: 440, w: 800, align: "center" },
+      organizerFont: `600 18px ${FONTS}`,
+    },
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 70.7, // baked white rank plate art x67–121
+        teamX: 135, // first clear pixel inside the charcoal row (art x128)
+        teamW: 142, // stops before the ELIMS value box at x285
+        statColumns: [
+          { key: "kp", x: 285 }, // ELIMS ink centre 310.4
+          { key: "pp", x: 358 }, // PLACEMENT ink centre 383.4
+          { key: "total", x: 456 }, // TOTAL PTS ink centre 481.2
+        ],
+        stripX: 129,
+        stripW: 398, // right edge 527, inside the art's left bar (art x500)
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 544.2, // baked right rank plate art x516–570
+        teamX: 610, // first clear pixel right of that plate (art x578)
+        teamW: 142, // stops before the ELIMS value box at x757
+        statColumns: [
+          { key: "kp", x: 757 }, // ELIMS ink centre 782.3
+          { key: "pp", x: 830 }, // PLACEMENT ink centre 855.1
+          { key: "total", x: 928 }, // TOTAL PTS ink centre 952.8
+        ],
+        stripX: 603,
+        stripW: 414, // right edge 1017, inside the art's right bar (art x964)
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 485, // baked orange→lime bar top (art y460)
+    // Least-squares fit through the 12 measured plate centres (canvas
+    // 557.4 … 1265.1): box centre = rowY0 + rowHeight/2 + i*rowPitch.
+    rowY0: 528.69,
+    rowPitch: 64.5461,
+    rowHeight: 53, // ≤ rowPitch; plate interior ~50–53 art px
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 50,
+    logoPlate: 28, // the filled reference's small square logo
+    logoNameGap: 52, // WITH a logo the name starts past rule 1 (canvas 181);
+    // without a logo it starts at teamX in the narrow flag/logo compartment
+    uniformRowInk: true, // rank 1 is already marked by its white plate
+    uniformStatInk: true, // every numeral pure white on the charcoal bars
+    nameFont: `800 21px ${FONTS}`, // short reference names fit the clear cell
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`, // labels baked; kept for config consumers
+  },
+  palette: {
+    accent: "#AFEE23", // measured lime brush ink
+    text: "#FFFFFF", // pure white row ink on the charcoal bars
+    textMuted: "#C9D2C7", // muted sage on fallback gradients (≥ 9:1)
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.04,
+    wwcdBg: "rgba(175,238,35,0.10)",
+    wwcdText: "#FFFFFF", // the baked white plate supplies rank-1 emphasis
+    watermarkColor: "rgba(255,255,255,0.88)", // dark gold/black footer zone
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(175,238,35,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0B0D12",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -4387,6 +4546,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "pmhi-crimson": PMHI_CRIMSON,
   "pmnc-pakistan-lime": PMNC_PAKISTAN_LIME,
   "pmpl-sea-purple": PMPL_SEA_PURPLE,
+  "pmrc-lime": PMRC_LIME,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

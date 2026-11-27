@@ -30,7 +30,8 @@ export type AestheticId =
   | "pmgo-teal"
   | "pmhi-crimson"
   | "pmnc-pakistan-lime"
-  | "pmpl-sea-purple";
+  | "pmpl-sea-purple"
+  | "pmrc-lime";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -618,6 +619,8 @@ export type TemplateConfig = {
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
   // Additive prefix painted before those digits (pmgc-sapphire's right-aligned
   // "M N" badge). Absent → existing templates render bare digits, unchanged.
+  // Additive prefix painted before the digits (pmrc-lime's "MATCH " + n brush
+  // lockup). Absent → existing templates render bare digits, unchanged.
   subtitlePrefix?: string;
   subtitleBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant: the art already
   // prints the subtitle LABEL (pmgc-aqua's baked "MATCH #"); the slot renders
