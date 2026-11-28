@@ -1,4 +1,6 @@
-import { LoginPanel } from "@/components/auth/login-panel";
+import { Suspense } from "react";
+
+import { RegistrationAuth } from "@/components/auth/registration-auth";
 
 export const metadata = { title: "Sign in — ScrimlyPro" };
 
@@ -13,5 +15,9 @@ export const metadata = { title: "Sign in — ScrimlyPro" };
  * boundary, so /login rendered as a permanent loading skeleton.
  */
 export default function LoginPage() {
-  return <LoginPanel />;
+  return (
+    <Suspense>
+      <RegistrationAuth mode="login" />
+    </Suspense>
+  );
 }

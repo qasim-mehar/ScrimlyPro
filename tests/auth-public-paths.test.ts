@@ -12,6 +12,7 @@ describe("public path classifier", () => {
         "/reset-password",
         "/auth/callback",
         "/auth/error",
+        "/terms",
         "/invite",
         "/share",
       ].sort(),
@@ -24,6 +25,7 @@ describe("public path classifier", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
     expect(isPublicPath("/auth/error")).toBe(true);
+    expect(isPublicPath("/terms")).toBe(true);
     // M2 share/invite surfaces (token pages are still server-guarded).
     expect(isPublicPath("/share/abc")).toBe(true);
     expect(isPublicPath("/invite/abc")).toBe(true);

@@ -45,6 +45,9 @@ const PUBLIC_PAGE_PREFIXES = [
   "forgot-password/",
   "reset-password/",
   "auth/",
+  // Public legal copy linked from the signup gate; mirrored from
+  // lib/auth/public-paths.ts PUBLIC_PAGES. No tenant or session data.
+  "terms/",
   // M2 (Lane B): public share + invite surfaces, mirrored from
   // lib/auth/public-paths.ts PUBLIC_PAGES. /invite redirects anonymous
   // users to login; /share renders only the token's public projection.
