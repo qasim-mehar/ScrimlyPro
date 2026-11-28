@@ -9,6 +9,7 @@ export type AestheticId =
   | "onyx-green"
   | "pmgc-crimson"
   | "pmgc-aqua"
+  | "pmgc-sapphire"
   | "pmwi-violet"
   | "grunge-red"
   | "esports-clash"
@@ -21,7 +22,19 @@ export type AestheticId =
   | "varsity-yellow"
   | "court-orange"
   | "varsity-purple"
-  | "varsity-orange";
+  | "varsity-orange"
+  | "pmsl-cobalt"
+  | "ewc-teal"
+  | "pmgc-league-blue"
+  | "pmgo-brazil-green"
+  | "pmgo-teal"
+  | "pmhi-crimson"
+  | "pmnc-pakistan-lime"
+  | "pmpl-sea-purple"
+  | "pmrc-lime"
+  | "pmsl-csa-amber"
+  | "pmwc-blue"
+  | "pmwc-orange";
 
 /** Slot coordinates are TOP-LEFT of the text box, in canvas px. */
 export type Slot = {
@@ -78,6 +91,11 @@ export type StandingsTableSpec = {
   rowY0: number; // TOP edge of first data row
   rowPitch: number;
   rowHeight: number;
+  /** Exact measured vertical midpoints of the painted row cards (canvas px).
+   *  Art whose card pitch is not uniform (pmpl-sea-purple) uses these so row i's
+   *  text box centre IS card i's centre — zero cumulative drift. When absent,
+   *  renderers keep the rowY0 + i·rowPitch formula. Pure measured data. */
+  rowCenterYs?: readonly number[];
   maxRowsLeft: number;
   singleColumn?: boolean; // true → one full-width table (neon-green art):
   // OverallStandingsGraphic renders columns[0] with ALL rows and skips
@@ -103,6 +121,35 @@ export type StandingsTableSpec = {
   // 0.16em); the renderer keeps its legacy -0.01em when absent
   nameUppercase?: boolean; // true → uppercase team names on the art-backed
   // broadcast table (varsity-purple's reference schedule typography)
+
+  /** Dual baked header pills (pmsl-cobalt): the art prints two empty coloured
+   *  boxes above the table — the left blue one holds the session name, the
+   *  right yellow one the stage/subtitle. Pure coordinate + ink data; the
+   *  renderer seats each string dead-centre in its measured box. Absent on
+   *  every other template, so their header markup is unchanged. */
+  headerPills?: {
+    left: HeaderPillSpec;
+    right: HeaderPillSpec;
+  };
+
+  // --- Additive per-row ink overrides for two-tone broadcast tables --------
+  // Absent on every existing template, so their row markup is unchanged.
+  // pmgc-sapphire paints ranks 1-3 in dark navy on peach/gold bars and ranks
+  // 4-16 in pure white on navy bars; its art bakes no rank numerals.
+  topRowsTextColor?: string; // name + stat ink for the first `topRowsCount` ranks
+  topRowsCount?: number; // how many leading ranks use that ink (default 3)
+  topRowsRankInk?: string; // rank-numeral ink on those rows
+  rankPrefix?: string; // e.g. "#" → the code-drawn badge reads "#1".."#16"
+};
+
+/** One header-pill ink slot. `box` is the pill's measured bounds (the renderer
+ *  centres its text); `height` drives the line-height declared AFTER `font`. */
+export type HeaderPillSpec = {
+  box: Slot;
+  height: number;
+  font: string;
+  color: string;
+  text: "title" | "subtitle"; // which header prop supplies the string
 };
 
 /** Starting-five brush lockup (grunge-red): measured slot geometry plus the
@@ -573,6 +620,11 @@ export type TemplateConfig = {
   variantLabelsBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant
   // override (grunge-red: the MVP art bakes its own labels/header)
   subtitleMode?: "full" | "matchNumber"; // matchNumber → subtitle slot renders only the digits
+  // Additive prefix painted before those digits (pmgc-sapphire's right-aligned
+  // "M N" badge). Absent → existing templates render bare digits, unchanged.
+  // Additive prefix painted before the digits (pmrc-lime's "MATCH " + n brush
+  // lockup). Absent → existing templates render bare digits, unchanged.
+  subtitlePrefix?: string;
   subtitleBakedIn?: Partial<Record<GraphicVariant, boolean>>; // per-variant: the art already
   // prints the subtitle LABEL (pmgc-aqua's baked "MATCH #"); the slot renders
   // only the digits. Mirrors variantLabelsBakedIn / variantHideScrimName.

@@ -170,8 +170,8 @@ describe("ewc-yellow standings config (measured 24-slot art)", () => {
     expect(header?.subtitleColor).toBe("#2B0F00");
   });
 
-  it("uses the measured espresso palette and bold broadcast type", () => {
-    expect(CONFIG.palette.text).toBe("#2B0F00");
+  it("uses the Spanish Orange primary ink with the measured palette and bold broadcast type", () => {
+    expect(CONFIG.palette.text).toBe("#e86100");
     expect(CONFIG.palette.textMuted).toBe("#4A1C00");
     expect(CONFIG.palette.accent).toBe("#5C2400");
     expect(CONFIG.palette.wwcdText).toBe("#6E2B00");

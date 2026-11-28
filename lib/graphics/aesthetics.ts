@@ -608,8 +608,8 @@ const EWC_YELLOW_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
  * - bottom flame art starts below the table (last bar bottom 1329.2); the
  *   brand-law watermark at y1570 sits over the dark purple swirls (measured
  *   glyph-zone mean luminance 0.13 → white ink reads 5.8:1).
- * MVP + announcement have no art → warm light gradient fallback; dark espresso
- * text/medal ink keeps every fallback surface high-contrast. */
+ * MVP + announcement have no art → warm light gradient fallback; Spanish Orange
+ * primary text with dark espresso muted/medal ink. */
 const EWC_YELLOW: TemplateConfig = {
   ...GEOMETRY,
   id: "ewc-yellow",
@@ -700,7 +700,7 @@ const EWC_YELLOW: TemplateConfig = {
   },
   palette: {
     accent: "#5C2400",
-    text: "#2B0F00",
+    text: "#e86100", // Spanish Orange — primary ink for EWC Yellow text
     textMuted: "#4A1C00",
     rowAlt: "#FFFFFF",
     rowAltOpacity: 0.22,
@@ -2951,6 +2951,2057 @@ const VARSITY_ORANGE: TemplateConfig = {
   },
 };
 
+const PMSL_COBALT_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Deep cobalt → navy → ink-blue. White + pale-lilac ink clear every stop;
+  // this is used only by the artless MVP/announcement variants (parking lot).
+  css: "linear-gradient(165deg, #0D1230 0%, #141B4A 55%, #1A2460 100%)",
+  decor: [],
+};
+
+/**
+ * PMSL Cobalt — the 2024 PMSL SEA Spring broadcast standings board.
+ *
+ * Art: `overall.png` is a TRUE 1686×2528 PNG (ratio 0.66693, within a pixel of
+ * 2:3). The uniform width fit S = 1080/1686 = 0.6405694 gives a 1080×1619.359
+ * box centred at top +0.3203 — no stretch, no crop of any painted slot. Every
+ * canvas number below was measured off those pixels with
+ * canvasX = artX × S, canvasY = artY × S + 0.3203.
+ *
+ * - The art bakes the "OVERALL RANKINGS" headline, the two empty header pills,
+ *   the label band, all rank squares and all row bars → labelsBakedIn +
+ *   ranksBakedIn + dual `headerPills` (blue = session name, yellow = stage).
+ * - Header pills measured by fill colour: blue x54–568 y304–363 (centre 311,
+ *   333.5), yellow x571–1027 y305–363 (centre 799, 334). White 900 ink in the
+ *   blue pill reads 4.7:1; deep navy #1E2B7B 900 ink in the yellow pill 9.9:1.
+ * - Header ink centres / painted cell dividers (canvas): RANK 53–108, TEAM
+ *   108–278, PLACE PTS 278–330 (ink 304.5), ELIMS 330–379 (ink 355),
+ *   TOTAL PTS 379–433 (ink 408), MATCHES 433–498 (ink 468), WWCD 498–~535
+ *   (chicken icon ink 520). Right table repeats at +492..+494, NOT a uniform
+ *   shift (rank divider 601, team 770, place 823, elims 872, total 925,
+ *   matches 990, wwcd 1030). Stat order is pp → kp → total → matches → wwcd.
+ * - 12 painted row bars/column: baked rank-square tops 447, 507, 566, …,
+ *   1105 and bottoms ~497, …, 1156 → rowY0 447, fixed pitch 59.82, box
+ *   height 51 (text centre 472.5 = row-1 badge centre, row 12 centre 1130.5).
+ *   24 teams → [12,12]; the 25th overflows below the painted table.
+ * - Row interior mean luminance 0.024 → pure-white Exo 2 700 names / 800 stats
+ *   read ≥14:1. Art bakes the rank-1 blue badge, so uniformRowInk/uniformStatInk
+ *   keep every numeral white with no synthetic rank-1 accent.
+ * - MVP + announcement have no art → deep cobalt/navy gradient fallback.
+ */
+const PMSL_COBALT: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmsl-cobalt",
+  name: "PMSL Cobalt",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmsl-cobalt/overall.png",
+      // Uniform width fit; centred 0.32px letterbox. No distortion.
+      fit: { width: 1080, height: 1619.3594306049824, left: 0, top: 0.3202846975088968 },
+    },
+    mvp: PMSL_COBALT_FALLBACK_BG,
+    announcement: PMSL_COBALT_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep the normal header.
+    // Standings seats title/subtitle in the two baked pills via headerPills.
+    title: { x: 54, y: 304, w: 515, align: "center" },
+    subtitle: { x: 571, y: 305, w: 457, align: "center" },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `900 30px ${FONTS}`,
+    subtitleFont: `900 30px ${FONTS}`,
+    organizerFont: `500 1px ${FONTS}`,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 53, // baked blue/white rank square x53–100; no code numeral
+        teamX: 106, // first clear pixel right of the rank square
+        teamW: 170, // ends at 276, 2px before the PLACE PTS divider (278)
+        statColumns: [
+          { key: "pp", x: 286 }, // PLACE PTS cell 278–330, centre 304
+          { key: "kp", x: 336.5 }, // ELIMS cell 330–379, centre 354.5
+          { key: "total", x: 388 }, // TOTAL PTS cell 379–433, centre 406
+          { key: "matches", x: 447.5 }, // MATCHES cell 433–498, centre 465.5
+          { key: "wwcd", x: 498.5 }, // chicken cell 498–535, centre 516.5
+        ],
+        stripX: 106,
+        stripW: 429, // right edge 535, inside the painted bar
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 547, // baked rank square x547–594
+        teamX: 600,
+        teamW: 170, // ends at 770, before the right PLACE PTS divider
+        statColumns: [
+          { key: "pp", x: 778.5 }, // cell 770–823, centre 796.5
+          { key: "kp", x: 829.5 }, // cell 823–872, centre 847.5
+          { key: "total", x: 880.5 }, // cell 872–925, centre 898.5
+          { key: "matches", x: 939.5 }, // cell 925–990, centre 957.5
+          { key: "wwcd", x: 992 }, // cell 990–1030, centre 1010
+        ],
+        stripX: 600,
+        stripW: 430, // right edge 1030
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 393, // baked label band top — code draws no labels
+    rowY0: 447,
+    rowPitch: 59.82, // baked rank-square ink centres / 11
+    rowHeight: 51,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 36, // fits the narrow 37px WWCD compartment without crossing dividers
+    logoPlate: 34,
+    logoNameGap: 40,
+    uniformRowInk: true, // the baked blue #1 badge carries rank-1 emphasis
+    uniformStatInk: true, // every stat numeral stays broadcast white
+    nameFont: `700 21px ${FONTS}`,
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+    headerPills: {
+      left: {
+        box: { x: 54, y: 304, w: 515, align: "center" },
+        height: 60,
+        font: `900 30px ${FONTS}`,
+        color: "#FFFFFF", // white on the measured blue fill (4.7:1)
+        text: "title",
+      },
+      right: {
+        box: { x: 571, y: 305, w: 457, align: "center" },
+        height: 59,
+        font: `900 30px ${FONTS}`,
+        color: "#1E2B7B", // deep navy on the measured yellow fill (9.9:1)
+        text: "subtitle",
+      },
+    },
+  },
+  palette: {
+    accent: "#5E5EFE", // the measured blue pill / rank-badge fill
+    text: "#FFFFFF", // pure white row ink on the dark cobalt bars (≥14:1)
+    textMuted: "#DCD9FF", // pale lilac for supporting slots
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 strip; badge is baked
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.85)", // clears the cobalt footer
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(94,94,254,0.5)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0D1230",
+  },
+};
+
+const PMGC_SAPPHIRE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Dark sapphire → royal blue. Pure white + electric-cyan ink clear every
+  // stop (≥ 4.5:1), so the artless MVP/announcement variants stay legible.
+  css: "linear-gradient(165deg, #0A1329 0%, #162E62 100%)",
+  decor: [],
+};
+
+/** PMGC Sapphire — the 2024 PMGC Group Stage broadcast leaderboard. The art is
+ *  a TRUE 1536×2730 PNG (taller than 2:3), uniformly width-fitted to 1080
+ *  (×0.703125 → 1080×1919.53125) and centre-cropped (top −149.765625): the
+ *  exact `object-fit: cover` mapping of art pixels onto the 1080×1620 canvas.
+ *  Every number below was measured off those pixels after that fit:
+ *  - Baked "OVERALL RANKINGS" ink ends canvas x814 and spans y79..168. The
+ *    empty slot immediately to its right (x824, y88, w180) carries the dynamic
+ *    "M N" badge in white Exo 2 900 — the reference art's "GROUP / DAY" block.
+ *    variantHideScrimName.standings hides the session name (title is baked).
+ *  - Baked header band y≈205..245 prints RANK | TEAM | WWCD | PLACE PTS |
+ *    ELIMS | TOTAL twice (labelsBakedIn). Measured ink centres: left 305.4 /
+ *    369 / 432.2 / 496.5, right 820 / 882 / 945 / 1009 (≈+512, uniform).
+ *    52px value boxes sit at 279 / 343 / 406 / 470 and 794 / 856 / 919 /
+ *    983 — centred on the baked labels, non-overlapping both sides.
+ *  - 14 painted bars per column; a fixed ≈78px pitch with a 66px box centred
+ *    at rowY0 253 lands ranks 1..8 dead-centre on the top eight bars (max
+ *    measured drift < 2px). The art bakes NO rank numerals, so the renderer
+ *    draws "#1".."#16" (rankPrefix). rowsPerColumn 8 splits 16 → [8,8].
+ *  - Ranks 1–3 (left column) sit on peach/gold bars → dark-navy #141A29 ink;
+ *    ranks 4–16 sit on navy bars → pure #FFFFFF ink. Rank numerals follow the
+ *    same rule, with electric-cyan #60CDFF from rank 4 down.
+ *  - MVP + announcement have no art → dark sapphire gradient fallback. The
+ *    brand-law watermark stays hardcoded. */
+const PMGC_SAPPHIRE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgc-sapphire",
+  name: "PMGC Sapphire",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgc-sapphire/overall.png",
+      fit: { width: 1080, height: 1919.53125, left: 0, top: -149.765625 },
+    },
+    mvp: PMGC_SAPPHIRE_FALLBACK_BG,
+    announcement: PMGC_SAPPHIRE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitlePrefix: "M ", // right-aligned badge reads "M 3" / "M" with no count
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep the normal header.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `700 40px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The baked title's right edge is x814; the badge starts 10px clear of
+      // it and sits on the title's own baseline band (ink y79..168).
+      subtitle: { x: 824, y: 88, w: 180, align: "left" },
+      subtitleFont: `900 56px ${FONTS}`,
+      subtitleColor: "#FFFFFF",
+      // No optional organizer text may touch the baked title or header band.
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 40, // centre 64 — under the baked "RANK" label (centre ~61)
+        teamX: 116, // first clear pixel right of the rank compartment
+        teamW: 150, // ends at 266, before the WWCD box at 279
+        statColumns: [
+          { key: "wwcd", x: 279 }, // WWCD ink centre 305.4
+          { key: "pp", x: 343 }, // PLACE PTS ink centre 369
+          { key: "kp", x: 406 }, // ELIMS ink centre 432.2
+          { key: "total", x: 470 }, // TOTAL ink centre 496.5
+        ],
+        stripX: 38,
+        stripW: 486,
+        rowsPerColumn: 8,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 548, // centre 572 — under the right baked "RANK" label
+        teamX: 628,
+        teamW: 150, // ends at 778, before the WWCD box at 794
+        statColumns: [
+          { key: "wwcd", x: 794 }, // ink centre 820
+          { key: "pp", x: 856 }, // ink centre 882
+          { key: "kp", x: 919 }, // ink centre 945
+          { key: "total", x: 983 }, // ink centre 1009
+        ],
+        stripX: 546,
+        stripW: 486,
+        rowsPerColumn: 8,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 205,
+    rowY0: 253, // bar 1 top canvas 250; 66px box centre 286 ≈ painted centre 284.5
+    rowPitch: 78, // least-squares fit of the 14 painted bar centres (~78.1)
+    rowHeight: 66,
+    maxRowsLeft: 8,
+    rowsPerColumn: 8,
+    fixedRowPitch: true,
+    ranksBakedIn: false, // table-wide default; art leaves the rank boxes empty
+    statBoxW: 52,
+    rankPrefix: "#", // unbaked rank badges: "#1".."#16"
+    topRowsCount: 3, // left-column ranks 1–3 ride the peach/gold bars
+    topRowsTextColor: "#141A29", // dark navy on peach (≈8.9:1 WCAG AA)
+    topRowsRankInk: "#141A29",
+    nameFont: `800 20px ${FONTS}`,
+    statFont: `800 22px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#60CDFF", // electric-cyan rank numeral from #4 down
+    text: "#FFFFFF", // pure white on the navy bars (≈14:1 WCAG AA)
+    textMuted: "#60CDFF",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // rank-1 ink is supplied by topRowsTextColor
+    wwcdText: "#141A29",
+    watermarkColor: "rgba(255,255,255,0.85)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(96,205,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0A1329",
+  },
+};
+
+const EWC_TEAL_FONTS = '"Rajdhani", "Exo 2", sans-serif';
+
+const EWC_TEAL_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Deep jungle-teal → broadcast green: the artless MVP/announcement variants
+  // keep white row ink ≥ 10:1 on every stop.
+  css: "linear-gradient(165deg, #062E20 0%, #0B4228 100%)",
+  decor: [],
+};
+
+/**
+ * EWC Teal — the 2024 Esports World Cup cyber-teal broadcast standings art.
+ *
+ * Art: `overall.png` is a TRUE 1027×1532 PNG (ratio 0.6704, 0.6% wider than
+ * 2:3). A uniform HEIGHT fit to the canvas gives S = 1620/1532 =
+ * 1.0574412532637076, drawn 1085.992×1620 at left −2.996 (a 3px object-fit:
+ * cover crop on each side). Every coordinate below is measured on art pixels
+ * through canvasX = artX·S − 2.996, canvasY = artY·S — no stretch, no drift.
+ *
+ * - A SINGLE full-width ladder. 24 dark-slate bars (#09203A mean interior)
+ *   from art y263 to y1422; bar tops fit art 262.5 + i·48.48 → canvas rowY0
+ *   279, fixed pitch 51.27, painted height 46.5. The 24 yellow rank tabs
+ *   (numerals 1–24) are baked into the left of every bar → ranksBakedIn.
+ * - Baked header band (art y238–259 → canvas 252–274) prints WWCD | MATCHES |
+ *   PLACEMENT POINTS | ELIM. POINTS | TOTAL POINTS → labelsBakedIn. Measured
+ *   label-ink centres (art x517/620/726/815/916) land on canvas 543/653/765/
+ *   858/965; 88px value boxes at 499/609/721/814/921 centre on them without
+ *   overlapping (the tightest pair is 93px apart).
+ * - Baked "OVERALL RANKING" headline (ends art y98 → canvas 104) and the
+ *   cyber-teal "MATCH#" lockup (ink art x503–897, y114–214 → canvas x529–946,
+ *   y121–226). The digits slot starts at x954, 8px right of the "#" ink, and
+ *   sits in the clear yellow field above the header band. Scrim name hidden.
+ * - Team ink starts at art x145 → canvas 150 inside the navy bar and stops at
+ *   x490, nine pixels before the WWCD box, so long names ellipsize cleanly.
+ * - Pure-white Rajdhani-led 700 team / 800 stat ink reads >14:1 on the navy
+ *   bars; #062E20 digits read >9:1 on the yellow MATCH# field. The art bakes
+ *   its own rank-1 yellow tab, so uniformRowInk/uniformStatInk keep every
+ *   row's data ink identical. MVP + announcement fall back to jungle-teal.
+ */
+const EWC_TEAL: TemplateConfig = {
+  ...GEOMETRY,
+  id: "ewc-teal",
+  name: "EWC Teal",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/ewc-teal/overall.png",
+      // Uniform ×1620/1532 height fit; centred object-fit: cover crop (3px
+      // per side). No distortion, so every measured slot stays pixel-exact.
+      fit: {
+        width: 1085.9921671018278,
+        height: 1620,
+        left: -2.9960835509139088,
+        top: 0,
+      },
+    },
+    mvp: EWC_TEAL_FALLBACK_BG,
+    announcement: EWC_TEAL_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal header;
+    // standings overrides park the title/organizer and move the digit slot.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${EWC_TEAL_FONTS}`,
+    subtitleFont: `600 36px ${EWC_TEAL_FONTS}`,
+    organizerFont: `500 24px ${EWC_TEAL_FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL RANKING" + "MATCH#": hide the scrim name, park
+      // the optional organizer, and paint ONLY the confirmed-match digits in
+      // the open yellow field after the "#" (ink ends canvas x945.5).
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 954, y: 118, w: 118, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${EWC_TEAL_FONTS}`,
+      subtitleFont: `900 100px ${EWC_TEAL_FONTS}`,
+      subtitleColor: "#062E20",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${EWC_TEAL_FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKING" + "MATCH#"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 80, // baked yellow rank tab; no code-drawn numeral
+        teamX: 150, // first clear pixel inside the dark-slate bar
+        teamW: 340, // ends at 490, 9px before the WWCD value box
+        statColumns: [
+          { key: "wwcd", x: 499 }, // label ink centre 543
+          { key: "matches", x: 609 }, // 653
+          { key: "pp", x: 721 }, // 765
+          { key: "kp", x: 814 }, // 858
+          { key: "total", x: 921 }, // 965
+        ],
+        stripX: 146,
+        stripW: 344,
+        ranksBakedIn: true,
+        rowsPerColumn: 24,
+        fixedRowPitch: true,
+      },
+      {
+        // The single-column renderer skips this spec entirely; it mirrors
+        // column[0] so dev readouts stay honest if the flag is ever toggled.
+        rankX: 80,
+        teamX: 150,
+        teamW: 340,
+        statColumns: [
+          { key: "wwcd", x: 499 },
+          { key: "matches", x: 609 },
+          { key: "pp", x: 721 },
+          { key: "kp", x: 814 },
+          { key: "total", x: 921 },
+        ],
+        stripX: 146,
+        stripW: 344,
+        ranksBakedIn: true,
+        rowsPerColumn: 24,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 252, // baked label band top — code draws no labels
+    rowY0: 279, // painted bar 1 top (art 263)
+    rowPitch: 51.27, // least-squares fit of the 24 baked bar tops
+    rowHeight: 46.5,
+    maxRowsLeft: 24,
+    rowsPerColumn: 24,
+    singleColumn: true,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 88,
+    uniformRowInk: true, // the baked gold tab already marks rank 1
+    uniformStatInk: true,
+    // Rajdhani-led condensed display face: 700 names / 800 data numerals.
+    nameFont: `700 24px ${EWC_TEAL_FONTS}`,
+    statFont: `800 28px ${EWC_TEAL_FONTS}`,
+    labelFont: `700 18px ${EWC_TEAL_FONTS}`,
+  },
+  palette: {
+    accent: "#0B7A6E", // deep teal accent for the gradient fallback
+    text: "#FFFFFF", // crisp white team + stat ink on the dark-slate bars
+    textMuted: "#BEE3DE",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)", // no rank-1 pill over the baked yellow tab
+    wwcdText: "#FFFFFF",
+    watermarkColor: "rgba(255,255,255,0.88)",
+    plateBg: "rgba(255,255,255,0.08)",
+    plateRing: "rgba(255,255,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#062E20",
+  },
+};
+
+const PMGC_LEAGUE_BLUE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Royal blue → cobalt → navy. White watermark/text clears every stop;
+  // used only by the artless MVP + announcement variants (parking lot).
+  css: "linear-gradient(165deg, #0E3A9E 0%, #1565D8 55%, #0A1F6B 100%)",
+  decor: [],
+};
+
+/**
+ * PMGC League Blue — the 2021 PMGC League East broadcast standings board.
+ *
+ * Art: `overall.png` is a TRUE 1024×1536 PNG (exactly 2:3); the uniform width
+ * fit is S = 1080/1024 = 1.0546875 with zero crop, so every canvas number
+ * below is artX × S / artY × S. No distortion, no fit offsets.
+ *
+ * - The art bakes the "OVERALL RANKINGS" headline, the white "MATCH #" words,
+ *   both yellow label bands, every rank square (1–24) and all 24 white row
+ *   cards. The scrim name and the code label/rank rows are suppressed; the
+ *   subtitle slot paints ONLY the confirmed-match digits (subtitleMode:
+ *   "matchNumber") in the open blue field after the baked "#", seated on the
+ *   measured text ink centre. Nothing is re-rendered over baked art.
+ * - Baked label ink (canvas centres): left RANK 77.5 / TEAM 164 / ELIMS 253.8
+ *   / RANK(pp) 322.3 / MATCHES 403.5 / TOTAL 486.3; right +516.8 (the shift is
+ *   NOT uniform — each box is pinned to its own measured label). Stat order is
+ *   ELIMS(kp) → RANK(pp) → MATCHES → TOTAL; the first RANK label is the baked
+ *   placement numeral in the blue square, not a value column.
+ * - 12 painted cards/column: interiors art y445–493, 502–552, …, 1101–1153.
+ *   Painted centres row 1 = art 469 (canvas 494.65), row 12 = art 1127
+ *   (canvas 1188.63). Least-squares fit of ALL 12 centres (intercept 492.64):
+ *   rowY0 466.8 / pitch 63.19 / box height 51.68 — max residual 2px (the art's pitch is
+ *   not perfectly uniform: first gap 58 art px, middle gaps 60–60.5); the
+ *   endpoint-only fit drifted up to 4px in mid-table. rowHeight ≤ rowPitch.
+ *   24 teams fill [12,12] exactly; 16 fill 12 + 4 (the remaining slots stay
+ *   blank — an 8+8 split would print the wrong baked ranks 13–20 for teams
+ *   9–16). Fixed pitch never stretches rows off the painted cards.
+ * - Row interiors are near-white (luminance 0.987) → #0A1128 Exo 2 800 names
+ *   and stats read ≈18:1. The digit slot sits on royal-blue ink (luminance
+ *   0.145) → #FFFFFF reads ≈5.4:1. Art bakes the rank squares, so
+ *   uniformRowInk/uniformStatInk keep every numeral in the same navy ink.
+ * - MVP + announcement have no art → royal-blue gradient fallback.
+ */
+const PMGC_LEAGUE_BLUE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgc-league-blue",
+  name: "PMGC League Blue",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgc-league-blue/overall.png",
+      // Native 2:3 art: exact full-canvas fit, no letterbox, no distortion.
+      fit: { width: 1080, height: 1620, left: 0, top: 0 },
+    },
+    mvp: PMGC_LEAGUE_BLUE_FALLBACK_BG,
+    announcement: PMGC_LEAGUE_BLUE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal header.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 72px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 26px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL RANKINGS" and "MATCH #": hide the scrim name
+      // and paint only the digits in the clear blue field after the "#".
+      // Baked ink: art x438–586 → canvas x462–618.05, art y313–347 →
+      // canvas y330.1–366.0 (ink centre 348.05). Slot x628 starts 10px past
+      // the "#"; its 52px box is centred at x654 for both "MATCH 1" and
+      // "MATCH 10" with no horizontal drift (~14px visible gap for two
+      // digits). y326 + 44/2 = 348 (ink centre).
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 628, y: 326, w: 52, align: "center" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `800 44px ${FONTS}`,
+      subtitleColor: "#FFFFFF",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // baked "OVERALL RANKINGS" — never re-render the title
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 44, // baked blue rank square art x42–101; no code numeral
+        teamX: 112, // first clear pixel of the white card (art x106)
+        teamW: 116, // ends at 228, ~2px before the ELIMS value box
+        statColumns: [
+          { key: "kp", x: 229.76 }, // ELIMS cell centre canvas 253.76
+          { key: "pp", x: 298.25 }, // RANK cell centre 322.25
+          { key: "matches", x: 379.48 }, // MATCHES centre 403.48
+          { key: "total", x: 462.25 }, // TOTAL centre 486.25
+        ],
+        stripX: 112,
+        stripW: 415, // card right edge canvas 527.3 — no synthetic strip
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 550, // baked blue rank square art x522–582
+        teamX: 620, // first clear pixel of the right card (art x587)
+        teamW: 125, // ends at 745, ~1.5px before the ELIMS value box
+        statColumns: [
+          { key: "kp", x: 746.55 }, // ELIMS centre 770.55
+          { key: "pp", x: 813.97 }, // RANK centre 837.97
+          { key: "matches", x: 893.77 }, // MATCHES centre 917.77
+          { key: "total", x: 974.45 }, // TOTAL centre 998.45
+        ],
+        stripX: 620,
+        stripW: 415, // card right edge canvas 1034.7
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 405, // baked yellow label band top (art y384)
+    rowY0: 466.8, // least-squares seat (box centre 492.64; row-1 card 494.65)
+    rowPitch: 63.19, // least-squares fit of all 12 painted card centres
+    rowHeight: 51.68, // art interior height 49; ≤ rowPitch
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48, // four compartments per side; 69px minimum label-centre gap
+    logoPlate: 28,
+    logoNameGap: 32,
+    uniformRowInk: true, // baked squares already mark every rank
+    uniformStatInk: true,
+    nameFont: `800 19px ${FONTS}`, // reference-length names still fit beside a logo
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#1565D8", // the measured royal-blue rank-square fill
+    text: "#0A1128", // dark navy ink on the near-white cards (≈18:1)
+    textMuted: "#FFFFFF", // pale ink clears every royal-blue fallback stop
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the cards — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)", // the baked rank squares carry all emphasis
+    wwcdText: "#0A1128",
+    watermarkColor: "#FFFFFF", // brand law: text/position stay fixed
+    plateBg: "rgba(255,255,255,0.75)",
+    plateRing: "rgba(21,101,216,0.55)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0A1F6B",
+  },
+};
+
+const PMGO_BRAZIL_GREEN_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Light lime-cream → white: the art's row ink is deep near-black, so the
+  // artless MVP/announcement fallbacks keep that same ink WCAG-legible. These
+  // variants have no art and are excluded from the picker.
+  css: "linear-gradient(165deg, #F7FBE8 0%, #E8F6C4 55%, #D6F836 100%)",
+  decor: [],
+};
+
+/**
+ * PMGO Brazil Green — the 2024 PMGO Brazil Main Event OVERALL leaderboard.
+ *
+ * Art: `overall.png` is a TRUE 1024×1536 PNG (exact 2:3 canvas ratio), so the
+ * uniform ×1080/1024 = 1.0546875 fit lands every painted slot on the canvas
+ * with zero crop and zero distortion:
+ *   canvasX = artX × 1.0546875, canvasY = artY × 1.0546875.
+ *
+ * Measured off those pixels (SECOND PASS, re-verified against the current art):
+ * - The art bakes the white "OVERALL RANKINGS" headline, the green→yellow
+ *   header bands, all RANK/TEAM/WWCD/PLACE PTS./ELIMS/TOTAL labels, every
+ *   "#1"–"#24" rank square and all 24 white row bars → labelsBakedIn +
+ *   ranksBakedIn + no dynamic scrim name anywhere (title ink is pure #FFFFFF).
+ * - 12 painted row bars per column: art tops 413, 477, 541, 606, 670, 734,
+ *   799, 863, 927, 991, 1056, 1120 and bottoms 466, 530, 595, 659, 723, 788,
+ *   852, 916, 980, 1045, 1109, 1173. Row-1 centre canvas 463.54, row-12 centre
+ *   1209.20 → pitch 67.7876 with a 56px box whose centre lands on both ends
+ *   (intermediate drift < 0.5px). 24 teams → [12,12]; the 25th overflows the
+ *   painted table, never dropped.
+ * - Header ink centres (art→canvas): WWCD 287→302.7, PLACE PTS. 351→370.2,
+ *   ELIMS 415→437.7, TOTAL 477.5→503.6 (left) and 770→812.1, 834→879.6,
+ *   898→947.1, 961→1013.6 (right). The stat boxes are 48px wide and centred
+ *   on the measured INK centres (303.2/371.8/439.8/503.6 and 812.6/880.7/
+ *   949.8/1013.0), never crossing the painted cell dividers.
+ * - Rank squares: art x35–81 (left), x518–564 (right); team cells art x82–253
+ *   and x566–736. Rank numerals are baked, so no code rank is drawn.
+ * - Yellow-green "MATCH #" badge fill: art x376–648, y252–322 → canvas
+ *   x396.56–683.44, y265.78–339.61 (centre y302.70). The baked "#" ink ends
+ *   art x607 → canvas x640.20. The dynamic confirmed-match digits therefore
+ *   render in the measured free slot x640.2–683.2 (centre x661.7), dead-centre on
+ *   the badge's Y axis, in Exo 2 900 black ink. Re-rendering the words would
+ *   duplicate the baked "MATCH #" lockup (see README Assumptions).
+ * - Deep near-black #0B0F1A row ink on the near-white bars reads >7:1;
+ *   black digits on the lime badge read >7:1; the hardcoded watermark uses
+ *   the brand lime #D6F836 over the art's dark footer.
+ */
+const PMGO_BRAZIL_GREEN: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgo-brazil-green",
+  name: "PMGO Brazil Green",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgo-brazil-green/overall.png",
+      // Uniform ×1080/1024 width fit: exact 2:3 art, so the image lands at
+      // 1080×1620 with no crop. The black edge ink fills behind it.
+      fit: { width: 1080, height: 1620, left: 0, top: 0 },
+    },
+    mvp: PMGO_BRAZIL_GREEN_FALLBACK_BG,
+    announcement: PMGO_BRAZIL_GREEN_FALLBACK_BG,
+  },
+  canvasBackground: "#000000",
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: true },
+  uniformMvpRows: true,
+  hideScrimName: true, // the art bakes "OVERALL RANKINGS"; fallback titles parked
+  header: {
+    title: { x: -9999, y: -9999, w: 0 },
+    // Painted only on standings: digits in the free slot right of the baked
+    // "#", vertically centred on the yellow-green badge's measured midpoint.
+    subtitle: { x: 640.2, y: 284.7, w: 43, align: "center" },
+    organizer: { x: -9999, y: -9999, w: 0 },
+    titleFont: `500 1px ${FONTS}`,
+    subtitleFont: `900 36px ${FONTS}`,
+    subtitleColor: "#000000",
+    subtitleTextTransform: "uppercase",
+    organizerFont: `500 1px ${FONTS}`,
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 37, // baked yellow/black rank square art x35–81
+        teamX: 88, // first clear pixel inside the white bar
+        teamW: 178, // ends at 266, before the WWCD divider at 270
+        statColumns: [
+          { key: "wwcd", x: 279.2 }, // baked ink centre 303.2
+          { key: "pp", x: 347.8 }, // 371.8
+          { key: "kp", x: 415.8 }, // 439.8
+          { key: "total", x: 479.6 }, // 503.6
+        ],
+        stripX: 88,
+        stripW: 178,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 546, // baked rank square art x518–564
+        teamX: 598,
+        teamW: 178, // ends at 776, before the right WWCD divider
+        statColumns: [
+          { key: "wwcd", x: 788.6 }, // baked ink centre 812.6
+          { key: "pp", x: 856.7 }, // 880.7
+          { key: "kp", x: 925.75 }, // 949.75
+          { key: "total", x: 989 }, // 1013.0
+        ],
+        stripX: 598,
+        stripW: 178,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 366, // baked green→yellow label band top
+    rowY0: 435.54, // box centre 463.54 = painted row-1 centre
+    rowPitch: 67.7876, // measured row-1 → row-12 centre distance / 11
+    rowHeight: 56, // inside the 56.95–58.01px painted bars
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48,
+    logoPlate: 34,
+    logoNameGap: 38,
+    uniformRowInk: true, // the baked yellow #1 badge is the rank-1 emphasis
+    uniformStatInk: true,
+    nameFont: `800 22px ${FONTS}`,
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#D6F836", // the badge / brand lime
+    text: "#0B0F1A", // deep near-black name + stat ink on the white bars
+    textMuted: "#0B0F1A",
+    rowAlt: "#0B0F1A",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#0B0F1A",
+    watermarkColor: "#D6F836", // lime on the art's dark footer
+    plateBg: "rgba(11,15,26,0.08)",
+    plateRing: "rgba(11,15,26,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0B0F1A",
+  },
+};
+
+const PMGO_TEAL_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Artless MVP + announcement variants only: deep broadcast teal → snow-teal.
+  // The near-white title/label ink clears 4.5:1 on both stops.
+  css: "linear-gradient(165deg, #062B3A 0%, #0A4256 100%)",
+  decor: [],
+};
+
+/**
+ * PMGO Teal — the 2025 PMGO Main Event "OVERALL STANDINGS" snow-scene board.
+ *
+ * Art: `overall.png` is a TRUE 1696×2528 PNG supplied by the user (the repo's
+ * established art filename). Uniform WIDTH fit S = 1080/1696 = 0.63679245
+ * gives a 1080×1609.811 box centred at top +5.094 — no stretch, no distortion.
+ * Every number below was measured on art pixels through
+ * canvasX = artX·S, canvasY = artY·S + 5.094. `refrence.jpeg` is the visual
+ * reference only and is NEVER registered as a background.
+ *
+ * - The art bakes the "OVERALL STANDINGS" headline (art x252–1491, y267–406 →
+ *   canvas x160–949, centre 555), the cyan "MATCH #" lockup (art x717–981,
+ *   y437–499 → canvas x457–625, y283–323), both cyan header bars with their
+ *   TEAM / chicken / PLACE PTS. / ELIMS / TOTAL labels, all 24 rank badges and
+ *   all row bars → labelsBakedIn + ranksBakedIn + hidden scrim name. Only the
+ *   confirmed-match DIGITS are painted after the baked "#" (subtitleMode:
+ *   "matchNumber"); the words are never printed twice.
+ * - Two painted tables, 12 bars each. Row-1 bar top art y646 → canvas 416.46;
+ *   pitch (2003−646)/11 = 123.3636 art → 78.56 canvas; bar height 108 art →
+ *   68.77 canvas (text centre 450.53 = row-1 painted centre; row 12 centre
+ *   1315.1 vs baked 1314.5, <0.6px drift). 24 → [12,12] via rowsPerColumn 12.
+ * - Stat ink centres (art → canvas): WWCD chicken 467→297.4, PLACE 570.5→
+ *   363.3, ELIMS 678→431.8, TOTAL 766.5→488.1 (left); right +806 art → 811.0/
+ *   876.2/945.3/1001.7, NOT a uniform shift. 52px value boxes centred there
+ *   stay inside their header compartments and never cross a divider.
+ * - Team ink starts just right of the baked white rank separator (left art
+ *   x209–212 → canvas ≤135, right art x1015–1019 → canvas ≤649) and stops
+ *   before the WWCD box (left 271, right 785).
+ * - Deep navy #0B1220 data ink on the measured teal plates (mean #51A6B9)
+ *   reads 6.7:1; the brightest ELIMS/TOTAL plates clear 7:1. The baked
+ *   near-white title (#F0FDFF) reads 10.4:1 on the measured dark-teal field
+ *   (#0B4259), and the cyan digits (#2DD4EE) read 6.1:1 — both above WCAG AA.
+ * - MVP + announcement have no art → deep-teal gradient fallback.
+ */
+const PMGO_TEAL: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmgo-teal",
+  name: "PMGO Teal",
+  canvasBackground: "#043350", // sampled top edge behind the 5px letterbox
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmgo-teal/overall.png",
+      // Uniform width fit; centred 5.09px letterbox. No distortion.
+      fit: {
+        width: 1080,
+        height: 1609.811320754717,
+        left: 0,
+        top: 5.094339622641428,
+      },
+    },
+    mvp: PMGO_TEAL_FALLBACK_BG,
+    announcement: PMGO_TEAL_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: true }, // "MATCH #" is in the art; digits only
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants keep a normal Exo 2 800 uppercase header; standings
+    // parks the title/organizer (the art bakes them) and moves the digit slot.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `800 62px ${FONTS}`,
+    subtitleFont: `700 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+    titleTextTransform: "uppercase",
+  },
+  variantHeaders: {
+    standings: {
+      title: { x: -9999, y: -9999, w: 0 },
+      // Baked "#" ink ends canvas x624.7; digits start 9.3px right of it and
+      // sit on the measured cyan-ink band (y283–323), below the baked title.
+      subtitle: { x: 634, y: 278, w: 68, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `800 56px ${FONTS}`,
+      subtitleColor: "#2DD4EE",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // "OVERALL STANDINGS" is baked into the art
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 49, // baked rank badge; no code-drawn numeral
+        teamX: 136, // first clear pixel right of the baked white separator
+        teamW: 134, // ends at 270, before the WWCD value box (271.4)
+        statColumns: [
+          { key: "wwcd", x: 271.4 }, // chicken ink centre 297.4
+          { key: "pp", x: 337.3 }, // PLACE PTS ink centre 363.3
+          { key: "kp", x: 405.8 }, // ELIMS ink centre 431.8
+          { key: "total", x: 462.1 }, // TOTAL ink centre 488.1
+        ],
+        stripX: 42, // painted bar x66–824
+        stripW: 483,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 577, // baked rank badge of the right table
+        teamX: 651, // right separator ends art x1019 (canvas 648.9)
+        teamW: 133, // ends at 784, before the WWCD box (785)
+        statColumns: [
+          { key: "wwcd", x: 785 }, // chicken ink centre 811.0
+          { key: "pp", x: 850.2 }, // PLACE PTS ink centre 876.2
+          { key: "kp", x: 919.3 }, // ELIMS ink centre 945.3
+          { key: "total", x: 975.7 }, // TOTAL ink centre 1001.7
+        ],
+        stripX: 555, // painted bar x871–1629
+        stripW: 482,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 366.2, // baked label band top — code draws no labels
+    rowY0: 416.46, // painted bar 1 top (art 646)
+    rowPitch: 78.56, // (art 2003 − 646) / 11 × S
+    rowHeight: 68.77, // painted bar interior (art 108 × S)
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 52,
+    logoPlate: 32,
+    logoNameGap: 38,
+    uniformRowInk: true, // baked badges carry the rank emphasis
+    uniformStatInk: true,
+    nameFont: `800 25px ${FONTS_FULL}`, // system-ui keeps Arabic/CJK glyphs
+    statFont: `800 27px ${FONTS_FULL}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#F0FDFF", // measured baked headline ink; fallback accent
+    text: "#0B1220", // deep navy data ink on the teal plates (≥6.7:1)
+    textMuted: "#F0FDFF", // pale header ink on dark teal (10.4:1)
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#0B1220",
+    watermarkColor: "#FFFFFF", // hard legibility on the snowy footer
+    plateBg: "rgba(255,255,255,0.18)",
+    plateRing: "rgba(11,18,32,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#062B3A",
+  },
+};
+
+const PMHI_CRIMSON_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // The PMHI art only backs standings. MVP + announcement fall back to the
+  // same deep-crimson broadcast wash; pure-white ink clears every stop.
+  css: "linear-gradient(165deg, #2A0710 0%, #5C0D1E 55%, #1A0508 100%)",
+  decor: [],
+};
+
+/**
+ * PMHI Crimson — the 2023 PMHI Indonesia broadcast OVERALL standings board.
+ *
+ * Art: `standings.png` is a TRUE 1696×2528 PNG (byte-identical to the supplied
+ * `overall.png`). It is NOT exactly 2:3, so it is uniformly WIDTH-fitted:
+ * S = 1080/1696 = 0.6367924528 → 1080×1609.8113, centred with a 5.0943px
+ * letterbox top/bottom (filled by `canvasBackground`). No stretching; every
+ * number below is an art-pixel measurement converted by canvasY = artY×S + 5.0943.
+ *
+ * - Art bakes the teal "OVERALL RANKINGS" title, the cyan label band
+ *   (art y666–742 → canvas 429.2–477.6), all #1–#24 rank ink and all row
+ *   bars → labelsBakedIn + ranksBakedIn + hidden scrim name. No code labels,
+ *   no code numerals, no re-rendered title.
+ * - 12 painted bars per column: baked row-1 rank centre art y808 → canvas
+ *   519.7; separator tops 746, 872, 994, 1119, 1245, … → least-squares pitch
+ *   125.2 art = 79.73 canvas. Text box top art y747 → canvas 480.7, height
+ *   78 (≤ pitch), so row 1's centre lands on the baked rank ink and row 12's
+ *   centre is canvas 1396.7 (last bar bottom ≈1436). 24 → [12,12].
+ * - Header label ink centres (canvas): left WWCD 292.3 / PLACE PTS 369.3 /
+ *   ELIMS 441.9 / TOTAL 498.9; right +528.9 (821.1 / 898.5 / 970.2 / 1027.5).
+ *   The right shift is NOT uniform; each 48px stat box is centred on its own
+ *   measured ink. TEAM starts at art 205 / 1036 → canvas 136 / 665.
+ * - The red "MATCH #" pill occupies art x646–853 y522–598; the empty black
+ *   digit slot is art x854–1060 → canvas x548.9 w131.2 y337.5. Exo 2 800
+ *   uppercase pure-white digits are centred in that box (≤3 digits fit).
+ * - Row interiors are dark crimson (#6E0D1D mean): pure-white Exo 2 800
+ *   names/stats clear 7:1. The rank-1 emphasis is baked into the art, so no
+ *   synthetic strip/accent is drawn. MVP + announcement use the crimson wash.
+ */
+const PMHI_CRIMSON: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmhi-crimson",
+  name: "PMHI Crimson",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmhi-crimson/standings.png",
+      fit: {
+        width: 1080,
+        height: 1609.811320754717,
+        left: 0,
+        top: 5.094339622641509,
+      },
+    },
+    mvp: PMHI_CRIMSON_FALLBACK_BG,
+    announcement: PMHI_CRIMSON_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  // Neutral deep-crimson fill behind the 5.09px uniform-fit letterbox: no
+  // transparent strip in the exported PNG, no stretching. The supplied art's
+  // own top/bottom edges differ in brightness, so one colour cannot match both.
+  canvasBackground: "#2A0710",
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `700 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL RANKINGS" and the words "MATCH #"; park the
+      // title/organizer and paint ONLY the confirmed-match digits in the
+      // measured black slot to the right of the baked pill.
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 548.92, y: 337.5, w: 131.17, align: "center" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `800 36px ${FONTS}`,
+      subtitleColor: "#FFFFFF",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL RANKINGS"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 43.3, // baked white rank ink x69–104 art; no code numeral
+        teamX: 136, // first clear pixel of the TEAM cell (art x205)
+        teamW: 130, // ends at 266, 2px before the WWCD box
+        statColumns: [
+          { key: "wwcd", x: 268.29 },
+          { key: "pp", x: 345.34 },
+          { key: "kp", x: 417.93 },
+          { key: "total", x: 474.93 },
+        ],
+        stripX: 38,
+        stripW: 490,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 565.47, // baked rank ink art x895–931
+        teamX: 665, // TEAM cell starts art x1036 (NOT +529 uniform)
+        teamW: 130,
+        statColumns: [
+          { key: "wwcd", x: 797.14 },
+          { key: "pp", x: 874.51 },
+          { key: "kp", x: 946.15 },
+          { key: "total", x: 1003.46 },
+        ],
+        stripX: 560,
+        stripW: 490,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 429.2, // cyan baked label band top (art y666)
+    rowY0: 480.72, // text box top art y747; row-1 centre = 519.7
+    rowPitch: 79.73, // least-squares fit of the 12 baked bar centres (125.2 art)
+    rowHeight: 78, // painted interior height, always ≤ rowPitch
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 48,
+    logoPlate: 30,
+    logoNameGap: 36,
+    uniformRowInk: true, // rank-1 badge is baked; no synthetic highlight
+    uniformStatInk: true,
+    nameFont: `800 22px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 20px ${FONTS}`,
+  },
+  palette: {
+    accent: "#46D6D5", // the art's teal title ink
+    text: "#FFFFFF", // pure-white Exo 2 800 names + stats
+    textMuted: "#CFE9E8",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#FFFFFF",
+    watermarkColor: "#FFFFFF", // brand watermark ink; position stays hardcoded
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(255,255,255,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#1A0508",
+  },
+};
+
+const PMNC_PAKISTAN_LIME_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Artless MVP/announcement fallbacks: light lime → fresh green. The dark
+  // #050505 row ink from the standings art clears 7:1 on every stop.
+  css: "linear-gradient(165deg, #F2F9D6 0%, #D9F09A 55%, #B9E050 100%)",
+  decor: [],
+};
+
+/**
+ * PMNC Pakistan Lime — the Pakistan National Championship broadcast leaderboard.
+ *
+ * Art: `public/templates/pmnc-pakistan-lime/overall.png`, a TRUE 1696×2528 PNG
+ * (ratio 0.6710, 0.6% wider than 2:3). Uniform HEIGHT fit S = 1620/2528 =
+ * 0.6408227848 draws 1086.835×1620 at left −3.4177 — a 3.4px cover crop per
+ * side, zero distortion. Every canvas number below was measured off those
+ * pixels through canvasX = artX·S − 3.4177, canvasY = artY·S.
+ *
+ * - The art bakes the two-line "OVERALL LEADERBOARD" headline (white ink art
+ *   x59–759 y23–299), the black label bands (art y364–420 → canvas 233.3–269.2)
+ *   printing TEAMS | PLACE | KILL | TOTAL twice, all rank numerals #1–#24 and
+ *   both 12-row tables → labelsBakedIn + ranksBakedIn + hideScrimName.
+ * - Baked rank-ink centres (art y500, 667, 837.5 … 2393) give canvas centres
+ *   320.41 … 1533.49: rowY0 272.4114 with a 96px box seats rows 1/13 at 320.41
+ *   and rows 12/24 at 1533.49 exactly. The art's pitch is mildly non-uniform
+ *   (167→174 art px), so mid-table rows drift ≤7px; a single fixed pitch is the
+ *   closest fit (per-row centre arrays exist only on the MVP/announcement
+ *   layouts, not on `StandingsTableSpec`).
+ * - Measured label-ink centres (canvas): left PLACE 387.5 / KILL 442.1 / TOTAL
+ *   495.9; right 906.0 / 959.7 / 1013.3 (uniform +518px shift). 46px value
+ *   boxes at 364.5/419/473 and 883/936.5/990.5 centre on them without overlap.
+ *   The chicken (WWCD) compartment is the open gap left of PLACE: centres 333 /
+ *   851 → boxes at 310 / 828. Team slots start at x106 / x634, 5px clear of
+ *   the FULL baked rank ink (right edges x101 / x629 for #12 / #24).
+ * - Baked "MATCH #" ink ends art x1246 → canvas x795.7, centred canvas y120.2
+ *   in the white banner. That banner is a parallelogram whose RIGHT edge
+ *   tapers from canvas x860 at y77 to x844 at y102 and x828 at y128 — the
+ *   white wedge after the baked "#" is only ~50px wide. The digits therefore
+ *   sit at x802 in italic 800 36px (with −0.04em tracking): two digits occupy
+ *   ≈41px and stay fully on white through their y78–106 ink band. A larger
+ *   face would spill onto the green field (#5C8A00 there is 2:1, illegible).
+ *   `subtitleMode: "matchNumber"` paints ONLY the confirmed-match number.
+ * - Row interiors are white/light-grey (row 1 lime #81BA15): #050505 Exo 2 800
+ *   ink reads ≥8:1. The brand-law watermark stays hardcoded at y1570; dark
+ *   #0F1115 ink clears the light row-12 band. MVP + announcement have no art →
+ *   light lime gradient fallback.
+ */
+const PMNC_PAKISTAN_LIME: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmnc-pakistan-lime",
+  name: "PMNC Pakistan Lime",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmnc-pakistan-lime/overall.png",
+      // Uniform ×1620/2528 height fit; centred cover crop (3.42px/side), no
+      // distortion, so every measured slot lands exactly on the config coords.
+      fit: {
+        width: 1086.8354430379747,
+        height: 1620,
+        left: -3.417721518987349,
+        top: 0,
+      },
+    },
+    mvp: PMNC_PAKISTAN_LIME_FALLBACK_BG,
+    announcement: PMNC_PAKISTAN_LIME_FALLBACK_BG,
+  },
+  canvasBackground: "#81BA15", // hidden by the cover crop; matches row-1 lime
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal header;
+    // standings parks the synthetic slots and seats the digits in the banner.
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `800 54px ${FONTS}`,
+    subtitleFont: `600 36px ${FONTS}`,
+    organizerFont: `500 24px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes "OVERALL LEADERBOARD" + "MATCH #": hide the scrim name,
+      // park the optional organizer, and paint ONLY the confirmed-match digits
+      // in the measured white slot after the "#" (ink ends canvas x795).
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 802, y: 72, w: 44, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `italic 800 36px ${FONTS}`,
+      subtitleLetterSpacing: "-0.04em",
+      subtitleColor: "#5C8A00",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // the art bakes "OVERALL LEADERBOARD"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 50, // baked rank ink centre x74; no code numeral
+        teamX: 106, // 5px clear of the widest baked rank ink (#12 ends x101)
+        teamW: 198, // ends at 304, 6px before the WWCD box at 310
+        statColumns: [
+          { key: "wwcd", x: 310 }, // chicken compartment centre 333
+          { key: "pp", x: 364.5 }, // PLACE label ink centre 387.5
+          { key: "kp", x: 419 }, // KILL ink centre 442.1
+          { key: "total", x: 473 }, // TOTAL ink centre 495.9
+        ],
+        stripX: 106,
+        stripW: 420,
+        ranksBakedIn: true,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 568, // baked rank ink centre x592.5
+        teamX: 634, // 5px clear of the widest baked rank ink (#24 ends x629)
+        teamW: 188, // ends at 822, 6px before the WWCD box at 828
+        statColumns: [
+          { key: "wwcd", x: 828 }, // centre 851
+          { key: "pp", x: 883 }, // centre 906
+          { key: "kp", x: 936.5 }, // centre 959.5
+          { key: "total", x: 990.5 }, // centre 1013.5
+        ],
+        stripX: 634,
+        stripW: 420,
+        ranksBakedIn: true,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 233, // black baked label band top (art y364)
+    rowY0: 272.4113924050633, // row-1 box centre 320.41 = baked rank ink centre
+    rowPitch: 110.2797756041427, // baked rank ink centres 320.41 … 1533.49 / 11
+    rowHeight: 96, // ≤ pitch; painted bar interior 96–100px
+    maxRowsLeft: 12,
+    // `rowsPerColumn` is deliberately NOT set: the engine's default splitRows()
+    // yields 24 → [12,12] but 16 → [8,8] — exactly the reference image's 8+8
+    // layout with the remaining baked rows left blank.
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 46,
+    logoPlate: 30,
+    logoNameGap: 34,
+    uniformRowInk: true, // the art bakes its own rank-1 lime bar
+    uniformStatInk: true,
+    nameFont: `800 21px ${FONTS}`,
+    statFont: `800 25px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#5C8A00",
+    text: "#050505",
+    textMuted: "#050505",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 pill over the baked lime bar
+    wwcdText: "#050505",
+    watermarkColor: "#0F1115",
+    plateBg: "rgba(5,5,5,0.08)",
+    plateRing: "rgba(92,138,0,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#FFFFFF",
+  },
+};
+
+const PMPL_SEA_PURPLE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // The standings art paints DARK charcoal ink on white cards, so the two
+  // artless (parked) variants use a light lavender→white fallback; the dark
+  // footer bar keeps the fixed white brand watermark legible there too.
+  css: "linear-gradient(165deg, #EDE9F6 0%, #FFFFFF 100%)",
+  decor: [{ kind: "bar", x: 0, y: 1520, w: 1080, h: 100, color: "#2A0B45" }],
+};
+
+/**
+ * PMPL SEA Purple — the 2022 PMPL SEA Championship "OVERALL RANKINGS" board.
+ *
+ * Art: the supplied blank is a 1696×2528 PNG (ratio 0.6709, 0.6% wider than
+ * 2:3). It is delivered as `standings.png` by a uniform ×1620/2528 height fit
+ * to 1087×1620, centre-cropped 3px to an EXACT 1080×1620 canvas — no stretch,
+ * no distortion. Every coordinate below was re-measured on that delivered
+ * canvas pixel-for-pixel (no reliance on stale art comments).
+ *
+ * - The art bakes the orange "OVERALL RANKINGS" headline, the neon-yellow
+ *   brush "MATCH #" lockup, BOTH label bands, every rank badge and every white
+ *   card row → labelsBakedIn + ranksBakedIn + hideScrimName. Fifteen-to-twenty-
+ *   four teams fill the left ladder first (12 slots) then the right one.
+ * - Row cards are NOT equally spaced: their measured midpoints (canvas) are
+ *   360, 449.5, 537, 621, 712.5, 806.5, 913, 1004.5, 1098.5, 1194, 1287, 1379
+ *   (nominal least-squares pitch 93.42). `rowCenterYs` seats each text box on
+ *   its own card centre; a single pitch would drift ~18px on rows 4–6.
+ * - Left white cards span x113–515, dividers at x331–332 / 380–381 / 443–444;
+ *   right cards x625–1027, dividers at x843–844 / 892–893 / 955–956. The art
+ *   prints exactly THREE stat compartments per side — ELIMS, RANK PTS, TOTAL
+ *   PTS — mapped to the domain's kp / pp / total stats (there is no baked
+ *   BONUS PTS column; ELIMS is the elimination-points stat). 46px value boxes
+ *   at 333/389/456 and 845/901/968 centre on those compartments without
+ *   crossing a divider; team cells are [113,331) and [625,843).
+ * - The baked '#' ink ends at canvas x986, y159–233. The 88px-wide match slot
+ *   starts at x992 (6px gap) and uses Permanent Marker (`--font-brush`) 76px
+ *   in #EAFF00, matching the brush lockup; only the confirmed digits render.
+ * - #111318 team ink reads ~17:1 on the white cards; #1a1c23 is the muted
+ *   secondary ink. Uniform row/stat ink keeps the baked rank badges in charge
+ *   of all rank-1 emphasis. Fixed pure-white watermark ink on the black footer.
+ */
+const PMPL_SEA_PURPLE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmpl-sea-purple",
+  name: "PMPL SEA Purple",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmpl-sea-purple/standings.png",
+    },
+    mvp: PMPL_SEA_PURPLE_FALLBACK_BG,
+    announcement: PMPL_SEA_PURPLE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 72px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 26px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      title: { x: -9999, y: -9999, w: 0 },
+      // Digits only: the art already prints the brush "MATCH #" words.
+      subtitle: { x: 992, y: 156, w: 88, align: "left" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `900 76px ${BRUSH_FONTS}`,
+      subtitleColor: "#EAFF00",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  hideScrimName: true,
+  variantHideScrimName: { standings: true },
+  standings: {
+    columns: [
+      {
+        rankX: 73, // baked badge x35–112; no code-drawn numeral
+        teamX: 113, // first clear pixel inside the left white card
+        teamW: 218, // ends at the first divider (x331)
+        statColumns: [
+          { key: "kp", x: 333 }, // ELIMS cell [332,380], centre 356
+          { key: "pp", x: 389 }, // RANK PTS cell [381,443], centre 412
+          { key: "total", x: 456 }, // TOTAL PTS cell [444,515], centre 479.5
+        ],
+        stripX: 113,
+        stripW: 403,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 585, // baked right-column badge x548–623
+        teamX: 625,
+        teamW: 218, // ends at x843, the right table's first divider
+        statColumns: [
+          { key: "kp", x: 845 }, // ELIMS cell [844,892], centre 868
+          { key: "pp", x: 901 }, // RANK PTS cell [893,955], centre 924
+          { key: "total", x: 968 }, // TOTAL PTS cell [956,1027], centre 991.5
+        ],
+        stripX: 625,
+        stripW: 402,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 282, // baked label band — code draws no labels
+    rowY0: 321, // first painted card top
+    rowPitch: 93.42, // least-squares fit of the 12 baked card midlines
+    rowHeight: 72, // stays inside the narrowest painted card (73px)
+    rowCenterYs: [
+      360, 449.5, 537, 621, 712.5, 806.5, 913, 1004.5, 1098.5, 1194, 1287,
+      1379,
+    ],
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 46, // the tight ELIMS compartment is only 48px wide
+    logoPlate: 44,
+    logoNameGap: 52,
+    uniformRowInk: true, // baked rank-1 badge owns the emphasis
+    uniformStatInk: true,
+    nameUppercase: true,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#EAFF00", // neon-yellow brush lockup
+    text: "#111318", // dark charcoal on the white cards (~17:1)
+    textMuted: "#1a1c23", // secondary stats/supporting ink
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the cards — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)",
+    wwcdText: "#111318",
+    watermarkColor: "#ffffff", // fixed brand ink on the black footer
+    plateBg: "rgba(17,19,24,0.08)",
+    plateRing: "rgba(17,19,24,0.28)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#111318",
+  },
+};
+
+const PMRC_LIME_FALLBACK_BG: TemplateConfig["backgrounds"]["standings"] = {
+  type: "gradient",
+  // The art is black (#0B0D12); the artless MVP/announcement fallbacks keep
+  // that same near-black field with a faint lime lift so pure-white ink stays
+  // WCAG AAA on every stop (≥ 14:1, pinned in the template suite).
+  css: "linear-gradient(165deg, #0B0D12 0%, #12151B 55%, #1A1E16 100%)",
+  decor: [],
+};
+
+/** PMRC Lime — the 2024 PMGC "OVERALL RANKINGS" broadcast poster.
+ *
+ *  Art: `overall.png` is a TRUE 1024×1536 PNG (exact 2:3), drawn full-cover
+ *  at the uniform canvas scale S = 1080/1024 = 1.0546875 with no crop. Every
+ *  coordinate below is measured on those pixels and converted by artPx × S.
+ *
+ *  - Baked header: "OVERALL" (mean ink #FB8903) over "RANKINGS" (#FFFFFF) in
+ *    the top band, then an orange→lime-gold bar at art y460–493 (canvas
+ *    485.1–520.1) printing TEAM | ELIMS | PLACEMENT | TOTAL PTS twice. Dark
+ *    label ink centres (canvas): left 210.3 / 310.4 / 383.4 / 481.2, right
+ *    682.4 / 782.3 / 855.1 / 952.8. `labelsBakedIn` draws no label row and
+ *    `variantHideScrimName.standings` hides the session title.
+ *  - Baked "MATCH #" lime brush lockup (measured mean #AFEE23) spans art
+ *    x387–599 / y336–392 → canvas x408.2–632.0 / y354.5–413.4, centred at
+ *    (520, 384) between the two lime rules at canvas x314–377 and x694–764.
+ *    The dynamic MATCH N slot is centred there. The art's own words stay in
+ *    place; `subtitlePrefix` supplies "MATCH " once the renderer applies it.
+ *  - 12 painted rank plates per column (art x67–121 / x516–570; white with
+ *    black #1..#24 baked in) at art tops 504, 563, …, 1174. Their measured
+ *    canvas centres are 557.4 … 1265.1; a single fixed pitch of 64.55 with a
+ *    53px text box seats every row within 2.3px of its painted centre (zero
+ *    cumulative drift), so `ranksBakedIn` draws no code numerals. A 25th team
+ *    falls below the last plate — never dropped.
+ *  - Charcoal row interiors (mean RGB 28/27/27) hold short white team names
+ *    and three stat values, in order ELIMS(kp) → PLACEMENT(pp) → TOTAL PTS.
+ *    Value boxes are 50px wide, centred on the baked header ink; the logo
+ *    plate sits in the narrow compartment just right of the rank plate and
+ *    the name shifts +52px past the first painted rule (art x172 → canvas
+ *    181.4), exactly as the filled reference's flag + logo + name lockup.
+ *  - Bottom-right watermark zone (canvas x730–1010 / y1570–1600) averages
+ *    RGB 20.5/20.5/20.4 — the gold arc ends before x660 — so the hardcoded
+ *    brand-law watermark uses 88% white ink (≈14:1).
+ *  - MVP + announcement have no art → near-black gradient fallback. */
+const PMRC_LIME: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmrc-lime",
+  name: "PMRC Lime",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmrc-lime/overall.png",
+      // The 1024×1536 source is uniformly upscaled to the exact canvas —
+      // zero crop, zero distortion (art px × 1080/1024 = every coordinate).
+      fit: { width: 1080, height: 1620, left: 0, top: 0 },
+    },
+    mvp: PMRC_LIME_FALLBACK_BG,
+    announcement: PMRC_LIME_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: false }, // the dynamic text supplies "MATCH " + digits
+  subtitlePrefix: "MATCH ",
+  uniformMvpRows: true,
+  variantHideScrimName: {
+    standings: true, // art bakes "OVERALL RANKINGS" in the top band
+  },
+  header: {
+    // Fallback variants (MVP/announcement gradient) keep a normal title; the
+    // standings override below moves the only dynamic ink into the brush slot.
+    title: { x: 90, y: 84, w: 900, align: "center" },
+    subtitle: { x: 390, y: 357, w: 260, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `800 46px ${FONTS}`,
+    subtitleFont: `400 48px ${BRUSH_FONTS}`,
+    organizerFont: `500 22px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Box centred on the measured baked "MATCH #" ink (canvas 520, 384).
+      // 48px marker ink stays inside the 260px slot between the baked rules.
+      subtitle: { x: 390, y: 357, w: 260, align: "center" },
+      subtitleFont: `400 48px ${BRUSH_FONTS}`,
+      subtitleColor: "#AFEE23",
+      // Park the optional organizer in the clear dark band below the brush
+      // slot (ends y413) and above the baked header bar (starts y485).
+      organizer: { x: 140, y: 440, w: 800, align: "center" },
+      organizerFont: `600 18px ${FONTS}`,
+    },
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 70.7, // baked white rank plate art x67–121
+        teamX: 135, // first clear pixel inside the charcoal row (art x128)
+        teamW: 142, // stops before the ELIMS value box at x285
+        statColumns: [
+          { key: "kp", x: 285 }, // ELIMS ink centre 310.4
+          { key: "pp", x: 358 }, // PLACEMENT ink centre 383.4
+          { key: "total", x: 456 }, // TOTAL PTS ink centre 481.2
+        ],
+        stripX: 129,
+        stripW: 398, // right edge 527, inside the art's left bar (art x500)
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 544.2, // baked right rank plate art x516–570
+        teamX: 610, // first clear pixel right of that plate (art x578)
+        teamW: 142, // stops before the ELIMS value box at x757
+        statColumns: [
+          { key: "kp", x: 757 }, // ELIMS ink centre 782.3
+          { key: "pp", x: 830 }, // PLACEMENT ink centre 855.1
+          { key: "total", x: 928 }, // TOTAL PTS ink centre 952.8
+        ],
+        stripX: 603,
+        stripW: 414, // right edge 1017, inside the art's right bar (art x964)
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 485, // baked orange→lime bar top (art y460)
+    // Least-squares fit through the 12 measured plate centres (canvas
+    // 557.4 … 1265.1): box centre = rowY0 + rowHeight/2 + i*rowPitch.
+    rowY0: 528.69,
+    rowPitch: 64.5461,
+    rowHeight: 53, // ≤ rowPitch; plate interior ~50–53 art px
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 50,
+    logoPlate: 28, // the filled reference's small square logo
+    logoNameGap: 52, // WITH a logo the name starts past rule 1 (canvas 181);
+    // without a logo it starts at teamX in the narrow flag/logo compartment
+    uniformRowInk: true, // rank 1 is already marked by its white plate
+    uniformStatInk: true, // every numeral pure white on the charcoal bars
+    nameFont: `800 21px ${FONTS}`, // short reference names fit the clear cell
+    statFont: `800 24px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`, // labels baked; kept for config consumers
+  },
+  palette: {
+    accent: "#AFEE23", // measured lime brush ink
+    text: "#FFFFFF", // pure white row ink on the charcoal bars
+    textMuted: "#C9D2C7", // muted sage on fallback gradients (≥ 9:1)
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0.04,
+    wwcdBg: "rgba(175,238,35,0.10)",
+    wwcdText: "#FFFFFF", // the baked white plate supplies rank-1 emphasis
+    watermarkColor: "rgba(255,255,255,0.88)", // dark gold/black footer zone
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(175,238,35,0.45)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0B0D12",
+  },
+};
+
+const PMSL_CSA_AMBER_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Espresso → burnt amber. White row ink clears every stop; used only by the
+  // artless MVP / announcement variants (parking lot for this template).
+  css: "linear-gradient(165deg, #3B1F17 0%, #7A3B0B 100%)",
+  decor: [],
+};
+
+/**
+ * PMSL CSA Amber — the PUBG Mobile South Asia "OVERALL STANDINGS" broadcast art.
+ *
+ * Art: `standings.png` is a TRUE 1696×2528 PNG (not a JPEG payload in a .png
+ * name). A uniform HEIGHT fit S = 1620/2528 = 0.6408227848 draws it 1086.8354
+ * wide at left −3.4177 (a 3.42px cover crop per side, zero top/bottom
+ * letterbox). Every coordinate below is measured on art pixels through
+ * canvasX = artX·S − 3.4177, canvasY = artY·S. Second review pass: re-sniffed
+ * the IHDR (1696×2528) and re-measured every row/ink centre against the file
+ * on disk; none of the pins below changed.
+ *
+ * - The art bakes the espresso "OVERALL STANDINGS" headline (title), the full
+ *   purple label band (RANK / TEAMS / chicken WWCD icon / PLACE PTS. / ELIMS /
+ *   TOTAL PTS.), all 24 rank numerals and all row bars → labelsBakedIn +
+ *   ranksBakedIn + `variantHideScrimName.standings`; no code-drawn title,
+ *   labels or ranks. 12 painted bars per column: bar 1 top art 841, bottom
+ *   art 922 (82px interior), rank-ink centres 881.5 … 1904.5 → rowY0 538.93,
+ *   fixed pitch 59.6 (93 art px), rowHeight 52.5 (text centre 565.18 =
+ *   bar-1 painted centre 565.21, 0.03px drift at rows 1/12/13/24). 24 → [12,12] via
+ *   splitRowsAt; 16 → [12,4] (left-first, so baked ranks still match); fewer
+ *   teams leave the remaining painted bars blank.
+ * - Baked stat-ink centres (art) left WWCD icon 523.5, PLACE 609, ELIMS 697,
+ *   TOTAL 783.5 → canvas 332.05 / 386.84 / 443.24 / 498.67. The right table
+ *   repeats at +819 art px (canvas +524.8), NOT a uniform rank/team shift.
+ *   44px value boxes centred on those midpoints never cross a divider.
+ * - The art bakes the amber "MATCH #" lockup (ink art x636–1061, y598–655 →
+ *   canvas x404.15–676.5, y383.21–419.74). `subtitleMode: "matchNumber"`
+ *   therefore paints ONLY the confirmed-match digits in the clear sky slot
+ *   after the "#": 900 Exo 2 #C26700, 48px, centred in x680..752 (centre
+ *   716) at y377.5 so the digit ink lands on the measured amber midline
+ *   y401.5. MATCH 1 and MATCH 10 share one slot → no horizontal drift.
+ * - Row interiors are dark bronze (mean WCAG luminance ≤0.09); pure-white
+ *   Exo 2 800 names/stats clear 7:1. The mandated #C26700 measures ~2.3:1 on
+ *   the bright amber sky (a brand-ink limitation of the supplied art, not a
+ *   layout bug); it is pinned at its measured ratio rather than faked.
+ *   Black canvasBackground backs the 3px side crop; the black footer gives
+ *   the fixed white watermark 21:1. MVP + announcement are gradient artless.
+ */
+const PMSL_CSA_AMBER: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmsl-csa-amber",
+  name: "PMSL CSA Amber",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmsl-csa-amber/standings.png",
+      // Uniform ×1620/2528 height fit; 3.42px cover crop per side, no
+      // distortion and no vertical letterbox (every painted slot stays exact).
+      fit: {
+        width: 1086.8354430379747,
+        height: 1620,
+        left: -3.4177215189873657,
+        top: 0,
+      },
+    },
+    mvp: PMSL_CSA_AMBER_FALLBACK_BG,
+    announcement: PMSL_CSA_AMBER_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  subtitleBakedIn: { standings: true }, // art bakes the words "MATCH #"
+  uniformMvpRows: true,
+  canvasBackground: "#000000", // behind the 3.42px uniform side crop
+  header: {
+    // Fallback MVP/announcement variants keep a normal header; the standings
+    // override parks title/organizer (baked art) and seats only the digits.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `700 72px ${FONTS}`,
+    subtitleFont: `600 40px ${FONTS}`,
+    organizerFont: `500 26px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      title: { x: -9999, y: -9999, w: 0 },
+      // Digits slot: amber ink bbox y383.21..419.74 (centre 401.48); a 48px
+      // line box centred there starts at 377.48 → 377.5. Centred align keeps
+      // "1" and "10" on the same axis; the slot centre sits 39px right of the
+      // baked "#" ink end, leaving ~10px clearance for a two-digit glyph.
+      subtitle: { x: 680, y: 377.5, w: 72, align: "center" },
+      organizer: { x: -9999, y: -9999, w: 0 },
+      titleFont: `500 1px ${FONTS}`,
+      subtitleFont: `900 48px ${FONTS}`,
+      subtitleColor: "#C26700",
+      subtitleTextTransform: "uppercase",
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: { standings: true }, // "OVERALL STANDINGS" is baked
+  standings: {
+    columns: [
+      {
+        rankX: 35, // baked white "#1".."#12" ink, no code numeral
+        teamX: 104, // first clear pixel right of the baked rank divider
+        teamW: 204, // ends at 308, 2px before the WWCD value box
+        statColumns: [
+          { key: "wwcd", x: 310 }, // chicken icon centre 332
+          { key: "pp", x: 365 }, // PLACE PTS. ink centre 386.8
+          { key: "kp", x: 421 }, // ELIMS ink centre 443.2
+          { key: "total", x: 477 }, // TOTAL PTS. ink centre 498.7
+        ],
+        stripX: 104,
+        stripW: 204,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 568, // baked "#13".."#24" ink
+        teamX: 637,
+        teamW: 194, // ends at 831, 4px before the right WWCD box
+        statColumns: [
+          { key: "wwcd", x: 835 }, // chicken centre 857
+          { key: "pp", x: 890 }, // 912.1
+          { key: "kp", x: 946 }, // 968
+          { key: "total", x: 1001 }, // 1023.8
+        ],
+        stripX: 637,
+        stripW: 194,
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 497, // baked purple label band top — code draws no labels
+    rowY0: 538.93, // painted bar 1 top (art 841)
+    rowPitch: 59.6, // least-squares fit of the baked rank-ink centres (93 art px)
+    rowHeight: 52.5, // bar interior 82 art px (centre = 565.18)
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 44,
+    rankBoxW: 54,
+    logoPlate: 32, // bounded inside the 52.55px painted bar
+    logoNameGap: 36,
+    uniformRowInk: true, // the art bakes rank-1 emphasis in white ink
+    uniformStatInk: true,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#C26700", // the measured amber MATCH lockup ink
+    text: "#FFFFFF", // pure white 800 team + stat ink on the dark bronze bars
+    textMuted: "#F7D9B4", // warm parchment for fallback supporting slots
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no synthetic strips
+    wwcdBg: "rgba(0,0,0,0)", // no rank-1 strip over the baked white numerals
+    wwcdText: "#FFFFFF",
+    watermarkColor: "#FFFFFF", // 21:1 on the baked black footer
+    plateBg: "rgba(0,0,0,0.24)",
+    plateRing: "rgba(255,255,255,0.55)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#3B1F17", // the art's espresso title ink
+  },
+};
+
+const PMWC_BLUE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Artless MVP/announcement variants: pale cyan → lavender → ice. Keeps the
+  // measured #0F172A row ink readable (≥7:1 at every stop); standings uses art.
+  css: "linear-gradient(160deg, #E6FBFF 0%, #C7D9F5 55%, #ADC3EC 100%)",
+  decor: [],
+};
+
+/**
+ * PMWC Blue — the 2022 PMWC broadcast OVERALL RANKINGS board.
+ *
+ * Art: `overall.png` is a TRUE 1027×1531 PNG (magic bytes verified; no JPEG
+ * payload). Uniform width fit S = 1080/1027 = 1.0516066212268744 gives a
+ * 1080×1610.0097 box centred with a 4.9951px top/bottom letterbox; the 10px of
+ * exposed canvas is filled by `canvasBackground` #1B1458 (the art's measured
+ * top/bottom edges are #171552 / #2B216C).
+ * canvasX = artX × S, canvasY = artY × S + 4.9951 — no distortion, no crop.
+ *
+ * - The art bakes the "OVERALL RANKINGS" headline AND the words "MATCH #",
+ *   with the digit slot AFTER the "#" left deliberately blank. We therefore
+ *   paint ONLY the confirmed-match digits (subtitleMode "matchNumber") and
+ *   park the code title/organizer off-canvas (hideScrimName) — never a second
+ *   "MATCH #". The digit slot is measured from the baked # ink: art x903 →
+ *   canvas x949.6, baseline art y333 → canvas y355.2.
+ * - The digits use the title's Exo 2 800 face and #E6FBFF ink at 66px, exactly
+ *   55% of the 120px header title size, and sit at x958 (8.4px clear of the #).
+ * - Baked label band (art y410 → canvas 436) and 12 baked rank squares per
+ *   column (#1–#12 left, #13–#24 right) → labelsBakedIn + ranksBakedIn.
+ * - 12 painted row bars/column: left art tops 453…1170, right 453…1169; row-1
+ *   centre art 481 (canvas 510.8), row-12 centre art 1197.5 (canvas 1264.3);
+ *   pitch ≈65.1 art px → 68.45 canvas px; a 57px text box keeps row 12's
+ *   bottom inside the last painted bar. Text-box centre rowY0 482.2 + 57/2 =
+ *   510.7 lands on the painted centre (rows 1/13 and 12/24 within 0.7px).
+ * - Stat label ink centres (art → canvas): PLACE PTS 344/835 → 361.8/878.4,
+ *   ELIMS 406/897 → 427.1/943.6, TOTAL 472/958 → 496.6/1007.6. Stat order is
+ *   pp → kp → total (no WWCD/MATCHES columns). 52px boxes centre on those
+ *   midpoints without crossing the ~66px baked cell spacing.
+ * - Row ink is #0F172A (measured 13.8:1 on the cyan bars, 16.8:1 on white);
+ *   rank-1 emphasis and zebra strips are baked, so uniformRowInk/uniformStatInk
+ *   keep every rendered numeral identical and rowAltOpacity is 0.
+ * - 16 teams fill 12 left + 4 right (splitRowsAt 12): the baked rank squares
+ *   are FIXED at #1–#12 / #13–#24, so an 8+8 fill would put rank 9 on the
+ *   painted #13 square. The unpainted remainder rows simply stay blank.
+ */
+const PMWC_BLUE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmwc-blue",
+  name: "PMWC Blue",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmwc-blue/overall.png",
+      // Uniform width fit; centred 4.9951px letterbox filled by canvasBackground.
+      fit: { width: 1080, height: 1610.0097370983447, left: 0, top: 4.995131450827671 },
+    },
+    mvp: PMWC_BLUE_FALLBACK_BG,
+    announcement: PMWC_BLUE_FALLBACK_BG,
+  },
+  canvasBackground: "#1B1458",
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  header: {
+    // FALLBACK variants only (MVP/announcement gradient): keep the title/
+    // subtitle boxes apart and use dark Exo 2 800 ink on the pale gradient.
+    // The broadcast headline typography lives in variantHeaders.standings —
+    // the base 120px/66px + pale ink would overlap and vanish here.
+    title: { x: 90, y: 96, w: 900, align: "center" },
+    subtitle: { x: 190, y: 188, w: 700, align: "center" },
+    organizer: { x: 340, y: 250, w: 400, align: "center" },
+    titleFont: `800 54px ${FONTS}`,
+    subtitleFont: `800 40px ${FONTS}`,
+    subtitleColor: "#0F172A",
+    organizerFont: `500 26px ${FONTS}`,
+    titleTextTransform: "uppercase",
+    subtitleTextTransform: "uppercase",
+  },
+  variantHeaders: {
+    standings: {
+      // The art bakes the title and "MATCH #" — park the scrim name and the
+      // optional organizer; paint only digits in the blank slot after the #.
+      // Exo 2 800 uppercase at 120px, with the digits at 55% (66px) in the
+      // title's #E6FBFF ink, baseline-aligned to the baked MATCH # bbox.
+      title: { x: -9999, y: -9999, w: 0 },
+      titleFont: `800 120px ${FONTS}`,
+      subtitle: { x: 958, y: 298, w: 100, align: "left" },
+      subtitleFont: `800 66px ${FONTS}`,
+      subtitleColor: "#E6FBFF",
+      subtitleTextTransform: "uppercase",
+      organizer: { x: -9999, y: -9999, w: 0 },
+      organizerFont: `500 1px ${FONTS}`,
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // baked "OVERALL RANKINGS MATCH #"
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 39, // baked rank square art x37–89; no code numeral
+        teamX: 100, // first clear pixel of the cyan bar (art x95)
+        teamW: 230, // ends at 330, clear of the PLACE PTS box (starts 335.8)
+        statColumns: [
+          { key: "pp", x: 335.8 }, // PLACE PTS ink centre 361.8
+          { key: "kp", x: 401.1 }, // ELIMS ink centre 427.1
+          { key: "total", x: 470.6 }, // TOTAL ink centre 496.6
+        ],
+        stripX: 100,
+        stripW: 430, // ends at 530 = painted bar right edge
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 552, // baked rank square art x525–582
+        teamX: 613, // first clear pixel of the white bar (art x583)
+        teamW: 235, // ends at 848, clear of the PLACE PTS box (starts 852.4)
+        statColumns: [
+          { key: "pp", x: 852.4 }, // PLACE PTS ink centre 878.4
+          { key: "kp", x: 917.6 }, // ELIMS ink centre 943.6
+          { key: "total", x: 981.6 }, // TOTAL ink centre 1007.6
+        ],
+        stripX: 613,
+        stripW: 427, // ends at 1040 = painted bar right edge
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 436, // baked label band top — code draws no labels
+    rowY0: 482.2,
+    rowPitch: 68.45,
+    rowHeight: 57,
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 52,
+    logoPlate: 34,
+    logoNameGap: 42,
+    uniformRowInk: true, // the baked rank art carries all rank-1 emphasis
+    uniformStatInk: true,
+    nameFont: `800 24px ${FONTS}`,
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#5B2BD9",
+    text: "#0F172A", // dark navy on the cyan/white bars (≥13:1)
+    textMuted: "#27405C",
+    rowAlt: "#FFFFFF",
+    rowAltOpacity: 0, // the art paints the bars — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // no synthetic rank-1 strip
+    wwcdText: "#0F172A",
+    watermarkColor: "#E0F7FF", // 13.6:1 on the measured dark-purple footer
+    plateBg: "rgba(255,255,255,0.12)",
+    plateRing: "rgba(15,23,42,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0F172A",
+  },
+};
+
+const PMWC_ORANGE_FALLBACK_BG: TemplateConfig["backgrounds"]["mvp"] = {
+  type: "gradient",
+  // Warm PMWC orange → cream: black row/title ink clears 7:1 on every stop.
+  css: "linear-gradient(165deg, #FFF4E2 0%, #FBD6A0 55%, #F2A05A 100%)",
+  decor: [],
+};
+
+/** PMWC Orange — the 2024 PMWC "OVERALL RANKINGS MATCH #" broadcast leaderboard.
+ *  The delivered art is a TRUE PNG at 1027×1531 (not the 4096px JPEG payloads,
+ *  not exactly 2:3). It is uniformly WIDTH-fitted to the canvas
+ *  (S = 1080/1027 = 1.0516066212 → 1080×1610.009737, top 4.995131), so the
+ *  painted frame is never stretched; the ~5px top/bottom letterbox is filled
+ *  with the art's black frame ink (`canvasBackground`). Every coordinate below
+ *  was measured off those pixels with canvasX = artX·S, canvasY = artY·S+4.995:
+ *  - 12 light row plates per column at art y316–394 (row 1), pitch art 91
+ *    → canvas tops 337.303 + i·95.7, plate height ≈83. A 82px text box at
+ *    rowY0 337.3 has its centre at canvas 378.3 = painted plate centre 378.315;
+ *    row 12 centre 1430.0 lands within 1px of the baked 1430.974.
+ *  - Baked rank badges (#1 gold, #2 silver, #3 bronze, #4–#24 black) at art
+ *    x22–99 / x514–591 → canvas 23.1–104.1 / 540.5–621.5; ranksBakedIn skips
+ *    the code numerals. Team slots start inside the plates at canvas 116/634.
+ *  - Baked black header band canvas y283.7–325.7 prints RANK | TEAM | WWCD |
+ *    PLACE/PTS | ELIMS | TOTAL on both tables (labelsBakedIn). Measured ink
+ *    centres (canvas): left 336.0 / 392.9 / 444.5 / 496.1, right 854.1 / 910.3 /
+ *    961.7 / 1014.6; 44px stat boxes at 314/371/422/474 and 832/888/939/993
+ *    centre on them within 0.5px, with zero overlap. Stat order is WWCD →
+ *    PLACE PTS (pp) → ELIMS (kp) → TOTAL (no MATCHES column on this art).
+ *  - Baked title "OVERALL RANKINGS MATCH #" ink x45.2–565.8 y171.1–209.0
+ *    (Exo 2 800-style heavy condensed black). The '#' ink ends at canvas
+ *    565.76; the dynamic match digit starts at x574 (8px gap) on the SAME
+ *    baseline in 800 52px black Exo 2 (slot y162 → rendered ink y173–209,
+ *    dead-on the baked title's y172–209) — the art already prints "MATCH #",
+ *    so `subtitleMode: "matchNumber"` renders ONLY the digits (never a second
+ *    "MATCH", never double-printing the #). The scrim name is baked too.
+ *  - Row plates are near-white (measured lum 209–227 → 13.8–16.4:1 vs the
+ *    #000000 name/stat ink). The orange footer (lum ≈172) clears 9:1 for the
+ *    hardcoded bottom-right watermark in black.
+ *  - MVP + announcement have no art → warm cream/orange gradient fallback. */
+const PMWC_ORANGE: TemplateConfig = {
+  ...GEOMETRY,
+  id: "pmwc-orange",
+  name: "PMWC Orange",
+  backgrounds: {
+    standings: {
+      type: "image",
+      src: "/templates/pmwc-orange/standings.png",
+      fit: {
+        width: 1080,
+        height: 1610.0097370983447,
+        left: 0,
+        top: 4.995131450827671,
+      },
+    },
+    mvp: PMWC_ORANGE_FALLBACK_BG,
+    announcement: PMWC_ORANGE_FALLBACK_BG,
+  },
+  labelsBakedIn: true,
+  subtitleMode: "matchNumber",
+  uniformMvpRows: true,
+  canvasBackground: "#000000", // the art's black frame fills the 5px letterbox
+  header: {
+    title: { x: 140, y: 84, w: 800, align: "center" },
+    subtitle: { x: 190, y: 168, w: 700, align: "center" },
+    organizer: { x: 340, y: 236, w: 400, align: "center" },
+    titleFont: `800 52px ${FONTS}`,
+    subtitleFont: `800 52px ${FONTS}`,
+    organizerFont: `500 22px ${FONTS}`,
+  },
+  variantHeaders: {
+    standings: {
+      // Baked "MATCH #" ink ends x565.76 y209.0; digits start x574 (8px gap)
+      // at the SAME baseline/size as the baked title. Slot y162 seats 52px
+      // Exo 2 digit ink at y173–209 (baked ink y172–209). Only digits render.
+      title: { x: -9999, y: -9999, w: 0 },
+      subtitle: { x: 574, y: 162, w: 70, align: "left" },
+      subtitleFont: `800 52px ${FONTS}`,
+      subtitleColor: "#000000",
+      organizer: { x: -9999, y: -9999, w: 0 },
+    },
+  },
+  variantHideScrimName: {
+    standings: true, // "OVERALL RANKINGS MATCH #" is baked into the art
+  },
+  standings: {
+    columns: [
+      {
+        rankX: 23, // baked badge art x22–99; no code-drawn numeral
+        teamX: 116, // first clear pixel inside the left plate (art x110)
+        teamW: 195, // ends 311, before the WWCD box at 314
+        statColumns: [
+          { key: "wwcd", x: 314 }, // ink centre 336.0
+          { key: "pp", x: 371 }, // PLACE PTS ink centre 392.9
+          { key: "kp", x: 422 }, // ELIMS ink centre 444.5
+          { key: "total", x: 474 }, // ink centre 496.1
+        ],
+        stripX: 116,
+        stripW: 409, // right edge 525, inside the painted left plate
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+      {
+        rankX: 540, // baked badge art x514–591
+        teamX: 634, // first clear pixel inside the right plate (art x603)
+        teamW: 195, // ends 829, before the WWCD box at 832
+        statColumns: [
+          { key: "wwcd", x: 832 }, // ink centre 854.1
+          { key: "pp", x: 888 }, // PLACE PTS ink centre 910.3
+          { key: "kp", x: 939 }, // ELIMS ink centre 961.7
+          { key: "total", x: 993 }, // ink centre 1014.6
+        ],
+        stripX: 634,
+        stripW: 408, // right edge 1042, inside the painted right plate
+        ranksBakedIn: true,
+        rowsPerColumn: 12,
+        fixedRowPitch: true,
+      },
+    ],
+    headerLabelsY: 283.7, // baked black label band top
+    rowY0: 337.3, // painted row-1 top; box centre 378.3 = plate centre 378.315
+    rowPitch: 95.7, // measured art-91px pitch (row 12 centre 1430 ≈ 1430.974)
+    rowHeight: 82, // ≤ pitch; inside the ~83px painted plate interior
+    maxRowsLeft: 12,
+    rowsPerColumn: 12,
+    fixedRowPitch: true,
+    ranksBakedIn: true,
+    statBoxW: 44, // four centred compartments, no overlap
+    logoPlate: 34,
+    logoNameGap: 38,
+    uniformRowInk: true, // baked rank badges carry all rank-1 emphasis
+    uniformStatInk: true,
+    // 19px keeps "STRAIGHT FORWARD" / "SHADOW SYNDICATE" (~219px at 22px)
+    // fully inside the 195px team cell; only genuinely longer names truncate.
+    nameFont: `800 19px ${FONTS}`,
+    nameUppercase: true, // broadcast team tags are uppercase (reference poster)
+    statFont: `800 26px ${FONTS}`,
+    labelFont: `700 18px ${FONTS}`,
+  },
+  palette: {
+    accent: "#F5942E", // the art's PMWC orange frame
+    text: "#000000", // near-black broadcast ink on the light row plates
+    textMuted: "#4A1F6B",
+    rowAlt: "#000000",
+    rowAltOpacity: 0, // the art paints the plates — no code strips over them
+    wwcdBg: "rgba(0,0,0,0)", // rank-1 strip invisible; gold badge is baked
+    wwcdText: "#000000",
+    watermarkColor: "#000000", // black on the measured orange footer (≈9:1)
+    plateBg: "rgba(255,255,255,0.10)",
+    plateRing: "rgba(0,0,0,0.35)",
+    medalGold: "#F0C44C",
+    medalSilver: "#C9D1DD",
+    medalBronze: "#B4763F",
+    medalText: "#0A0A0A",
+  },
+};
+
 export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "dark-gold": DARK_GOLD,
   "purple-butterfly": PURPLE_BUTTERFLY,
@@ -2962,6 +5013,7 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "onyx-green": ONYX_GREEN,
   "pmgc-crimson": PMGC_CRIMSON,
   "pmgc-aqua": PMGC_AQUA,
+  "pmgc-sapphire": PMGC_SAPPHIRE,
   "pmwi-violet": PMWI_VIOLET,
   "grunge-red": GRUNGE_RED,
   "esports-clash": ESPORTS_CLASH,
@@ -2975,6 +5027,18 @@ export const AESTHETICS: Record<AestheticId, TemplateConfig> = {
   "urban-slate": URBAN_SLATE,
   "varsity-purple": VARSITY_PURPLE,
   "varsity-orange": VARSITY_ORANGE,
+  "pmsl-cobalt": PMSL_COBALT,
+  "ewc-teal": EWC_TEAL,
+  "pmgc-league-blue": PMGC_LEAGUE_BLUE,
+  "pmgo-brazil-green": PMGO_BRAZIL_GREEN,
+  "pmgo-teal": PMGO_TEAL,
+  "pmhi-crimson": PMHI_CRIMSON,
+  "pmnc-pakistan-lime": PMNC_PAKISTAN_LIME,
+  "pmpl-sea-purple": PMPL_SEA_PURPLE,
+  "pmrc-lime": PMRC_LIME,
+  "pmsl-csa-amber": PMSL_CSA_AMBER,
+  "pmwc-blue": PMWC_BLUE,
+  "pmwc-orange": PMWC_ORANGE,
 };
 
 /** Registered ids in render order — the single source for chips, dev selectors

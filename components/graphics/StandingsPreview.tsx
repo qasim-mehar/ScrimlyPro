@@ -26,6 +26,9 @@ type StandingsPreviewProps = {
    * filename stays correct. Absent → legacy subtitle parsing (gradients). */
   matchCount?: number;
   isFinal?: boolean;
+  /** Dev fixture previews can boot straight into a specific art-backed skin
+   *  (e.g. pmsl-cobalt); ignored when that skin is not selectable. */
+  initialAestheticId?: AestheticId;
 };
 
 export function StandingsPreview({
@@ -35,10 +38,13 @@ export function StandingsPreview({
   standings,
   matchCount,
   isFinal,
+  initialAestheticId,
 }: StandingsPreviewProps) {
   const variant = "standings" as const;
   const [aestheticId, setAestheticId] = useState<AestheticId>(() =>
-    defaultAestheticId(variant),
+    initialAestheticId && selectableAestheticIds(variant).includes(initialAestheticId)
+      ? initialAestheticId
+      : defaultAestheticId(variant),
   );
   const available = selectableAestheticIds(variant);
   const effectiveId = available.includes(aestheticId)

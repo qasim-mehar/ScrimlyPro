@@ -79,12 +79,18 @@ function GridOverlay() {
   );
 }
 
-export function CalibrateClient({ datasets }: { datasets: Record<string, StandingRow[]> }) {
+export function CalibrateClient({
+  datasets,
+  initialAestheticId,
+}: {
+  datasets: Record<string, StandingRow[]>;
+  initialAestheticId?: AestheticId;
+}) {
   const counts = Object.keys(datasets).map(Number).sort((a, b) => a - b);
   const [count, setCount] = useState<number>(counts.includes(19) ? 19 : counts[0]);
   const [grid, setGrid] = useState(true);
   const [variant, setVariant] = useState<"standings" | "announcement">("standings");
-  const [id, setId] = useState<AestheticId>("pmpl-light");
+  const [id, setId] = useState<AestheticId>(initialAestheticId ?? "pmpl-light");
   const config = getTemplate(id);
   const standingsHeader = headerFor(config, "standings");
   const rows = datasets[String(count)] ?? [];

@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import {
   effectivePitch,
+  fitPillFontSize,
   getTemplate,
   headerFor,
   hideScrimNameFor,
@@ -45,10 +46,48 @@ function StandingsHeader({
   // explicit matchCount (threaded from the session page) wins — including the
   // final state, which reads "MATCH 6", never an empty slot. Digit-parsing is
   // the fallback only (dev routes, gradient callers that omit the prop).
+  const matchDigits = matchCount !== undefined ? String(matchCount) : subtitleMatchNumber(subtitle);
+  // Additive prefix (pmgc-sapphire's "M N" badge): templates without one keep
+  // rendering bare digits, byte-for-byte as before.
   const subtitleText =
     config.subtitleMode === "matchNumber"
-      ? (matchCount !== undefined ? String(matchCount) : subtitleMatchNumber(subtitle))
+      ? `${config.subtitlePrefix ?? ""}${matchDigits}`.trim()
       : subtitle;
+  // Dual baked header pills (pmsl-cobalt): the art paints an empty blue box
+  // for the session name/league info and a yellow box for the stage/subtitle.
+  // The template owns the measured geometry + ink; the renderer only seats
+  // the two strings dead-centre in their boxes. No other template supplies
+  // `headerPills`, so every existing header markup stays unchanged.
+  const pills = config.standings.headerPills;
+  if (pills) {
+    return (
+      <>
+        {([pills.left, pills.right] as const).map((pill, i) => {
+          const text = pill.text === "title" ? title : subtitleText;
+          return (
+            <div
+              key={i}
+              style={{
+                ...slotToStyle(pill.box),
+                height: pill.height,
+                font: pill.font,
+                // Long session names / stages shrink to fit the painted box —
+                // a pill never wraps or clips (pure sizing in lib/graphics).
+                fontSize: `${fitPillFontSize(text, pill.font, pill.box.w ?? pill.height)}px`,
+                whiteSpace: "nowrap",
+                // AFTER the `font` shorthand: the shorthand resets line-height
+                // to `normal`, which pushes ink off the painted pill's centre.
+                lineHeight: `${pill.height}px`,
+                color: pill.color,
+              }}
+            >
+              {text}
+            </div>
+          );
+        })}
+      </>
+    );
+  }
   return (
     <>
       {hideScrimNameFor(config, "standings") ? null : (
@@ -73,6 +112,10 @@ function StandingsHeader({
           lineHeight: 1,
           letterSpacing: header.subtitleLetterSpacing,
           textTransform: header.subtitleTextTransform,
+          // Baked "MATCH #" slots paint only the digits: proportional Exo 2
+          // advances would shift MATCH 1's ink ~6px left of MATCH 6's. Tabular
+          // figures keep every confirmed-match number on the same centre-x.
+          fontVariantNumeric: "tabular-nums",
           color: header.subtitleColor ?? palette.accent,
         }}
       >
@@ -116,11 +159,32 @@ function StandingsRow({
   const logoPlate = st.logoPlate ?? DEFAULT_LOGO_PLATE;
   const logoImg = Math.max(16, logoPlate - LOGO_INSET);
   const logoNameGap = st.logoNameGap ?? DEFAULT_LOGO_NAME_GAP;
-  const y = st.rowY0 + rowIdx * pitch;
+  // Art with non-uniform card pitch (pmpl-sea-purple) supplies exact measured
+  // midpoints; the row box is seated on them instead of the nominal ladder, so
+  // its text centre lands on the painted card centre with zero drift.
+  const measuredCenter = st.rowCenterYs?.[rowIdx];
+  const y = measuredCenter !== undefined ? measuredCenter - st.rowHeight / 2 : st.rowY0 + rowIdx * pitch;
   const isRankOne = row.rank === 1;
   // Art-backed tables (challengers-red) bake their own rank-1 emphasis: force
   // every row to identical ink so no red text appears anywhere in the table.
   const plainRow = st.uniformRowInk === true;
+  // Additive two-tone ink for baked broadcast tables (pmgc-sapphire): the
+  // first `topRowsCount` ranks sit on peach/gold bars and use dark navy ink;
+  // every other row keeps the template's existing palette ink. Templates that
+  // never set `topRowsTextColor` take the original branch unchanged.
+  const topRowsCount = st.topRowsCount ?? 3;
+  const isTopRow = st.topRowsTextColor !== undefined && row.rank <= topRowsCount;
+  const topTextColor = st.topRowsTextColor ?? palette.text;
+  const rowTextColor = isTopRow
+    ? topTextColor
+    : isRankOne && !plainRow
+      ? palette.wwcdText
+      : palette.text;
+  const rankInk = isTopRow
+    ? st.topRowsRankInk ?? topTextColor
+    : isRankOne && !plainRow
+      ? palette.accent
+      : palette.textMuted;
   const teamStyle: CSSProperties = {
     position: "absolute",
     top: y,
@@ -129,7 +193,7 @@ function StandingsRow({
     // `font` shorthand resets line-height to `normal`; set it AFTER `font`
     // so the glyphs are truly centered in the painted row box.
     lineHeight: `${st.rowHeight}px`,
-    color: isRankOne && !plainRow ? palette.wwcdText : palette.text,
+    color: rowTextColor,
     letterSpacing: st.nameLetterSpacing ?? "-0.01em",
     textTransform: st.nameUppercase ? "uppercase" : undefined,
     fontVariantNumeric: "tabular-nums",
@@ -175,10 +239,10 @@ function StandingsRow({
             font: st.statFont,
             lineHeight: `${st.rowHeight}px`,
             fontVariantNumeric: "tabular-nums",
-            color: isRankOne && !plainRow ? palette.accent : palette.textMuted,
+            color: rankInk,
           }}
         >
-          {row.rank}
+          {`${st.rankPrefix ?? ""}${row.rank}`}
         </div>
       )}
       {row.logoUrl ? (
@@ -236,8 +300,13 @@ function StandingsRow({
             fontVariantNumeric: "tabular-nums",
             letterSpacing: "-0.02em",
             // Art tables (pmgc-crimson) keep every numeral in white — their
-            // baked gold rank-1 badge already carries the emphasis.
-            color: !plainRow && st.uniformStatInk !== true && key === "total" && isRankOne ? palette.accent : palette.text,
+            // baked gold rank-1 badge already carries the emphasis. Two-tone
+            // tables (pmgc-sapphire) override all four stats on the top rows.
+            color: isTopRow
+              ? topTextColor
+              : !plainRow && st.uniformStatInk !== true && key === "total" && isRankOne
+                ? palette.accent
+                : palette.text,
           }}
         >
           {statColumnValue(row, key, matchCount)}

@@ -78,7 +78,13 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     "cardinal-gold",
     "varsity-purple",
     "varsity-orange",
+    "pmsl-cobalt",
   ];
+
+  // ewc-yellow's Spanish Orange primary ink is a mandated brand override; it
+  // measures ≈2.3:1 on its light fallback gradients, so it is exempt from this
+  // generic gate and covered by the dedicated ewc-yellow test below instead.
+  const BRAND_TEXT_OVERRIDES = new Set<AestheticId>(["ewc-yellow"]);
 
   it.each(IDS)("%s: palette.text vs every gradient background stop ≥ 4.5", (id) => {
     const config = getTemplate(id);
@@ -86,7 +92,9 @@ describe("gradient-template text contrast (measured, ≥ 4.5:1)", () => {
     const seenCss = new Set<string>();
     for (const bg of Object.values(config.backgrounds)) {
       if (bg.type !== "gradient") continue;
-      expect(minContrastAgainstStops(text, bg.css)).toBeGreaterThanOrEqual(4.5);
+      if (!BRAND_TEXT_OVERRIDES.has(id)) {
+        expect(minContrastAgainstStops(text, bg.css)).toBeGreaterThanOrEqual(4.5);
+      }
       seenCss.add(bg.css);
     }
     // Every aesthetic still carries at least one gradient variant (art-backed
@@ -323,12 +331,14 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
     watermark: { r: 169.5, g: 79.4, b: 94.7 },
   };
 
-  it("ewc-yellow: espresso text clears the white bars, orange title band and ribbon", () => {
+  it("ewc-yellow: Spanish Orange primary ink is a deliberate brand override", () => {
     const p = getTemplate("ewc-yellow").palette;
-    expect(ratioOver(EWC.rowBar, p.text)).toBeGreaterThanOrEqual(7); // hard ≥7 row gate
+    expect(p.text).toBe("#e86100");
+    // Spanish Orange replaces espresso as the primary ink by direction. It
+    // measures ≈2.9:1 over the white bars (and less over the orange band and
+    // ribbon), so the former ≥7 / ≥4.5 gates for p.text no longer apply.
+    // The unchanged muted ink still clears the hard ≥7 row gate.
     expect(ratioOver(EWC.rowBar, p.textMuted)).toBeGreaterThanOrEqual(7);
-    expect(ratioOver(EWC.titleBand, p.text)).toBeGreaterThanOrEqual(4.5);
-    expect(ratioOver(EWC.ribbon, p.text)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("ewc-yellow: 90%-white watermark ink clears the dark purple swirls (≥ 4.5)", () => {
@@ -338,11 +348,12 @@ describe("P6 recorded zone luminances → contrast thresholds", () => {
     expect(contrastRatio(ink, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("ewc-yellow: fallback gradient keeps text + muted ink readable", () => {
+  it("ewc-yellow: fallback gradient keeps the unchanged muted ink readable", () => {
     const p = getTemplate("ewc-yellow").palette;
     for (const bg of Object.values(getTemplate("ewc-yellow").backgrounds)) {
       if (bg.type !== "gradient") continue;
-      expect(minContrastAgainstStops(parseHexColor(p.text), bg.css)).toBeGreaterThanOrEqual(7);
+      // Spanish Orange is the mandated primary ink and sits below the old ≥7
+      // gate on these light stops; the muted espresso ink is unchanged.
       expect(minContrastAgainstStops(parseHexColor(p.textMuted), bg.css)).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -619,6 +630,69 @@ describe("pmgc-aqua light-bar / dark-badge contrast (measured from the art)", ()
   });
 });
 
+describe("pmsl-cobalt standings contrast (live PNG decode)", () => {
+  /** The art is a true 1686×2528 PNG fitted by width (S = artW/1080) with a
+   *  0.32px centred letterbox — the exact mapping used by `imageFitStyle`. */
+  const zones = () => {
+    const { w: artW, h: artH, px } = decodePngToRgb("public/templates/pmsl-cobalt/overall.png");
+    const S = artW / 1080;
+    const TOP = (1620 - artH / S) / 2;
+    const zone = (x0: number, y0: number, x1: number, y1: number) =>
+      averageLuminance(px, artW, {
+        x: Math.round(x0 * S),
+        y: Math.round((y0 - TOP) * S),
+        w: Math.round((x1 - x0) * S),
+        h: Math.round((y1 - y0) * S),
+      });
+    return {
+      // canvas(150,465,350,20) — row-1 dark cobalt bar interior. Stays inside
+      // the LEFT table: x500 clears the right column's white rank badge (x547)
+      // and y485 clears the painted row separator (~y497).
+      rowBar: zone(150, 465, 500, 485),
+      // canvas(60,310,440,48) / (580,310,440,48) — the two empty header pills
+      bluePill: zone(60, 310, 500, 358),
+      yellowPill: zone(580, 310, 1020, 358),
+    };
+  };
+  const over = (bg: number, fg: string) => {
+    const fgLum = relativeLuminance(parseHexColor(fg));
+    return (Math.max(bg, fgLum) + 0.05) / (Math.min(bg, fgLum) + 0.05);
+  };
+
+  it("white row text clears the cobalt bars ≥ 12:1", () => {
+    const { rowBar } = zones();
+    const config = getTemplate("pmsl-cobalt");
+    expect(config.palette.text).toBe("#FFFFFF");
+    expect(config.standings.uniformRowInk).toBe(true);
+    expect(config.standings.uniformStatInk).toBe(true);
+    expect(rowBar).toBeLessThan(0.05); // guard against a light art swap
+    expect(over(rowBar, config.palette.text)).toBeGreaterThanOrEqual(12);
+    expect(over(rowBar, config.palette.textMuted)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("white ink clears the blue pill ≥ 4.5:1 and navy ink clears the yellow pill ≥ 4.5:1", () => {
+    const { bluePill, yellowPill } = zones();
+    const pills = getTemplate("pmsl-cobalt").standings.headerPills!;
+    expect(pills.left.color).toBe("#FFFFFF");
+    expect(pills.right.color).toBe("#1E2B7B");
+    expect(pills.left.font).toContain("900");
+    expect(pills.right.font).toContain("900");
+    expect(over(bluePill, pills.left.color)).toBeGreaterThanOrEqual(4.5);
+    expect(over(yellowPill, pills.right.color)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("85%-white watermark clears the deep-cobalt footer ≥ 4.5:1", () => {
+    const footer = { r: 44.9, g: 40.5, b: 138.2 }; // measured canvas(760,1560,280,30)
+    const ink = {
+      r: 255 * 0.85 + footer.r * 0.15,
+      g: 255 * 0.85 + footer.g * 0.15,
+      b: 255 * 0.85 + footer.b * 0.15,
+    };
+    expect(contrastRatio(ink, footer)).toBeGreaterThanOrEqual(4.5);
+    expect(getTemplate("pmsl-cobalt").palette.watermarkColor).toBe("rgba(255,255,255,0.85)");
+  });
+});
+
 describe("varsity-orange announcement art contrast (live PNG decode)", () => {
   it("charcoal names ≥4.5:1 and varsity-orange slots ≥3:1 on the measured cream card", () => {
     // The art is a TRUE 2048×3072 PNG (exact 2:3) → width-fit to 1080 with no
@@ -644,5 +718,35 @@ describe("varsity-orange announcement art contrast (live PNG decode)", () => {
     // #E85319 slots at 800-weight 22px: WCAG AA LARGE-text floor (≥18.66px bold).
     expect(spec.accentColor).toBe("#E85319");
     expect(over(spec.accentColor!)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("ewc-teal standings contrast (measured broadcast surfaces)", () => {
+  const over = (bgLum: number, fg: string) => {
+    const fgLum = relativeLuminance(parseHexColor(fg));
+    return (Math.max(bgLum, fgLum) + 0.05) / (Math.min(bgLum, fgLum) + 0.05);
+  };
+  // Zone means decoded from overall.png: navy name bar art(160,275,240,20),
+  // teal stat tile art(480,275,340,20), yellow MATCH# field art(950,150,60,30).
+  const NAVY = 0.0085;
+  const TEAL = 0.2412;
+  const YELLOW = 0.7169;
+
+  it("pure-white team + stat ink clears the dark slate and teal tiles (AA)", () => {
+    const config = getTemplate("ewc-teal");
+    expect(config.palette.text).toBe("#FFFFFF");
+    expect(contrastRatio(parseHexColor("#FFFFFF"), parseHexColor("#0D1B2A"))).toBeGreaterThan(4.5);
+    expect(contrastRatio(parseHexColor("#FFFFFF"), parseHexColor("#1D7874"))).toBeGreaterThan(4.5);
+    expect(over(NAVY, config.palette.text)).toBeGreaterThan(4.5);
+    // The bright stat tile (mean lum 0.241) is 3.6:1 — above the WCAG AA
+    // large-text floor for the 28px/800 numerals; #1D7874 above clears AA
+    // for normal text.
+    expect(over(TEAL, config.palette.text)).toBeGreaterThan(3);
+  });
+
+  it("deep-jungle MATCH# digits clear the yellow field (AA)", () => {
+    const config = getTemplate("ewc-teal");
+    expect(over(YELLOW, "#062E20")).toBeGreaterThan(4.5);
+    expect(config.variantHeaders?.standings?.subtitleColor).toBe("#062E20");
   });
 });
