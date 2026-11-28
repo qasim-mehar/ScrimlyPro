@@ -375,16 +375,16 @@
 
 .artStack {
   position: relative;
-  width: min(300px, 82%);
-  height: 320px;
-  margin: 36px auto 0;
+  width: min(560px, 92%);
+  height: 330px;
+  margin: 32px auto 0;
 }
 
 .artCard {
   position: absolute;
-  width: 70%;
-  height: 88%;
-  padding: 8px;
+  width: 40%;
+  height: 84%;
+  padding: 7px;
   overflow: hidden;
   border-radius: 16px;
   background: #ffffff;
@@ -392,23 +392,25 @@
 }
 
 .artCardBack {
-  top: 0;
-  left: 4%;
+  top: 2%;
+  left: 1%;
   z-index: 1;
-  transform: rotate(-10deg);
+  transform: rotate(-9deg);
 }
 
 .artCardMid {
-  top: 5%;
-  right: 4%;
+  top: 0;
+  right: 1%;
   z-index: 2;
-  transform: rotate(9deg);
+  transform: rotate(8deg);
 }
 
 .artCardFront {
   bottom: 0;
-  left: 15%;
+  left: 29%;
   z-index: 3;
+  width: 42%;
+  height: 90%;
   transform: rotate(-2deg);
 }
 
@@ -459,9 +461,9 @@
   .artStack {
     position: absolute;
     right: 6%;
-    bottom: -44px;
-    width: min(420px, 48%);
-    height: 400px;
+    bottom: -36px;
+    width: 88%;
+    height: 390px;
     margin: 0;
   }
 }
