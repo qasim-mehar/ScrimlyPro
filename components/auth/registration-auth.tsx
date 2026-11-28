@@ -390,15 +390,16 @@ export function RegistrationAuth({ mode }: { mode: Mode }) {
             </span>
           </div>
         </div>
-        <div className={s.artFrame}>
-          <Image
-            src="/regtable.png"
-            alt="Overall rankings table from a PUBG Mobile scrim"
-            width={1119}
-            height={1406}
-            className={s.artImage}
-            priority
-          />
+        <div className={s.artStack} aria-hidden="true">
+          <div className={`${s.artCard} ${s.artCardBack}`}>
+            <Image src="/regtable3.png" alt="" width={1080} height={1620} loading="eager" className={s.artImage} />
+          </div>
+          <div className={`${s.artCard} ${s.artCardMid}`}>
+            <Image src="/regtable2.png" alt="" width={1080} height={1620} loading="eager" className={s.artImage} />
+          </div>
+          <div className={`${s.artCard} ${s.artCardFront}`}>
+            <Image src="/regtable.png" alt="" width={1119} height={1406} loading="eager" className={s.artImage} priority />
+          </div>
         </div>
       </aside>
     </main>

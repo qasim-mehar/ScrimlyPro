@@ -373,23 +373,51 @@
   color: rgba(255, 255, 255, 0.68);
 }
 
-.artFrame {
+.artStack {
   position: relative;
-  z-index: 1;
-  width: min(280px, 80%);
-  margin: 24px auto 0;
-  padding: 10px;
-  border-radius: 18px;
+  width: min(300px, 82%);
+  height: 320px;
+  margin: 36px auto 0;
+}
+
+.artCard {
+  position: absolute;
+  width: 70%;
+  height: 88%;
+  padding: 8px;
+  overflow: hidden;
+  border-radius: 16px;
   background: #ffffff;
-  box-shadow: 0 24px 60px -22px rgba(0, 0, 0, 0.55);
-  transform: rotate(-1deg);
+  box-shadow: 0 20px 44px -18px rgba(0, 0, 0, 0.62);
+}
+
+.artCardBack {
+  top: 0;
+  left: 4%;
+  z-index: 1;
+  transform: rotate(-10deg);
+}
+
+.artCardMid {
+  top: 5%;
+  right: 4%;
+  z-index: 2;
+  transform: rotate(9deg);
+}
+
+.artCardFront {
+  bottom: 0;
+  left: 15%;
+  z-index: 3;
+  transform: rotate(-2deg);
 }
 
 .artImage {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   border-radius: 10px;
+  object-fit: cover;
 }
 
 @media (min-width: 600px) {
@@ -428,14 +456,13 @@
     border-radius: 0 24px 24px 0;
   }
 
-  .artFrame {
+  .artStack {
     position: absolute;
     right: 6%;
-    bottom: -30px;
-    left: auto;
-    width: min(340px, 44%);
+    bottom: -44px;
+    width: min(420px, 48%);
+    height: 400px;
     margin: 0;
-    padding: 12px;
   }
 }
 
